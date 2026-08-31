@@ -53,26 +53,20 @@
         linear-gradient(180deg, rgba(6,26,41,.55), rgba(6,26,41,.82) 55%, rgba(6,26,41,.96));
     }
 
-    .page { width: 100%; max-width: 960px; margin: 0 auto; padding: 40px 20px 56px; }
+    .page { width: 100%; max-width: 960px; margin: 0 auto; padding: 0 20px 56px; }
 
-    /* ---- testata / logo ---- */
-    .hero { text-align: center; }
-    .logo {
-      display: block; width: 100%; max-width: 620px; height: auto; margin: 0 auto;
-      border-radius: 18px; border: 1px solid rgba(255,255,255,.18);
-      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    /* ---- banner a tutta larghezza ---- */
+    .banner { width: 100%; background: #061a29; line-height: 0; margin-bottom: 6px; }
+    .banner img { display: block; width: 100%; height: auto; }
+    @media (min-width: 800px) {
+      .banner img { height: clamp(320px, 33vw, 460px); object-fit: cover; object-position: center 42%; }
     }
-    .brand-text { display: none; }
+    .brand-text { display: none; text-align: center; padding: 44px 20px 4px; }
     .brand-text.show { display: block; }
     .brand-text h1 { margin: 0; font-size: clamp(28px, 7vw, 42px); }
-    .eyebrow {
-      font-family: var(--font-display);
-      color: var(--gold); font-size: 12px; font-weight: 600;
-      letter-spacing: .22em; text-transform: uppercase; margin: 0 0 12px;
-    }
     .lead {
-      margin: 18px auto 0; max-width: 560px; font-size: 16px; line-height: 1.65;
-      color: rgba(255,255,255,.85);
+      margin: 30px auto 0; max-width: 580px; text-align: center;
+      font-size: 16px; line-height: 1.65; color: rgba(255,255,255,.85);
     }
 
     /* ---- giostra 3D della ciurma ---- */
@@ -82,28 +76,29 @@
     .sect-head p { margin: 8px auto 0; max-width: 480px; font-size: 14.5px; line-height: 1.55; color: rgba(255,255,255,.74); }
 
     .scene {
-      position: relative; height: 320px; margin: 0 auto;
+      position: relative; height: 340px; margin: 0 auto;
       perspective: 1100px; touch-action: pan-y;
       cursor: grab;
     }
     .scene:active { cursor: grabbing; }
     .ring {
-      position: absolute; inset: 0; margin: auto; width: 170px; height: 230px;
+      position: absolute; inset: 0; margin: auto; width: 200px; height: 200px;
       transform-style: preserve-3d; will-change: transform;
     }
     .cell {
       position: absolute; inset: 0;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
       backface-visibility: hidden;
     }
     .cell img {
-      width: 170px; height: 227px; object-fit: cover; object-position: center top;
-      border-radius: 14px; border: 2px solid rgba(243,199,111,.75);
+      position: absolute; top: 0; left: 0;
+      width: 200px; height: 200px; object-fit: cover; object-position: center;
+      border-radius: 18px; border: 3px solid rgba(243,199,111,.8);
       background: #0c2331;
       box-shadow: 0 18px 34px rgba(0,0,0,.45);
       -webkit-user-drag: none; user-select: none;
     }
     .cell span {
+      position: absolute; top: 210px; left: 0; width: 200px; text-align: center;
       font-family: var(--font-display);
       font-size: 14px; font-weight: 600; letter-spacing: .02em;
       color: var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,.6);
@@ -169,11 +164,49 @@
     .foot a { color: rgba(255,255,255,.75); }
     [hidden] { display: none !important; }
 
+    /* ---- il gioco per i grandi: Abisso Infinito ---- */
+    .abisso {
+      margin: 44px auto 0; max-width: 680px;
+      border: 1px solid rgba(212,154,76,.32); border-radius: 20px;
+      padding: 32px 26px;
+      background: linear-gradient(180deg, rgba(8,8,8,.9), rgba(11,7,4,.92));
+      box-shadow: 0 24px 60px rgba(0,0,0,.55);
+      text-align: center;
+    }
+    .abisso .mark {
+      display: inline-grid; place-items: center; width: 46px; height: 46px;
+      border: 1px solid rgba(212,154,76,.5); color: #d49a4c; border-radius: 10px;
+      font-family: var(--font-display); font-weight: 700; letter-spacing: .04em;
+      margin-bottom: 14px;
+    }
+    .abisso .kick {
+      color: #d49a4c; font-family: var(--font-display); font-weight: 600;
+      font-size: 12px; letter-spacing: .18em; text-transform: uppercase; margin: 0 0 8px;
+    }
+    .abisso h2 { margin: 0; font-size: clamp(20px, 4.5vw, 26px); color: #f2e7d5; }
+    .abisso .body { margin: 14px auto 0; max-width: 560px; font-size: 14.5px; line-height: 1.65; color: #cdb89d; }
+    .abisso .body b { color: #f2e7d5; }
+    .abisso ul {
+      list-style: none; padding: 0; margin: 18px auto 0; max-width: 470px;
+      display: grid; gap: 8px; text-align: left;
+    }
+    .abisso li { font-size: 13.5px; line-height: 1.5; color: #dccab1; padding-left: 22px; position: relative; }
+    .abisso li::before { content: "◆"; position: absolute; left: 0; top: 1px; color: #d49a4c; font-size: 11px; }
+    .abisso .cta {
+      display: inline-block; width: auto; margin-top: 22px;
+      background: #d49a4c; color: #120d08; text-decoration: none;
+      font-family: var(--font-display); font-weight: 600; font-size: 15px;
+      padding: 12px 24px; border-radius: 11px;
+    }
+    .abisso .cta:hover { background: #ffb14d; }
+    .abisso .tiny { margin: 12px 0 0; font-size: 11.5px; color: rgba(255,255,255,.4); }
+
     @media (max-width: 640px) {
       .steps { grid-template-columns: 1fr; }
-      .scene { height: 280px; }
-      .cell img { width: 150px; height: 200px; }
-      .ring { width: 150px; height: 200px; }
+      .scene { height: 260px; }
+      .cell img { width: 120px; height: 120px; }
+      .ring { width: 120px; height: 120px; }
+      .cell span { top: 128px; width: 120px; font-size: 12px; }
     }
     @media (prefers-reduced-motion: reduce) {
       .scene { cursor: default; }
@@ -181,14 +214,15 @@
   </style>
 </head>
 <body>
+
+<div class="banner">
+  <img id="logo" alt="Pirati: Isole del Teschio d'Oro">
+  <div class="brand-text" id="brand-text"><h1>Pirati: Isole del Teschio d'Oro</h1></div>
+</div>
+
 <div class="page">
 
-  <header class="hero">
-    <p class="eyebrow">Un gioco spalla di Abisso</p>
-    <img class="logo" id="logo" alt="Pirati: Isole del Teschio d'Oro">
-    <div class="brand-text" id="brand-text"><h1>Pirati: Isole del Teschio d'Oro</h1></div>
-    <p class="lead">Il gioco di ruolo da Master per tenere occupata una ciurma di bambini: una mappa, tanti dadi da tirare, avventure da leggere e premi a non finire.</p>
-  </header>
+  <p class="lead">Il gioco di ruolo da Master per tenere occupata una ciurma di bambini: una mappa, tanti dadi da tirare, avventure da leggere e premi a non finire.</p>
 
   <section aria-label="La ciurma">
     <div class="sect-head">
@@ -285,6 +319,26 @@
     <p class="foot" id="page-foot">Serve un invito per giocare.</p>
   </div>
 
+  <section class="abisso" aria-label="Abisso Infinito">
+    <div class="mark" aria-hidden="true">AI</div>
+    <p class="kick">Il gioco per i grandi</p>
+    <h2>Questo è il ponte dei piccoli. Sotto, c'è l'Abisso.</h2>
+    <p class="body">
+      Pirati è il gioco-spalla per bambini. Nasce da <b>Abisso Infinito</b>: un gioco di ruolo
+      fantasy digitale, cupo e strategico, pensato per adulti. Il Master apre una <b>sessione
+      privata nel browser</b> e invita fino a 16 giocatori — mappa vivente, dadi, combattimenti,
+      mercati e una progressione che resta anche dopo la serata. Discord per le voci, tutto il
+      resto è dentro il gioco.
+    </p>
+    <ul>
+      <li>Sessioni condivise, sincronizzate in tempo reale per tutto il tavolo.</li>
+      <li>Il Master guida il destino, i giocatori scelgono quanto osare.</li>
+      <li>Campagne che continuano tra una serata e l'altra: l'Abisso non dimentica.</li>
+    </ul>
+    <a class="cta" href="https://abissoinfinito.it" target="_blank" rel="noopener">Scendi nell'Abisso →</a>
+    <p class="tiny">Non si entra nell'Abisso. Si viene chiamati.</p>
+  </section>
+
 </div>
 
 <script>
@@ -325,7 +379,7 @@
     cell.className = "cell";
     const img = new Image();
     img.alt = nome(id); img.loading = "lazy";
-    img.src = PIRATI_ASSET("personaggi/" + id + ".webp");
+    img.src = PIRATI_ASSET("ciurma/" + id + ".webp");
     const cap = document.createElement("span");
     cap.textContent = nome(id);
     cell.appendChild(img); cell.appendChild(cap);
@@ -335,7 +389,7 @@
 
   function layout() {
     const vw = Math.min(window.innerWidth, 960);
-    radius = Math.max(230, Math.min(340, vw * 0.44));
+    radius = vw < 640 ? 250 : Math.max(300, Math.min(430, vw * 0.5));
     cells.forEach((c, i) => {
       c.style.transform = "rotateY(" + (i * step) + "deg) translateZ(" + radius + "px)";
     });
