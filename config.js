@@ -13,13 +13,14 @@
 window.PIRATI_CONFIG = {
   assetBase: "assets",
 
-  // Login (Supabase). Vuoti = login disattivato (sviluppo).
-  supabaseUrl: "",
-  supabaseAnonKey: "",
+  // Login (Supabase). Progetto "pirati" (org Postami).
+  supabaseUrl: "https://abzawcwdubrakppobvyk.supabase.co",
+  supabaseAnonKey: "sb_publishable_XNC9vaJ-md3waXOfYVI9dg_RsCt6xRf",
 
-  // Solo queste email possono entrare. Vuoto = chiunque abbia un account.
+  // Solo queste email possono entrare (anche con Google). Vuoto = chiunque.
   allowedEmails: [
-    // "dipaolo1974@gmail.com",
+    "dipaolo1974@gmail.com",
+    "abissoinfinitoapp@gmail.com"
   ]
 };
 
