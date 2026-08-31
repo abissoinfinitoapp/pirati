@@ -355,6 +355,13 @@ const defaultState = {
     week: 1,
     weekday: 1      // 1 = Lunedì ... 5 = Venerdì
   },
+  crostone: {
+    today: null,    // { wordId, day, status: "aperta" | "vinta" | "persa" }
+    taccuino: [],    // [{ wordId, day }]  parole non indovinate, da ripetere
+    libro: [],       // [{ wordId, day, recuperata }]  parole archiviate (imparate)
+    pass: [],        // [day, ...]  giorni in cui la ciurma ha ottenuto il lasciapassare
+    usate: []        // [wordId, ...]  parole già uscite (non tornano)
+  },
   voyage: {
     cursor: { at: "node", node: "porto" },
     choosing: null,
@@ -412,8 +419,11 @@ function loadState() {
 function withDefaults(saved) {
   const base = clone(defaultState);
   const merged = { ...base, ...saved };
-  ["crew", "questCampaign", "session", "schoolCalendar", "voyage"].forEach((key) => {
+  ["crew", "questCampaign", "session", "schoolCalendar", "voyage", "crostone"].forEach((key) => {
     merged[key] = { ...base[key], ...(saved && saved[key] ? saved[key] : {}) };
+  });
+  ["taccuino", "libro", "pass", "usate"].forEach((key) => {
+    if (!Array.isArray(merged.crostone[key])) merged.crostone[key] = [];
   });
   if (!merged.voyage.cursor || typeof merged.voyage.cursor !== "object") {
     merged.voyage.cursor = { at: "node", node: "porto" };
@@ -2250,7 +2260,7 @@ function mapEncounterMarkup(enc) {
 }
 
 function showView(viewName) {
-  const button = $(`[data-view="${viewName}"]`);
+  const button = $(`.nav-item[data-view="${viewName}"]`);
   if (button) button.click();
 }
 
@@ -2285,6 +2295,189 @@ function renderBestiario() {
       ? `<p class="bestiario-boss-label">Il boss di fine ciclo</p>${foeCardMarkup(boss, { big: true })}`
       : "";
   }
+}
+
+/* =========================================================================
+   Il Pesce Crostone: la parola difficile del giorno (lasciapassare)
+   ===================================================================== */
+
+const CROSTONE_COINS_SUBITO = 5;    // indovinata al primo colpo
+const CROSTONE_COINS_RECUPERO = 3;  // ripetuta dal Taccuino Nero il giorno dopo
+
+function crostoneWord(id) {
+  return PIRATI.word(id) || { id, parola: id, significato: "(parola non nel catalogo)", esempio: "", tranello: "" };
+}
+
+/* Pesca la parola del giorno, se non c'è già per il giorno corrente. */
+function ensureWordOfDay() {
+  const c = state.crostone;
+  // parola vecchia rimasta "aperta": finisce sul Taccuino Nero
+  if (c.today && c.today.day !== state.day) {
+    if (c.today.status === "aperta") {
+      c.taccuino.push({ wordId: c.today.wordId, day: c.today.day });
+      pushLog(`Pesce Crostone: «${crostoneWord(c.today.wordId).parola}» non affrontata, va sul Taccuino Nero.`);
+    }
+    c.today = null;
+  }
+  if (c.today && c.today.day === state.day) return;
+  const disponibili = (PIRATI.words || []).filter((w) => !c.usate.includes(w.id));
+  if (!disponibili.length) { c.today = null; return; }
+  const scelta = disponibili[Math.floor(Math.random() * disponibili.length)];
+  c.usate.push(scelta.id);
+  c.today = { wordId: scelta.id, day: state.day, status: "aperta" };
+  saveState();
+}
+
+function crostoneIndovinata() {
+  const c = state.crostone;
+  if (!c.today || c.today.status !== "aperta") return;
+  c.libro.push({ wordId: c.today.wordId, day: state.day, recuperata: false });
+  c.today.status = "vinta";
+  if (!c.pass.includes(state.day)) c.pass.push(state.day);
+  state.crew.coins += CROSTONE_COINS_SUBITO;
+  pushLog(`Pesce Crostone: la ciurma spiega «${crostoneWord(c.today.wordId).parola}». Lasciapassare ottenuto, +${CROSTONE_COINS_SUBITO} monete.`);
+  saveState();
+  lastShownCoins = state.crew.coins - CROSTONE_COINS_SUBITO;
+  render();
+}
+
+function crostoneSbagliata() {
+  const c = state.crostone;
+  if (!c.today || c.today.status !== "aperta") return;
+  c.taccuino.push({ wordId: c.today.wordId, day: state.day });
+  c.today.status = "persa";
+  pushLog(`Pesce Crostone: «${crostoneWord(c.today.wordId).parola}» finisce sul Taccuino Nero. Stasera il Master ne spiega il significato.`);
+  saveState();
+  render();
+}
+
+/* Master: "passa al Libro delle Parole Impossibili" -> parola recuperata. */
+function crostoneRecupera(wordId) {
+  const c = state.crostone;
+  const i = c.taccuino.findIndex((e) => e.wordId === wordId);
+  if (i === -1) return;
+  c.taccuino.splice(i, 1);
+  c.libro.push({ wordId, day: state.day, recuperata: true });
+  state.crew.coins += CROSTONE_COINS_RECUPERO;
+  pushLog(`Pesce Crostone: la ciurma ripete «${crostoneWord(wordId).parola}». Archiviata nel Libro delle Parole Impossibili, +${CROSTONE_COINS_RECUPERO} monete.`);
+  saveState();
+  lastShownCoins = state.crew.coins - CROSTONE_COINS_RECUPERO;
+  render();
+}
+
+function crostoneWordRow(entry, opts) {
+  const w = crostoneWord(entry.wordId);
+  const showActions = opts && opts.recover;
+  return `<li class="crostone-word">
+    <div class="crostone-word-head">
+      <strong>${w.parola}</strong>
+      ${entry.recuperata ? '<span class="crostone-tag recuperata">recuperata</span>' : ""}
+      ${showActions ? '<span class="crostone-tag attesa">da ripetere</span>' : ""}
+    </div>
+    <p class="crostone-word-mean">${w.significato}</p>
+    ${w.esempio ? `<p class="crostone-word-ex">${w.esempio}</p>` : ""}
+    ${showActions ? `<button type="button" class="primary-button" data-crostone-recover="${w.id}">Ripetuta bene → al Libro (+${CROSTONE_COINS_RECUPERO} monete)</button>` : ""}
+  </li>`;
+}
+
+function renderCrostone() {
+  const oggiBox = $("#crostone-oggi");
+  if (!oggiBox) return;
+  ensureWordOfDay();
+  const c = state.crostone;
+
+  const portrait = $("#crostone-portrait");
+  if (portrait && !portrait.src) portrait.src = window.PIRATI_ASSET("contendenti/pesce-crostone.webp");
+
+  const totali = (PIRATI.words || []).length;
+  const imparate = c.libro.length;
+  $("#crostone-counters").innerHTML = `
+    <div><span>Parole imparate</span><strong>${imparate}${totali ? " / " + totali : ""}</strong></div>
+    <div><span>Sul Taccuino Nero</span><strong>${c.taccuino.length}</strong></div>
+    <div><span>Lasciapassare</span><strong>${c.pass.length}</strong></div>`;
+
+  // Ripasso: le parole di ieri da ripetere
+  const ripassoBox = $("#crostone-ripasso");
+  if (c.taccuino.length) {
+    ripassoBox.innerHTML = `
+      <div class="crostone-block crostone-ripasso">
+        <p class="eyebrow">Prima di tutto: il ripasso</p>
+        <h3>Ripetete il significato di ieri</h3>
+        <p class="crostone-hint">Il Master ha spiegato queste parole. La ciurma le ripete: se ci siamo, il Master dà l'ok e la parola passa al Libro delle Parole Impossibili.</p>
+        <ul class="crostone-word-list">
+          ${c.taccuino.map((e) => crostoneWordRow(e, { recover: true })).join("")}
+        </ul>
+      </div>`;
+  } else {
+    ripassoBox.innerHTML = "";
+  }
+
+  // Parola di oggi
+  if (!c.today) {
+    oggiBox.innerHTML = `
+      <div class="crostone-block">
+        <h3>Il Pesce Crostone ha finito le parole</h3>
+        <p class="crostone-hint">Aggiungi altre parole in <code>catalog/parole.js</code> per continuare.</p>
+      </div>`;
+  } else {
+    const w = crostoneWord(c.today.wordId);
+    if (c.today.status === "aperta") {
+      oggiBox.innerHTML = `
+        <div class="crostone-block crostone-oggi is-open">
+          <p class="eyebrow">La parola di oggi</p>
+          <p class="crostone-parola">${w.parola}</p>
+          <p class="crostone-ask">Cosa vuol dire? Fatela spiegare alla ciurma con parole loro.</p>
+          <details class="crostone-reveal">
+            <summary>Mostra il significato (per il Master)</summary>
+            <p class="crostone-word-mean">${w.significato}</p>
+            ${w.esempio ? `<p class="crostone-word-ex">${w.esempio}</p>` : ""}
+            ${w.tranello ? `<p class="crostone-word-trap">⚠ ${w.tranello}</p>` : ""}
+          </details>
+          <div class="crostone-actions">
+            <button type="button" class="primary-button" data-crostone-ok>Indovinata! +${CROSTONE_COINS_SUBITO} monete e lasciapassare</button>
+            <button type="button" class="secondary-button" data-crostone-ko>Non ci sono arrivati → Taccuino Nero</button>
+          </div>
+        </div>`;
+    } else if (c.today.status === "vinta") {
+      oggiBox.innerHTML = `
+        <div class="crostone-block crostone-oggi is-won">
+          <p class="eyebrow">La parola di oggi</p>
+          <p class="crostone-parola">${w.parola}</p>
+          <p class="crostone-verdict">✓ Indovinata! La ciurma ha il lasciapassare di oggi. +${CROSTONE_COINS_SUBITO} monete.</p>
+          <p class="crostone-word-mean">${w.significato}</p>
+          <p class="crostone-hint">Nuova parola alla prossima giornata di scuola.</p>
+        </div>`;
+    } else {
+      oggiBox.innerHTML = `
+        <div class="crostone-block crostone-oggi is-lost">
+          <p class="eyebrow">La parola di oggi</p>
+          <p class="crostone-parola">${w.parola}</p>
+          <p class="crostone-verdict">Il Pesce Crostone l'ha segnata sul Taccuino Nero.</p>
+          <p class="crostone-word-mean">${w.significato}</p>
+          ${w.esempio ? `<p class="crostone-word-ex">${w.esempio}</p>` : ""}
+          <p class="crostone-hint">Stasera il Master rilegge il significato alla ciurma. Domani si ripete: se ci arrivano, la parola passa al Libro (+${CROSTONE_COINS_RECUPERO} monete).</p>
+        </div>`;
+    }
+  }
+
+  // Taccuino Nero
+  $("#crostone-taccuino").innerHTML = `
+    <div class="crostone-block crostone-taccuino">
+      <h3>📓 Taccuino Nero <span class="crostone-count">${c.taccuino.length}</span></h3>
+      ${c.taccuino.length
+        ? `<ul class="crostone-word-list">${c.taccuino.map((e) => crostoneWordRow(e, { recover: true })).join("")}</ul>`
+        : `<p class="crostone-hint">Nessuna parola in sospeso. La ciurma le ha spiegate tutte.</p>`}
+    </div>`;
+
+  // Libro delle Parole Impossibili
+  const libroOrdinato = c.libro.slice().reverse();
+  $("#crostone-libro").innerHTML = `
+    <div class="crostone-block crostone-libro">
+      <h3>📖 Libro delle Parole Impossibili <span class="crostone-count">${c.libro.length}</span></h3>
+      ${c.libro.length
+        ? `<ul class="crostone-word-list">${libroOrdinato.map((e) => crostoneWordRow(e)).join("")}</ul>`
+        : `<p class="crostone-hint">Ancora vuoto. La prima parola indovinata finisce qui.</p>`}
+    </div>`;
 }
 
 function setNavDrawer(open) {
@@ -2536,6 +2729,25 @@ function renderTodayPlan() {
 
   const gainedToday = stampedToday(state.crew.powers).length + stampedToday(state.crew.trophies).length;
 
+  const cro = state.crostone || {};
+  let crostoneLine = "";
+  if (PIRATI.words && PIRATI.words.length) {
+    const t = cro.today && cro.today.day === state.day ? cro.today : null;
+    const daRipetere = (cro.taccuino || []).length;
+    let stato = "Da fare: fatela spiegare alla ciurma.";
+    if (t && t.status === "vinta") stato = "✓ Indovinata, lasciapassare ottenuto.";
+    else if (t && t.status === "persa") stato = "Segnata sul Taccuino Nero.";
+    else if (!t) stato = "Parole esaurite — aggiungine in catalog/parole.js.";
+    crostoneLine = `<div class="today-crostone">
+        <div>
+          <p class="eyebrow">Il lasciapassare · Pesce Crostone</p>
+          <h4>La parola del giorno${t ? `: “${crostoneWord(t.wordId).parola}”` : ""}</h4>
+          <p class="today-quest-meta">${stato}${daRipetere ? ` · ${daRipetere} da ripetere dal Taccuino Nero` : ""}</p>
+        </div>
+        <button type="button" class="secondary-button" data-view="crostone">Apri il Pesce Crostone</button>
+      </div>`;
+  }
+
   box.innerHTML = `
     <div class="today-head">
       <div class="today-when">
@@ -2554,7 +2766,8 @@ function renderTodayPlan() {
       <li><span>2</span><div><strong>Avventura · ~${suggested ? suggested.minutes : 50} min</strong><p>Lettura a turni, scelte di gruppo, prove con i dadi.</p></div></li>
       <li><span>3</span><div><strong>Chiusura · 10 min</strong><p>Incassate il bottino, segnate le crescite, una domanda finale: il momento più coraggioso o più buffo?</p></div></li>
     </ol>
-    ${questLine}`;
+    ${questLine}
+    ${crostoneLine}`;
 }
 
 function prepareTodayQuest(questId) {
@@ -2950,6 +3163,7 @@ function render() {
   renderTreasury();
   renderMap();
   renderBestiario();
+  renderCrostone();
   renderLog();
   renderPrint();
 }
@@ -3143,6 +3357,14 @@ function bindEvents() {
     const prepareTodayButton = event.target.closest("[data-prepare-today]");
     if (prepareTodayButton) prepareTodayQuest(prepareTodayButton.dataset.prepareToday);
     if (event.target.closest("[data-end-school-day]")) endSchoolDay();
+
+    const viewJump = event.target.closest("[data-view]");
+    if (viewJump && !viewJump.classList.contains("nav-item")) showView(viewJump.dataset.view);
+
+    if (event.target.closest("[data-crostone-ok]")) crostoneIndovinata();
+    if (event.target.closest("[data-crostone-ko]")) crostoneSbagliata();
+    const crostoneRecoverBtn = event.target.closest("[data-crostone-recover]");
+    if (crostoneRecoverBtn) crostoneRecupera(crostoneRecoverBtn.dataset.crostoneRecover);
 
     const mapDie = event.target.closest("[data-map-die]");
     if (mapDie && state.voyage.pending) {

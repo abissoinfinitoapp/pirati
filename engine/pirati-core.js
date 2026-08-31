@@ -30,6 +30,8 @@ window.PIRATI = (function () {
     enemyById: new Map(),
     events: [],
     eventById: new Map(),
+    words: [],               // parole del Pesce Crostone (una al giorno)
+    wordById: new Map(),
     map: null,               // { id, start, nodes:{}, legs:{}, routes:{} }
     gradeLadder: [
       { grade: 1, questsNeeded: 0, name: "Mozzi Coraggiosi" },
@@ -268,6 +270,27 @@ window.PIRATI = (function () {
     return state.events.filter((e) => e.scope === scope);
   }
 
+  /* ---------- parole del Pesce Crostone ------------------------------- */
+
+  function registerWords(list) {
+    if (!Array.isArray(list)) return warn("registerWords: serve un array.");
+    list.forEach((w) => {
+      if (!w || !w.id) return warn("registerWords: parola senza 'id'.");
+      if (state.wordById.has(w.id)) return warn(`Parola duplicata: "${w.id}".`);
+      if (!w.parola) warn(`Parola "${w.id}": manca 'parola'.`);
+      if (!w.significato) warn(`Parola "${w.id}": manca 'significato'.`);
+      const clean = {
+        id: w.id,
+        parola: w.parola || w.id,
+        significato: w.significato || "",
+        esempio: w.esempio || "",
+        tranello: w.tranello || ""
+      };
+      state.words.push(clean);
+      state.wordById.set(clean.id, clean);
+    });
+  }
+
   /* ---------- mappa dell'arcipelago ----------------------------------- */
 
   const SPACE_TYPES = ["mare", "costa", "evento", "mostro", "assalto", "razzia", "tesoro", "quest", "sbarco", "porto"];
@@ -370,6 +393,7 @@ window.PIRATI = (function () {
       `Poteri a catalogo: ${state.powers.length}`,
       `Nemici: ${state.enemies.length} + ${state.bosses.length} boss`,
       `Carte rotta: ${state.events.length}`,
+      `Parole Pesce Crostone: ${state.words.length}`,
       `Mappa: ${state.map ? Object.keys(state.map.nodes).length + " nodi, " + Object.keys(state.map.legs).length + " tratte" : "nessuna"}`,
       `Avvisi: ${state.problems.length}`
     ];
@@ -385,6 +409,7 @@ window.PIRATI = (function () {
     registerPowers,
     registerEnemies,
     registerEvents,
+    registerWords,
     registerMap,
     get packs() { return state.packs; },
     get islands() { return state.islands; },
@@ -397,6 +422,8 @@ window.PIRATI = (function () {
     get events() { return state.events; },
     event: (id) => state.eventById.get(id) || null,
     eventsForScope,
+    get words() { return state.words; },
+    word: (id) => state.wordById.get(id) || null,
     get gradeLadder() { return state.gradeLadder; },
     get problems() { return state.problems; },
     get map() { return state.map; },

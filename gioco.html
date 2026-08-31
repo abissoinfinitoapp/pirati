@@ -8,11 +8,16 @@
   <script src="vendor/supabase.js"></script>
   <script src="auth.js"></script>
   <script>
-    /* Guardia: mostra il gioco solo con una sessione valida, altrimenti torna alla home. */
-    document.documentElement.style.visibility = "hidden";
-    PIRATI_AUTH.requireSession().then(function (ok) {
-      if (ok) document.documentElement.style.visibility = "";
-    });
+    /* Guardia: mostra il gioco solo con una sessione valida, altrimenti torna alla home.
+       In locale (localhost / 127.0.0.1) la guardia è disattivata per il playtest. */
+    (function () {
+      var local = ["localhost", "127.0.0.1", "[::1]", ""].indexOf(location.hostname) !== -1;
+      if (local) return;
+      document.documentElement.style.visibility = "hidden";
+      PIRATI_AUTH.requireSession().then(function (ok) {
+        if (ok) document.documentElement.style.visibility = "";
+      });
+    })();
   </script>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -256,6 +261,30 @@
       </section>
     </section>
 
+    <section id="view-crostone" class="view" aria-labelledby="crostone-title">
+      <section class="crostone-page">
+        <div class="crostone-hero">
+          <div class="crostone-hero-img">
+            <img src="" alt="Il Pesce Crostone" id="crostone-portrait" loading="lazy"
+                 onerror="this.parentNode.classList.add('missing'); this.remove();">
+          </div>
+          <div>
+            <p class="eyebrow">Il lasciapassare per l'avventura</p>
+            <h2 id="crostone-title">Il Pesce Crostone</h2>
+            <p>Ogni giorno tira fuori una parola difficile. Fatela spiegare alla ciurma: se ci arrivano, monete e lasciapassare. Se no, finisce sul Taccuino Nero e domani si ripete.</p>
+            <div class="crostone-counters" id="crostone-counters"></div>
+          </div>
+        </div>
+        <div id="crostone-ripasso" aria-live="polite"></div>
+        <div id="crostone-oggi" aria-live="polite"></div>
+        <div class="crostone-books">
+          <div id="crostone-taccuino"></div>
+          <div id="crostone-libro"></div>
+        </div>
+        <p id="crostone-message" class="item-message" aria-live="polite"></p>
+      </section>
+    </section>
+
     <section id="view-items" class="view" aria-labelledby="items-title">
       <section class="items-page">
         <div class="items-hero">
@@ -405,6 +434,7 @@
       <p class="nav-group-label">Avventura</p>
       <button type="button" class="nav-item is-active" data-view="mappa"><span class="nav-ico" aria-hidden="true">&#128506;&#65039;</span>Mappa</button>
       <button type="button" class="nav-item" data-view="quests"><span class="nav-ico" aria-hidden="true">&#11088;</span>Quest</button>
+      <button type="button" class="nav-item" data-view="crostone"><span class="nav-ico" aria-hidden="true">&#128033;</span>Parola</button>
       <button type="button" class="nav-item" data-view="bestiario"><span class="nav-ico" aria-hidden="true">&#128121;</span>Bestiario</button>
     </div>
 
@@ -456,6 +486,7 @@
 <script src="catalog/poteri.js"></script>
 <script src="catalog/nemici.js"></script>
 <script src="catalog/eventi.js"></script>
+<script src="catalog/parole.js"></script>
 
 <!-- Mappa dell'arcipelago. -->
 <script src="content/mappa.js"></script>

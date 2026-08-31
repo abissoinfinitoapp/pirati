@@ -2143,6 +2143,100 @@ select {
 }
 
 /* =========================================================================
+   Il Pesce Crostone: la parola del giorno
+   ===================================================================== */
+
+.crostone-page {
+  border-radius: 28px;
+  padding: clamp(20px, 4vw, 30px);
+  color: #fffdf5;
+  background:
+    radial-gradient(circle at 88% 4%, rgba(45,138,166,.24), transparent 34%),
+    linear-gradient(150deg, #0c3346, #071d2e 74%);
+  box-shadow: var(--shadow);
+}
+.crostone-page .eyebrow { color: #f3c76f; }
+.crostone-hero { display: flex; gap: 20px; align-items: center; }
+.crostone-hero h2 { margin: 4px 0 6px; font-size: clamp(26px, 4.5vw, 42px); }
+.crostone-hero > div:last-child > p { color: rgba(255,255,255,.68); max-width: 62ch; }
+.crostone-hero-img {
+  flex: 0 0 auto; width: 128px; height: 128px; border-radius: 20px; overflow: hidden;
+  border: 2px solid rgba(243,199,111,.5); background: #0c2331;
+}
+.crostone-hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.crostone-hero-img.missing { display: none; }
+
+.crostone-counters { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.crostone-counters > div {
+  display: grid; gap: 3px; min-width: 130px; padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.16); border-radius: 16px; background: rgba(255,255,255,.06);
+}
+.crostone-counters span { color: rgba(255,255,255,.52); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.crostone-counters strong { font-size: 22px; }
+
+.crostone-block {
+  margin-top: 18px; padding: 20px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05);
+}
+.crostone-block h3 { margin: 0 0 8px; font-size: 18px; }
+.crostone-hint { color: rgba(255,255,255,.6); font-size: 13px; line-height: 1.5; margin: 6px 0 0; }
+.crostone-block code { background: rgba(0,0,0,.3); padding: 1px 5px; border-radius: 5px; font-size: 12px; }
+
+.crostone-ripasso { border-color: rgba(243,199,111,.4); background: rgba(243,199,111,.08); }
+
+.crostone-oggi.is-open { border-color: rgba(159,221,207,.4); }
+.crostone-oggi.is-won { border-color: rgba(159,221,207,.55); background: rgba(159,221,207,.1); }
+.crostone-oggi.is-lost { border-color: rgba(240,169,164,.45); background: rgba(240,169,164,.08); }
+.crostone-parola {
+  margin: 6px 0 10px; font-size: clamp(30px, 6vw, 46px); font-weight: 900;
+  color: #ffe6a8; letter-spacing: .5px;
+}
+.crostone-ask { color: rgba(255,255,255,.8); font-size: 15px; margin: 0 0 14px; }
+.crostone-verdict { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+.crostone-oggi.is-won .crostone-verdict { color: #9fe0c9; }
+.crostone-reveal { margin: 6px 0 14px; }
+.crostone-reveal summary { cursor: pointer; color: #f3c76f; font-weight: 700; font-size: 13px; }
+.crostone-reveal[open] summary { margin-bottom: 8px; }
+.crostone-word-mean { margin: 4px 0 0; font-size: 14px; line-height: 1.55; }
+.crostone-word-ex { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,.62); font-style: italic; }
+.crostone-word-trap { margin: 8px 0 0; font-size: 12.5px; color: #f0c89a; }
+.crostone-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+
+.crostone-books { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.crostone-count {
+  display: inline-block; min-width: 22px; padding: 1px 8px; margin-left: 4px;
+  border-radius: 999px; background: rgba(243,199,111,.22); color: #ffe6a8;
+  font-size: 13px; font-weight: 900; text-align: center;
+}
+.crostone-word-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.crostone-word {
+  padding: 12px 14px; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.16);
+}
+.crostone-word-head { display: flex; align-items: center; gap: 8px; }
+.crostone-word-head strong { font-size: 16px; color: #ffe6a8; }
+.crostone-tag {
+  font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+}
+.crostone-tag.recuperata { background: rgba(159,221,207,.2); color: #9fe0c9; }
+.crostone-tag.attesa { background: rgba(240,169,164,.18); color: #f0a9a4; }
+.crostone-word .primary-button { margin-top: 10px; font-size: 13px; }
+
+.today-crostone {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-top: 14px; padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(243,199,111,.32); background: rgba(243,199,111,.09);
+}
+.today-crostone h4 { margin: 2px 0 4px; font-size: 17px; }
+
+@media (max-width: 640px) {
+  .crostone-hero { flex-direction: column; align-items: flex-start; }
+  .crostone-books { grid-template-columns: 1fr; }
+  .today-crostone { flex-direction: column; align-items: flex-start; }
+}
+
+/* =========================================================================
    Mappa dell'Arcipelago
    ===================================================================== */
 

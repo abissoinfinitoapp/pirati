@@ -18,7 +18,7 @@ con esportazione/importazione JSON dal Diario.
 | `app.js`, `styles.css` | logica e stile del gioco |
 | `engine/pirati-core.js` | motore contenuti modulare (nessun contenuto di gioco) |
 | `content/pack-*.js` | le avventure. Guida: `content/_COME-SCRIVERE-UNA-QUEST.md` |
-| `catalog/*.js` | premi, poteri, contendenti, eventi |
+| `catalog/*.js` | premi, poteri, contendenti, eventi, parole del Pesce Crostone |
 | `assets/` | immagini (WebP) |
 | `vendor/` | gsap, supabase-js |
 
