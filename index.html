@@ -8,124 +8,359 @@
   <script src="config.js"></script>
   <script src="vendor/supabase.js"></script>
   <script src="auth.js"></script>
+  <script>
+    /* sfondo e logo della home: arrivano dallo stesso assetBase delle altre immagini */
+    try {
+      document.documentElement.style.setProperty(
+        "--home-bg", 'url("' + window.PIRATI_ASSET("sfondi/sfondo-home.webp") + '")'
+      );
+    } catch (e) {}
+  </script>
   <style>
-    :root { color-scheme: dark; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh;
-      display: grid; place-items: center; padding: 32px 20px;
-      font-family: Inter, "Segoe UI", system-ui, Arial, sans-serif;
-      color: #f2e8d5;
-      background:
-        radial-gradient(circle at 15% 10%, rgba(214,154,45,.18), transparent 35%),
-        radial-gradient(circle at 85% 90%, rgba(45,138,166,.22), transparent 40%),
-        linear-gradient(160deg, #0b3044, #061a29 75%);
+    :root {
+      color-scheme: dark;
+      --gold: #f3c76f;
+      --ink: #f2e8d5;
+      --panel: rgba(255,255,255,.05);
+      --line: rgba(255,255,255,.14);
     }
-    .wrap { width: 100%; max-width: 440px; }
-    .brand { text-align: center; margin-bottom: 26px; }
-    .brand .eyebrow { color: #f3c76f; font-size: 11px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; margin: 0 0 8px; }
-    .brand h1 { margin: 0; font-size: clamp(28px, 7vw, 40px); line-height: 1.15; }
-    .brand p { margin: 12px 0 0; color: rgba(255,255,255,.7); font-size: 14px; line-height: 1.55; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", system-ui, Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(160deg, #0b3044, #061a29 75%);
+      overflow-x: hidden;
+    }
+    /* sfondo illustrato + velatura per la leggibilità */
+    body::before {
+      content: ""; position: fixed; inset: 0; z-index: -2;
+      background: var(--home-bg) center top / cover no-repeat;
+      background-color: #061a29;
+    }
+    body::after {
+      content: ""; position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(circle at 15% 8%, rgba(214,154,45,.16), transparent 40%),
+        linear-gradient(180deg, rgba(6,26,41,.55), rgba(6,26,41,.82) 55%, rgba(6,26,41,.96));
+    }
+
+    .page { width: 100%; max-width: 960px; margin: 0 auto; padding: 40px 20px 56px; }
+
+    /* ---- testata / logo ---- */
+    .hero { text-align: center; }
+    .logo {
+      display: block; width: 100%; max-width: 620px; height: auto; margin: 0 auto;
+      border-radius: 18px; border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    }
+    .brand-text { display: none; }
+    .brand-text.show { display: block; }
+    .brand-text h1 { margin: 0; font-size: clamp(28px, 7vw, 42px); }
+    .eyebrow {
+      color: var(--gold); font-size: 11px; font-weight: 900;
+      letter-spacing: .2em; text-transform: uppercase; margin: 0 0 12px;
+    }
+    .lead {
+      margin: 18px auto 0; max-width: 560px; font-size: 15px; line-height: 1.6;
+      color: rgba(255,255,255,.82);
+    }
+
+    /* ---- giostra 3D della ciurma ---- */
+    section { margin-top: 54px; }
+    .sect-head { text-align: center; margin-bottom: 22px; }
+    .sect-head h2 { margin: 0; font-size: clamp(20px, 4.5vw, 26px); }
+    .sect-head p { margin: 8px auto 0; max-width: 460px; font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,.7); }
+
+    .scene {
+      position: relative; height: 320px; margin: 0 auto;
+      perspective: 1100px; touch-action: pan-y;
+      cursor: grab;
+    }
+    .scene:active { cursor: grabbing; }
+    .ring {
+      position: absolute; inset: 0; margin: auto; width: 170px; height: 230px;
+      transform-style: preserve-3d; will-change: transform;
+    }
+    .cell {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      backface-visibility: hidden;
+    }
+    .cell img {
+      width: 170px; height: 227px; object-fit: cover; object-position: center top;
+      border-radius: 14px; border: 2px solid rgba(243,199,111,.75);
+      background: #0c2331;
+      box-shadow: 0 18px 34px rgba(0,0,0,.45);
+      -webkit-user-drag: none; user-select: none;
+    }
+    .cell span {
+      font-size: 12px; font-weight: 800; letter-spacing: .04em;
+      color: var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    }
+
+    /* ---- mostri ---- */
+    .foes {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;
+    }
+    .foe {
+      width: 84px; height: 84px; border-radius: 50%;
+      object-fit: cover; object-position: center 28%;
+      border: 2px solid rgba(255,255,255,.28);
+      background: #0c2331;
+      box-shadow: 0 10px 22px rgba(0,0,0,.4);
+    }
+
+    /* ---- come si gioca ---- */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .step {
+      border: 1px solid var(--line); border-radius: 16px; padding: 18px 16px;
+      background: var(--panel); backdrop-filter: blur(6px); text-align: center;
+    }
+    .step .ico { font-size: 30px; line-height: 1; }
+    .step h3 { margin: 10px 0 6px; font-size: 15px; }
+    .step p { margin: 0; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,.72); }
+    .reassure {
+      margin: 16px auto 0; max-width: 620px; text-align: center;
+      font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,.78);
+    }
+    .reassure b { color: var(--ink); }
+
+    /* ---- riquadro accesso ---- */
+    .gate { margin: 54px auto 0; max-width: 440px; }
     .card {
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 20px;
-      padding: 24px;
-      background: rgba(255,255,255,.05);
-      backdrop-filter: blur(8px);
+      border: 1px solid var(--line); border-radius: 20px; padding: 24px;
+      background: rgba(9,28,42,.72); backdrop-filter: blur(8px);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
     }
     .card h2 { margin: 0 0 16px; font-size: 17px; }
     label { display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.6); margin: 12px 0 5px; }
     input {
       width: 100%; font: inherit;
       border: 1px solid rgba(255,255,255,.2); border-radius: 11px;
-      padding: 11px 13px; color: #fff; background: rgba(0,0,0,.25);
+      padding: 11px 13px; color: #fff; background: rgba(0,0,0,.3);
     }
-    input:focus { outline: 2px solid #f3c76f; border-color: transparent; }
+    input:focus { outline: 2px solid var(--gold); border-color: transparent; }
     button {
       width: 100%; font: inherit; font-weight: 800; cursor: pointer;
       border: 0; border-radius: 11px; padding: 12px 16px; margin-top: 16px;
     }
-    .btn-primary { background: #f3c76f; color: #173449; }
+    .btn-primary { background: var(--gold); color: #173449; }
     .btn-primary:hover { background: #ffd77d; }
-    .btn-google {
-      background: #fff; color: #1f1f1f;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-    }
+    .btn-google { background: #fff; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .btn-google svg { width: 18px; height: 18px; }
-    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,.25); color: #f2e8d5; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,.25); color: var(--ink); }
     .sep { display: flex; align-items: center; gap: 12px; margin: 18px 0 4px; color: rgba(255,255,255,.4); font-size: 11px; }
     .sep::before, .sep::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.15); }
     .msg { margin-top: 14px; font-size: 13px; line-height: 1.4; min-height: 1.2em; }
     .msg.err { color: #f0a9a4; }
     .msg.ok { color: #9fe0c9; }
-    .foot { text-align: center; margin-top: 20px; font-size: 12px; color: rgba(255,255,255,.45); }
-    .foot a { color: rgba(255,255,255,.7); }
+    .foot { text-align: center; margin-top: 20px; font-size: 12px; color: rgba(255,255,255,.5); }
+    .foot a { color: rgba(255,255,255,.75); }
     [hidden] { display: none !important; }
+
+    @media (max-width: 640px) {
+      .steps { grid-template-columns: 1fr; }
+      .scene { height: 280px; }
+      .cell img { width: 150px; height: 200px; }
+      .ring { width: 150px; height: 200px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .scene { cursor: default; }
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="brand">
+<div class="page">
+
+  <header class="hero">
     <p class="eyebrow">Un gioco spalla di Abisso</p>
-    <h1>Pirati: Isole del Teschio d'Oro</h1>
-    <p>Il gioco di ruolo da Master per tenere occupata una ciurma di bambini: una mappa, tanti dadi da tirare, avventure da leggere e premi a non finire.</p>
-  </div>
+    <img class="logo" id="logo" alt="Pirati: Isole del Teschio d'Oro">
+    <div class="brand-text" id="brand-text"><h1>Pirati: Isole del Teschio d'Oro</h1></div>
+    <p class="lead">Il gioco di ruolo da Master per tenere occupata una ciurma di bambini: una mappa, tanti dadi da tirare, avventure da leggere e premi a non finire.</p>
+  </header>
 
-  <div class="card">
-    <!-- Sei già dentro -->
-    <div id="already" hidden>
-      <h2>Bentornato, capitano.</h2>
-      <p class="msg" id="already-who"></p>
-      <button class="btn-primary" onclick="location.href='/gioco'">Continua a giocare →</button>
-      <button class="btn-ghost" id="logout-btn">Esci</button>
+  <section aria-label="La ciurma">
+    <div class="sect-head">
+      <h2>La tua ciurma</h2>
+      <p>Dodici piccoli pirati, ognuno con un potere speciale. I bambini scelgono chi essere.</p>
+    </div>
+    <div class="scene" id="scene">
+      <div class="ring" id="ring"></div>
+    </div>
+  </section>
+
+  <section aria-label="Avversari">
+    <div class="sect-head">
+      <h2>E qualcuno da affrontare…</h2>
+      <p>Bidelli dei mari, ammiragli in salamoia e un capitano che nessuno vuole incontrare.</p>
+    </div>
+    <div class="foes" id="foes"></div>
+  </section>
+
+  <section aria-label="Come si gioca">
+    <div class="sect-head"><h2>Come funziona</h2></div>
+    <div class="steps">
+      <div class="step">
+        <div class="ico">🎲</div>
+        <h3>Dadi veri in mano</h3>
+        <p>I bambini tirano i loro dadi. Tu scrivi il numero: ai conti ci pensa l'app.</p>
+      </div>
+      <div class="step">
+        <div class="ico">🗺️</div>
+        <h3>Una mappa, una ciurma</h3>
+        <p>Nove isole. La nave si muove da sola e l'app dice cosa succede: quest, mostro o tesoro.</p>
+      </div>
+      <div class="step">
+        <div class="ico">🏆</div>
+        <h3>Premi a ogni passo</h3>
+        <p>Trofei, carte e poteri che restano per sempre. Più giocano, più diventano forti.</p>
+      </div>
+    </div>
+    <p class="reassure"><b>Guidi tu:</b> leggi l'avventura ad alta voce e proponi le scelte. Nessun regolamento da studiare — l'app tiene i conti, i gradi e i premi.</p>
+  </section>
+
+  <div class="gate">
+    <div class="card">
+      <!-- Sei già dentro -->
+      <div id="already" hidden>
+        <h2>Bentornato, capitano.</h2>
+        <p class="msg" id="already-who"></p>
+        <button class="btn-primary" onclick="location.href='/gioco'">Continua a giocare →</button>
+        <button class="btn-ghost" id="logout-btn">Esci</button>
+      </div>
+
+      <!-- Login -->
+      <form id="login" hidden autocomplete="on">
+        <h2>Entra a giocare</h2>
+
+        <button type="button" class="btn-google" id="google-btn">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.4 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.9-6.1C.9 16.9 0 20.3 0 24s.9 7.1 2.5 10.5l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2.1 15.3-5.6l-7.1-5.5c-2 1.3-4.6 2.1-8.2 2.1-6.4 0-11.8-3.7-13.6-9l-7.9 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
+          Entra con Google
+        </button>
+
+        <div class="sep">oppure</div>
+
+        <label for="email">Email</label>
+        <input id="email" type="email" name="email" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input id="password" type="password" name="password" autocomplete="current-password" required>
+        <button type="submit" class="btn-primary" id="submit-btn">Entra</button>
+
+        <p class="msg" id="msg"></p>
+        <p class="foot" style="margin:14px 0 0"><a href="#" id="ask-link">Non hai un accesso? Chiedilo →</a></p>
+      </form>
+
+      <!-- Richiesta di accesso -->
+      <form id="request" hidden>
+        <h2>Chiedi di entrare nella ciurma</h2>
+        <p class="msg" id="req-intro">Lascia la tua email: il Master ti aggiunge e poi potrai entrare con Google o password.</p>
+        <label for="req-email">La tua email</label>
+        <input id="req-email" type="email" required autocomplete="email">
+        <label for="req-msg">Due righe su di te (facoltativo)</label>
+        <input id="req-msg" type="text" maxlength="300" placeholder="Es. maestra della 3ª B, mi ha parlato di voi…">
+        <button type="submit" class="btn-primary" id="req-btn">Invia la richiesta</button>
+        <button type="button" class="btn-ghost" id="req-back">← Torna al login</button>
+        <p class="msg" id="req-msg-out"></p>
+      </form>
+
+      <!-- Login disattivato (config vuota) -->
+      <div id="nogate" hidden>
+        <h2>Accesso libero</h2>
+        <p class="msg">Il login non è configurato: puoi entrare direttamente.</p>
+        <button class="btn-primary" onclick="location.href='/gioco'">Entra nel gioco →</button>
+      </div>
     </div>
 
-    <!-- Login -->
-    <form id="login" hidden autocomplete="on">
-      <h2>Entra a giocare</h2>
-
-      <button type="button" class="btn-google" id="google-btn">
-        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.4 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.9-6.1C.9 16.9 0 20.3 0 24s.9 7.1 2.5 10.5l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2.1 15.3-5.6l-7.1-5.5c-2 1.3-4.6 2.1-8.2 2.1-6.4 0-11.8-3.7-13.6-9l-7.9 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
-        Entra con Google
-      </button>
-
-      <div class="sep">oppure</div>
-
-      <label for="email">Email</label>
-      <input id="email" type="email" name="email" autocomplete="username" required>
-      <label for="password">Password</label>
-      <input id="password" type="password" name="password" autocomplete="current-password" required>
-      <button type="submit" class="btn-primary" id="submit-btn">Entra</button>
-
-      <p class="msg" id="msg"></p>
-      <p class="foot" style="margin:14px 0 0"><a href="#" id="ask-link">Non hai un accesso? Chiedilo →</a></p>
-    </form>
-
-    <!-- Richiesta di accesso -->
-    <form id="request" hidden>
-      <h2>Chiedi di entrare nella ciurma</h2>
-      <p class="msg" id="req-intro">Lascia la tua email: il Master ti aggiunge e poi potrai entrare con Google o password.</p>
-      <label for="req-email">La tua email</label>
-      <input id="req-email" type="email" required autocomplete="email">
-      <label for="req-msg">Due righe su di te (facoltativo)</label>
-      <input id="req-msg" type="text" maxlength="300" placeholder="Es. maestra della 3ª B, mi ha parlato di voi…">
-      <button type="submit" class="btn-primary" id="req-btn">Invia la richiesta</button>
-      <button type="button" class="btn-ghost" id="req-back">← Torna al login</button>
-      <p class="msg" id="req-msg-out"></p>
-    </form>
-
-    <!-- Login disattivato (config vuota) -->
-    <div id="nogate" hidden>
-      <h2>Accesso libero</h2>
-      <p class="msg">Il login non è configurato: puoi entrare direttamente.</p>
-      <button class="btn-primary" onclick="location.href='/gioco'">Entra nel gioco →</button>
-    </div>
+    <p class="foot" id="page-foot">Serve un invito per giocare.</p>
   </div>
 
-  <p class="foot" id="page-foot">Serve un invito per giocare.</p>
 </div>
 
 <script>
+/* ---------- giostra 3D della ciurma + mostri ---------- */
+(function () {
+  const CIURMA = ["arturo","bruno","gigi","luna","mina","nerina","nino","pepita","rocco","sofia","tito","zoe"];
+  const MOSTRI = ["capitan-vongola","ammiraglia-salamoia","nonna-cannonata","ruggine-squittio",
+                  "fifi-ombralunga","le-sorelle-mordicchio","sbadiglio-il-mozzo","ossobello-il-traballante",
+                  "zia-rete-la-polposa","bombolo-micciacorta","barbabisso"];
+  const nome = (id) => id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  /* logo */
+  const logo = document.getElementById("logo");
+  logo.addEventListener("error", () => {
+    logo.style.display = "none";
+    document.getElementById("brand-text").classList.add("show");
+  });
+  logo.src = PIRATI_ASSET("sfondi/logo.webp");
+
+  /* mostri */
+  const foes = document.getElementById("foes");
+  MOSTRI.forEach((id) => {
+    const img = new Image();
+    img.className = "foe"; img.loading = "lazy"; img.alt = nome(id);
+    img.src = PIRATI_ASSET("contendenti/" + id + ".webp");
+    foes.appendChild(img);
+  });
+
+  /* giostra */
+  const scene = document.getElementById("scene");
+  const ring = document.getElementById("ring");
+  const N = CIURMA.length;
+  const step = 360 / N;
+  let radius = 300;
+
+  CIURMA.forEach((id, i) => {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    const img = new Image();
+    img.alt = nome(id); img.loading = "lazy";
+    img.src = PIRATI_ASSET("personaggi/" + id + ".webp");
+    const cap = document.createElement("span");
+    cap.textContent = nome(id);
+    cell.appendChild(img); cell.appendChild(cap);
+    ring.appendChild(cell);
+  });
+  const cells = [...ring.children];
+
+  function layout() {
+    const vw = Math.min(window.innerWidth, 960);
+    radius = Math.max(230, Math.min(340, vw * 0.44));
+    cells.forEach((c, i) => {
+      c.style.transform = "rotateY(" + (i * step) + "deg) translateZ(" + radius + "px)";
+    });
+  }
+  layout();
+  window.addEventListener("resize", layout);
+
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let angle = 0, spin = reduce ? 0 : 0.12, dragging = false, hovering = false, lastX = 0;
+
+  function frame() {
+    if (!dragging && !hovering) angle += spin;
+    ring.style.transform = "translateZ(" + (-radius) + "px) rotateY(" + angle + "deg)";
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  scene.addEventListener("pointerenter", () => { hovering = true; });
+  scene.addEventListener("pointerleave", () => { hovering = false; dragging = false; });
+  scene.addEventListener("pointerdown", (e) => {
+    dragging = true; lastX = e.clientX;
+    try { scene.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  scene.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    angle += (e.clientX - lastX) * 0.35;
+    lastX = e.clientX;
+  });
+  scene.addEventListener("pointerup", () => { dragging = false; });
+})();
+</script>
+
+<script>
+/* ---------- accesso (Supabase) ---------- */
 (async function () {
   const q = new URLSearchParams(location.search);
   const $ = (id) => document.getElementById(id);
@@ -135,7 +370,6 @@
 
   if (!PIRATI_AUTH.enabled) { show("nogate"); return; }
 
-  // già loggato e autorizzato?
   const user = await PIRATI_AUTH.currentUser();
   if (user && !user.guest && (await PIRATI_AUTH.isAllowed(user.email))) {
     show("already");

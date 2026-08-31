@@ -8,6 +8,7 @@ package-lock.json
 *.psd
 _png-originali/
 assets/maps/
+assets/**/*.png
 *.chn
 
 # Segreti — MAI nel repo

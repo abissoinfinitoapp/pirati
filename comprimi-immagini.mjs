@@ -19,10 +19,11 @@ const require = createRequire(import.meta.url);
 const ROOT = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
 const ASSETS = join(ROOT, "assets");
 
-const FOLDERS = ["carte", "contendenti", "personaggi", "oggetti", "ciurma"];
+const FOLDERS = ["carte", "contendenti", "personaggi", "oggetti", "ciurma", "sfondi"];
 const LOOSE = ["pirati-character-atlas.png"];
 
 const MAX_WIDTH = 1200;   // le carte si vedono molto più piccole; ok anche per la stampa casalinga
+const WIDTH_BY_FOLDER = { sfondi: 1920 }; // sfondo/logo della home: servono più larghi
 const QUALITY = 84;
 const clean = process.argv.includes("--pulisci");
 
@@ -42,8 +43,10 @@ let totIn = 0, totOut = 0, count = 0;
 async function convert(pngPath) {
   const webpPath = pngPath.slice(0, -4) + ".webp";
   const before = statSync(pngPath).size;
+  const folder = pngPath.split(/[\\/]/).slice(-2, -1)[0];
+  const width = WIDTH_BY_FOLDER[folder] || MAX_WIDTH;
   await sharp(pngPath)
-    .resize({ width: MAX_WIDTH, withoutEnlargement: true })
+    .resize({ width, withoutEnlargement: true })
     .webp({ quality: QUALITY })
     .toFile(webpPath);
   const after = statSync(webpPath).size;
