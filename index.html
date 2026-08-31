@@ -98,6 +98,20 @@
       <button type="submit" class="btn-primary" id="submit-btn">Entra</button>
 
       <p class="msg" id="msg"></p>
+      <p class="foot" style="margin:14px 0 0"><a href="#" id="ask-link">Non hai un accesso? Chiedilo →</a></p>
+    </form>
+
+    <!-- Richiesta di accesso -->
+    <form id="request" hidden>
+      <h2>Chiedi di entrare nella ciurma</h2>
+      <p class="msg" id="req-intro">Lascia la tua email: il Master ti aggiunge e poi potrai entrare con Google o password.</p>
+      <label for="req-email">La tua email</label>
+      <input id="req-email" type="email" required autocomplete="email">
+      <label for="req-msg">Due righe su di te (facoltativo)</label>
+      <input id="req-msg" type="text" maxlength="300" placeholder="Es. maestra della 3ª B, mi ha parlato di voi…">
+      <button type="submit" class="btn-primary" id="req-btn">Invia la richiesta</button>
+      <button type="button" class="btn-ghost" id="req-back">← Torna al login</button>
+      <p class="msg" id="req-msg-out"></p>
     </form>
 
     <!-- Login disattivato (config vuota) -->
@@ -108,49 +122,86 @@
     </div>
   </div>
 
-  <p class="foot">Serve un invito. Contatta il Master per avere un accesso.</p>
+  <p class="foot" id="page-foot">Serve un invito per giocare.</p>
 </div>
 
 <script>
 (async function () {
   const q = new URLSearchParams(location.search);
-  const msg = document.getElementById("msg");
-  const show = (id) => document.getElementById(id).hidden = false;
+  const $ = (id) => document.getElementById(id);
+  const msg = $("msg");
+  const show = (id) => { $(id).hidden = false; };
+  const hide = (id) => { $(id).hidden = true; };
 
   if (!PIRATI_AUTH.enabled) { show("nogate"); return; }
 
-  // già loggato?
+  // già loggato e autorizzato?
   const user = await PIRATI_AUTH.currentUser();
-  if (user && !user.guest && PIRATI_AUTH.isAllowed(user.email)) {
+  if (user && !user.guest && (await PIRATI_AUTH.isAllowed(user.email))) {
     show("already");
-    document.getElementById("already-who").textContent = "Sei entrato come " + user.email + ".";
-    document.getElementById("logout-btn").addEventListener("click", () => PIRATI_AUTH.signOut());
-    // se arrivi qui dal gioco senza sessione ma in realtà ce l'hai, prosegui
+    $("already-who").textContent = "Sei entrato come " + user.email + ".";
+    $("logout-btn").addEventListener("click", () => PIRATI_AUTH.signOut());
     if (q.get("login") === "1") location.href = "/gioco";
     return;
   }
 
   show("login");
-  if (q.get("vietato") === "1") { msg.className = "msg err"; msg.textContent = "Quell'account non è tra quelli autorizzati."; }
-  if (q.get("login") === "1") document.getElementById("email").focus();
 
-  document.getElementById("google-btn").addEventListener("click", async () => {
+  let rifiutata = "";
+  try { rifiutata = sessionStorage.getItem("pirati-rifiutata") || ""; sessionStorage.removeItem("pirati-rifiutata"); } catch (e) {}
+
+  function apriRichiesta(prefill) {
+    hide("login"); show("request");
+    $("page-foot").textContent = "";
+    if (prefill) $("req-email").value = prefill;
+    $("req-email").focus();
+  }
+
+  if (q.get("vietato") === "1" || rifiutata) {
+    apriRichiesta(rifiutata);
+    $("req-intro").className = "msg err";
+    $("req-intro").textContent = (rifiutata ? "L'email " + rifiutata + " non è ancora autorizzata." : "Quell'account non è ancora autorizzato.")
+      + " Lascia la tua email e il Master ti aggiunge.";
+  }
+  if (q.get("login") === "1") $("email").focus();
+
+  $("ask-link").addEventListener("click", (e) => { e.preventDefault(); apriRichiesta($("email").value); });
+  $("req-back").addEventListener("click", () => { hide("request"); show("login"); $("page-foot").textContent = "Serve un invito per giocare."; });
+
+  $("google-btn").addEventListener("click", async () => {
     msg.className = "msg"; msg.textContent = "Ti porto su Google…";
     try { await PIRATI_AUTH.signInWithGoogle(); }
     catch (e) { msg.className = "msg err"; msg.textContent = e.message || String(e); }
   });
 
-  document.getElementById("login").addEventListener("submit", async (ev) => {
+  $("login").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const btn = document.getElementById("submit-btn");
+    const btn = $("submit-btn");
     btn.disabled = true; msg.className = "msg"; msg.textContent = "Controllo…";
     try {
-      await PIRATI_AUTH.signInWithPassword(document.getElementById("email").value, document.getElementById("password").value);
+      await PIRATI_AUTH.signInWithPassword($("email").value, $("password").value);
       msg.className = "msg ok"; msg.textContent = "Fatto! Si salpa…";
       location.href = "/gioco";
     } catch (e) {
       msg.className = "msg err";
-      msg.textContent = /invalid login/i.test(e.message) ? "Email o password sbagliate." : (e.message || String(e));
+      if (e.code === "not_allowed") { msg.textContent = ""; apriRichiesta($("email").value); }
+      else msg.textContent = /invalid login/i.test(e.message || "") ? "Email o password sbagliate." : (e.message || String(e));
+      btn.disabled = false;
+    }
+  });
+
+  $("request").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const out = $("req-msg-out"), btn = $("req-btn");
+    btn.disabled = true; out.className = "msg"; out.textContent = "Invio…";
+    try {
+      await PIRATI_AUTH.requestAccess($("req-email").value, $("req-msg").value);
+      out.className = "msg ok";
+      out.textContent = "Richiesta inviata! Quando il Master ti aggiunge potrai entrare. Puoi anche scrivere a " + PIRATI_AUTH.contact + ".";
+      $("req-btn").disabled = true;
+    } catch (e) {
+      out.className = "msg err";
+      out.innerHTML = "Non è riuscito l'invio. Scrivi direttamente a <a href='mailto:" + PIRATI_AUTH.contact + "?subject=Accesso%20a%20Pirati'>" + PIRATI_AUTH.contact + "</a>.";
       btn.disabled = false;
     }
   });

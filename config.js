@@ -15,11 +15,15 @@ window.PIRATI_CONFIG = {
   // Per lo sviluppo offline si può rimettere "assets".
   assetBase: "https://assets.abissoinfinito.it/img/pirati",
 
-  // Login (Supabase). Progetto "pirati" (org Postami).
+  // Login (Supabase). Progetto "pirati".
   supabaseUrl: "https://abzawcwdubrakppobvyk.supabase.co",
   supabaseAnonKey: "sb_publishable_XNC9vaJ-md3waXOfYVI9dg_RsCt6xRf",
 
-  // Solo queste email possono entrare (anche con Google). Vuoto = chiunque.
+  // Email per le richieste di accesso.
+  contactEmail: "abissoinfinitoapp@gmail.com",
+
+  // Lista di RISERVA (bootstrap). Gli altri giocatori si aggiungono nella
+  // tabella `giocatori_autorizzati` su Supabase, non qui.
   allowedEmails: [
     "dipaolo1974@gmail.com",
     "abissoinfinitoapp@gmail.com"

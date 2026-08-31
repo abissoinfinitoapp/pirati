@@ -3,8 +3,10 @@
 
    Config in config.js:
      supabaseUrl, supabaseAnonKey  -> il progetto Supabase
-     allowedEmails                  -> elenco di email ammesse (invito).
-                                       Vuoto = chiunque abbia un account entra.
+     allowedEmails                  -> lista di riserva (bootstrap/override).
+
+   Chi può entrare è nella tabella `giocatori_autorizzati` su Supabase.
+   Le richieste di accesso vanno nella tabella `richieste_accesso`.
 
    Se supabaseUrl/Key sono vuoti l'autenticazione è disattivata (sviluppo).
    ========================================================================== */
@@ -14,7 +16,8 @@ window.PIRATI_AUTH = (function () {
 
   const cfg = window.PIRATI_CONFIG || {};
   const enabled = Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey && window.supabase);
-  const allow = (cfg.allowedEmails || []).map((e) => String(e).trim().toLowerCase());
+  const bootstrap = (cfg.allowedEmails || []).map((e) => String(e).trim().toLowerCase());
+  const CONTACT = cfg.contactEmail || "abissoinfinitoapp@gmail.com";
 
   let client = null;
   if (enabled) {
@@ -23,9 +26,22 @@ window.PIRATI_AUTH = (function () {
     });
   }
 
-  function isAllowed(email) {
-    if (!allow.length) return true;
-    return allow.includes(String(email || "").trim().toLowerCase());
+  /* È autorizzato? Lista di riserva in config, poi tabella giocatori_autorizzati. */
+  async function isAllowed(email) {
+    const e = String(email || "").trim().toLowerCase();
+    if (!e) return false;
+    if (bootstrap.includes(e)) return true;
+    if (!enabled) return bootstrap.length === 0;
+    try {
+      const { data } = await client
+        .from("giocatori_autorizzati")
+        .select("email")
+        .eq("email", e)
+        .maybeSingle();
+      return Boolean(data);
+    } catch (err) {
+      return false;
+    }
   }
 
   async function currentUser() {
@@ -40,9 +56,11 @@ window.PIRATI_AUTH = (function () {
       email: String(email).trim(), password: String(password)
     });
     if (error) throw error;
-    if (!isAllowed(data.user.email)) {
+    if (!(await isAllowed(data.user.email))) {
       await client.auth.signOut();
-      throw new Error("Questo account non è tra quelli autorizzati.");
+      const err = new Error("Questa email non è ancora autorizzata a giocare.");
+      err.code = "not_allowed";
+      throw err;
     }
     return data.user;
   }
@@ -54,7 +72,6 @@ window.PIRATI_AUTH = (function () {
       options: { redirectTo: location.origin + "/gioco" }
     });
     if (error) throw error;
-    // il browser viene reindirizzato a Google e poi torna su /gioco
   }
 
   async function signOut() {
@@ -62,13 +79,23 @@ window.PIRATI_AUTH = (function () {
     location.href = "/";
   }
 
-  /* In cima al GIOCO: se non c'è sessione valida e ammessa, torna alla home. */
+  /* Invia una richiesta di accesso (finisce nella tabella richieste_accesso). */
+  async function requestAccess(email, messaggio) {
+    if (!enabled) throw new Error("Non configurato.");
+    const { error } = await client
+      .from("richieste_accesso")
+      .insert({ email: String(email).trim(), messaggio: (messaggio || "").trim() || null });
+    if (error) throw error;
+  }
+
+  /* In cima al GIOCO: se non c'è sessione valida e autorizzata, torna alla home. */
   async function requireSession() {
     if (!enabled) return true;
     const { data } = await client.auth.getSession();
     const user = data && data.session && data.session.user;
     if (!user) { location.replace("/?login=1"); return false; }
-    if (!isAllowed(user.email)) {
+    if (!(await isAllowed(user.email))) {
+      try { sessionStorage.setItem("pirati-rifiutata", user.email); } catch (e) {}
       await client.auth.signOut();
       location.replace("/?vietato=1");
       return false;
@@ -76,5 +103,8 @@ window.PIRATI_AUTH = (function () {
     return true;
   }
 
-  return { enabled, client, currentUser, signInWithPassword, signInWithGoogle, signOut, requireSession, isAllowed };
+  return {
+    enabled, client, contact: CONTACT,
+    currentUser, isAllowed, signInWithPassword, signInWithGoogle, signOut, requestAccess, requireSession
+  };
 })();
