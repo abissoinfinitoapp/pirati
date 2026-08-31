@@ -13,14 +13,25 @@ const TYPES = {
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml"
 };
 
+function send(res, filePath) {
+  fs.readFile(filePath, (err, data) => {
+    if (err) { res.writeHead(404); return res.end("404"); }
+    res.writeHead(200, { "Content-Type": TYPES[path.extname(filePath)] || "application/octet-stream", "Cache-Control": "no-store" });
+    res.end(data);
+  });
+}
+
 http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split("?")[0]);
   if (urlPath === "/") urlPath = "/index.html";
   const filePath = path.join(ROOT, path.normalize(urlPath));
   if (!filePath.startsWith(ROOT)) { res.writeHead(403); return res.end("403"); }
-  fs.readFile(filePath, (err, data) => {
-    if (err) { res.writeHead(404); return res.end("404 - " + urlPath); }
-    res.writeHead(200, { "Content-Type": TYPES[path.extname(filePath)] || "application/octet-stream", "Cache-Control": "no-store" });
-    res.end(data);
+  fs.access(filePath, (err) => {
+    if (!err) return send(res, filePath);
+    // "clean URL" come Vercel: /gioco -> gioco.html
+    if (!path.extname(filePath)) {
+      return fs.access(filePath + ".html", (e2) => e2 ? (res.writeHead(404), res.end("404 - " + urlPath)) : send(res, filePath + ".html"));
+    }
+    res.writeHead(404); res.end("404 - " + urlPath);
   });
 }).listen(PORT, () => console.log(`Pirati dev server → http://localhost:${PORT}`));

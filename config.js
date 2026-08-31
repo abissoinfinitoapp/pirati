@@ -12,8 +12,15 @@
 
 window.PIRATI_CONFIG = {
   assetBase: "assets",
+
+  // Login (Supabase). Vuoti = login disattivato (sviluppo).
   supabaseUrl: "",
-  supabaseAnonKey: ""
+  supabaseAnonKey: "",
+
+  // Solo queste email possono entrare. Vuoto = chiunque abbia un account.
+  allowedEmails: [
+    // "dipaolo1974@gmail.com",
+  ]
 };
 
 /* Costruisce l'URL di un'immagine: PIRATI_ASSET("carte/soffio-starnuto.webp") */

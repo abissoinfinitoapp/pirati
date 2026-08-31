@@ -2997,6 +2997,16 @@ function bindEvents() {
     renderTutorialStep(1);
   });
 
+  const logoutBtn = $("#logout-btn");
+  if (logoutBtn && window.PIRATI_AUTH && window.PIRATI_AUTH.enabled) {
+    logoutBtn.hidden = false;
+    logoutBtn.addEventListener("click", () => window.PIRATI_AUTH.signOut());
+    window.PIRATI_AUTH.currentUser().then((u) => {
+      const label = $("#logout-label");
+      if (label && u && u.email) label.textContent = "Esci (" + u.email.split("@")[0] + ")";
+    });
+  }
+
   $("#new-session-btn").addEventListener("click", startNewSession);
   $("#add-player-btn").addEventListener("click", addPlayer);
   $("#seed-crew-btn")?.addEventListener("click", seedTestCrew);

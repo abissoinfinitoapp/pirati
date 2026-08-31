@@ -4,455 +4,157 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pirati: Isole del Teschio d'Oro</title>
+  <meta name="description" content="Un gioco di ruolo da Master per bambini: mappa, dadi, quest e mille premi. Un gioco spalla di Abisso.">
   <script src="config.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <script src="vendor/supabase.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      display: grid; place-items: center; padding: 32px 20px;
+      font-family: Inter, "Segoe UI", system-ui, Arial, sans-serif;
+      color: #f2e8d5;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(214,154,45,.18), transparent 35%),
+        radial-gradient(circle at 85% 90%, rgba(45,138,166,.22), transparent 40%),
+        linear-gradient(160deg, #0b3044, #061a29 75%);
+    }
+    .wrap { width: 100%; max-width: 440px; }
+    .brand { text-align: center; margin-bottom: 26px; }
+    .brand .eyebrow { color: #f3c76f; font-size: 11px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; margin: 0 0 8px; }
+    .brand h1 { margin: 0; font-size: clamp(28px, 7vw, 40px); line-height: 1.15; }
+    .brand p { margin: 12px 0 0; color: rgba(255,255,255,.7); font-size: 14px; line-height: 1.55; }
+    .card {
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 20px;
+      padding: 24px;
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(8px);
+    }
+    .card h2 { margin: 0 0 16px; font-size: 17px; }
+    label { display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.6); margin: 12px 0 5px; }
+    input {
+      width: 100%; font: inherit;
+      border: 1px solid rgba(255,255,255,.2); border-radius: 11px;
+      padding: 11px 13px; color: #fff; background: rgba(0,0,0,.25);
+    }
+    input:focus { outline: 2px solid #f3c76f; border-color: transparent; }
+    button {
+      width: 100%; font: inherit; font-weight: 800; cursor: pointer;
+      border: 0; border-radius: 11px; padding: 12px 16px; margin-top: 16px;
+    }
+    .btn-primary { background: #f3c76f; color: #173449; }
+    .btn-primary:hover { background: #ffd77d; }
+    .btn-google {
+      background: #fff; color: #1f1f1f;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-google svg { width: 18px; height: 18px; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,.25); color: #f2e8d5; }
+    .sep { display: flex; align-items: center; gap: 12px; margin: 18px 0 4px; color: rgba(255,255,255,.4); font-size: 11px; }
+    .sep::before, .sep::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.15); }
+    .msg { margin-top: 14px; font-size: 13px; line-height: 1.4; min-height: 1.2em; }
+    .msg.err { color: #f0a9a4; }
+    .msg.ok { color: #9fe0c9; }
+    .foot { text-align: center; margin-top: 20px; font-size: 12px; color: rgba(255,255,255,.45); }
+    .foot a { color: rgba(255,255,255,.7); }
+    [hidden] { display: none !important; }
+  </style>
 </head>
 <body>
-<div id="pirati-app">
-  <header class="app-header no-print">
-    <div>
-      <p class="eyebrow">Gioco da tavolo + App Master</p>
-      <h1>Pirati: Isole del Teschio d'Oro</h1>
-    </div>
-  </header>
+<div class="wrap">
+  <div class="brand">
+    <p class="eyebrow">Un gioco spalla di Abisso</p>
+    <h1>Pirati: Isole del Teschio d'Oro</h1>
+    <p>Il gioco di ruolo da Master per tenere occupata una ciurma di bambini: una mappa, tanti dadi da tirare, avventure da leggere e premi a non finire.</p>
+  </div>
 
-  <main>
-    <section id="view-mappa" class="view is-active" aria-labelledby="mappa-title">
-      <section class="map-page">
-        <div class="map-topbar">
-          <div>
-            <p class="eyebrow">Rotta della ciurma</p>
-            <h2 id="mappa-title">Mappa dell'Arcipelago</h2>
-            <p id="map-week" class="map-week">Settimana 1 · Lunedì</p>
-          </div>
-          <div class="map-topbar-right">
-            <button type="button" class="map-potenza-button" data-open-potenza>
-              <span>💪 Potenza ciurma</span>
-              <strong id="map-potenza-value">0</strong>
-            </button>
-            <div class="map-danger">
-              <span>Pericolo</span>
-              <strong id="map-danger-value">0</strong>
-              <div class="map-danger-track"><div id="map-danger-fill"></div></div>
-            </div>
-          </div>
-        </div>
-        <div class="map-layout">
-          <div class="map-stage">
-            <svg id="archipelago" viewBox="-18 -9 136 118" role="img" aria-label="Mappa dell'arcipelago"></svg>
-          </div>
-          <aside class="map-console" aria-live="polite">
-            <p id="map-message" class="map-message"></p>
-            <div id="map-choices" class="map-choices" hidden></div>
-            <div id="map-encounter" class="map-encounter" hidden></div>
-            <div id="map-move" class="map-move" hidden></div>
-            <div id="map-dice" class="map-dice">
-              <p id="map-dice-hint" class="map-dice-hint">Tira 1d6 e premi il numero uscito per risolvere l'incontro.</p>
-              <div class="physical-dice map-physical-dice">
-                <button type="button" data-map-die="1">1</button>
-                <button type="button" data-map-die="2">2</button>
-                <button type="button" data-map-die="3">3</button>
-                <button type="button" data-map-die="4">4</button>
-                <button type="button" data-map-die="5">5</button>
-                <button type="button" data-map-die="6">6</button>
-              </div>
-            </div>
-            <div id="map-hand" class="map-hand" hidden></div>
-            <div id="map-extra" class="map-extra" hidden></div>
-          </aside>
-        </div>
-      </section>
-    </section>
-
-    <section id="view-master" class="view" aria-labelledby="master-title">
-      <div class="dashboard-grid">
-        <section class="panel mission-panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Sessione</p>
-              <h2 id="master-title">Plancia Master</h2>
-            </div>
-            <button type="button" id="new-session-btn" class="primary-button">Nuovo giorno</button>
-          </div>
-
-          <div class="mission-card" id="active-mission"></div>
-
-          <div class="status-grid">
-            <div class="status-box">
-              <span>Giorno</span>
-              <strong id="day-value">1</strong>
-            </div>
-            <div class="status-box">
-              <span>Turno</span>
-              <strong id="turn-value">0/12</strong>
-            </div>
-            <div class="status-box danger-box">
-              <span>Pericolo</span>
-              <strong id="danger-value">0</strong>
-            </div>
-            <div class="status-box">
-              <span>Fama</span>
-              <strong id="fame-value">0</strong>
-            </div>
-          </div>
-
-          <div class="danger-track" aria-label="Tracciato pericolo">
-            <div id="danger-fill"></div>
-          </div>
-
-          <div class="action-grid" aria-label="Azioni Master">
-            <button type="button" class="action-button" data-action="event">Evento</button>
-            <button type="button" class="action-button" data-action="combat">Combattimento</button>
-            <button type="button" class="action-button" data-action="treasure">Cerca tesoro</button>
-            <button type="button" class="action-button" data-action="quest">Quest veloce</button>
-            <button type="button" class="action-button" data-action="market">Mercante</button>
-            <button type="button" class="action-button" data-action="rest">Riposo</button>
-          </div>
-        </section>
-
-        <aside class="panel result-panel" aria-live="polite">
-          <div class="panel-header compact">
-            <div>
-              <p class="eyebrow">Esito</p>
-              <h2>Cosa succede</h2>
-            </div>
-            <button type="button" id="undo-btn" class="secondary-button">Annulla</button>
-          </div>
-          <div id="result-card" class="result-card"></div>
-          <div class="dice-box">
-            <div class="dice-intro">
-              <p class="eyebrow">Dadi fisici</p>
-              <h3>Tiro dei bambini</h3>
-              <p id="roll-prompt">L'app propone la prova, i bambini tirano il d6 sul tavolo.</p>
-            </div>
-            <div>
-              <label for="dice-stat">Tiro prova</label>
-              <select id="dice-stat">
-                <option value="coraggio">Coraggio</option>
-                <option value="astuzia">Astuzia</option>
-                <option value="fortuna">Fortuna</option>
-              </select>
-            </div>
-            <div>
-              <label for="dice-bonus">Bonus</label>
-              <input id="dice-bonus" type="number" min="-3" max="6" value="0">
-            </div>
-            <div>
-              <label for="dice-target">Soglia</label>
-              <input id="dice-target" type="number" min="2" max="14" value="5">
-            </div>
-          </div>
-          <div class="physical-dice" aria-label="Risultato dado fisico">
-            <button type="button" data-die="1">1</button>
-            <button type="button" data-die="2">2</button>
-            <button type="button" data-die="3">3</button>
-            <button type="button" data-die="4">4</button>
-            <button type="button" data-die="5">5</button>
-            <button type="button" data-die="6">6</button>
-          </div>
-          <div id="dice-result" class="dice-result">Seleziona un pirata, scegli la prova, poi premi il numero uscito sul dado fisico.</div>
-        </aside>
-      </div>
-
-      <section class="panel crew-strip">
-        <div class="panel-header compact">
-          <div>
-            <p class="eyebrow">Giocatori</p>
-            <h2>Ciurma attiva</h2>
-          </div>
-        </div>
-        <div id="active-crew" class="crew-cards"></div>
-      </section>
-    </section>
-
-    <section id="view-crew" class="view" aria-labelledby="crew-title">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Preparazione</p>
-            <h2 id="crew-title">Gestisci giocatori e personaggi</h2>
-          </div>
-          <div class="button-row">
-            <button type="button" id="seed-crew-btn" class="secondary-button" title="Aggiunge una ciurma finta per provare velocemente">Ciurma di prova</button>
-            <button type="button" id="add-player-btn" class="primary-button">Aggiungi giocatore</button>
-          </div>
-        </div>
-        <div class="setup-row">
-          <label>
-            Nome bambino
-            <input id="player-name" type="text" maxlength="18" placeholder="Es. Leo">
-          </label>
-          <label>
-            Personaggio
-            <select id="character-select"></select>
-          </label>
-        </div>
-        <div id="player-list" class="player-list"></div>
-      </div>
-
-      <section class="character-showcase" aria-labelledby="characters-title">
-        <div id="magic-particles" class="magic-particles" aria-hidden="true"></div>
-        <div class="showcase-heading">
-          <div>
-            <p class="eyebrow">Scegli il tuo alter ego</p>
-            <h2 id="characters-title">Chi vuoi essere oggi?</h2>
-          </div>
-          <p>Scorri la ciurma e porta al centro il pirata che ti fa sognare.</p>
-        </div>
-        <div id="character-names" class="character-names" role="tablist" aria-label="Personaggi disponibili"></div>
-        <div class="carousel-shell">
-          <button type="button" id="character-prev" class="carousel-arrow" aria-label="Personaggio precedente">&#8592;</button>
-          <div id="character-library" class="character-carousel" aria-live="polite"></div>
-          <button type="button" id="character-next" class="carousel-arrow" aria-label="Personaggio successivo">&#8594;</button>
-        </div>
-        <p class="carousel-hint">Usa le frecce, i nomi o trascina le carte</p>
-        <div id="character-gallery" class="character-gallery" aria-label="Tutte le carte personaggio"></div>
-      </section>
-    </section>
-
-    <section id="view-quests" class="view" aria-labelledby="quest-cycle-title">
-      <section class="quest-cycle-page">
-        <div id="today-plan" class="today-plan" aria-live="polite"></div>
-        <div class="quest-cycle-hero">
-          <div>
-            <p class="eyebrow">Ciclo I · Le rotte del risveglio</p>
-            <h2 id="quest-cycle-title">16 avventure, 8 isole</h2>
-            <p>Il Master sceglie l'isola e rivela la quest più adatta alla storia. Ogni isola custodisce due avventure.</p>
-          </div>
-          <div class="quest-cycle-counters">
-            <div><span>Completate</span><strong id="quest-completed-count">0/16</strong></div>
-            <div><span>Grado ciurma</span><strong id="quest-grade">1</strong><small id="quest-grade-name">Mozzi Coraggiosi</small></div>
-            <div><span>Monete</span><strong id="quest-coins">0</strong></div>
-            <div><span>Trofei</span><strong id="quest-trophy-count">0</strong></div>
-            <div class="supply-counter"><span>Rifornimenti</span><strong id="quest-supplies">8</strong><div><button type="button" data-supplies="-1" aria-label="Riduci rifornimenti">−</button><button type="button" data-supplies="1" aria-label="Aumenta rifornimenti">+</button></div></div>
-          </div>
-        </div>
-
-        <aside class="base-rule-card">
-          <span aria-hidden="true">⚓</span>
-          <div><strong>Porto centrale: base sicura</strong><p>Qui la ciurma recupera i rifornimenti. Un gruppo che resta su un'isola non può cambiare isola finché non viene recuperato o supera una prova di fuga fantastica.</p></div>
-        </aside>
-
-        <div class="quest-workspace">
-          <div>
-            <p class="quest-section-label">1. Dove accade?</p>
-            <div id="quest-islands" class="quest-islands" role="tablist" aria-label="Isole del primo ciclo"></div>
-          </div>
-          <div>
-            <p class="quest-section-label">2. Quale avventura riveli?</p>
-            <div id="quest-event-choices" class="quest-event-choices"></div>
-          </div>
-        </div>
-        <div id="quest-master-sheet" class="quest-master-sheet" aria-live="polite"></div>
-      </section>
-    </section>
-
-    <section id="view-items" class="view" aria-labelledby="items-title">
-      <section class="items-page">
-        <div class="items-hero">
-          <div>
-            <p class="eyebrow">Una volta per giorno</p>
-            <h2 id="items-title">Bauli della ciurma</h2>
-            <p>Ogni pirata possiede tre oggetti unici. Quando una carta viene usata, torna disponibile al prossimo giorno.</p>
-          </div>
-          <div class="day-medallion"><span>Giorno</span><strong id="items-day">1</strong></div>
-        </div>
-        <div id="item-crew-tabs" class="item-crew-tabs" role="tablist" aria-label="Membri della ciurma"></div>
-        <div id="item-owner" class="item-owner"></div>
-        <div id="special-item-grid" class="special-item-grid" aria-live="polite"></div>
-        <p id="item-message" class="item-message" aria-live="polite"></p>
-      </section>
-    </section>
-
-    <section id="view-tesoreria" class="view" aria-labelledby="tesoreria-title">
-      <section class="tesoreria-page">
-        <div class="tesoreria-hero">
-          <div>
-            <p class="eyebrow">Tutto quello che avete conquistato</p>
-            <h2 id="tesoreria-title">Il Tesoro della Ciurma</h2>
-          </div>
-          <div class="tesoreria-stats">
-            <div class="grade-medallion">
-              <span>Grado</span>
-              <strong id="tesoreria-grade">1</strong>
-              <small id="tesoreria-grade-name">Mozzi Coraggiosi</small>
-            </div>
-            <div class="tesoreria-coins">
-              <span aria-hidden="true">🪙</span>
-              <strong id="tesoreria-coins" data-count="0">0</strong>
-              <small>monete</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="grade-track" aria-label="Avanzamento di Grado">
-          <div id="grade-track-fill"></div>
-          <p id="grade-track-label"></p>
-        </div>
-
-        <div class="tesoreria-tabs" role="tablist" aria-label="Sezioni del tesoro">
-          <button type="button" role="tab" class="tesoreria-tab is-active" data-treasury-tab="trofei">🏆 Bottino &amp; Trofei</button>
-          <button type="button" role="tab" class="tesoreria-tab" data-treasury-tab="poteri">✦ Baule dei Poteri</button>
-          <button type="button" role="tab" class="tesoreria-tab" data-treasury-tab="potenza">💪 Potenza della Ciurma</button>
-        </div>
-
-        <div id="treasury-panel" class="treasury-panel" aria-live="polite"></div>
-      </section>
-    </section>
-
-    <section id="view-bestiario" class="view" aria-labelledby="bestiario-title">
-      <section class="bestiario-page">
-        <div class="bestiario-hero">
-          <div>
-            <p class="eyebrow">Chi potreste incontrare</p>
-            <h2 id="bestiario-title">Bestiario dell'Arcipelago</h2>
-            <p>Dieci contendenti e un boss. Ognuno si può battere: cerca il trucco.</p>
-          </div>
-        </div>
-        <div id="bestiario-grid" class="bestiario-grid"></div>
-        <div id="bestiario-boss" class="bestiario-boss"></div>
-      </section>
-    </section>
-
-    <section id="view-archive" class="view" aria-labelledby="archive-title">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Campagna</p>
-            <h2 id="archive-title">Diario delle avventure</h2>
-          </div>
-          <div class="button-row">
-            <button type="button" id="export-save-btn" class="secondary-button">Esporta</button>
-            <label class="secondary-button file-button">
-              Importa
-              <input id="import-save-input" type="file" accept="application/json,.json">
-            </label>
-            <button type="button" id="clear-log-btn" class="secondary-button">Svuota diario</button>
-          </div>
-        </div>
-        <p id="save-message" class="save-message" aria-live="polite"></p>
-        <ol id="log-list" class="log-list"></ol>
-      </div>
-    </section>
-
-    <section id="view-print" class="view print-view" aria-labelledby="print-title">
-      <div class="panel no-print">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Materiali</p>
-            <h2 id="print-title">Fogli stampabili</h2>
-          </div>
-          <button type="button" id="print-btn" class="primary-button">Stampa</button>
-        </div>
-        <p class="helper-text">Stampa questa sezione: contiene plancia, carte personaggio, carte evento, tesoro e nemici.</p>
-      </div>
-
-      <article class="print-sheet board-sheet">
-        <h2>Plancia: Arcipelago del Teschio d'Oro</h2>
-        <div class="dice-rule-card">
-          <h3>Regola dei Dadi</h3>
-          <p>Quando il Master chiede una prova: scegli un pirata, tira 1d6 fisico, aggiungi Coraggio, Astuzia o Fortuna, poi confronta con la Soglia.</p>
-          <p><strong>Successo:</strong> ottieni l'effetto buono. <strong>Fallimento:</strong> scegli un costo: Pericolo +1, perdi tempo, perdi una moneta o arriva una complicazione.</p>
-        </div>
-        <div id="print-board" class="print-board"></div>
-      </article>
-
-      <article class="print-sheet">
-        <h2>Carte Personaggio</h2>
-        <div id="print-characters" class="print-power-grid"></div>
-      </article>
-
-      <article class="print-sheet">
-        <h2>Carte Potere</h2>
-        <p class="helper-text no-print">Ritaglia lungo il bordo. I bambini tengono in mano quelle che la ciurma ha conquistato.</p>
-        <div id="print-powers" class="print-power-grid"></div>
-      </article>
-
-      <article class="print-sheet">
-        <h2>Carte Oggetto</h2>
-        <p class="helper-text no-print">Le tre carte personali di ogni pirata. Si giocano una al giorno.</p>
-        <div id="print-oggetti" class="print-power-grid"></div>
-      </article>
-
-      <article class="print-sheet">
-        <h2>Carte Evento</h2>
-        <div id="print-events" class="print-card-grid compact-cards"></div>
-      </article>
-
-      <article class="print-sheet">
-        <h2>Carte Tesoro e Nemici</h2>
-        <div id="print-loot-enemies" class="print-card-grid compact-cards"></div>
-      </article>
-    </section>
-  </main>
-
-  <button type="button" id="nav-toggle" class="nav-toggle no-print" aria-label="Apri il menu" aria-controls="app-nav" aria-expanded="false"><span aria-hidden="true">&#9776;</span></button>
-  <div id="nav-scrim" class="nav-scrim no-print" hidden></div>
-
-  <nav id="app-nav" class="app-nav no-print" aria-label="Menu principale">
-    <p class="app-nav-brand"><span aria-hidden="true">&#9760;</span> Teschio d'Oro</p>
-
-    <div class="nav-group">
-      <p class="nav-group-label">Avventura</p>
-      <button type="button" class="nav-item is-active" data-view="mappa"><span class="nav-ico" aria-hidden="true">&#128506;&#65039;</span>Mappa</button>
-      <button type="button" class="nav-item" data-view="quests"><span class="nav-ico" aria-hidden="true">&#11088;</span>Quest</button>
-      <button type="button" class="nav-item" data-view="bestiario"><span class="nav-ico" aria-hidden="true">&#128121;</span>Bestiario</button>
+  <div class="card">
+    <!-- Sei già dentro -->
+    <div id="already" hidden>
+      <h2>Bentornato, capitano.</h2>
+      <p class="msg" id="already-who"></p>
+      <button class="btn-primary" onclick="location.href='/gioco'">Continua a giocare →</button>
+      <button class="btn-ghost" id="logout-btn">Esci</button>
     </div>
 
-    <div class="nav-group">
-      <p class="nav-group-label">Ciurma</p>
-      <button type="button" class="nav-item" data-view="tesoreria"><span class="nav-ico" aria-hidden="true">&#127942;</span>Tesoro</button>
-      <button type="button" class="nav-item" data-view="items"><span class="nav-ico" aria-hidden="true">&#10024;</span>Oggetti</button>
-      <button type="button" class="nav-item" data-view="crew"><span class="nav-ico" aria-hidden="true">&#129517;</span>Giocatori</button>
-    </div>
+    <!-- Login -->
+    <form id="login" hidden autocomplete="on">
+      <h2>Entra a giocare</h2>
 
-    <div class="nav-group">
-      <p class="nav-group-label">Partita</p>
-      <button type="button" class="nav-item" data-view="master"><span class="nav-ico" aria-hidden="true">&#9875;</span>Plancia</button>
-      <button type="button" class="nav-item" data-view="archive"><span class="nav-ico" aria-hidden="true">&#128214;</span>Diario</button>
-      <button type="button" class="nav-item" data-view="print"><span class="nav-ico" aria-hidden="true">&#128424;&#65039;</span>Stampa</button>
-    </div>
+      <button type="button" class="btn-google" id="google-btn">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.4 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.9-6.1C.9 16.9 0 20.3 0 24s.9 7.1 2.5 10.5l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2.1 15.3-5.6l-7.1-5.5c-2 1.3-4.6 2.1-8.2 2.1-6.4 0-11.8-3.7-13.6-9l-7.9 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
+        Entra con Google
+      </button>
 
-    <button type="button" class="nav-item nav-help" data-tutorial-toggle aria-expanded="false" aria-controls="tutorial-overlay"><span class="nav-ico" aria-hidden="true">&#10067;</span>Guida</button>
-  </nav>
+      <div class="sep">oppure</div>
 
-  <section id="tutorial-overlay" class="tutorial-overlay no-print" role="dialog" aria-modal="true" aria-labelledby="tutorial-title" aria-hidden="true">
-    <div class="tutorial-backdrop" data-tutorial-close></div>
-    <div class="tutorial-panel">
-      <button type="button" class="tutorial-close" data-tutorial-close aria-label="Chiudi la guida">&#10005;</button>
-      <div class="tutorial-sidebar">
-        <p class="eyebrow">Prima partita</p>
-        <h2 id="tutorial-title">La rotta del Master</h2>
-        <p>Una guida sempre disponibile, senza interrompere la partita.</p>
-        <div id="tutorial-progress" class="tutorial-progress"></div>
-      </div>
-      <div id="tutorial-content" class="tutorial-content" aria-live="polite"></div>
-      <div class="tutorial-actions">
-        <button type="button" id="tutorial-prev" class="tutorial-nav-button">Indietro</button>
-        <span id="tutorial-counter"></span>
-        <button type="button" id="tutorial-next" class="tutorial-nav-button primary">Avanti</button>
-      </div>
+      <label for="email">Email</label>
+      <input id="email" type="email" name="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" name="password" autocomplete="current-password" required>
+      <button type="submit" class="btn-primary" id="submit-btn">Entra</button>
+
+      <p class="msg" id="msg"></p>
+    </form>
+
+    <!-- Login disattivato (config vuota) -->
+    <div id="nogate" hidden>
+      <h2>Accesso libero</h2>
+      <p class="msg">Il login non è configurato: puoi entrare direttamente.</p>
+      <button class="btn-primary" onclick="location.href='/gioco'">Entra nel gioco →</button>
     </div>
-  </section>
+  </div>
+
+  <p class="foot">Serve un invito. Contatta il Master per avere un accesso.</p>
 </div>
 
-<script src="vendor/gsap.min.js"></script>
+<script>
+(async function () {
+  const q = new URLSearchParams(location.search);
+  const msg = document.getElementById("msg");
+  const show = (id) => document.getElementById(id).hidden = false;
 
-<!-- Motore contenuti (registro). Non contiene contenuti di gioco. -->
-<script src="engine/pirati-core.js"></script>
+  if (!PIRATI_AUTH.enabled) { show("nogate"); return; }
 
-<!-- Cataloghi condivisi: premi, poteri, bestiario. -->
-<script src="catalog/premi.js"></script>
-<script src="catalog/poteri.js"></script>
-<script src="catalog/nemici.js"></script>
-<script src="catalog/eventi.js"></script>
+  // già loggato?
+  const user = await PIRATI_AUTH.currentUser();
+  if (user && !user.guest && PIRATI_AUTH.isAllowed(user.email)) {
+    show("already");
+    document.getElementById("already-who").textContent = "Sei entrato come " + user.email + ".";
+    document.getElementById("logout-btn").addEventListener("click", () => PIRATI_AUTH.signOut());
+    // se arrivi qui dal gioco senza sessione ma in realtà ce l'hai, prosegui
+    if (q.get("login") === "1") location.href = "/gioco";
+    return;
+  }
 
-<!-- Mappa dell'arcipelago. -->
-<script src="content/mappa.js"></script>
+  show("login");
+  if (q.get("vietato") === "1") { msg.className = "msg err"; msg.textContent = "Quell'account non è tra quelli autorizzati."; }
+  if (q.get("login") === "1") document.getElementById("email").focus();
 
-<!-- Pacchetti di quest. Per aggiungerne uno: copia un file, poi aggiungi qui una riga. -->
-<script src="content/pack-01-risveglio.js"></script>
+  document.getElementById("google-btn").addEventListener("click", async () => {
+    msg.className = "msg"; msg.textContent = "Ti porto su Google…";
+    try { await PIRATI_AUTH.signInWithGoogle(); }
+    catch (e) { msg.className = "msg err"; msg.textContent = e.message || String(e); }
+  });
 
-<script src="app.js"></script>
+  document.getElementById("login").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = true; msg.className = "msg"; msg.textContent = "Controllo…";
+    try {
+      await PIRATI_AUTH.signInWithPassword(document.getElementById("email").value, document.getElementById("password").value);
+      msg.className = "msg ok"; msg.textContent = "Fatto! Si salpa…";
+      location.href = "/gioco";
+    } catch (e) {
+      msg.className = "msg err";
+      msg.textContent = /invalid login/i.test(e.message) ? "Email o password sbagliate." : (e.message || String(e));
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
 </body>
 </html>
