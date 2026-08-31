@@ -16,6 +16,9 @@
       );
     } catch (e) {}
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
       color-scheme: dark;
@@ -23,16 +26,20 @@
       --ink: #f2e8d5;
       --panel: rgba(255,255,255,.05);
       --line: rgba(255,255,255,.14);
+      --font-display: "Fredoka", "Segoe UI", system-ui, Arial, sans-serif;
+      --font-body: "Nunito", "Segoe UI", system-ui, Arial, sans-serif;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
     body {
       min-height: 100vh;
-      font-family: Inter, "Segoe UI", system-ui, Arial, sans-serif;
+      font-family: var(--font-body);
+      font-size: 16px;
       color: var(--ink);
       background: linear-gradient(160deg, #0b3044, #061a29 75%);
       overflow-x: hidden;
     }
+    h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: .2px; }
     /* sfondo illustrato + velatura per la leggibilità */
     body::before {
       content: ""; position: fixed; inset: 0; z-index: -2;
@@ -59,19 +66,20 @@
     .brand-text.show { display: block; }
     .brand-text h1 { margin: 0; font-size: clamp(28px, 7vw, 42px); }
     .eyebrow {
-      color: var(--gold); font-size: 11px; font-weight: 900;
-      letter-spacing: .2em; text-transform: uppercase; margin: 0 0 12px;
+      font-family: var(--font-display);
+      color: var(--gold); font-size: 12px; font-weight: 600;
+      letter-spacing: .22em; text-transform: uppercase; margin: 0 0 12px;
     }
     .lead {
-      margin: 18px auto 0; max-width: 560px; font-size: 15px; line-height: 1.6;
-      color: rgba(255,255,255,.82);
+      margin: 18px auto 0; max-width: 560px; font-size: 16px; line-height: 1.65;
+      color: rgba(255,255,255,.85);
     }
 
     /* ---- giostra 3D della ciurma ---- */
     section { margin-top: 54px; }
     .sect-head { text-align: center; margin-bottom: 22px; }
     .sect-head h2 { margin: 0; font-size: clamp(20px, 4.5vw, 26px); }
-    .sect-head p { margin: 8px auto 0; max-width: 460px; font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,.7); }
+    .sect-head p { margin: 8px auto 0; max-width: 480px; font-size: 14.5px; line-height: 1.55; color: rgba(255,255,255,.74); }
 
     .scene {
       position: relative; height: 320px; margin: 0 auto;
@@ -96,7 +104,8 @@
       -webkit-user-drag: none; user-select: none;
     }
     .cell span {
-      font-size: 12px; font-weight: 800; letter-spacing: .04em;
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 600; letter-spacing: .02em;
       color: var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,.6);
     }
 
@@ -119,8 +128,8 @@
       background: var(--panel); backdrop-filter: blur(6px); text-align: center;
     }
     .step .ico { font-size: 30px; line-height: 1; }
-    .step h3 { margin: 10px 0 6px; font-size: 15px; }
-    .step p { margin: 0; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,.72); }
+    .step h3 { margin: 10px 0 6px; font-size: 16px; }
+    .step p { margin: 0; font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,.75); }
     .reassure {
       margin: 16px auto 0; max-width: 620px; text-align: center;
       font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,.78);
@@ -143,8 +152,8 @@
     }
     input:focus { outline: 2px solid var(--gold); border-color: transparent; }
     button {
-      width: 100%; font: inherit; font-weight: 800; cursor: pointer;
-      border: 0; border-radius: 11px; padding: 12px 16px; margin-top: 16px;
+      width: 100%; font-family: var(--font-display); font-size: 15px; font-weight: 600;
+      cursor: pointer; border: 0; border-radius: 11px; padding: 12px 16px; margin-top: 16px;
     }
     .btn-primary { background: var(--gold); color: #173449; }
     .btn-primary:hover { background: #ffd77d; }
