@@ -1,0 +1,6 @@
+# File utili nel repo ma da NON pubblicare
+dev-server.js
+comprimi-immagini.mjs
+tools/
+README.md
+content/_COME-SCRIVERE-UNA-QUEST.md

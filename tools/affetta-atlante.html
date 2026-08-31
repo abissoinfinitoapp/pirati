@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Affetta l'Atlante — ritratti singoli della ciurma</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 32px 24px 64px;
+    font: 15px/1.6 system-ui, -apple-system, Segoe UI, sans-serif;
+    background: #10262e; color: #ece0c4;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p.sub { color: #9db2ae; margin: 0 0 22px; }
+  .bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  button {
+    font: inherit; font-weight: 700;
+    border: 1px solid #56b6b3; border-radius: 8px;
+    background: #56b6b3; color: #06232a;
+    padding: 9px 16px; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: #9fe0dc; }
+  .status { color: #e2b458; font-size: 13px; align-self: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+  .cell {
+    background: rgba(255,255,255,.05); border: 1px solid #2a4148;
+    border-radius: 10px; padding: 12px; text-align: center;
+  }
+  .cell canvas { width: 100%; height: auto; border-radius: 6px; background: #06232a; display: block; }
+  .cell b { display: block; margin: 9px 0 2px; font-size: 13px; }
+  .cell code { font-size: 11px; color: #9db2ae; }
+  .cell a {
+    display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 700;
+    color: #06232a; background: #e2b458; border-radius: 6px; padding: 5px 12px; text-decoration: none;
+  }
+  .note { margin-top: 26px; font-size: 13px; color: #9db2ae; }
+  .note code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; color: #ece0c4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Affetta l'Atlante</h1>
+  <p class="sub">Taglia <code style="color:#9fe0dc">assets/pirati-character-atlas.png</code> nei 12 ritratti singoli della ciurma. Apri questa pagina dal server locale (<code style="color:#9fe0dc">node dev-server.js</code> → <code style="color:#9fe0dc">localhost:4173/tools/affetta-atlante.html</code>): serve per non far "sporcare" il canvas.</p>
+
+  <div class="bar">
+    <button id="all">⬇ Scarica tutti i 12</button>
+    <button class="ghost" id="reload">Ricarica</button>
+    <span class="status" id="status">Carico l'atlante…</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <p class="note">
+    Metti i file scaricati in <code>assets/ciurma/</code> (crea la cartella).
+    Il nome è già quello giusto: <code>luna.png</code>, <code>rocco.png</code>, ecc.
+    <br><br>
+    Nota: il gioco <b>non ha bisogno</b> di questi singoli — mostra già ogni pirata
+    ritagliando l'atlante grande con i CSS. Questi ti servono solo se vuoi
+    ritoccarli o rigenerarne uno alla volta.
+  </p>
+</div>
+
+<script>
+  // Ordine = DATA.characters in app.js. 4 colonne × 3 righe.
+  const CHARS = [
+    ["luna",   "Luna Occhio di Stella"],
+    ["rocco",  "Rocco Barilotto"],
+    ["mina",   "Mina Miccia Corta"],
+    ["tito",   "Tito Tre Denti"],
+    ["sofia",  "Sofia Ventoalto"],
+    ["nino",   "Nino Nodi"],
+    ["zoe",    "Capitanina Zoe"],
+    ["bruno",  "Bruno Pancia di Ferro"],
+    ["pepita", "Pepita Cercatesori"],
+    ["gigi",   "Gigi Pappagallo"],
+    ["nerina", "Nerina la Silenziosa"],
+    ["arturo", "Arturo Mezzabussola"]
+  ];
+  const COLS = 4, ROWS = 3;
+
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("status");
+  let cells = [];
+
+  function build() {
+    grid.innerHTML = "";
+    cells = [];
+    const img = new Image();
+    img.onload = () => {
+      const cw = img.naturalWidth / COLS;
+      const ch = img.naturalHeight / ROWS;
+      status.textContent = `Atlante ${img.naturalWidth}×${img.naturalHeight} · celle ${Math.round(cw)}×${Math.round(ch)}`;
+      CHARS.forEach(([id, name], i) => {
+        const col = i % COLS, row = Math.floor(i / COLS);
+        const cv = document.createElement("canvas");
+        cv.width = cw; cv.height = ch;
+        cv.getContext("2d").drawImage(img, col * cw, row * ch, cw, ch, 0, 0, cw, ch);
+
+        const wrap = document.createElement("div");
+        wrap.className = "cell";
+        const b = document.createElement("b"); b.textContent = name;
+        const c = document.createElement("code"); c.textContent = id + ".png";
+        const a = document.createElement("a"); a.textContent = "scarica";
+        a.download = id + ".png";
+        wrap.append(cv, b, c, a);
+        grid.append(wrap);
+
+        cv.toBlob((blob) => { a.href = URL.createObjectURL(blob); }, "image/png");
+        cells.push({ id, canvas: cv, link: a });
+      });
+    };
+    img.onerror = () => { status.textContent = "Non trovo l'atlante. Apri questa pagina dal server locale, non da file://"; };
+    img.src = "../assets/pirati-character-atlas.webp?" + Date.now();
+  }
+
+  document.getElementById("all").addEventListener("click", () => {
+    cells.forEach(({ canvas, id }, i) => {
+      setTimeout(() => {
+        canvas.toBlob((blob) => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = id + ".png";
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }, "image/png");
+      }, i * 250);
+    });
+  });
+  document.getElementById("reload").addEventListener("click", build);
+
+  build();
+</script>
+</body>
+</html>

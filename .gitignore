@@ -1,0 +1,16 @@
+# Dipendenze e build locali
+node_modules/
+package.json
+package-lock.json
+.vercel/
+
+# Sorgenti pesanti e backup — non vanno nel repo
+*.psd
+_png-originali/
+assets/maps/
+*.chn
+
+# Roba dell'assistente / editor
+.claude/
+.agents/
+.DS_Store
