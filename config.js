@@ -11,7 +11,9 @@
    ========================================================================== */
 
 window.PIRATI_CONFIG = {
-  assetBase: "assets",
+  // Immagini su R2 (bucket abisso-assets, cartella img/pirati/).
+  // Per lo sviluppo offline si può rimettere "assets".
+  assetBase: "https://assets.abissoinfinito.it/img/pirati",
 
   // Login (Supabase). Progetto "pirati" (org Postami).
   supabaseUrl: "https://abzawcwdubrakppobvyk.supabase.co",
