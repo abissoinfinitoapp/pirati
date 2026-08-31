@@ -10,6 +10,12 @@ _png-originali/
 assets/maps/
 *.chn
 
+# Segreti — MAI nel repo
+supabase/
+*client_secret*
+.env
+.env.*
+
 # Roba dell'assistente / editor
 .claude/
 .agents/
