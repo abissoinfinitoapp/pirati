@@ -2387,7 +2387,20 @@ function renderCrostone() {
   const c = state.crostone;
 
   const portrait = $("#crostone-portrait");
-  if (portrait && !portrait.src) portrait.src = window.PIRATI_ASSET("contendenti/pesce-crostone.webp");
+  if (portrait && !portrait.dataset.wired) {
+    portrait.dataset.wired = "1";
+    portrait.addEventListener("error", function () {
+      if (!portrait.dataset.fallback) {
+        // se la copia su CDN non c'è ancora, prova quella locale del sito
+        portrait.dataset.fallback = "1";
+        portrait.src = "assets/contendenti/pesce-crostone.webp";
+        return;
+      }
+      if (portrait.parentNode) portrait.parentNode.classList.add("missing");
+      portrait.remove();
+    });
+    portrait.src = window.PIRATI_ASSET("contendenti/pesce-crostone.webp");
+  }
 
   const totali = (PIRATI.words || []).length;
   const imparate = c.libro.length;
