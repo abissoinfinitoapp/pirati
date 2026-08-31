@@ -1,35 +1,56 @@
 # Pirati: Isole del Teschio d'Oro
 
-Struttura del gioco:
+Gioco di ruolo da **Master** per bambini (6-10 anni): l'adulto guida, la ciurma
+tira dadi fisici. Mappa dell'arcipelago, navigazione a dadi, incontri, avventure
+da leggere, carte (poteri, leggendarie, oggetti), boss. Un gioco spalla di Abisso.
 
-- `index.html`: app Master e sezione materiali stampabili.
-- `styles.css`: layout, plancia, carte e stampa.
-- `app.js`: flusso sessione, anti-farming, diario, salvataggio locale, premi e Gradi.
-- `engine/pirati-core.js`: motore modulare (registro pacchetti). Nessun contenuto di gioco.
-- `content/pack-*.js`: le avventure (isole + quest). Aggiungerne = copiare un file. Guida: `content/_COME-SCRIVERE-UNA-QUEST.md`.
-- `content/mappa.js`: l'arcipelago (9 isole, rotte di mare, caselle). Solo dati.
-- `catalog/premi.js`, `catalog/poteri.js`, `catalog/nemici.js`, `catalog/eventi.js`: bottino/trofei, poteri (carte/magie/armi/marchingegni), bestiario (10 contendenti + boss), carte rotta (eventi/tesori/razzie con scena e contesto).
-- `dev-server.js`: `node dev-server.js` per provare in locale su `http://localhost:4173` (aprire `index.html` da `file://` non carica i moduli).
+Nessun database per il gioco: la campagna vive nel `localStorage` del browser,
+con esportazione/importazione JSON dal Diario.
 
-L'app salva i progressi in `localStorage`.
-Nessun database, nessun server e nessuna build: puo essere pubblicata come file statici su Neocities.
+## File
 
-La sezione Diario include anche esportazione/importazione del salvataggio in JSON.
-Questo serve per spostare la campagna su un altro browser o recuperarla se il browser cancella i dati locali.
+| | |
+|---|---|
+| `index.html` | **home pubblica + login** |
+| `gioco.html` | il gioco (protetto dal login) |
+| `config.js` | **configurazione** (immagini, Supabase) — vedi sotto |
+| `auth.js` | login con Supabase Auth (lato browser) |
+| `app.js`, `styles.css` | logica e stile del gioco |
+| `engine/pirati-core.js` | motore contenuti modulare (nessun contenuto di gioco) |
+| `content/pack-*.js` | le avventure. Guida: `content/_COME-SCRIVERE-UNA-QUEST.md` |
+| `catalog/*.js` | premi, poteri, contendenti, eventi |
+| `assets/` | immagini (WebP) |
+| `vendor/` | gsap, supabase-js |
 
-## Ciclo di gioco
+## Sviluppo in locale
 
-1. Aggiungi 6-10 bambini nella sezione Ciurma.
-2. Avvia o continua il giorno nella Plancia Master.
-3. Usa Evento, Combattimento, Tesoro, Quest, Mercante o Riposo per avanzare.
-4. L'app propone caratteristica e soglia, ma i bambini tirano il d6 fisico.
-5. Inserisci nell'app il numero uscito sul dado per calcolare e registrare l'esito.
-6. Le azioni ripetute, specialmente tesori/mercante/riposo, aumentano il Pericolo.
-7. Stampa plancia e carte dalla sezione Stampa.
+```bash
+node dev-server.js      # -> http://localhost:4173
+```
+(aprire i file da `file://` non carica i moduli)
 
-## Bilanciamento iniziale
+## Configurazione — `config.js`
 
-- Sessione: 10-14 turni, pensata per circa 30 minuti.
-- Prove: dado fisico `1d6 + statistica + bonus` contro la soglia missione o nemico.
-- Anti-farming: cercare tesori troppe volte aumenta Pericolo e riduce valore narrativo.
-- Nessuna eliminazione: i fallimenti generano costo, complicazione o perdita di tempo.
+```js
+window.PIRATI_CONFIG = {
+  // Immagini: "assets" (locali) oppure un URL R2/CDN senza slash finale
+  assetBase: "assets",
+
+  // Login. Vuoti = login disattivato (chiunque entra).
+  supabaseUrl: "https://XXXX.supabase.co",
+  supabaseAnonKey: "sb_publishable_...",
+
+  // Solo queste email possono entrare. Vuoto = chiunque abbia un account.
+  allowedEmails: ["dipaolo1974@gmail.com"]
+};
+```
+
+## Deploy (Vercel)
+
+Sito statico, nessun build. `git push` → Vercel deploya. `vercel.json` gestisce
+cache immagini, header e clean URL. `.vercelignore` tiene fuori i file di sviluppo.
+
+## Strumenti (non pubblicati)
+
+- `comprimi-immagini.mjs` — PNG → WebP (`node comprimi-immagini.mjs`, poi `--pulisci`)
+- `tools/affetta-atlante.html` — taglia l'atlante nei 12 ritratti singoli
