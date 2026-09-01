@@ -164,42 +164,37 @@
     .foot a { color: rgba(255,255,255,.75); }
     [hidden] { display: none !important; }
 
-    /* ---- il gioco per i grandi: Abisso Infinito ---- */
+    /* ---- il gioco per i grandi: Abisso Infinito (immagine + pulsante trasparente) ---- */
     .abisso {
-      margin: 44px auto 0; max-width: 680px;
-      border: 1px solid rgba(212,154,76,.32); border-radius: 20px;
-      padding: 32px 26px;
-      background: linear-gradient(180deg, rgba(8,8,8,.9), rgba(11,7,4,.92));
+      position: relative;
+      margin: 44px auto 0;
+      max-width: 820px;
+      line-height: 0;
+    }
+    .abisso-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 16px;
       box-shadow: 0 24px 60px rgba(0,0,0,.55);
-      text-align: center;
     }
-    .abisso .mark {
-      display: inline-grid; place-items: center; width: 46px; height: 46px;
-      border: 1px solid rgba(212,154,76,.5); color: #d49a4c; border-radius: 10px;
-      font-family: var(--font-display); font-weight: 700; letter-spacing: .04em;
-      margin-bottom: 14px;
+    /* pulsante invisibile sopra il "Discendi nell'Abisso" disegnato nell'immagine */
+    .abisso-btn {
+      position: absolute;
+      left: 31.5%;
+      width: 37%;
+      top: 77.5%;
+      height: 8.6%;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .15s, box-shadow .15s;
     }
-    .abisso .kick {
-      color: #d49a4c; font-family: var(--font-display); font-weight: 600;
-      font-size: 12px; letter-spacing: .18em; text-transform: uppercase; margin: 0 0 8px;
+    .abisso-btn:hover,
+    .abisso-btn:focus-visible {
+      outline: none;
+      background: rgba(243,199,111,.14);
+      box-shadow: 0 0 0 2px rgba(243,199,111,.7), 0 0 24px rgba(243,199,111,.35);
     }
-    .abisso h2 { margin: 0; font-size: clamp(20px, 4.5vw, 26px); color: #f2e7d5; }
-    .abisso .body { margin: 14px auto 0; max-width: 560px; font-size: 14.5px; line-height: 1.65; color: #cdb89d; }
-    .abisso .body b { color: #f2e7d5; }
-    .abisso ul {
-      list-style: none; padding: 0; margin: 18px auto 0; max-width: 470px;
-      display: grid; gap: 8px; text-align: left;
-    }
-    .abisso li { font-size: 13.5px; line-height: 1.5; color: #dccab1; padding-left: 22px; position: relative; }
-    .abisso li::before { content: "◆"; position: absolute; left: 0; top: 1px; color: #d49a4c; font-size: 11px; }
-    .abisso .cta {
-      display: inline-block; width: auto; margin-top: 22px;
-      background: #d49a4c; color: #120d08; text-decoration: none;
-      font-family: var(--font-display); font-weight: 600; font-size: 15px;
-      padding: 12px 24px; border-radius: 11px;
-    }
-    .abisso .cta:hover { background: #ffb14d; }
-    .abisso .tiny { margin: 12px 0 0; font-size: 11.5px; color: rgba(255,255,255,.4); }
 
     @media (max-width: 640px) {
       .steps { grid-template-columns: 1fr; }
@@ -320,23 +315,8 @@
   </div>
 
   <section class="abisso" aria-label="Abisso Infinito">
-    <div class="mark" aria-hidden="true">AI</div>
-    <p class="kick">Il gioco per i grandi</p>
-    <h2>Questo è il ponte dei piccoli. Sotto, c'è l'Abisso.</h2>
-    <p class="body">
-      Pirati è il gioco-spalla per bambini. Nasce da <b>Abisso Infinito</b>: un gioco di ruolo
-      fantasy digitale, cupo e strategico, pensato per adulti. Il Master apre una <b>sessione
-      privata nel browser</b> e invita fino a 16 giocatori — mappa vivente, dadi, combattimenti,
-      mercati e una progressione che resta anche dopo la serata. Discord per le voci, tutto il
-      resto è dentro il gioco.
-    </p>
-    <ul>
-      <li>Sessioni condivise, sincronizzate in tempo reale per tutto il tavolo.</li>
-      <li>Il Master guida il destino, i giocatori scelgono quanto osare.</li>
-      <li>Campagne che continuano tra una serata e l'altra: l'Abisso non dimentica.</li>
-    </ul>
-    <a class="cta" href="https://abissoinfinito.it" target="_blank" rel="noopener">Scendi nell'Abisso →</a>
-    <p class="tiny">Non si entra nell'Abisso. Si viene chiamati.</p>
+    <img id="abisso-img" class="abisso-img" alt="Se hai 10 anni o più e ti è piaciuta questa avventura, amerai Abisso Infinito: un gioco cooperativo online dove il Master apre una sessione privata nel browser per fino a 16 giocatori — mappa vivente, mostri, dadi, mercati e una progressione che continua anche dopo la serata. Puoi anche creare avventure personalizzate con mostri e quest tue.">
+    <a class="abisso-btn" href="https://abissoinfinito.it" target="_blank" rel="noopener" aria-label="Discendi nell'Abisso — vai ad Abisso Infinito"></a>
   </section>
 
 </div>
@@ -357,6 +337,15 @@
     document.getElementById("brand-text").classList.add("show");
   });
   logo.src = PIRATI_ASSET("sfondi/logo.webp");
+
+  /* pannello Abisso Infinito (immagine con pulsante trasparente sopra) */
+  const abissoImg = document.getElementById("abisso-img");
+  if (abissoImg) {
+    abissoImg.addEventListener("error", () => {
+      if (!abissoImg.dataset.fb) { abissoImg.dataset.fb = "1"; abissoImg.src = "assets/sfondi/abisso.webp"; }
+    });
+    abissoImg.src = PIRATI_ASSET("sfondi/abisso.webp");
+  }
 
   /* mostri */
   const foes = document.getElementById("foes");
