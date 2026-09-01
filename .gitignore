@@ -11,6 +11,9 @@ assets/maps/
 assets/**/*.png
 *.chn
 
+# Documenti di progettazione interni — non vanno nel repo
+quest_json/
+
 # Segreti — MAI nel repo
 supabase/
 *client_secret*
