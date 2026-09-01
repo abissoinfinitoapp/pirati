@@ -141,8 +141,79 @@ window.PIRATI = (function () {
       rewards,
       growth: quest.growth || "",
       fail: quest.fail || "",
-      escape: quest.escape || ""
+      escape: quest.escape || "",
+      storyFlow: normalizeStoryFlow(quest.storyFlow, where)
     };
+  }
+
+  /* ---------- avventura guidata (storyFlow) --------------------------------
+     Opzionale. Struttura definita nel contratto tecnico
+     quest_json/quest-director-v2-tempio-contratto-tecnico.json:
+       { start, progression: [ { scene_id, phase_flow, scene:{read,ask,hints,
+         rescue,masterTip}, interaction?, choices?[{id,label,reaction_title,
+         reaction,next}], resolution?{policy,destiny,destiny_screen,dice,group},
+         outcomes?{success,fail_forward}, outcome?, completion? } ], reward_screen? }
+     Il motore fa solo indicizzazione + validazione: passa le scene COSÌ COME
+     SONO (nessuna riscrittura di logica narrativa). ------------------------ */
+  const STORY_POLICIES = ["narrative", "dice", "group", "destiny", "destiny_group_or_dice"];
+
+  function normalizeStoryFlow(flow, where) {
+    if (flow == null) return null;
+    const prog = Array.isArray(flow.progression) ? flow.progression : null;
+    if (!prog || !prog.length) { warn(`${where}: 'storyFlow' senza 'progression' (array di scene).`); return null; }
+
+    const scenes = {};
+    const order = [];
+    prog.forEach((entry, i) => {
+      const id = entry.scene_id || entry.id;
+      if (!id) { warn(`${where}: storyFlow scena #${i} senza 'scene_id'.`); return; }
+      if (scenes[id]) { warn(`${where}: storyFlow scena duplicata "${id}".`); return; }
+      const clone = JSON.parse(JSON.stringify(entry));
+      clone.scene_id = id;
+      clone.id = id;              // alias comodo per app.js
+      scenes[id] = clone;
+      order.push(id);
+
+      const sc = clone.scene || {};
+      if (sc.ask && (!Array.isArray(sc.hints) || !sc.hints.length))
+        warn(`${where}: storyFlow scena "${id}" ha 'ask' ma nessun 'hints'.`);
+      if (sc.ask && !sc.rescue)
+        warn(`${where}: storyFlow scena "${id}" ha 'ask' ma nessun 'rescue'.`);
+
+      const r = clone.resolution;
+      if (r) {
+        const policy = String(r.policy || "").toLowerCase();
+        if (!STORY_POLICIES.includes(policy))
+          warn(`${where}: storyFlow scena "${id}" resolution.policy "${r.policy}" sconosciuta.`);
+        const needsDice = policy === "dice" || policy === "destiny" || policy === "destiny_group_or_dice";
+        if (needsDice && !(r.dice && STATS.includes(String(r.dice.stat || "").toLowerCase())))
+          warn(`${where}: storyFlow scena "${id}" policy "${policy}" richiede resolution.dice {stat,target}.`);
+      }
+      const ways = (clone.choices ? 1 : 0) + (clone.outcomes ? 1 : 0) + (clone.outcome ? 1 : 0) + (clone.completion ? 1 : 0);
+      if (!ways) warn(`${where}: storyFlow scena "${id}" senza 'choices', 'outcomes', 'outcome' né 'completion'.`);
+    });
+
+    const start = flow.start || order[0];
+    if (!scenes[start]) warn(`${where}: storyFlow.start "${start}" non è una scena.`);
+
+    const nextsOf = (s) => {
+      const outs = [];
+      (s.choices || []).forEach((c) => { if (!c.next) warn(`${where}: storyFlow scena "${s.scene_id}" scelta "${c.id}" senza 'next'.`); outs.push(c.next); });
+      if (s.outcomes) { ["success", "fail_forward"].forEach((k) => { if (s.outcomes[k]) outs.push(s.outcomes[k].next); }); }
+      if (s.outcome) outs.push(s.outcome.next);
+      return outs.filter(Boolean);
+    };
+    const reachable = new Set();
+    const visit = (id) => {
+      if (!id || reachable.has(id)) return;
+      if (!scenes[id]) { warn(`${where}: storyFlow collegamento a scena inesistente "${id}".`); return; }
+      reachable.add(id);
+      nextsOf(scenes[id]).forEach(visit);
+    };
+    visit(start);
+    order.forEach((id) => { if (!reachable.has(id)) warn(`${where}: storyFlow scena "${id}" non raggiungibile da "${start}".`); });
+
+    return { start, order, scenes, rewardScreen: flow.reward_screen || flow.rewardScreen || null };
   }
 
   function resortQuests() {
@@ -388,7 +459,7 @@ window.PIRATI = (function () {
     const lines = [
       `Pacchetti: ${state.packs.length}`,
       `Isole: ${state.islands.length}`,
-      `Quest: ${state.quests.length}`,
+      `Quest: ${state.quests.length} (${state.quests.filter((q) => q.storyFlow).length} guidate)`,
       `Premi a catalogo: ${state.rewardById.size}`,
       `Poteri a catalogo: ${state.powers.length}`,
       `Nemici: ${state.enemies.length} + ${state.bosses.length} boss`,

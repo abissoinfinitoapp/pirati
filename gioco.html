@@ -33,6 +33,17 @@
   <main>
     <section id="view-mappa" class="view is-active" aria-labelledby="mappa-title">
       <section class="map-page">
+        <details id="map-parola" class="map-parola no-print">
+          <summary class="map-parola-summary">
+            <span class="map-parola-ico" aria-hidden="true">&#128033;</span>
+            <span class="map-parola-head">
+              <strong>La parola del Pesce Crostone</strong>
+              <small id="map-parola-status">&mdash;</small>
+            </span>
+            <span class="map-parola-chev" aria-hidden="true">&#9662;</span>
+          </summary>
+          <div id="map-parola-body" class="map-parola-body"></div>
+        </details>
         <div class="map-topbar">
           <div>
             <p class="eyebrow">Rotta della ciurma</p>
@@ -78,107 +89,6 @@
       </section>
     </section>
 
-    <section id="view-master" class="view" aria-labelledby="master-title">
-      <div class="dashboard-grid">
-        <section class="panel mission-panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Sessione</p>
-              <h2 id="master-title">Plancia Master</h2>
-            </div>
-            <button type="button" id="new-session-btn" class="primary-button">Nuovo giorno</button>
-          </div>
-
-          <div class="mission-card" id="active-mission"></div>
-
-          <div class="status-grid">
-            <div class="status-box">
-              <span>Giorno</span>
-              <strong id="day-value">1</strong>
-            </div>
-            <div class="status-box">
-              <span>Turno</span>
-              <strong id="turn-value">0/12</strong>
-            </div>
-            <div class="status-box danger-box">
-              <span>Pericolo</span>
-              <strong id="danger-value">0</strong>
-            </div>
-            <div class="status-box">
-              <span>Fama</span>
-              <strong id="fame-value">0</strong>
-            </div>
-          </div>
-
-          <div class="danger-track" aria-label="Tracciato pericolo">
-            <div id="danger-fill"></div>
-          </div>
-
-          <div class="action-grid" aria-label="Azioni Master">
-            <button type="button" class="action-button" data-action="event">Evento</button>
-            <button type="button" class="action-button" data-action="combat">Combattimento</button>
-            <button type="button" class="action-button" data-action="treasure">Cerca tesoro</button>
-            <button type="button" class="action-button" data-action="quest">Quest veloce</button>
-            <button type="button" class="action-button" data-action="market">Mercante</button>
-            <button type="button" class="action-button" data-action="rest">Riposo</button>
-          </div>
-        </section>
-
-        <aside class="panel result-panel" aria-live="polite">
-          <div class="panel-header compact">
-            <div>
-              <p class="eyebrow">Esito</p>
-              <h2>Cosa succede</h2>
-            </div>
-            <button type="button" id="undo-btn" class="secondary-button">Annulla</button>
-          </div>
-          <div id="result-card" class="result-card"></div>
-          <div class="dice-box">
-            <div class="dice-intro">
-              <p class="eyebrow">Dadi fisici</p>
-              <h3>Tiro dei bambini</h3>
-              <p id="roll-prompt">L'app propone la prova, i bambini tirano il d6 sul tavolo.</p>
-            </div>
-            <div>
-              <label for="dice-stat">Tiro prova</label>
-              <select id="dice-stat">
-                <option value="coraggio">Coraggio</option>
-                <option value="astuzia">Astuzia</option>
-                <option value="fortuna">Fortuna</option>
-              </select>
-            </div>
-            <div>
-              <label for="dice-bonus">Bonus</label>
-              <input id="dice-bonus" type="number" min="-3" max="6" value="0">
-            </div>
-            <div>
-              <label for="dice-target">Soglia</label>
-              <input id="dice-target" type="number" min="2" max="14" value="5">
-            </div>
-          </div>
-          <div class="physical-dice" aria-label="Risultato dado fisico">
-            <button type="button" data-die="1">1</button>
-            <button type="button" data-die="2">2</button>
-            <button type="button" data-die="3">3</button>
-            <button type="button" data-die="4">4</button>
-            <button type="button" data-die="5">5</button>
-            <button type="button" data-die="6">6</button>
-          </div>
-          <div id="dice-result" class="dice-result">Seleziona un pirata, scegli la prova, poi premi il numero uscito sul dado fisico.</div>
-        </aside>
-      </div>
-
-      <section class="panel crew-strip">
-        <div class="panel-header compact">
-          <div>
-            <p class="eyebrow">Giocatori</p>
-            <h2>Ciurma attiva</h2>
-          </div>
-        </div>
-        <div id="active-crew" class="crew-cards"></div>
-      </section>
-    </section>
-
     <section id="view-crew" class="view" aria-labelledby="crew-title">
       <div class="panel">
         <div class="panel-header">
@@ -220,7 +130,11 @@
           <button type="button" id="character-next" class="carousel-arrow" aria-label="Personaggio successivo">&#8594;</button>
         </div>
         <p class="carousel-hint">Usa le frecce, i nomi o trascina le carte</p>
-        <div id="character-gallery" class="character-gallery" aria-label="Tutte le carte personaggio"></div>
+        <div class="gallery-block">
+          <p class="gallery-label">Tutte le carte &middot; tocca una carta per ingrandirla e leggerla</p>
+          <div id="character-gallery" class="character-gallery" aria-label="Tutte le carte personaggio"></div>
+          <figure id="character-card-viewer" class="character-card-viewer" hidden></figure>
+        </div>
       </section>
     </section>
 
@@ -258,29 +172,6 @@
           </div>
         </div>
         <div id="quest-master-sheet" class="quest-master-sheet" aria-live="polite"></div>
-      </section>
-    </section>
-
-    <section id="view-crostone" class="view" aria-labelledby="crostone-title">
-      <section class="crostone-page">
-        <div class="crostone-hero">
-          <div class="crostone-hero-img">
-            <img alt="Il Pesce Crostone" id="crostone-portrait" loading="lazy">
-          </div>
-          <div>
-            <p class="eyebrow">Il lasciapassare per l'avventura</p>
-            <h2 id="crostone-title">Il Pesce Crostone</h2>
-            <p>Ogni giorno tira fuori una parola difficile. Fatela spiegare alla ciurma: se ci arrivano, monete e lasciapassare. Se no, finisce sul Taccuino Nero e domani si ripete.</p>
-            <div class="crostone-counters" id="crostone-counters"></div>
-          </div>
-        </div>
-        <div id="crostone-ripasso" aria-live="polite"></div>
-        <div id="crostone-oggi" aria-live="polite"></div>
-        <div class="crostone-books">
-          <div id="crostone-taccuino"></div>
-          <div id="crostone-libro"></div>
-        </div>
-        <p id="crostone-message" class="item-message" aria-live="polite"></p>
       </section>
     </section>
 
@@ -381,17 +272,20 @@
           </div>
           <button type="button" id="print-btn" class="primary-button">Stampa</button>
         </div>
-        <p class="helper-text">Stampa questa sezione: contiene plancia, carte personaggio, carte evento, tesoro e nemici.</p>
+        <p class="helper-text">Stampa questa sezione: contiene le regole rapide, le carte personaggio, potere e oggetto, le carte evento, tesoro e nemici.</p>
       </div>
 
       <article class="print-sheet board-sheet">
-        <h2>Plancia: Arcipelago del Teschio d'Oro</h2>
+        <h2>Regole rapide da tavolo</h2>
         <div class="dice-rule-card">
-          <h3>Regola dei Dadi</h3>
-          <p>Quando il Master chiede una prova: scegli un pirata, tira 1d6 fisico, aggiungi Coraggio, Astuzia o Fortuna, poi confronta con la Soglia.</p>
-          <p><strong>Successo:</strong> ottieni l'effetto buono. <strong>Fallimento:</strong> scegli un costo: Pericolo +1, perdi tempo, perdi una moneta o arriva una complicazione.</p>
+          <h3>La prova con i dadi</h3>
+          <p>Quando serve una prova: ogni pirata in gioco tira 1d6 e aggiunge la sua caratteristica (Coraggio, Astuzia o Fortuna). La <strong>media</strong> dei risultati deve raggiungere la Soglia.</p>
+          <p><strong>Riuscita:</strong> l'effetto buono. <strong>Complicazione:</strong> la storia va avanti lo stesso, con un costo — di solito Pericolo +1, una scorciatoia storta o un guaio buffo.</p>
         </div>
-        <div id="print-board" class="print-board"></div>
+        <div class="dice-rule-card">
+          <h3>Il Pesce Crostone</h3>
+          <p>Ogni giorno una parola difficile: se la ciurma la spiega, prende monete e il <strong>lasciapassare</strong> (+1 miglio alla prossima navigazione). Se no, va sul Taccuino Nero e si ripete domani.</p>
+        </div>
       </article>
 
       <article class="print-sheet">
@@ -433,7 +327,6 @@
       <p class="nav-group-label">Avventura</p>
       <button type="button" class="nav-item is-active" data-view="mappa"><span class="nav-ico" aria-hidden="true">&#128506;&#65039;</span>Mappa</button>
       <button type="button" class="nav-item" data-view="quests"><span class="nav-ico" aria-hidden="true">&#11088;</span>Quest</button>
-      <button type="button" class="nav-item" data-view="crostone"><span class="nav-ico" aria-hidden="true">&#128033;</span>Parola</button>
       <button type="button" class="nav-item" data-view="bestiario"><span class="nav-ico" aria-hidden="true">&#128121;</span>Bestiario</button>
     </div>
 
@@ -446,11 +339,11 @@
 
     <div class="nav-group">
       <p class="nav-group-label">Partita</p>
-      <button type="button" class="nav-item" data-view="master"><span class="nav-ico" aria-hidden="true">&#9875;</span>Plancia</button>
       <button type="button" class="nav-item" data-view="archive"><span class="nav-ico" aria-hidden="true">&#128214;</span>Diario</button>
       <button type="button" class="nav-item" data-view="print"><span class="nav-ico" aria-hidden="true">&#128424;&#65039;</span>Stampa</button>
     </div>
 
+    <button type="button" class="nav-item" id="sfx-toggle" aria-pressed="true"><span class="nav-ico" aria-hidden="true">&#128266;</span><span id="sfx-label">Suoni</span></button>
     <button type="button" class="nav-item nav-help" data-tutorial-toggle aria-expanded="false" aria-controls="tutorial-overlay"><span class="nav-ico" aria-hidden="true">&#10067;</span>Guida</button>
     <button type="button" class="nav-item nav-logout" id="logout-btn" hidden><span class="nav-ico" aria-hidden="true">&#8618;</span><span id="logout-label">Esci</span></button>
   </nav>
@@ -473,12 +366,15 @@
       </div>
     </div>
   </section>
+
+  <div id="card-magnifier" class="card-magnifier no-print" hidden aria-live="polite"></div>
 </div>
 
 <script src="vendor/gsap.min.js"></script>
 
 <!-- Motore contenuti (registro). Non contiene contenuti di gioco. -->
 <script src="engine/pirati-core.js"></script>
+<script src="engine/sfx.js"></script>
 
 <!-- Cataloghi condivisi: premi, poteri, bestiario. -->
 <script src="catalog/premi.js"></script>

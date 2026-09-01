@@ -121,53 +121,6 @@ const DATA = {
       goal: "Risolvi tre situazioni diverse con un'invenzione."
     }
   ],
-  missions: [
-    {
-      id: "mappa-strappata",
-      title: "La Mappa Strappata",
-      difficulty: 5,
-      turns: 12,
-      text: "Tre pezzi di mappa sono nascosti tra porto, giungla e grotta. Servono almeno due pezzi per scoprire la rotta.",
-      win: "+2 Fama e un tesoro raro se trovano almeno due indizi.",
-      fail: "La mappa finisce a una ciurma rivale. Domani il primo combattimento sara piu duro."
-    },
-    {
-      id: "pappagallo-scomparso",
-      title: "Il Pappagallo Scomparso",
-      difficulty: 4,
-      turns: 10,
-      text: "Un pappagallo conosce una parola segreta. Va recuperato prima che impari a insultare il Governatore.",
-      win: "+1 Fama e un aiuto gratuito in una prova di Astuzia.",
-      fail: "Il pappagallo rivela dove si trova la nave: Pericolo iniziale +2 domani."
-    },
-    {
-      id: "forte-corallo",
-      title: "Il Forte di Corallo",
-      difficulty: 6,
-      turns: 12,
-      text: "Un vecchio forte contiene una chiave. Si puo entrare con forza, furtivita o trattativa.",
-      win: "+3 Fama e sblocca le missioni con porte sigillate.",
-      fail: "Il forte chiude le saracinesche. Serve pagare 3 monete per riprovare."
-    },
-    {
-      id: "campana-abissi",
-      title: "La Campana degli Abissi",
-      difficulty: 7,
-      turns: 14,
-      text: "Una campana sommersa sveglia creature marine ogni volta che il Pericolo cresce.",
-      win: "+3 Fama e una protezione contro tempeste.",
-      fail: "Le onde spingono la nave fuori rotta: perdono un tesoro comune."
-    },
-    {
-      id: "duello-capitano",
-      title: "Duello con Capitan Salsedine",
-      difficulty: 7,
-      turns: 12,
-      text: "Un capitano rivale sfida la ciurma. I bambini possono batterlo con duello, trucco o colpo di scena.",
-      win: "+4 Fama e una carta trofeo.",
-      fail: "Il rivale ruba il prossimo tesoro trovato."
-    }
-  ],
   events: [
     { title: "Nebbia Fitta", type: "Mare", text: "La prossima prova di Astuzia ha +1, ma se fallisce il Pericolo sale di 2." },
     { title: "Scimmia Ladra", type: "Isola", text: "Ruba una moneta. Con Fortuna 6+ la riprende e trova anche un indizio." },
@@ -215,36 +168,6 @@ const DATA = {
     { title: "Ombra del Galeone", threat: 10, reward: "Tesoro epico", trick: "Perde forza se il Pericolo scende sotto 5." },
     { title: "Polpo Furbo", threat: 9, reward: "Perla nera", trick: "Afferra oggetti: gli oggetti usati hanno il 50% di rischio." },
     { title: "Marina Reale", threat: 11, reward: "Fama +3", trick: "Compare se la ciurma farma troppo tesoro." }
-  ],
-  quests: [
-    "Convincere un mercante a fidarsi della ciurma.",
-    "Attraversare un ponte che scricchiola senza urlare.",
-    "Decifrare tre simboli su una porta antica.",
-    "Aiutare un abitante dell'isola e scegliere una ricompensa.",
-    "Recuperare una bandiera prima che finisca in mare.",
-    "Fare pace tra due pirati che vogliono lo stesso tesoro.",
-    "Inventare una parola d'ordine e usarla al momento giusto.",
-    "Spostare un masso senza usare solo la forza."
-  ],
-  board: [
-    ["Porto Calmo", "porto", "Compra oggetti e scegli missioni."],
-    ["Baia delle Vele", "mare", "Prova di navigazione."],
-    ["Scoglio Rosso", "pericolo", "Evento mare obbligatorio."],
-    ["Spiaggia X", "tesoro", "Cerca tesoro una volta."],
-    ["Giungla Fitta", "pericolo", "Trappola o quest."],
-    ["Grotta Umida", "tesoro", "Tesoro con Pericolo +1."],
-    ["Villaggio", "porto", "Riposo o trattativa."],
-    ["Rovine", "pericolo", "Prova Astuzia."],
-    ["Cascata", "mare", "Scorciatoia se Fortuna 6+."],
-    ["Forte Corallo", "pericolo", "Nemico o chiave."],
-    ["Laguna Blu", "mare", "Riduci Pericolo di 1."],
-    ["Isola Teschio", "tesoro", "Tesoro raro se missione attiva."],
-    ["Relitto", "tesoro", "Oggetto comune o nemico."],
-    ["Palude", "pericolo", "Pericolo +1 se si ripete azione."],
-    ["Ponte Rotto", "pericolo", "Serve aiuto di gruppo."],
-    ["Mercato", "porto", "Scambia monete e oggetti."],
-    ["Tempesta", "mare", "Turno extra o danno."],
-    ["Vulcano", "pericolo", "Ricompensa alta, rischio alto."]
   ]
 };
 
@@ -312,12 +235,62 @@ const SPECIAL_ITEMS = {
 };
 
 const TUTORIAL_STEPS = [
-  { icon: "☠", kicker: "Passo 1 · Preparazione", title: "Crea la ciurma", text: "Apri Giocatori → Ciurma. Inserisci il nome di ogni bambino e assegna un pirata diverso. Da 6 a 10 giocatori è il gruppo ideale.", tip: "Lascia scegliere il personaggio guardando prima i ritratti: l'identificazione rende la storia più coinvolgente." },
-  { icon: "⚓", kicker: "Passo 2 · Inizio", title: "Apri un nuovo giorno", text: "Vai nella Plancia Master e premi Nuovo giorno. L'app sceglie la missione, mostra il numero di turni e azzera gli oggetti speciali.", tip: "Leggi ad alta voce il testo della missione e chiedi alla ciurma quale rotta vuole seguire." },
-  { icon: "✦", kicker: "Passo 3 · Turno", title: "Scegli cosa accade", text: "Usa Evento, Combattimento, Cerca tesoro, Quest, Mercante o Riposo. Ogni scelta fa avanzare la giornata e prepara una prova.", tip: "Non cercare la scelta perfetta: segui l'idea più divertente proposta dai bambini." },
-  { icon: "⚄", kicker: "Passo 4 · Prova", title: "Fate rotolare il dado vero", text: "Seleziona il bambino che agisce. Lui tira 1d6 sul tavolo; tu inserisci il numero uscito. L'app aggiunge Coraggio, Astuzia o Fortuna e registra l'esito.", tip: "Un fallimento non elimina mai un pirata: introduce un costo, un guaio o una nuova possibilità narrativa." },
-  { icon: "❖", kicker: "Passo 5 · Carte", title: "Ricorda gli oggetti", text: "Apri Giocatori → Oggetti. Ogni membro ha tre carte personali, utilizzabili una volta nel giorno. Premi Usa questa carta quando entra in gioco.", tip: "Invita i bambini a descrivere come impiegano l'oggetto: l'effetto è una scintilla per inventare la scena." },
-  { icon: "✎", kicker: "Passo 6 · Chiusura", title: "Conserva l'avventura", text: "Nel menu Master trovi Quest, Diario e Stampa. Quest prepara la scena, il Diario conserva ogni scelta e Stampa crea i materiali fisici.", tip: "Chiudi la sessione con una domanda: qual è stato il momento più coraggioso o più buffo della giornata?" }
+  {
+    icon: "🎭",
+    kicker: "Passo 1 · Il tuo ruolo",
+    title: "Sei il capitano-regista",
+    text: "Tu non fai l'arbitro: fai il regista. L'app ti dà sempre la prossima frase da leggere, la domanda da fare, la reazione del mondo. Le idee, le soluzioni e le scelte arrivano dalla ciurma. Non esiste un modo sbagliato di giocare.",
+    tip: "Quando un bambino propone qualcosa di assurdo, rispondi «sì, e...» invece di «no». La storia va dove va la ciurma."
+  },
+  {
+    icon: "☠",
+    kicker: "Passo 2 · Prepara la ciurma",
+    title: "Ogni bambino sceglie un pirata",
+    text: "Apri Giocatori. Scrivi il nome di ogni bambino e assegnagli un pirata: ha tre caratteristiche (Coraggio, Astuzia, Fortuna) e un potere speciale. Da 6 a 10 giocatori è l'ideale. Tocca una carta per vederla grande e leggerla. Se hai fretta, usa «Ciurma di prova».",
+    tip: "Fai scegliere il pirata guardando prima i ritratti: se un bambino si identifica col suo personaggio, partecipa di più."
+  },
+  {
+    icon: "📅",
+    kicker: "Passo 3 · Una giornata di scuola",
+    title: "Un'avventura, circa un'ora",
+    text: "Vai in Quest: il Piano di Bordo in cima ti propone l'avventura di oggi e ti fa «riprendere da dove eravate». Alla fine premi «Chiudi la giornata»: il calendario avanza (lunedì → venerdì) e si preparano le cose del giorno dopo.",
+    tip: "Apri sempre con «dove eravamo rimasti?» e chiudi con «qual è stato il momento più bello o più buffo?»."
+  },
+  {
+    icon: "🐟",
+    kicker: "Passo 4 · La parola del giorno",
+    title: "Il Pesce Crostone",
+    text: "In cima alla Mappa c'è un pannello a scomparsa. Ogni giorno il Pesce Crostone tira fuori una parola difficile: fatela spiegare alla ciurma con parole loro. Se ci arrivano: monete e il lasciapassare, che spinge le vele di +1 miglio alla prossima navigazione. Se no, finisce sul Taccuino Nero e domani si ripete.",
+    tip: "Apri «Mostra il significato (per il Master)» solo dopo che i bambini ci hanno provato davvero."
+  },
+  {
+    icon: "🗺️",
+    kicker: "Passo 5 · La mappa",
+    title: "La ciurma naviga unita",
+    text: "Sulla mappa c'è una sola pedina per tutto il gruppo. Dal Porto scegliete la rotta, poi TUTTI i pirati in gioco tirano 1d6: la media dei tiri sono le miglia. La nave si muove da sola. Se si ferma su un incontro (mostro, tesoro, evento) o su un'isola con un'avventura, lo risolvete lì.",
+    tip: "I bambini tirano il dado vero sul tavolo; tu premi solo il numero uscito. Falli tirare tutti: gli piace comunque."
+  },
+  {
+    icon: "📖",
+    kicker: "Passo 6 · L'avventura guidata",
+    title: "Una scena per volta",
+    text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda (con spunti pronti e un «se nessuno parte»), 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
+    tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Gli spunti servono a te, non ai bambini: usali solo se serve."
+  },
+  {
+    icon: "🎲",
+    kicker: "Passo 7 · Il Destino e i dadi",
+    title: "Fallire vuol dire andare avanti diversi",
+    text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
+    tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
+  },
+  {
+    icon: "🏆",
+    kicker: "Passo 8 · Come cresce la ciurma",
+    title: "Carte, Potenza, Gradi",
+    text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte finiscono nel Baule dei Poteri (Tesoro): durante una prova puoi giocarne una — toccala per ingrandirla, leggila, poi «Gioca». Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
+    tip: "Alla schermata dei premi leggi ad alta voce i numeri che salgono: monete, Potenza, Grado. È il momento che i bambini aspettano."
+  }
 ];
 
 /* Isole e quest arrivano dal motore modulare (engine/pirati-core.js).
@@ -376,18 +349,11 @@ const defaultState = {
     revealedQuestId: null,
     completedQuestIds: [],
     supplies: 8,
-    resolution: null
+    resolution: null,
+    story: null   // avventura guidata in corso: { questId, sceneId, notes{}, choices{}, destiny{}, rolls{}, resolved{} }
   },
   session: {
-    missionId: "mappa-strappata",
-    turn: 0,
-    danger: 0,
-    maxTurns: 12,
-    repeatedAction: "",
-    repeatedCount: 0,
-    searchedZones: 0,
-    current: null,
-    history: []
+    danger: 0   // Pericolo condiviso: mappa, Barbabisso, effetti delle avventure guidate
   },
   log: []
 };
@@ -396,6 +362,9 @@ let state = loadState();
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+/* effetti sonori (engine/sfx.js) — no-op se il motore non c'è */
+const sfx = (name) => { if (window.PIRATI_SFX) window.PIRATI_SFX.play(name); };
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -442,6 +411,16 @@ function withDefaults(saved) {
     if (typeof player.active !== "boolean") player.active = true;
   });
   if (merged.voyage && !merged.voyage.moveRoll) merged.voyage.moveRoll = { rolls: {} };
+  if (merged.questCampaign.story && typeof merged.questCampaign.story === "object" && merged.questCampaign.story.questId) {
+    const st = merged.questCampaign.story;
+    ["notes", "choices", "destiny", "rolls", "resolved", "cards"].forEach((k) => {
+      if (!st[k] || typeof st[k] !== "object") st[k] = {};
+    });
+    if (!st.phase) st.phase = "SCENE";
+    if (typeof st.step !== "number") st.step = 1;
+  } else {
+    merged.questCampaign.story = null;
+  }
   return merged;
 }
 
@@ -451,10 +430,6 @@ function saveState() {
 
 function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
-}
-
-function getMission() {
-  return DATA.missions.find((mission) => mission.id === state.session.missionId) || DATA.missions[0];
 }
 
 function getCharacter(id) {
@@ -476,7 +451,6 @@ function selectedPlayer() {
 function pushLog(text) {
   const entry = {
     day: state.day,
-    turn: state.session.turn,
     text,
     time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })
   };
@@ -484,188 +458,6 @@ function pushLog(text) {
   state.log = state.log.slice(0, 80);
 }
 
-function snapshot() {
-  state.session.history.push(JSON.stringify({
-    day: state.day,
-    fame: state.fame,
-    session: state.session,
-    log: state.log
-  }));
-  state.session.history = state.session.history.slice(-12);
-}
-
-function restoreSnapshot() {
-  const raw = state.session.history.pop();
-  if (!raw) return;
-  const restored = JSON.parse(raw);
-  state.day = restored.day;
-  state.fame = restored.fame;
-  state.session = restored.session;
-  state.log = restored.log;
-  saveState();
-  render();
-}
-
-function applyAction(action) {
-  snapshot();
-  const session = state.session;
-  const mission = getMission();
-  session.turn += 1;
-
-  if (session.repeatedAction === action) {
-    session.repeatedCount += 1;
-  } else {
-    session.repeatedAction = action;
-    session.repeatedCount = 1;
-  }
-
-  let dangerGain = action === "rest" ? -1 : 1;
-  if (session.repeatedCount >= 2 && ["treasure", "market", "rest"].includes(action)) {
-    dangerGain += session.repeatedCount;
-  }
-  if (session.turn > mission.turns) dangerGain += 2;
-  session.danger = Math.max(0, Math.min(12, session.danger + dangerGain));
-
-  let result;
-  if (action === "event") result = drawEvent();
-  if (action === "combat") result = drawCombat();
-  if (action === "treasure") result = drawTreasure();
-  if (action === "quest") result = drawQuest();
-  if (action === "market") result = drawMarket();
-  if (action === "rest") result = drawRest();
-
-  if (session.danger >= 10 && action !== "combat") {
-    const enemy = theBoss();
-    result.extra = `Allarme massimo: arriva ${enemy.title}. Soglia ${enemy.threat}.`;
-  }
-
-  session.current = result;
-  pushLog(`${result.title}: ${result.text}${result.extra ? " " + result.extra : ""}`);
-  saveState();
-  render();
-}
-
-function drawEvent() {
-  const event = pick(DATA.events);
-  const roll = suggestedRollForEvent(event);
-  return {
-    kind: "Evento",
-    title: event.title,
-    text: event.text,
-    tags: [event.type, `Pericolo ${state.session.danger}`],
-    roll
-  };
-}
-
-function drawCombat() {
-  const roster = allEnemies();
-  const enemyPool = roster.filter((enemy) => enemy.threat <= 6 + state.session.danger);
-  const enemy = pick(enemyPool.length ? enemyPool : roster);
-  return {
-    kind: "Combattimento",
-    title: enemy.title,
-    text: `Soglia ${enemy.threat}. Ogni pirata puo attaccare, aiutare, distrarre o tentare una manovra rischiosa.`,
-    tags: [`Ricompensa: ${enemy.reward}`, enemy.trick],
-    roll: { stat: "coraggio", target: enemy.threat, label: "Attacco, difesa o manovra rischiosa" }
-  };
-}
-
-function drawTreasure() {
-  const session = state.session;
-  session.searchedZones += 1;
-  const farmingPenalty = Math.max(0, session.searchedZones - 2);
-  const rareAllowed = session.danger >= 3 || session.searchedZones <= 2;
-  const pool = DATA.treasures.filter((treasure) => rareAllowed || treasure.rarity === "Comune");
-  const treasure = pick(pool);
-  if (farmingPenalty > 0) session.danger = Math.min(12, session.danger + farmingPenalty);
-  return {
-    kind: "Tesoro",
-    title: treasure.title,
-    text: `${treasure.text} ${farmingPenalty ? "Zona gia sfruttata: ricompensa ridotta o Pericolo extra." : ""}`.trim(),
-    tags: [treasure.rarity, `Ricerche oggi: ${session.searchedZones}`],
-    roll: { stat: "fortuna", target: 5 + farmingPenalty, label: "Scavare, cercare indizi o aprire il forziere" }
-  };
-}
-
-function drawQuest() {
-  const quest = pick(DATA.quests);
-  const target = getMission().difficulty + Math.floor(state.session.danger / 4);
-  return {
-    kind: "Quest",
-    title: "Incarico rapido",
-    text: `${quest} Soglia consigliata ${target}. Successo: indizio, moneta o Fama. Fallimento: scegli tra Pericolo +1 o perdita di tempo.`,
-    tags: ["Scelta di gruppo", "No farming"],
-    roll: { stat: "astuzia", target, label: "Prova scelta dal Master in base alla soluzione proposta" }
-  };
-}
-
-function drawMarket() {
-  const prices = state.session.repeatedCount > 1 ? "Prezzi alti: +1 moneta perche la ciurma insiste troppo." : "Prezzi normali.";
-  return {
-    kind: "Mercante",
-    title: "Bancarella del Porto",
-    text: `${prices} Oggetto comune 2 monete, oggetto raro 5 monete, indizio 3 monete.`,
-    tags: ["Limite: un acquisto utile per bambino", "Ripetere alza Pericolo"],
-    roll: { stat: "astuzia", target: 7, label: "Contrattare, distrarre o ottenere uno sconto" }
-  };
-}
-
-function drawRest() {
-  return {
-    kind: "Riposo",
-    title: "Pausa in Coperta",
-    text: "Ogni pirata recupera un problema leggero. Se riposano due volte di fila, la ciurma rivale avanza.",
-    tags: ["Pericolo -1", "Non cura missioni fallite"],
-    roll: { stat: "fortuna", target: 6, label: "Raccontare una scena di riposo per ottenere un piccolo bonus" }
-  };
-}
-
-function suggestedRollForEvent(event) {
-  const baseTarget = getMission().difficulty + Math.floor(state.session.danger / 5);
-  const typeToStat = {
-    Mare: "fortuna",
-    Isola: "astuzia",
-    Indizio: "astuzia",
-    Quest: "astuzia",
-    Porto: "astuzia",
-    Pericolo: "coraggio",
-    Trappola: "astuzia",
-    Comico: "fortuna",
-    Nemico: "coraggio",
-    Mistero: "fortuna",
-    Tesoro: "fortuna"
-  };
-  return {
-    stat: typeToStat[event.type] || "fortuna",
-    target: Math.max(4, baseTarget),
-    label: "Prova suggerita dall'evento"
-  };
-}
-
-function startNewSession() {
-  snapshot();
-  const nextMission = DATA.missions[(DATA.missions.findIndex((mission) => mission.id === state.session.missionId) + 1) % DATA.missions.length];
-  state.day += 1;
-  state.session = {
-    missionId: nextMission.id,
-    turn: 0,
-    danger: 0,
-    maxTurns: nextMission.turns,
-    repeatedAction: "",
-    repeatedCount: 0,
-    searchedZones: 0,
-    current: {
-      kind: "Missione",
-      title: nextMission.title,
-      text: nextMission.text,
-      tags: [`Soglia ${nextMission.difficulty}`, `${nextMission.turns} turni`]
-    },
-    history: state.session.history
-  };
-  pushLog(`Inizia il giorno ${state.day}: ${nextMission.title}.`);
-  saveState();
-  render();
-}
 
 function addPlayer() {
   const nameInput = $("#player-name");
@@ -734,25 +526,6 @@ function seedTestCrew() {
   render();
 }
 
-function recordPhysicalRoll(die) {
-  const player = selectedPlayer();
-  const stat = $("#dice-stat").value;
-  const bonus = Number($("#dice-bonus").value || 0);
-  const target = Number($("#dice-target").value || getMission().difficulty);
-  if (!player) {
-    $("#dice-result").textContent = `Sul dado e uscito ${die}. Aggiungi o seleziona un pirata per calcolare il totale.`;
-    return;
-  }
-  const character = getCharacter(player.characterId);
-  const total = die + character.stats[stat] + bonus;
-  const outcome = total >= target ? "SUCCESSO" : "FALLIMENTO";
-  const text = `${player.name}: dado ${die} + ${character.stats[stat]} ${stat} + ${bonus} bonus = ${total}. Soglia ${target}: ${outcome}.`;
-  $("#dice-result").textContent = text;
-  pushLog(`Tiro fisico - ${text}`);
-  saveState();
-  renderLog();
-}
-
 function showSaveMessage(text) {
   const message = $("#save-message");
   if (!message) return;
@@ -790,7 +563,6 @@ function importSave(file) {
         throw new Error("Formato salvataggio non valido.");
       }
       state = withDefaults(importedState);
-      state.session.history = [];
       saveState();
       render();
       showSaveMessage("Salvataggio importato.");
@@ -801,65 +573,7 @@ function importSave(file) {
   reader.readAsText(file);
 }
 
-function renderMission() {
-  const mission = getMission();
-  $("#active-mission").innerHTML = `
-    <h3>${mission.title}</h3>
-    <p>${mission.text}</p>
-    <div class="mission-meta">
-      <span>Soglia ${mission.difficulty}</span>
-      <span>${mission.turns} turni</span>
-      <span>Vittoria: ${mission.win}</span>
-    </div>
-  `;
-  $("#day-value").textContent = state.day;
-  $("#turn-value").textContent = `${state.session.turn}/${mission.turns}`;
-  $("#danger-value").textContent = state.session.danger;
-  $("#fame-value").textContent = state.fame;
-  $("#danger-fill").style.width = `${Math.min(100, (state.session.danger / 12) * 100)}%`;
-}
-
-function renderResult() {
-  const current = state.session.current || {
-    kind: "Pronto",
-    title: "Scegli la prossima azione",
-    text: "Usa i pulsanti Master per far avanzare il giorno. Le azioni ripetute aumentano il Pericolo.",
-    tags: ["30 minuti", "Anti-farming attivo"]
-  };
-  $("#result-card").innerHTML = `
-    <p class="eyebrow">${current.kind}</p>
-    <h3>${current.title}</h3>
-    <p>${current.text}</p>
-    ${current.extra ? `<p><strong>${current.extra}</strong></p>` : ""}
-    <div class="tag-row">${(current.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
-  `;
-  renderRollPrompt(current);
-}
-
-function renderRollPrompt(current) {
-  const roll = current.roll || { stat: "fortuna", target: getMission().difficulty, label: "Prova libera scelta dal Master" };
-  $("#roll-prompt").textContent = `${roll.label}: tira 1d6 + ${roll.stat} contro soglia ${roll.target}.`;
-  $("#dice-stat").value = roll.stat;
-  $("#dice-target").value = roll.target;
-}
-
 function renderCrew() {
-  const activeCrew = $("#active-crew");
-  if (!state.players.length) {
-    activeCrew.innerHTML = `<p class="helper-text">Aggiungi da 6 a 10 giocatori nella sezione Ciurma.</p>`;
-  } else {
-    activeCrew.innerHTML = state.players.map((player) => {
-      const character = getCharacter(player.characterId);
-      return `
-        <button type="button" class="crew-card ${state.selectedPlayerId === player.id ? "is-selected" : ""}" data-select-player="${player.id}">
-          <h3>${player.name}</h3>
-          <p>${character.name} - ${character.role}</p>
-          ${statsMarkup(character)}
-        </button>
-      `;
-    }).join("");
-  }
-
   const activeN = activePlayers().length;
   $("#player-list").innerHTML = state.players.length ? `
     <p class="crew-presence">In gioco oggi: <strong>${activeN}</strong> di ${state.players.length}. Metti <em>Assente</em> chi non c'è: tiene tutti i progressi e rientra quando torna.</p>
@@ -899,6 +613,7 @@ function statsMarkup(character) {
 
 let characterCarouselIndex = 0;
 let characterDetailsOpen = false;
+let openGalleryCard = null;   // indice della carta ingrandita nella galleria, o null
 let previousCarouselDistances = new Map();
 let itemsCharacterId = null;
 let expandedItemId = null;
@@ -988,12 +703,12 @@ function renderLibrary() {
   const gallery = $("#character-gallery");
   if (gallery && !gallery.dataset.built) {
     gallery.innerHTML = DATA.characters.map((character, index) => `
-      <button type="button" class="gallery-card" data-character-jump="${index}" title="${character.name}">
+      <button type="button" class="gallery-card" data-gallery-card="${index}" title="${character.name}">
         <img src="${character.image}" alt="${character.name}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'gallery-fallback',textContent:'${character.name}'}))">
       </button>`).join("");
     gallery.dataset.built = "1";
   }
-  gallery && $$("#character-gallery .gallery-card").forEach((btn, i) => btn.classList.toggle("is-current", i === characterCarouselIndex));
+  updateGallerySelection();
 
   const namesTrack = $("#character-names");
   const activeName = $(".character-name.is-active");
@@ -1001,6 +716,29 @@ function renderLibrary() {
     const targetLeft = activeName.offsetLeft - (namesTrack.clientWidth - activeName.offsetWidth) / 2;
     namesTrack.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
   }
+}
+
+/* Galleria carte: tocca una miniatura per vederla grande e leggibile qui sotto. */
+function updateGallerySelection() {
+  $$("#character-gallery .gallery-card").forEach((btn, i) => btn.classList.toggle("is-open", i === openGalleryCard));
+  renderCardViewer();
+}
+
+function renderCardViewer() {
+  const box = $("#character-card-viewer");
+  if (!box) return;
+  const character = openGalleryCard == null ? null : DATA.characters[openGalleryCard];
+  if (!character) {
+    box.hidden = true;
+    box.innerHTML = "";
+    return;
+  }
+  box.hidden = false;
+  box.innerHTML = `
+    <button type="button" class="card-viewer-close" data-close-card aria-label="Chiudi la carta">&#10005;</button>
+    <img src="${character.image}" alt="Carta di ${character.name}"
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'card-viewer-fallback',textContent:'${character.name}'}))">
+    <figcaption><strong>${character.name}</strong><span>${character.role}</span></figcaption>`;
 }
 
 function getItemOwners() {
@@ -1071,6 +809,7 @@ function useSpecialItem(ownerKey, characterId, itemId) {
   if (state.usedSpecialItems[key] === state.day) return;
 
   state.usedSpecialItems[key] = state.day;
+  sfx("star");
   pushLog(`${owner.name} usa ${item.name}: ${item.effect}`);
   saveState();
   $("#item-message").textContent = `${item.name} attivato. Tornerà disponibile al giorno ${state.day + 1}.`;
@@ -1203,6 +942,53 @@ function powerNumber(power) {
   return null;
 }
 
+/* --- Lente d'ingrandimento carte: miniatura ovunque, tap per leggerla ---
+   playAs: "" (solo lettura) | "story" | "quest" | "map"  -> nella lente
+   compare anche "Gioca questa carta". */
+let magnifierState = null;
+
+function openMagnifier(powerId, playAs) {
+  if (!PIRATI.power(powerId)) return;
+  magnifierState = { powerId, playAs: playAs || "" };
+  sfx("click");
+  renderMagnifier();
+}
+
+function closeMagnifier() {
+  magnifierState = null;
+  renderMagnifier();
+}
+
+function renderMagnifier() {
+  const el = $("#card-magnifier");
+  if (!el) return;
+  if (!magnifierState) { el.hidden = true; el.innerHTML = ""; document.body.classList.remove("magnifier-open"); return; }
+  const power = PIRATI.power(magnifierState.powerId);
+  if (!power) { el.hidden = true; el.innerHTML = ""; return; }
+  const playable = magnifierState.playAs && !isCardPlayed(power);
+  const spent = magnifierState.playAs && isCardPlayed(power);
+  const num = powerNumber(power);
+  el.hidden = false;
+  document.body.classList.add("magnifier-open");
+  el.innerHTML = `
+    <div class="magnifier-backdrop" data-magnifier-close></div>
+    <figure class="magnifier-card">
+      <button type="button" class="magnifier-close" data-magnifier-close aria-label="Chiudi">&#10005;</button>
+      <div class="magnifier-img">
+        <img src="${power.image}" alt="${power.name}"
+             onerror="this.closest('.magnifier-img').classList.add('no-img'); this.remove();">
+        <span class="magnifier-fallback" aria-hidden="true">${power.icon}</span>
+      </div>
+      <figcaption>
+        <strong>${power.name}</strong>
+        <span class="magnifier-meta">${titleCase(power.category)}${power.grade ? " · Grado " + power.grade : ""}${num ? " · " + num : ""}</span>
+        <p>${power.legendary && !ownedPowerIds().has(power.id) ? power.howTo || power.effect : power.effect}</p>
+        ${playable ? `<button type="button" class="complete-quest-button" data-magnifier-play>▸ Gioca questa carta</button>` : ""}
+        ${spent ? `<p class="magnifier-spent">Già giocata in questa prova.</p>` : ""}
+      </figcaption>
+    </figure>`;
+}
+
 function treasuryPowersMarkup() {
   const crew = state.crew;
   const owned = ownedPowerIds();
@@ -1219,13 +1005,13 @@ function treasuryPowersMarkup() {
     else if (gradeLocked) { statusText = `Si sblocca al Grado ${power.grade}`; statusKind = "locked"; cardKind = "is-grade-locked"; }
     else { statusText = "Da trovare in missione"; statusKind = "findable"; cardKind = "is-findable"; }
     const tip = power.legendary && !isOwned ? power.howTo : `${power.name} — ${power.effect}`;
-    return `<article class="power-card pop-in ${cardKind}" title="${tip}">
+    return `<button type="button" class="power-card pop-in ${cardKind}" title="${tip}" data-magnify-power="${power.id}">
       <div class="power-card-art">
         <img src="${power.image}" alt="${power.name}: ${power.effect}" onerror="this.closest('.power-card-art').classList.add('no-img'); this.remove();">
         <span class="power-card-fallback" aria-hidden="true">${power.icon}<b>${power.name}</b></span>
       </div>
       <p class="power-status ${statusKind}">${statusText}</p>
-    </article>`;
+    </button>`;
   };
 
   const groups = POWER_GROUPS.map((group) => {
@@ -1459,9 +1245,12 @@ function doCrewMove() {
   const rolls = roster.map((p) => Number(v.moveRoll && v.moveRoll.rolls[p.id]));
   if (rolls.some((n) => !(n >= 1 && n <= 6))) return; // manca qualche tiro
   const avg = rolls.reduce((a, b) => a + b, 0) / rolls.length;
-  const miles = Math.max(1, Math.round(avg));
+  const base = Math.max(1, Math.round(avg));
+  const hasPass = ((state.crostone && state.crostone.pass) || []).includes(state.day);
+  const miles = hasPass ? base + 1 : base;
   v.moveRoll = { rolls: {} };
-  pushLog(`Navigazione: ${rolls.join(" + ")} → media ${avg.toFixed(1)} → ${miles} miglia.`);
+  sfx("salpa");
+  pushLog(`Navigazione: ${rolls.join(" + ")} → media ${avg.toFixed(1)} → ${base} miglia${hasPass ? " +1 (lasciapassare del Pesce Crostone)" : ""} → ${miles} miglia.`);
   sail(miles, { crew: true, avg });
 }
 
@@ -1503,6 +1292,8 @@ function sail(steps, opts) {
     : `${steps} caselle`;
 
   if (v.pending) {
+    if (v.pending.kind === "quest") sfx("quest");
+    else if (v.pending.kind === "mostro" || v.pending.kind === "assalto") sfx("minaccia");
     v.message = v.pending.kind === "quest"
       ? `${lead}. La ciurma mette piede sull'isola: c'è un'avventura!`
       : `${lead}. La rotta si ferma: leggete l'incontro qui sotto.`;
@@ -1641,6 +1432,7 @@ function bumpEncounter() {
 function playCard(powerId) {
   const power = PIRATI.power(powerId);
   if (!power || isCardPlayed(power)) return;
+  sfx("star");
   const p = power.play || { type: "narrative" };
   const v = voyage();
   const enc = v.pending;
@@ -1826,6 +1618,8 @@ function resolveMapEncounter(die, opts) {
   }
 
   const mech = effects.concat(gains).filter(Boolean).join(" · ");
+  if (success) sfx(enc.kind === "tesoro" || enc.kind === "razzia" ? "monete" : "win-event");
+  else sfx("fallimento");
   pushLog(`Mappa — ${scene ? scene.title : enc.kind}: ${formula}. ${success ? "SUCCESSO" : "FALLIMENTO"}. ${narrative}${mech ? " (" + mech + ")" : ""}`);
   refreshGrade();
   v.pending = null;
@@ -1907,6 +1701,7 @@ function startBossEncounter() {
     attempts: 0
   };
   v.message = `Il mare ribolle e si spalanca: ${boss ? boss.title : "il Vecchio del Fondale"} si solleva dagli abissi!`;
+  sfx("abisso");
   bumpEncounter();
   saveState();
   renderMap();
@@ -1969,6 +1764,7 @@ function calmBoss() {
     state.crew.trophies.push({ id: "sonno-dell-abisso", questId: null, day: state.day });
   }
   grantLegendary("cuore-abisso", "Barbabisso è tornato a dormire e vi ha lasciato il suo cuore di luce.");
+  sfx("trionfo");
   pushLog(`✨ ${boss ? boss.title : "Barbabisso"} torna a dormire! Fama +4, +20 monete, Pericolo azzerato. Trofeo: Il Sonno dell'Abisso.`);
   v.pending = null;
   v.bossCooldownDay = state.day;
@@ -2146,6 +1942,8 @@ function renderMap() {
       const vals = roster.map((p) => Number(rolls[p.id])).filter((n) => n >= 1 && n <= 6);
       const allIn = roster.length > 0 && vals.length === roster.length;
       const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+      const hasPass = ((state.crostone && state.crostone.pass) || []).includes(state.day);
+      const miles = Math.max(1, Math.round(avg)) + (hasPass ? 1 : 0);
       moveBox.hidden = false;
       moveBox.innerHTML = `
         <p class="map-console-label">Tutti tirano per navigare <span class="count-pill">${vals.length}/${roster.length}</span></p>
@@ -2156,8 +1954,9 @@ function renderMap() {
             <span class="move-dice">${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" class="${cur === n ? "is-picked" : ""}" data-move-die="${p.id}:${n}">${n}</button>`).join("")}</span>
           </div>`;
         }).join("") : `<p class="helper-text">Nessun pirata in gioco. Aggiungi la ciurma (Giocatori) o riattiva un pirata assente.</p>`}
+        ${hasPass ? `<p class="move-pass">🐟 Lasciapassare del Pesce Crostone: +1 miglio a questa navigazione</p>` : ""}
         ${roster.length ? `<div class="move-foot">
-          <span class="move-avg">${vals.length ? `Media ${avg.toFixed(1)} → <strong>${Math.max(1, Math.round(avg))} miglia</strong>` : "In attesa dei tiri…"}</span>
+          <span class="move-avg">${vals.length ? `Media ${avg.toFixed(1)} → <strong>${miles} miglia</strong>${hasPass ? ` <span class="move-pass-tag">+1 🐟</span>` : ""}` : "In attesa dei tiri…"}</span>
           <button type="button" class="primary-button" data-crew-sail ${allIn ? "" : "disabled"}>Salpa! ⛵</button>
         </div>` : ""}`;
     }
@@ -2178,7 +1977,7 @@ function renderMap() {
           const staged = enc && (enc.cardBonuses || []).some((c) => c.id === pw.id);
           const spent = isCardPlayed(pw);
           const num = powerNumber(pw);
-          return `<button type="button" class="hand-card ${staged ? "is-staged" : ""} ${spent ? "is-spent" : ""}" data-play-card="${pw.id}" ${spent ? "disabled" : ""} title="${pw.name} — ${pw.effect}">
+          return `<button type="button" class="hand-card ${staged ? "is-staged" : ""} ${spent ? "is-spent" : ""}" data-magnify-power="${pw.id}" data-magnify-as="map" title="${pw.name} — ${pw.effect}">
             <img src="${pw.image}" alt="${pw.name}" loading="lazy" onerror="this.remove();">
             <span class="hand-card-name">${pw.name}</span>
             ${num ? `<span class="hand-num">${num}</span>` : ""}
@@ -2335,6 +2134,7 @@ function crostoneIndovinata() {
   c.today.status = "vinta";
   if (!c.pass.includes(state.day)) c.pass.push(state.day);
   state.crew.coins += CROSTONE_COINS_SUBITO;
+  sfx("win-event");
   pushLog(`Pesce Crostone: la ciurma spiega «${crostoneWord(c.today.wordId).parola}». Lasciapassare ottenuto, +${CROSTONE_COINS_SUBITO} monete.`);
   saveState();
   lastShownCoins = state.crew.coins - CROSTONE_COINS_SUBITO;
@@ -2346,6 +2146,7 @@ function crostoneSbagliata() {
   if (!c.today || c.today.status !== "aperta") return;
   c.taccuino.push({ wordId: c.today.wordId, day: state.day });
   c.today.status = "persa";
+  sfx("fallimento");
   pushLog(`Pesce Crostone: «${crostoneWord(c.today.wordId).parola}» finisce sul Taccuino Nero. Stasera il Master ne spiega il significato.`);
   saveState();
   render();
@@ -2380,62 +2181,72 @@ function crostoneWordRow(entry, opts) {
   </li>`;
 }
 
-function renderCrostone() {
-  const oggiBox = $("#crostone-oggi");
-  if (!oggiBox) return;
+/* Il Pesce Crostone vive in un accordion in cima alla Mappa: la parola fa
+   parte dell'avventura, non ha più una sezione a sé. */
+function renderMapParola() {
+  const acc = $("#map-parola");
+  const body = $("#map-parola-body");
+  if (!acc || !body) return;
   ensureWordOfDay();
   const c = state.crostone;
+  const words = PIRATI.words || [];
 
-  const portrait = $("#crostone-portrait");
-  if (portrait && !portrait.dataset.wired) {
-    portrait.dataset.wired = "1";
-    portrait.addEventListener("error", function () {
-      if (!portrait.dataset.fallback) {
-        // se la copia su CDN non c'è ancora, prova quella locale del sito
-        portrait.dataset.fallback = "1";
-        portrait.src = "assets/contendenti/pesce-crostone.webp";
-        return;
-      }
-      if (portrait.parentNode) portrait.parentNode.classList.add("missing");
-      portrait.remove();
+  const t = c.today && c.today.day === state.day ? c.today : null;
+  const hasPass = (c.pass || []).includes(state.day);
+  const daRipetere = (c.taccuino || []).length;
+
+  // riga di stato nel sommario dell'accordion
+  const statusEl = $("#map-parola-status");
+  if (statusEl) {
+    let s;
+    if (!words.length) s = "nessuna parola nel catalogo";
+    else if (!t) s = "parole esaurite — aggiungine in catalog/parole.js";
+    else if (t.status === "aperta") s = `oggi: “${crostoneWord(t.wordId).parola}” · da spiegare`;
+    else if (t.status === "vinta") s = "lasciapassare ottenuto · la ciurma naviga +1 miglio";
+    else s = "sul Taccuino Nero · andatura normale, si ripete domani";
+    if (daRipetere) s += ` · ${daRipetere} da ripassare`;
+    statusEl.textContent = s;
+  }
+
+  // ricostruisci il corpo solo quando qualcosa cambia (così i <details>
+  // annidati non si richiudono a ogni renderMap)
+  const sig = JSON.stringify([state.day, t && t.status, c.taccuino.length, c.libro.length, hasPass, words.length]);
+  const actionable = (t && t.status === "aperta") || daRipetere > 0;
+
+  if (!acc.dataset.wired) {
+    acc.dataset.wired = "1";
+    acc.addEventListener("toggle", () => {
+      if (acc.open !== (acc._progOpen === true)) acc.dataset.touched = "1";
     });
-    portrait.src = window.PIRATI_ASSET("contendenti/pesce-crostone.webp");
   }
 
-  const totali = (PIRATI.words || []).length;
+  if (acc.dataset.sig !== sig) {
+    acc.dataset.sig = sig;
+    body.innerHTML = mapParolaMarkup(c, t);
+    if (!acc.dataset.touched) {
+      acc._progOpen = actionable;
+      acc.open = actionable;
+    }
+  }
+}
+
+function mapParolaMarkup(c, t) {
+  const words = PIRATI.words || [];
+  const totali = words.length;
   const imparate = c.libro.length;
-  $("#crostone-counters").innerHTML = `
-    <div><span>Parole imparate</span><strong>${imparate}${totali ? " / " + totali : ""}</strong></div>
-    <div><span>Sul Taccuino Nero</span><strong>${c.taccuino.length}</strong></div>
-    <div><span>Lasciapassare</span><strong>${c.pass.length}</strong></div>`;
 
-  // Ripasso: le parole di ieri da ripetere
-  const ripassoBox = $("#crostone-ripasso");
-  if (c.taccuino.length) {
-    ripassoBox.innerHTML = `
-      <div class="crostone-block crostone-ripasso">
-        <p class="eyebrow">Prima di tutto: il ripasso</p>
-        <h3>Ripetete il significato di ieri</h3>
-        <p class="crostone-hint">Il Master ha spiegato queste parole. La ciurma le ripete: se ci siamo, il Master dà l'ok e la parola passa al Libro delle Parole Impossibili.</p>
-        <ul class="crostone-word-list">
-          ${c.taccuino.map((e) => crostoneWordRow(e, { recover: true })).join("")}
-        </ul>
-      </div>`;
+  let oggi;
+  if (!words.length) {
+    oggi = `<div class="crostone-block"><p class="crostone-hint">Nessuna parola nel catalogo. Aggiungine in <code>catalog/parole.js</code>.</p></div>`;
+  } else if (!t) {
+    oggi = `<div class="crostone-block">
+      <h3>Il Pesce Crostone ha finito le parole</h3>
+      <p class="crostone-hint">Aggiungi altre parole in <code>catalog/parole.js</code> per continuare.</p>
+    </div>`;
   } else {
-    ripassoBox.innerHTML = "";
-  }
-
-  // Parola di oggi
-  if (!c.today) {
-    oggiBox.innerHTML = `
-      <div class="crostone-block">
-        <h3>Il Pesce Crostone ha finito le parole</h3>
-        <p class="crostone-hint">Aggiungi altre parole in <code>catalog/parole.js</code> per continuare.</p>
-      </div>`;
-  } else {
-    const w = crostoneWord(c.today.wordId);
-    if (c.today.status === "aperta") {
-      oggiBox.innerHTML = `
+    const w = crostoneWord(t.wordId);
+    if (t.status === "aperta") {
+      oggi = `
         <div class="crostone-block crostone-oggi is-open">
           <p class="eyebrow">La parola di oggi</p>
           <p class="crostone-parola">${w.parola}</p>
@@ -2451,21 +2262,21 @@ function renderCrostone() {
             <button type="button" class="secondary-button" data-crostone-ko>Non ci sono arrivati → Taccuino Nero</button>
           </div>
         </div>`;
-    } else if (c.today.status === "vinta") {
-      oggiBox.innerHTML = `
+    } else if (t.status === "vinta") {
+      oggi = `
         <div class="crostone-block crostone-oggi is-won">
           <p class="eyebrow">La parola di oggi</p>
           <p class="crostone-parola">${w.parola}</p>
-          <p class="crostone-verdict">✓ Indovinata! La ciurma ha il lasciapassare di oggi. +${CROSTONE_COINS_SUBITO} monete.</p>
+          <p class="crostone-verdict">✓ Indovinata! Il lasciapassare spinge le vele: la ciurma naviga <strong>+1 miglio</strong>. +${CROSTONE_COINS_SUBITO} monete.</p>
           <p class="crostone-word-mean">${w.significato}</p>
           <p class="crostone-hint">Nuova parola alla prossima giornata di scuola.</p>
         </div>`;
     } else {
-      oggiBox.innerHTML = `
+      oggi = `
         <div class="crostone-block crostone-oggi is-lost">
           <p class="eyebrow">La parola di oggi</p>
           <p class="crostone-parola">${w.parola}</p>
-          <p class="crostone-verdict">Il Pesce Crostone l'ha segnata sul Taccuino Nero.</p>
+          <p class="crostone-verdict">Segnata sul Taccuino Nero — oggi si naviga con andatura normale.</p>
           <p class="crostone-word-mean">${w.significato}</p>
           ${w.esempio ? `<p class="crostone-word-ex">${w.esempio}</p>` : ""}
           <p class="crostone-hint">Stasera il Master rilegge il significato alla ciurma. Domani si ripete: se ci arrivano, la parola passa al Libro (+${CROSTONE_COINS_RECUPERO} monete).</p>
@@ -2473,24 +2284,42 @@ function renderCrostone() {
     }
   }
 
-  // Taccuino Nero
-  $("#crostone-taccuino").innerHTML = `
-    <div class="crostone-block crostone-taccuino">
-      <h3>📓 Taccuino Nero <span class="crostone-count">${c.taccuino.length}</span></h3>
-      ${c.taccuino.length
-        ? `<ul class="crostone-word-list">${c.taccuino.map((e) => crostoneWordRow(e, { recover: true })).join("")}</ul>`
-        : `<p class="crostone-hint">Nessuna parola in sospeso. La ciurma le ha spiegate tutte.</p>`}
-    </div>`;
+  const ripasso = c.taccuino.length ? `
+    <div class="crostone-block crostone-ripasso">
+      <p class="eyebrow">Prima di salpare: il ripasso</p>
+      <h3>Ripetete il significato di ieri</h3>
+      <p class="crostone-hint">Il Master ha spiegato queste parole. La ciurma le ripete: se ci siamo, il Master dà l'ok e la parola passa al Libro delle Parole Impossibili.</p>
+      <ul class="crostone-word-list">${c.taccuino.map((e) => crostoneWordRow(e, { recover: true })).join("")}</ul>
+    </div>` : "";
 
-  // Libro delle Parole Impossibili
   const libroOrdinato = c.libro.slice().reverse();
-  $("#crostone-libro").innerHTML = `
-    <div class="crostone-block crostone-libro">
-      <h3>📖 Libro delle Parole Impossibili <span class="crostone-count">${c.libro.length}</span></h3>
-      ${c.libro.length
-        ? `<ul class="crostone-word-list">${libroOrdinato.map((e) => crostoneWordRow(e)).join("")}</ul>`
-        : `<p class="crostone-hint">Ancora vuoto. La prima parola indovinata finisce qui.</p>`}
-    </div>`;
+  const archivi = `
+    <details class="crostone-archivi">
+      <summary>📓 Taccuino Nero (${c.taccuino.length}) · 📖 Libro delle Parole Impossibili (${c.libro.length})</summary>
+      <div class="crostone-block crostone-taccuino">
+        <h3>📓 Taccuino Nero <span class="crostone-count">${c.taccuino.length}</span></h3>
+        ${c.taccuino.length
+          ? `<ul class="crostone-word-list">${c.taccuino.map((e) => crostoneWordRow(e, { recover: true })).join("")}</ul>`
+          : `<p class="crostone-hint">Nessuna parola in sospeso. La ciurma le ha spiegate tutte.</p>`}
+      </div>
+      <div class="crostone-block crostone-libro">
+        <h3>📖 Libro delle Parole Impossibili <span class="crostone-count">${c.libro.length}</span></h3>
+        ${c.libro.length
+          ? `<ul class="crostone-word-list">${libroOrdinato.map((e) => crostoneWordRow(e)).join("")}</ul>`
+          : `<p class="crostone-hint">Ancora vuoto. La prima parola indovinata finisce qui.</p>`}
+      </div>
+    </details>`;
+
+  return `
+    <div class="crostone-counters">
+      <div><span>Parole imparate</span><strong>${imparate}${totali ? " / " + totali : ""}</strong></div>
+      <div><span>Sul Taccuino Nero</span><strong>${c.taccuino.length}</strong></div>
+      <div><span>Lasciapassare</span><strong>${c.pass.length}</strong></div>
+    </div>
+    <p class="crostone-intro">Ogni giorno il Pesce Crostone tira fuori una parola difficile: spiegatela e avrete monete più il <strong>lasciapassare</strong>, che spinge le vele di <strong>+1 miglio</strong> alla prossima navigazione.</p>
+    ${ripasso}
+    ${oggi}
+    ${archivi}`;
 }
 
 function setNavDrawer(open) {
@@ -2573,7 +2402,7 @@ function questHandMarkup(resolution) {
       const staged = (resolution.cardBonuses || []).some((c) => c.id === pw.id);
       const spent = isCardPlayed(pw);
       const num = powerNumber(pw);
-      return `<button type="button" class="hand-card ${staged ? "is-staged" : ""} ${spent ? "is-spent" : ""}" data-play-quest-card="${pw.id}" ${spent ? "disabled" : ""} title="${pw.name} — ${pw.effect}">
+      return `<button type="button" class="hand-card ${staged ? "is-staged" : ""} ${spent ? "is-spent" : ""}" data-magnify-power="${pw.id}" data-magnify-as="quest" title="${pw.name} — ${pw.effect}">
         <img src="${pw.image}" alt="${pw.name}" onerror="this.remove();">
         <span class="hand-card-name">${pw.name}</span>
         ${num ? `<span class="hand-num">${num}</span>` : ""}
@@ -2587,6 +2416,7 @@ function playQuestCard(id) {
   const power = PIRATI.power(id);
   const r = state.questCampaign.resolution;
   if (!power || !r || isCardPlayed(power)) return;
+  sfx("star");
   const p = power.play || { type: "narrative" };
   if (p.type === "bonus" || p.type === "teambonus") {
     r.cardBonuses = r.cardBonuses || [];
@@ -2757,7 +2587,7 @@ function renderTodayPlan() {
           <h4>La parola del giorno${t ? `: “${crostoneWord(t.wordId).parola}”` : ""}</h4>
           <p class="today-quest-meta">${stato}${daRipetere ? ` · ${daRipetere} da ripetere dal Taccuino Nero` : ""}</p>
         </div>
-        <button type="button" class="secondary-button" data-view="crostone">Apri il Pesce Crostone</button>
+        <button type="button" class="secondary-button" data-view="mappa" data-open-parola>Apri la parola del giorno</button>
       </div>`;
   }
 
@@ -2809,6 +2639,7 @@ function endSchoolDay() {
   else cal.weekday += 1;
   state.day += 1;
 
+  sfx("campana");
   saveState();
   render();
   const box = $("#today-plan");
@@ -2859,7 +2690,8 @@ function renderQuestCycle() {
   }
   if (!campaign.resolution || campaign.resolution.questId !== quest.id) campaign.resolution = createQuestResolution(quest.id);
   const target = Math.min(10, quest.difficulty + Math.max(0, campaign.cycle - 1));
-  $("#quest-master-sheet").innerHTML = `
+
+  const classicSheet = `
     <div class="quest-sheet-heading"><div><p class="eyebrow">${selectedIsland.name} · ${quest.kind}</p><h3>${quest.title}</h3></div><span class="quest-difficulty">Soglia ${target}</span><span class="quest-minutes">~${quest.minutes} min</span></div>
     <div class="read-aloud-card"><span>Da leggere ai bambini · voce del Master</span><p>“${quest.readAloud}”</p></div>
     ${questReadKidsMarkup(quest)}
@@ -2875,20 +2707,563 @@ function renderQuestCycle() {
       <article class="growth"><strong>Crescita</strong><p>${quest.growth}</p></article>
       <article class="complication"><strong>Se falliscono</strong><p>${quest.fail}</p></article>
       <article class="escape"><strong>Fuga se restano bloccati</strong><p>${quest.escape}</p></article>
-    </div>
-    ${questResolutionMarkup(quest, campaign)}
-    <button type="button" class="complete-quest-button" data-complete-quest="${quest.id}">Segna quest completata e incassa i premi</button>
-  `;
+    </div>`;
+
+  if (quest.storyFlow) {
+    $("#quest-master-sheet").innerHTML = storyFlowMarkup(quest, selectedIsland, classicSheet);
+  } else {
+    $("#quest-master-sheet").innerHTML = `
+      ${classicSheet}
+      ${questResolutionMarkup(quest, campaign)}
+      <button type="button" class="complete-quest-button" data-complete-quest="${quest.id}">Segna quest completata e incassa i premi</button>`;
+  }
   if (window.gsap && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     gsap.fromTo("#quest-master-sheet > *", { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, stagger: 0.06, ease: "power2.out" });
   }
 }
 
+/* =========================================================================
+   Avventura guidata (storyFlow v2) — macchina a stati visivi.
+   Fasi: SCENE · RESOLUTION · OUTCOME · REWARDS. Un momento di gioco per volta.
+   Contratto: quest_json/quest-director-v2-tempio-contratto-tecnico.json
+   ===================================================================== */
+
+function activeStory() {
+  const s = state.questCampaign.story;
+  if (!s || !s.questId) return null;
+  const quest = PIRATI.quest(s.questId);
+  if (!quest || !quest.storyFlow) return null;
+  return { s, quest, flow: quest.storyFlow };
+}
+
+function currentStoryScene() {
+  const a = activeStory();
+  return a ? a.flow.scenes[a.s.sceneId] || null : null;
+}
+
+function storyScrollTop() {
+  const sheet = $("#quest-master-sheet");
+  if (sheet) sheet.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function startStory(questId) {
+  const quest = PIRATI.quest(questId);
+  if (!quest || !quest.storyFlow) return;
+  state.questCampaign.revealedQuestId = questId;
+  state.questCampaign.selectedIslandId = quest.island;
+  state.questCampaign.story = {
+    questId,
+    sceneId: quest.storyFlow.start,
+    phase: "SCENE",
+    step: 1,
+    notes: {}, choices: {}, destiny: {}, rolls: {}, resolved: {}, cards: {},
+    completionSnapshot: null
+  };
+  sfx("quest");
+  saveState();
+  renderQuestCycle();
+}
+
+function abandonStory() {
+  state.questCampaign.story = null;
+  saveState();
+  renderQuestCycle();
+}
+
+function setStoryPhase(phase) {
+  const a = activeStory();
+  if (!a) return;
+  a.s.phase = phase;
+  saveState();
+  renderQuestCycle();
+  storyScrollTop();
+}
+
+function goToScene(sceneId) {
+  const a = activeStory();
+  if (!a || !a.flow.scenes[sceneId]) return;
+  a.s.sceneId = sceneId;
+  a.s.phase = "SCENE";
+  a.s.step = (a.s.step || 1) + 1;
+  a.s.rolls = {};
+  sfx("click");
+  saveState();
+  renderQuestCycle();
+  storyScrollTop();
+}
+
+/* SCENE → fase successiva secondo il tipo di scena */
+function advanceFromScene() {
+  const scene = currentStoryScene();
+  if (!scene || scene.completion || scene.choices) return;
+  if (scene.resolution && String(scene.resolution.policy) !== "narrative") {
+    setStoryPhase("RESOLUTION");
+  } else {
+    if (scene.outcome && scene.outcome.audio) sfx(scene.outcome.audio);
+    setStoryPhase("OUTCOME");
+  }
+}
+
+function chooseStoryOption(choiceId) {
+  const a = activeStory();
+  const scene = currentStoryScene();
+  if (!a || !scene || !scene.choices) return;
+  if (!scene.choices.some((c) => c.id === choiceId)) return;
+  a.s.choices[scene.id] = choiceId;
+  a.s.phase = "RESOLUTION";
+  sfx("click");
+  saveState();
+  renderQuestCycle();
+  storyScrollTop();
+}
+
+function advanceFromChoice() {
+  const a = activeStory();
+  const scene = currentStoryScene();
+  if (!a || !scene || !scene.choices) return;
+  const chosen = scene.choices.find((c) => c.id === a.s.choices[scene.id]);
+  if (chosen && chosen.next) goToScene(chosen.next);
+}
+
+function noteStoryIdea(text) {
+  const a = activeStory();
+  const scene = currentStoryScene();
+  if (!a || !scene) return;
+  a.s.notes[scene.id] = text;
+  saveState();
+}
+
+/* Il Destino: pesato, persistente. Esiti: group | narrative | dice */
+function rollStoryDestiny() {
+  const a = activeStory();
+  const scene = currentStoryScene();
+  if (!a || !scene || !scene.resolution || a.s.destiny[scene.id]) return;
+  const r = scene.resolution;
+  const w = r.destiny || {};
+  const softMode = r.policy === "destiny_group_or_dice" ? "group" : "narrative";
+  const wSoft = Number(w[softMode]) || 0;
+  const wDice = Number(w.dice) || 0;
+  const total = (wSoft + wDice) || 1;
+  const mode = Math.random() * total < wSoft ? softMode : "dice";
+  a.s.destiny[scene.id] = mode;
+  sfx(mode === "dice" ? "minaccia" : "star");
+  saveState();
+  renderQuestCycle();
+  storyScrollTop();
+}
+
+function setStoryRoll(playerId, n) {
+  const a = activeStory();
+  if (!a) return;
+  if (a.s.rolls[playerId] === n) delete a.s.rolls[playerId];
+  else a.s.rolls[playerId] = n;
+  saveState();
+  renderQuestCycle();
+}
+
+/* carte giocabili dentro lo storyFlow */
+function playStoryCard(id) {
+  const a = activeStory();
+  const scene = currentStoryScene();
+  const power = PIRATI.power(id);
+  if (!a || !scene || !power || isCardPlayed(power)) return;
+  sfx("star");
+  const p = power.play || { type: "narrative" };
+  a.s.cards[scene.id] = a.s.cards[scene.id] || [];
+  if (p.type === "bonus" || p.type === "teambonus") {
+    if (!a.s.cards[scene.id].some((c) => c.id === id)) {
+      a.s.cards[scene.id].push({ id, name: power.name, amount: p.amount || 0 });
+    }
+  } else if (p.type === "auto" || p.type === "skip") {
+    markCardPlayed(power);
+    finishStoryScene(true, { card: power.name });
+    return;
+  } else {
+    markCardPlayed(power);
+    pushLog(`Avventura — carta giocata: ${power.name}. ${power.effect} (il Master applica).`);
+  }
+  saveState();
+  renderQuestCycle();
+}
+
+function storyCardBonus(sceneId) {
+  const a = activeStory();
+  return a && a.s.cards[sceneId] ? a.s.cards[sceneId].reduce((s, c) => s + (c.amount || 0), 0) : 0;
+}
+
+/* media della ciurma: tutti gli attivi tirano 1d6 + stat (+ bonus carte) */
+function storyCrewCheck(statKey, target, sceneId) {
+  const roster = activePlayers();
+  const a = activeStory();
+  if (!a || !roster.length) return { incomplete: true };
+  const entries = roster.map((pl) => {
+    const ch = getCharacter(pl.characterId);
+    const roll = Number(a.s.rolls[pl.id]);
+    if (!ch || !(roll >= 1 && roll <= 6)) return null;
+    const stat = ch.stats[statKey] || 0;
+    return { name: pl.name, roll, stat, total: roll + stat };
+  });
+  if (entries.some((e) => !e)) return { incomplete: true };
+  const bonus = storyCardBonus(sceneId);
+  const avg = entries.reduce((s, e) => s + e.total, 0) / entries.length + bonus;
+  return {
+    success: avg >= target,
+    breakdown: `${entries.map((e) => `${e.name}: ${e.roll}+${e.stat}`).join(" · ")}${bonus ? ` + ${bonus} carte` : ""} · Media ${avg.toFixed(1)} contro ${target}`
+  };
+}
+
+/* applica gli 'effects' testuali della scena (es. "Pericolo +1") */
+function applyStoryEffects(effects) {
+  (effects || []).forEach((eff) => {
+    const m = /Pericolo\s*([+-]\s*\d+)/i.exec(eff);
+    if (m) {
+      const delta = Number(m[1].replace(/\s/g, ""));
+      state.session.danger = Math.max(0, Math.min(12, state.session.danger + delta));
+    }
+  });
+}
+
+/* chiude la risoluzione della scena e passa a OUTCOME (una volta sola) */
+function finishStoryScene(success, extra) {
+  const a = activeStory();
+  const scene = currentStoryScene();
+  if (!a || !scene || a.s.resolved[scene.id]) return;
+  const outcome = scene.outcomes ? (success ? scene.outcomes.success : scene.outcomes.fail_forward) : scene.outcome;
+  const res = { success: Boolean(success) };
+  if (extra && extra.breakdown) res.breakdown = extra.breakdown;
+  if (extra && extra.card) res.card = extra.card;
+  a.s.resolved[scene.id] = res;
+  if (outcome && outcome.effects) applyStoryEffects(outcome.effects);
+  if (outcome && outcome.audio) sfx(outcome.audio);
+  else sfx(success ? "win-event" : "fallimento");
+  pushLog(`Avventura "${a.quest.title}" — ${scene.id}: ${success ? "riuscita" : "avanti lo stesso"}${extra && extra.breakdown ? ` (${extra.breakdown})` : ""}.`);
+  a.s.phase = "OUTCOME";
+  saveState();
+  renderQuestCycle();
+  storyScrollTop();
+}
+
+function resolveStoryGroup(success) { finishStoryScene(success, {}); }
+function resolveStorySoft() { finishStoryScene(true, {}); }
+
+function resolveStoryDice() {
+  const scene = currentStoryScene();
+  if (!scene || !scene.resolution || !scene.resolution.dice) return;
+  const d = scene.resolution.dice;
+  const res = storyCrewCheck(d.stat, d.target, scene.id);
+  if (res.incomplete) return;
+  finishStoryScene(res.success, { breakdown: res.breakdown });
+}
+
+function advanceFromOutcome() {
+  const a = activeStory();
+  const scene = currentStoryScene();
+  if (!a || !scene) return;
+  const res = a.s.resolved[scene.id] || { success: true };
+  const outcome = scene.outcomes ? (res.success ? scene.outcomes.success : scene.outcomes.fail_forward) : scene.outcome;
+  if (outcome && outcome.next) goToScene(outcome.next);
+}
+
+/* --- completamento: schermata REWARDS persistente e idempotente --------- */
+
+function progressSnapshot() {
+  const done = state.questCampaign.completedQuestIds.length;
+  return {
+    coins: state.crew.coins,
+    fame: state.fame,
+    grade: state.crew.grade,
+    gradeName: PIRATI.gradeForCompleted(done).name,
+    crewPower: state.players.reduce((sum, p) => sum + playerPower(p), 0),
+    players: state.players.map((p) => ({ id: p.id, name: p.name, power: playerPower(p) })),
+    trophyIds: state.crew.trophies.map((t) => t.id),
+    lootKeys: state.crew.loot.map((l) => l.id || l.name),
+    powerIds: state.crew.powers.map((p) => p.id)
+  };
+}
+
+function finishStory() {
+  const a = activeStory();
+  if (!a) return;
+  if (a.s.completionSnapshot) { a.s.phase = "REWARDS"; saveState(); renderQuestCycle(); return; }
+  const questId = a.quest.id;
+  const before = progressSnapshot();
+  state.questCampaign.resolution = null;          // guidata = collaborativa: crescita a tutta la ciurma
+  completeQuest(questId, { silent: true });       // idempotente, applica i premi una volta
+  const after = progressSnapshot();
+  state.questCampaign.revealedQuestId = questId;  // tenuto per la reward screen
+  a.s.completionSnapshot = { before, after };
+  a.s.phase = "REWARDS";
+  sfx("trionfo");
+  if (after.grade > before.grade) sfx("grado");
+  saveState();
+  renderQuestCycle();
+  storyScrollTop();
+}
+
+function closeStoryRewards() {
+  const a = activeStory();
+  const questId = a ? a.quest.id : null;
+  state.questCampaign.story = null;
+  state.questCampaign.revealedQuestId = null;
+  if (questId && state.voyage && state.voyage.pending && state.voyage.pending.questId === questId) {
+    state.voyage.pending = null;
+    state.voyage.message = `Avventura conclusa! Tornate alla rotta.`;
+  }
+  saveState();
+  render();
+  showView("mappa");
+}
+
+/* --- markup ------------------------------------------------------------- */
+
+function storyFlowMarkup(quest, island, classicSheet) {
+  const story = state.questCampaign.story;
+  const started = story && story.questId === quest.id;
+  const header = `
+    <div class="quest-sheet-heading">
+      <div><p class="eyebrow">${island.name} · ${quest.kind} · avventura guidata</p><h3>${quest.title}</h3></div>
+      <span class="quest-minutes">~${quest.minutes} min</span>
+    </div>`;
+  const classic = `<details class="story-classic"><summary>Scheda tecnica completa</summary>${classicSheet}</details>`;
+
+  if (started && story.phase === "REWARDS" && story.completionSnapshot) {
+    return storyRewardMarkup(quest, story) + classic;
+  }
+  if (!started) {
+    return `${header}
+      <div class="read-aloud-card"><span>Da leggere ai bambini · apertura</span><p>“${quest.readAloud}”</p></div>
+      <p class="story-intro">Avventura <strong>guidata</strong>: un momento di gioco alla volta — cosa leggere, cosa chiedere, la scelta della ciurma, l'esito, e alla fine cosa è cambiato per la ciurma.</p>
+      <button type="button" class="complete-quest-button" data-story-start="${quest.id}">▸ Comincia l'avventura</button>
+      ${classic}`;
+  }
+  return `${header}${storyPhaseMarkup()}${classic}`;
+}
+
+function storyPhaseMarkup() {
+  const a = activeStory();
+  if (!a) return "";
+  const scene = a.flow.scenes[a.s.sceneId];
+  if (!scene) return `<p class="helper-text">Scena "${a.s.sceneId}" non trovata. <button type="button" class="link-button" data-story-abandon>Chiudi</button></p>`;
+  const phase = a.s.phase || "SCENE";
+  const progress = `<div class="story-progress"><span>Scena ${a.s.step || 1}${scene.completion ? " · finale" : ""}</span><button type="button" class="link-button" data-story-abandon>Esci dall'avventura</button></div>`;
+  if (phase === "RESOLUTION") return progress + storyResolutionPhaseMarkup(scene);
+  if (phase === "OUTCOME") return progress + storyOutcomePhaseMarkup(scene);
+  return progress + storyScenePhaseMarkup(scene);
+}
+
+function storyScenePhaseMarkup(scene) {
+  const sc = scene.scene || {};
+  const a = activeStory();
+  const note = a.s.notes[scene.id] || "";
+  let out = "";
+  if (sc.read) out += `<div class="story-block story-read"><span class="story-tag">📖 Leggi alla ciurma</span><p>“${sc.read}”</p></div>`;
+  if (sc.ask) {
+    out += `<div class="story-block story-ask">
+      <span class="story-tag">💬 Chiedi ai bambini</span>
+      <p class="story-question">${sc.ask}</p>
+      ${(sc.hints || []).length ? `<ul class="story-hints-list">${sc.hints.map((h) => `<li>${h}</li>`).join("")}</ul>` : ""}
+      ${sc.rescue ? `<details class="story-rescue"><summary>⚡ Se nessuno parte</summary><p>“${sc.rescue}”</p></details>` : ""}
+      <label class="story-note-label">Annota l'idea della ciurma (facoltativo)
+        <textarea data-story-note rows="2" placeholder="La parola, il piano o la trovata dei bambini...">${note}</textarea>
+      </label>
+    </div>`;
+  }
+  if (sc.masterTip) out += `<div class="story-block story-tip"><span class="story-tag">🎭 Spunto per il Master</span><p>${sc.masterTip}</p></div>`;
+
+  if (scene.choices) {
+    out += `<div class="story-block story-choices">
+      <span class="story-tag">👉 Cosa decide la ciurma?</span>
+      <div class="story-choice-row">${scene.choices.map((c) => `<button type="button" class="story-choice is-decision" data-story-choice="${c.id}">${c.label}</button>`).join("")}</div>
+    </div>`;
+  } else if (scene.completion) {
+    out += `<button type="button" class="complete-quest-button" data-story-finish>${scene.completion.action_label || "Concludi l'avventura"}</button>`;
+  } else {
+    out += `<button type="button" class="complete-quest-button" data-story-advance>Continua ▸</button>`;
+  }
+  return out;
+}
+
+function storyCardsMarkup(scene) {
+  const cards = playableCards();
+  if (!cards.length) return "";
+  const a = activeStory();
+  const staged = a.s.cards[scene.id] || [];
+  return `<div class="story-cards">
+    <p class="story-tag">✦ Potete usare una carta della ciurma</p>
+    <div class="hand-row">${cards.map((pw) => {
+      const isStaged = staged.some((c) => c.id === pw.id);
+      const spent = isCardPlayed(pw);
+      const num = powerNumber(pw);
+      return `<button type="button" class="hand-card ${isStaged ? "is-staged" : ""} ${spent ? "is-spent" : ""}" data-magnify-power="${pw.id}" data-magnify-as="story" title="${pw.name} — ${pw.effect}">
+        <img src="${pw.image}" alt="${pw.name}" onerror="this.remove();">
+        <span class="hand-card-name">${pw.name}</span>
+        ${num ? `<span class="hand-num">${num}</span>` : ""}
+        ${spent ? `<span class="hand-spent-tag">giocata</span>` : ""}
+      </button>`;
+    }).join("")}</div>
+  </div>`;
+}
+
+function storyDiceMarkup(scene, dice) {
+  const roster = activePlayers();
+  const a = activeStory();
+  const rolls = a ? a.s.rolls : {};
+  const allIn = roster.length > 0 && roster.every((p) => Number(rolls[p.id]) >= 1 && Number(rolls[p.id]) <= 6);
+  return `
+    <p class="story-question">Tutti i pirati in gioco tirano 1d6 + <strong>${titleCase(dice.stat)}</strong>. La media deve raggiungere <strong>${dice.target}</strong>.</p>
+    ${storyCardsMarkup(scene)}
+    ${roster.length ? roster.map((p) => {
+      const ch = getCharacter(p.characterId);
+      const cur = Number(rolls[p.id]) || 0;
+      return `<div class="move-roll-row">
+        <span class="move-roll-name">${p.name} <small>(${ch ? ch.stats[dice.stat] : 0} ${dice.stat})</small></span>
+        <span class="move-dice">${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" class="${cur === n ? "is-picked" : ""}" data-story-roll="${p.id}:${n}">${n}</button>`).join("")}</span>
+      </div>`;
+    }).join("") : `<p class="helper-text">Nessun pirata in gioco: aggiungine nella Ciurma.</p>`}
+    <button type="button" class="story-destiny-button" data-story-resolve-dice ${allIn ? "" : "disabled"}>Calcola la media della ciurma</button>`;
+}
+
+function storyResolutionPhaseMarkup(scene) {
+  const a = activeStory();
+
+  // reazione a una scelta (card centrale + "segui questa strada")
+  if (scene.choices) {
+    const chosen = scene.choices.find((c) => c.id === a.s.choices[scene.id]);
+    if (!chosen) { a.s.phase = "SCENE"; return storyScenePhaseMarkup(scene); }
+    return `<div class="story-outcome is-reaction">
+      <p class="story-outcome-badge">La ciurma ha scelto</p>
+      <p class="story-outcome-title">${chosen.reaction_title || ""}</p>
+      <p class="story-outcome-text">${chosen.reaction || ""}</p>
+      <button type="button" class="complete-quest-button" data-story-follow>Segui questa strada ▸</button>
+    </div>`;
+  }
+
+  const r = scene.resolution || {};
+  const ds = r.destiny_screen || {};
+  const isDestiny = r.policy === "destiny" || r.policy === "destiny_group_or_dice";
+  let mode = r.policy;
+
+  if (isDestiny) {
+    const rolled = a.s.destiny[scene.id];
+    if (!rolled) {
+      return `<div class="story-block story-destiny">
+        <span class="story-tag">✦ Il Destino decide</span>
+        <p class="story-destiny-title">${ds.title || "Il Destino decide"}</p>
+        <button type="button" class="story-destiny-button" data-story-destiny>${ds.button || "Affidiamoci al Destino"}</button>
+      </div>`;
+    }
+    mode = rolled;
+    if (mode !== "dice") {
+      const txt = mode === "group" ? (ds.group_result || "") : (ds.narrative_result || "");
+      return `<div class="story-block story-destiny is-verdict">
+        <span class="story-tag">✦ Il Destino ha parlato</span>
+        <p class="story-destiny-verdict">💡 ${txt}</p>
+        <button type="button" class="story-destiny-button" data-story-soft>Continua ▸</button>
+      </div>`;
+    }
+    return `<div class="story-block story-resolve">
+      <span class="story-tag">🎲 Fate una prova</span>
+      <p class="story-destiny-verdict">🎲 ${ds.dice_result || "Il mare vuole una prova!"}</p>
+      ${storyDiceMarkup(scene, r.dice)}
+    </div>`;
+  }
+
+  if (mode === "group") {
+    return `<div class="story-block story-resolve">
+      <span class="story-tag">✦ Sfida collaborativa</span>
+      <p class="story-question">${r.group || ""}</p>
+      ${storyCardsMarkup(scene)}
+      <div class="story-choice-row story-resolve-actions">
+        <button type="button" class="story-destiny-button" data-story-group="1">Ci sono riusciti insieme</button>
+        <button type="button" class="story-choice" data-story-group="0">Non del tutto — si va avanti</button>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="story-block story-resolve">
+    <span class="story-tag">🎲 Fate una prova</span>
+    ${storyDiceMarkup(scene, r.dice)}
+  </div>`;
+}
+
+function storyOutcomePhaseMarkup(scene) {
+  const a = activeStory();
+  const res = a.s.resolved[scene.id] || { success: true };
+  const outcome = scene.outcomes ? (res.success ? scene.outcomes.success : scene.outcomes.fail_forward) : scene.outcome;
+  if (!outcome) return `<button type="button" class="complete-quest-button" data-story-outcome-next>Continua l'avventura ▸</button>`;
+  const kind = scene.outcomes ? (res.success ? "is-success" : "is-forward") : "is-neutral";
+  const badge = scene.outcomes ? (res.success ? "SUCCESSO" : "COMPLICAZIONE") : "✦";
+  const effChips = (outcome.effects || []).map((e) => `<span class="story-eff-chip">${e}</span>`).join("");
+  return `<div class="story-outcome ${kind}">
+    <p class="story-outcome-badge">${badge}</p>
+    <p class="story-outcome-title">${outcome.title || ""}</p>
+    <p class="story-outcome-text">${outcome.text || ""}</p>
+    ${res.card ? `<p class="story-outcome-note">Carta giocata: ${res.card}</p>` : ""}
+    ${res.breakdown ? `<p class="story-outcome-note">${res.breakdown}</p>` : ""}
+    ${effChips ? `<div class="story-eff-row">${effChips}</div>` : ""}
+    <button type="button" class="complete-quest-button" data-story-outcome-next>Continua l'avventura ▸</button>
+  </div>`;
+}
+
+function storyRewardMarkup(quest, story) {
+  const rs = quest.storyFlow.rewardScreen || {};
+  const snap = story.completionSnapshot;
+  const b = snap.before, af = snap.after;
+
+  const newPowerIds = af.powerIds.filter((id) => !b.powerIds.includes(id));
+  const ba = (label, x, y) => x === y
+    ? `<div class="story-ba"><span>${label}</span><strong>${y}</strong></div>`
+    : `<div class="story-ba is-changed"><span>${label}</span><strong>${x} <em>→</em> ${y}</strong></div>`;
+
+  const grew = af.players.filter((p) => {
+    const was = b.players.find((q) => q.id === p.id);
+    return was && p.power > was.power;
+  }).map((p) => {
+    const was = b.players.find((q) => q.id === p.id);
+    return `<li>${p.name}: Potenza ${was.power} <em>→</em> <strong>${p.power}</strong></li>`;
+  }).join("");
+
+  const powerCards = newPowerIds.map((id) => {
+    const pw = PIRATI.power(id);
+    return pw ? `<figure class="story-reward-card"><img src="${pw.image}" alt="${pw.name}" onerror="this.parentNode.classList.add('no-img'); this.remove()"><figcaption>${pw.name}</figcaption></figure>` : "";
+  }).join("");
+
+  const gradeUp = af.grade > b.grade;
+
+  return `
+    <div class="story-rewards">
+      <p class="story-rewards-headline">${rs.headline || "🏴‍☠️ AVVENTURA COMPLETATA!"}</p>
+      <p class="story-rewards-subtitle">${rs.subtitle || quest.title}</p>
+      ${rs.final_read ? `<p class="story-rewards-read">“${rs.final_read}”</p>` : ""}
+
+      <div class="story-rewards-block">
+        <h4>Bottino conquistato</h4>
+        ${rewardCardsMarkup(quest)}
+      </div>
+
+      ${powerCards ? `<div class="story-rewards-block"><h4>Nuove carte della ciurma</h4><div class="story-reward-cards">${powerCards}</div></div>` : ""}
+
+      <div class="story-rewards-block">
+        <h4>Come è cresciuta la ciurma</h4>
+        <div class="story-ba-grid">
+          ${ba("Monete", b.coins, af.coins)}
+          ${b.fame !== af.fame ? ba("Fama", b.fame, af.fame) : ""}
+          ${ba("Potenza della Ciurma", b.crewPower, af.crewPower)}
+          ${ba("Grado", b.grade + " · " + b.gradeName, af.grade + " · " + af.gradeName)}
+        </div>
+        ${grew ? `<p class="story-ba-label">Crescita dei pirati</p><ul class="story-grew-list">${grew}</ul>` : ""}
+        ${gradeUp ? `<p class="story-grade-up">✦ Nuovo Grado ${af.grade}! Nuove carte del Baule dei Poteri sbloccate.</p>` : ""}
+      </div>
+
+      <button type="button" class="complete-quest-button" data-story-close-rewards>${rs.close_button || "⛵ Torna alla rotta"}</button>
+    </div>`;
+}
 function revealQuest(questId) {
   if (state.questCampaign.completedQuestIds.includes(questId)) return;
   state.questCampaign.revealedQuestId = questId;
   state.questCampaign.resolution = createQuestResolution(questId);
   bumpEncounter();
+  sfx("quest");
   saveState();
   renderQuestCycle();
 }
@@ -2921,6 +3296,7 @@ function resolveCrewDice() {
   const average = entries.reduce((sum, entry) => sum + entry.total, 0) / entries.length + cardBonus;
   const target = approach.target + Math.max(0, campaign.cycle - 1);
   const success = average >= target;
+  sfx(success ? "win-event" : "fallimento");
   const cardTxt = cardList.length ? ` + ${cardList.map((c) => `${c.amount} (${c.name})`).join(" + ")}` : "";
   resolution.result = {
     success,
@@ -3049,7 +3425,8 @@ function questGrowthStat(quest, resolution) {
   return approach ? approach.stat : "fortuna";
 }
 
-function completeQuest(questId) {
+function completeQuest(questId, opts) {
+  opts = opts || {};
   const quest = CYCLE_ONE_QUESTS.find((entry) => entry.id === questId);
   if (!quest || state.questCampaign.completedQuestIds.includes(questId)) return;
   const resolution = state.questCampaign.resolution;
@@ -3074,33 +3451,28 @@ function completeQuest(questId) {
   state.questCampaign.resolution = null;
 
   const gained = grantQuestRewards(quest);
+  if (!opts.silent) sfx("trionfo");
   pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +1 crescita ${titleCase(growthStat)} a ${growthTargets.length} pirati.`);
   const gradeUp = refreshGrade();
-  if (gradeUp) pushLog(`La ciurma sale al Grado ${gradeUp.grade}: ${gradeUp.name}! Nuovi poteri sbloccati.`);
+  if (gradeUp) { if (!opts.silent) sfx("grado"); pushLog(`La ciurma sale al Grado ${gradeUp.grade}: ${gradeUp.name}! Nuovi poteri sbloccati.`); }
   checkLegendaryGrants();
 
-  if (state.voyage && state.voyage.pending && state.voyage.pending.questId === questId) {
+  if (!opts.silent && state.voyage && state.voyage.pending && state.voyage.pending.questId === questId) {
     state.voyage.pending = null;
     state.voyage.message = `Avventura "${quest.title}" conclusa! Tornate alla Mappa e proseguite la rotta.`;
   }
 
   saveState();
-  render();
+  if (!opts.silent) render();
 }
 
 function renderLog() {
   $("#log-list").innerHTML = state.log.length ? state.log.map((entry) => `
-    <li><strong>Giorno ${entry.day}, turno ${entry.turn}</strong> <span>${entry.time}</span><br>${entry.text}</li>
+    <li><strong>Giorno ${entry.day}</strong> <span>${entry.time}</span><br>${entry.text}</li>
   `).join("") : `<li>Il diario e vuoto.</li>`;
 }
 
 function renderPrint() {
-  $("#print-board").innerHTML = DATA.board.map((space, index) => `
-    <div class="board-space" data-kind="${space[1]}">
-      <strong>${index + 1}. ${space[0]}</strong>
-      <span>${space[2]}</span>
-    </div>
-  `).join("");
 
   $("#print-characters").innerHTML = DATA.characters.map((character) => `
     <figure class="print-power-card">
@@ -3167,8 +3539,6 @@ function renderPrint() {
 }
 
 function render() {
-  renderMission();
-  renderResult();
   renderCrew();
   renderLibrary();
   renderItems();
@@ -3176,7 +3546,7 @@ function render() {
   renderTreasury();
   renderMap();
   renderBestiario();
-  renderCrostone();
+  renderMapParola();
   renderLog();
   renderPrint();
 }
@@ -3201,10 +3571,6 @@ function bindEvents() {
         gsap.fromTo(activeView, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power2.out" });
       }
     });
-  });
-
-  $$(".action-button").forEach((button) => {
-    button.addEventListener("click", () => applyAction(button.dataset.action));
   });
 
   $("[data-tutorial-toggle]").addEventListener("click", () => {
@@ -3234,10 +3600,8 @@ function bindEvents() {
     });
   }
 
-  $("#new-session-btn").addEventListener("click", startNewSession);
   $("#add-player-btn").addEventListener("click", addPlayer);
   $("#seed-crew-btn")?.addEventListener("click", seedTestCrew);
-  $("#undo-btn").addEventListener("click", restoreSnapshot);
   $("#print-btn").addEventListener("click", () => window.print());
   $("#export-save-btn").addEventListener("click", exportSave);
   $("#import-save-input").addEventListener("change", (event) => {
@@ -3265,7 +3629,8 @@ function bindEvents() {
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if ($("#tutorial-overlay").classList.contains("is-open")) setTutorialOverlay(false);
+      if (magnifierState) closeMagnifier();
+      else if ($("#tutorial-overlay").classList.contains("is-open")) setTutorialOverlay(false);
       else closeNavDrawer();
     }
     if (!$("#view-crew").classList.contains("is-active")) return;
@@ -3274,6 +3639,10 @@ function bindEvents() {
   });
 
   document.addEventListener("input", (event) => {
+    if (event.target.matches("[data-story-note]")) {
+      noteStoryIdea(event.target.value);
+      return;
+    }
     const resolution = state.questCampaign?.resolution;
     if (!resolution) return;
     if (event.target.matches("[data-quest-roll]")) {
@@ -3293,7 +3662,30 @@ function bindEvents() {
   });
   $("#nav-scrim").addEventListener("click", closeNavDrawer);
 
+  const sfxToggle = $("#sfx-toggle");
+  if (sfxToggle) {
+    const paintSfx = () => {
+      const muted = window.PIRATI_SFX ? window.PIRATI_SFX.isMuted() : false;
+      sfxToggle.setAttribute("aria-pressed", String(!muted));
+      sfxToggle.querySelector(".nav-ico").textContent = muted ? "🔇" : "🔊";
+      const label = $("#sfx-label");
+      if (label) label.textContent = muted ? "Suoni off" : "Suoni";
+    };
+    paintSfx();
+    sfxToggle.addEventListener("click", () => {
+      if (window.PIRATI_SFX) window.PIRATI_SFX.toggle();
+      paintSfx();
+      sfx("click");
+    });
+  }
+
   document.addEventListener("click", (event) => {
+    // clic "generale": voci di menu e pulsanti principali
+    const clickable = event.target.closest(
+      ".nav-item, .primary-button, .secondary-button, .action-button, .map-route-button, .tesoreria-tab, .carousel-arrow, .map-potenza-button"
+    );
+    if (clickable && !clickable.disabled && clickable.id !== "sfx-toggle") sfx("click");
+
     if (event.target.closest("[data-tutorial-close]")) setTutorialOverlay(false);
     const tutorialStep = event.target.closest("[data-tutorial-step]");
     if (tutorialStep) {
@@ -3302,9 +3694,6 @@ function bindEvents() {
       tutorialStepIndex = nextStep;
       renderTutorialStep(direction);
     }
-    const dieButton = event.target.closest("[data-die]");
-    if (dieButton) recordPhysicalRoll(Number(dieButton.dataset.die));
-
     const selectButton = event.target.closest("[data-select-player]");
     if (selectButton) {
       state.selectedPlayerId = selectButton.dataset.selectPlayer;
@@ -3327,6 +3716,21 @@ function bindEvents() {
     }
     const carouselCard = event.target.closest("[data-carousel-card]");
     if (carouselCard) selectCarouselCharacter(Number(carouselCard.dataset.carouselCard));
+
+    const galleryCard = event.target.closest("[data-gallery-card]");
+    if (galleryCard) {
+      const i = Number(galleryCard.dataset.galleryCard);
+      openGalleryCard = openGalleryCard === i ? null : i;
+      updateGallerySelection();
+      if (openGalleryCard != null) {
+        const viewer = $("#character-card-viewer");
+        if (viewer) viewer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+    if (event.target.closest("[data-close-card]")) {
+      openGalleryCard = null;
+      updateGallerySelection();
+    }
 
     const itemCharacter = event.target.closest("[data-item-character]");
     if (itemCharacter) {
@@ -3374,6 +3778,16 @@ function bindEvents() {
     const viewJump = event.target.closest("[data-view]");
     if (viewJump && !viewJump.classList.contains("nav-item")) showView(viewJump.dataset.view);
 
+    if (event.target.closest("[data-open-parola]")) {
+      const acc = $("#map-parola");
+      if (acc) {
+        acc._progOpen = true;
+        acc.open = true;
+        acc.dataset.touched = "1";
+        acc.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
     if (event.target.closest("[data-crostone-ok]")) crostoneIndovinata();
     if (event.target.closest("[data-crostone-ko]")) crostoneSbagliata();
     const crostoneRecoverBtn = event.target.closest("[data-crostone-recover]");
@@ -3408,6 +3822,19 @@ function bindEvents() {
     if (eventChoice) resolveEventChoice(Number(eventChoice.dataset.eventChoice));
     const playCardBtn = event.target.closest("[data-play-card]");
     if (playCardBtn) playCard(playCardBtn.dataset.playCard);
+
+    // --- lente carte: apri/chiudi/gioca dalla lente ---
+    const magnifyBtn = event.target.closest("[data-magnify-power]");
+    if (magnifyBtn) { openMagnifier(magnifyBtn.dataset.magnifyPower, magnifyBtn.dataset.magnifyAs); return; }
+    if (event.target.closest("[data-magnifier-close]")) { closeMagnifier(); return; }
+    if (event.target.closest("[data-magnifier-play]") && magnifierState) {
+      const { powerId, playAs } = magnifierState;
+      closeMagnifier();
+      if (playAs === "story") playStoryCard(powerId);
+      else if (playAs === "quest") playQuestCard(powerId);
+      else if (playAs === "map") playCard(powerId);
+      return;
+    }
     if (event.target.closest("[data-open-potenza]")) {
       treasuryTab = "potenza";
       showView("tesoreria");
@@ -3436,6 +3863,30 @@ function bindEvents() {
     if (event.target.closest("[data-resolve-question]")) resolveGroupQuestion(true);
     const completeQuestButton = event.target.closest("[data-complete-quest]");
     if (completeQuestButton) completeQuest(completeQuestButton.dataset.completeQuest);
+
+    // --- avventura guidata (storyFlow v2) ---
+    const storyStartBtn = event.target.closest("[data-story-start]");
+    if (storyStartBtn) startStory(storyStartBtn.dataset.storyStart);
+    if (event.target.closest("[data-story-abandon]")) abandonStory();
+    if (event.target.closest("[data-story-advance]")) advanceFromScene();
+    const storyChoiceBtn = event.target.closest("[data-story-choice]");
+    if (storyChoiceBtn) chooseStoryOption(storyChoiceBtn.dataset.storyChoice);
+    if (event.target.closest("[data-story-follow]")) advanceFromChoice();
+    if (event.target.closest("[data-story-destiny]")) rollStoryDestiny();
+    if (event.target.closest("[data-story-soft]")) resolveStorySoft();
+    const storyGroupBtn = event.target.closest("[data-story-group]");
+    if (storyGroupBtn) resolveStoryGroup(storyGroupBtn.dataset.storyGroup === "1");
+    if (event.target.closest("[data-story-resolve-dice]")) resolveStoryDice();
+    if (event.target.closest("[data-story-outcome-next]")) advanceFromOutcome();
+    if (event.target.closest("[data-story-finish]")) finishStory();
+    if (event.target.closest("[data-story-close-rewards]")) closeStoryRewards();
+    const storyRollBtn = event.target.closest("[data-story-roll]");
+    if (storyRollBtn) {
+      const [pid, n] = storyRollBtn.dataset.storyRoll.split(":");
+      setStoryRoll(pid, Number(n));
+    }
+    const playStoryCardBtn = event.target.closest("[data-play-story-card]");
+    if (playStoryCardBtn) playStoryCard(playStoryCardBtn.dataset.playStoryCard);
     const supplyButton = event.target.closest("[data-supplies]");
     if (supplyButton) {
       state.questCampaign.supplies = Math.max(0, Math.min(12, state.questCampaign.supplies + Number(supplyButton.dataset.supplies)));
