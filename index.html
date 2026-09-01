@@ -178,22 +178,18 @@
       border-radius: 16px;
       box-shadow: 0 24px 60px rgba(0,0,0,.55);
     }
-    /* pulsante invisibile sopra il "Discendi nell'Abisso" disegnato nell'immagine */
+    /* zona cliccabile completamente invisibile sopra il "Discendi nell'Abisso" disegnato */
     .abisso-btn {
       position: absolute;
       left: 31.5%;
       width: 37%;
       top: 77.5%;
       height: 8.6%;
-      border-radius: 10px;
       cursor: pointer;
-      transition: background .15s, box-shadow .15s;
     }
-    .abisso-btn:hover,
-    .abisso-btn:focus-visible {
-      outline: none;
-      background: rgba(243,199,111,.14);
-      box-shadow: 0 0 0 2px rgba(243,199,111,.7), 0 0 24px rgba(243,199,111,.35);
+    @media (max-width: 640px) {
+      .abisso { max-width: 440px; }
+      .abisso-btn { left: 9%; width: 82%; top: 84%; height: 8.5%; }
     }
 
     @media (max-width: 640px) {
@@ -315,7 +311,10 @@
   </div>
 
   <section class="abisso" aria-label="Abisso Infinito">
-    <img id="abisso-img" class="abisso-img" alt="Se hai 10 anni o più e ti è piaciuta questa avventura, amerai Abisso Infinito: un gioco cooperativo online dove il Master apre una sessione privata nel browser per fino a 16 giocatori — mappa vivente, mostri, dadi, mercati e una progressione che continua anche dopo la serata. Puoi anche creare avventure personalizzate con mostri e quest tue.">
+    <picture>
+      <source id="abisso-src-mobile" media="(max-width: 640px)">
+      <img id="abisso-img" class="abisso-img" alt="Se hai 10 anni o più e ti è piaciuta questa avventura, amerai Abisso Infinito: un gioco cooperativo online dove il Master apre una sessione privata nel browser per fino a 16 giocatori — mappa vivente, mostri, dadi, mercati e una progressione che continua anche dopo la serata. Puoi anche creare avventure personalizzate con mostri e quest tue.">
+    </picture>
     <a class="abisso-btn" href="https://abissoinfinito.it" target="_blank" rel="noopener" aria-label="Discendi nell'Abisso — vai ad Abisso Infinito"></a>
   </section>
 
@@ -338,11 +337,17 @@
   });
   logo.src = PIRATI_ASSET("sfondi/logo.webp");
 
-  /* pannello Abisso Infinito (immagine con pulsante trasparente sopra) */
+  /* pannello Abisso Infinito: immagine (desktop / mobile) + zona cliccabile invisibile */
   const abissoImg = document.getElementById("abisso-img");
+  const abissoSrcMobile = document.getElementById("abisso-src-mobile");
   if (abissoImg) {
+    if (abissoSrcMobile) abissoSrcMobile.srcset = PIRATI_ASSET("sfondi/abisso-mobile.webp");
     abissoImg.addEventListener("error", () => {
-      if (!abissoImg.dataset.fb) { abissoImg.dataset.fb = "1"; abissoImg.src = "assets/sfondi/abisso.webp"; }
+      if (abissoImg.dataset.fb) return;
+      abissoImg.dataset.fb = "1";
+      const mobile = window.matchMedia("(max-width: 640px)").matches;
+      if (abissoSrcMobile) abissoSrcMobile.remove();
+      abissoImg.src = mobile ? "assets/sfondi/abisso-mobile.webp" : "assets/sfondi/abisso.webp";
     });
     abissoImg.src = PIRATI_ASSET("sfondi/abisso.webp");
   }
