@@ -31,12 +31,13 @@
        campana.mp3  si chiude la giornata di scuola
   */
   var SOUNDS = {
-    click:       0.28,   // tap sui pulsanti principali
-    fallimento:  0.55,   // una prova va male (mappa / quest / parola sbagliata)
-    minaccia:    0.60,   // compare un mostro o un assalto
-    quest:       0.55,   // si apre / si rivela un'avventura
-    star:        0.50,   // si gioca una carta potere, una magia, un oggetto
-    "win-event": 0.60    // prova riuscita / parola indovinata
+    click:        0.28,  // tap sui pulsanti principali (menu, primari, ...)
+    "click-home": 0.30,  // tap "leggero" su tutti gli altri pulsanti
+    fallimento:   0.55,  // una prova va male (mappa / quest / parola sbagliata)
+    minaccia:     0.60,  // compare un mostro o un assalto
+    quest:        0.55,  // si apre / si rivela un'avventura
+    star:         0.50,  // si gioca una carta potere, una magia, un oggetto
+    "win-event":  0.60   // prova riuscita / parola indovinata
 
     // monete:   0.50,
     // trionfo:  0.60,

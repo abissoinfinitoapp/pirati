@@ -364,8 +364,14 @@ let state = loadState();
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
-/* effetti sonori (engine/sfx.js) — no-op se il motore non c'è */
-const sfx = (name) => { if (window.PIRATI_SFX) window.PIRATI_SFX.play(name); };
+/* effetti sonori (engine/sfx.js) — no-op se il motore non c'è.
+   sfxTick s'incrementa a ogni suono: serve al click "leggero" di riserva. */
+let sfxTick = 0;
+const sfx = (name) => {
+  if (!window.PIRATI_SFX) return;
+  window.PIRATI_SFX.play(name);
+  sfxTick++;
+};
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -3723,6 +3729,14 @@ function bindEvents() {
       ".nav-item, .primary-button, .secondary-button, .action-button, .map-route-button, .tesoreria-tab, .carousel-arrow, .map-potenza-button"
     );
     if (clickable && !clickable.disabled && clickable.id !== "sfx-toggle") sfx("click");
+
+    // click "leggero" su tutti gli altri pulsanti che non fanno già un suono loro:
+    // dopo i gestori sincroni, suona solo se sfxTick non è cambiato per questo clic
+    const anyBtn = event.target.closest("button:not([disabled])");
+    if (anyBtn && anyBtn.id !== "sfx-toggle" && !anyBtn.closest("#app-nav")) {
+      const t = sfxTick;
+      Promise.resolve().then(() => { if (sfxTick === t) sfx("click-home"); });
+    }
 
     if (event.target.closest("[data-tutorial-close]")) setTutorialOverlay(false);
     const tutorialStep = event.target.closest("[data-tutorial-step]");
