@@ -967,6 +967,18 @@ select {
   box-shadow: var(--shadow);
 }
 .quest-cycle-page .eyebrow { color: #f3c76f; }
+.quest-cycle-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.quest-cycle-tabs[hidden] { display: none; }
+.quest-cycle-tab {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(255,255,255,.18); border-radius: 999px;
+  padding: 8px 15px; color: rgba(255,255,255,.75); background: rgba(255,255,255,.05);
+  font-weight: 800; font-size: 13px;
+}
+.quest-cycle-tab small { color: rgba(255,255,255,.5); font-weight: 700; }
+.quest-cycle-tab.is-active { color: #173449; border-color: #f3c76f; background: #f3c76f; }
+.quest-cycle-tab.is-active small { color: rgba(23,32,42,.6); }
+.quest-cycle-tab.is-complete:not(.is-active) { border-color: rgba(159,221,207,.4); color: #9fddcf; }
 .quest-cycle-hero { display: flex; align-items: center; justify-content: space-between; gap: 25px; flex-wrap: wrap; }
 .quest-cycle-hero h2 { margin: 4px 0 8px; font-size: clamp(31px, 5vw, 52px); }
 .quest-cycle-hero > div:first-child > p:last-child { max-width: 690px; color: rgba(255,255,255,.65); }

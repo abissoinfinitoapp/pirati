@@ -298,7 +298,7 @@ const TUTORIAL_STEPS = [
    comodi con gli stessi nomi di prima, così il resto del codice non cambia. */
 const QUEST_ISLANDS = PIRATI.islands;
 
-const CYCLE_ONE_QUESTS = PIRATI.quests;
+const ALL_QUESTS = PIRATI.quests;
 
 /* La domanda collaborativa ora vive dentro ogni quest (campo groupChallenge). */
 function questGroupChallenge(quest) {
@@ -345,6 +345,7 @@ const defaultState = {
   },
   questCampaign: {
     cycle: 1,
+    selectedPackId: null,     // null = primo pacchetto con quest da fare
     selectedIslandId: "rovine",
     revealedQuestId: null,
     completedQuestIds: [],
@@ -2655,24 +2656,61 @@ function renderQuestCycle() {
   campaign.supplies = Number.isFinite(Number(campaign.supplies)) ? Number(campaign.supplies) : 8;
   state.questCampaign = campaign;
   const completed = new Set(campaign.completedQuestIds || []);
-  const totalQuests = CYCLE_ONE_QUESTS.length;
-  const selectedIsland = QUEST_ISLANDS.find((island) => island.id === campaign.selectedIslandId) || QUEST_ISLANDS[0];
-  const islandQuests = CYCLE_ONE_QUESTS.filter((quest) => quest.island === selectedIsland.id);
+
+  // --- ciclo (pacchetto) selezionato ---
+  const packs = PIRATI.packs;
+  const packOf = (id) => packs.find((p) => p.id === id);
+  let pack = packOf(campaign.selectedPackId);
+  if (!pack) {
+    // primo pacchetto con almeno una quest da fare, altrimenti l'ultimo
+    pack = packs.find((p) => PIRATI.quests.some((q) => q.packId === p.id && !completed.has(q.id))) || packs[packs.length - 1] || packs[0];
+    campaign.selectedPackId = pack ? pack.id : null;
+  }
+  const packQuests = PIRATI.quests.filter((q) => q.packId === (pack && pack.id));
+  const packIslands = QUEST_ISLANDS.filter((isl) => packQuests.some((q) => q.island === isl.id));
+  const packDone = packQuests.filter((q) => completed.has(q.id)).length;
+
+  let selectedIsland = packIslands.find((island) => island.id === campaign.selectedIslandId);
+  if (!selectedIsland) { selectedIsland = packIslands[0] || QUEST_ISLANDS[0]; campaign.selectedIslandId = selectedIsland.id; }
+  const islandQuests = packQuests.filter((quest) => quest.island === selectedIsland.id);
+
   refreshGrade();
-  const gradeStep = PIRATI.gradeForCompleted(completed.size);
-  const nextStep = PIRATI.nextGrade(completed.size);
-  $("#quest-completed-count").textContent = `${completed.size}/${totalQuests}`;
+  const totalDone = completed.size;
+  const gradeStep = PIRATI.gradeForCompleted(totalDone);
+  const nextStep = PIRATI.nextGrade(totalDone);
+  $("#quest-completed-count").textContent = `${packDone}/${packQuests.length}`;
   $("#quest-supplies").textContent = campaign.supplies;
   if ($("#quest-grade")) $("#quest-grade").textContent = gradeStep.grade;
   if ($("#quest-grade-name")) $("#quest-grade-name").textContent = nextStep
-    ? `${gradeStep.name} · al Grado ${nextStep.grade} con ${nextStep.questsNeeded - completed.size} quest`
+    ? `${gradeStep.name} · al Grado ${nextStep.grade} con ${nextStep.questsNeeded - totalDone} quest`
     : `${gradeStep.name} · grado massimo`;
   if ($("#quest-coins")) $("#quest-coins").textContent = state.crew.coins;
   if ($("#quest-trophy-count")) $("#quest-trophy-count").textContent = state.crew.trophies.length;
 
-  $("#quest-islands").innerHTML = QUEST_ISLANDS.map((island) => {
-    const done = CYCLE_ONE_QUESTS.filter((quest) => quest.island === island.id && completed.has(quest.id)).length;
-    return `<button type="button" role="tab" aria-selected="${island.id === selectedIsland.id}" class="quest-island-button ${island.id === selectedIsland.id ? "is-active" : ""} ${done === 2 ? "is-complete" : ""}" data-quest-island="${island.id}" data-color="${island.color}"><span>${island.icon}</span><strong>${island.name}</strong><small>${done}/2 concluse</small></button>`;
+  // intestazione del ciclo
+  if ($("#quest-cycle-eyebrow") && pack) $("#quest-cycle-eyebrow").textContent = pack.name;
+  if ($("#quest-cycle-title")) $("#quest-cycle-title").textContent = `${packQuests.length} avventure, ${packIslands.length} isol${packIslands.length === 1 ? "a" : "e"}`;
+
+  // tab dei cicli (solo se c'è più di un pacchetto)
+  const cycleTabs = $("#quest-cycle-tabs");
+  if (cycleTabs) {
+    if (packs.length > 1) {
+      cycleTabs.hidden = false;
+      cycleTabs.innerHTML = packs.map((p) => {
+        const qs = PIRATI.quests.filter((q) => q.packId === p.id);
+        const d = qs.filter((q) => completed.has(q.id)).length;
+        return `<button type="button" role="tab" aria-selected="${p.id === pack.id}" class="quest-cycle-tab ${p.id === pack.id ? "is-active" : ""} ${d >= qs.length ? "is-complete" : ""}" data-quest-pack="${p.id}">${p.name}<small>${d}/${qs.length}</small></button>`;
+      }).join("");
+    } else {
+      cycleTabs.hidden = true;
+      cycleTabs.innerHTML = "";
+    }
+  }
+
+  $("#quest-islands").innerHTML = packIslands.map((island) => {
+    const isl = packQuests.filter((quest) => quest.island === island.id);
+    const done = isl.filter((quest) => completed.has(quest.id)).length;
+    return `<button type="button" role="tab" aria-selected="${island.id === selectedIsland.id}" class="quest-island-button ${island.id === selectedIsland.id ? "is-active" : ""} ${done === isl.length ? "is-complete" : ""}" data-quest-island="${island.id}" data-color="${island.color}"><span>${island.icon}</span><strong>${island.name}</strong><small>${done}/${isl.length} concluse</small></button>`;
   }).join("");
 
   $("#quest-event-choices").innerHTML = islandQuests.map((quest) => {
@@ -2681,11 +2719,11 @@ function renderQuestCycle() {
     return `<button type="button" class="quest-choice-card ${isDone ? "is-complete" : ""} ${isRevealed ? "is-active" : ""}" data-reveal-quest="${quest.id}" ${isDone ? "disabled" : ""}><span>${quest.kind}</span><strong>${quest.title}</strong><small>Soglia base ${quest.difficulty}</small><em>${isDone ? "Completata" : isRevealed ? "In preparazione" : "Prepara la quest"}</em></button>`;
   }).join("");
 
-  const quest = CYCLE_ONE_QUESTS.find((entry) => entry.id === campaign.revealedQuestId);
+  const quest = PIRATI.quest(campaign.revealedQuestId);
   if (!quest) {
-    $("#quest-master-sheet").innerHTML = completed.size >= totalQuests
-      ? `<div class="quest-empty-state cycle-complete"><span>✦</span><h3>Primo ciclo completato</h3><p>La ciurma ha attraversato tutte le otto isole. La Stella della Ciurma è pronta ad aprire il ciclo della vittoria.</p></div>`
-      : `<div class="quest-empty-state"><span>${selectedIsland.icon}</span><h3>Scegli una delle due avventure</h3><p>La scheda operativa del Master comparirà qui. I bambini vedranno soltanto ciò che deciderai di raccontare.</p></div>`;
+    $("#quest-master-sheet").innerHTML = (packQuests.length && packDone >= packQuests.length)
+      ? `<div class="quest-empty-state cycle-complete"><span>✦</span><h3>${pack.name}: ciclo completato</h3><p>La ciurma ha attraversato tutte le sue isole.${packOf(campaign.selectedPackId) === packs[packs.length - 1] ? "" : " Passa al ciclo successivo con le linguette qui sopra."}</p></div>`
+      : `<div class="quest-empty-state"><span>${selectedIsland.icon}</span><h3>Scegli un'avventura di ${selectedIsland.name}</h3><p>La scheda operativa del Master comparirà qui. I bambini vedranno soltanto ciò che deciderai di raccontare.</p></div>`;
     return;
   }
   if (!campaign.resolution || campaign.resolution.questId !== quest.id) campaign.resolution = createQuestResolution(quest.id);
@@ -3271,7 +3309,7 @@ function revealQuest(questId) {
 function resolveCrewDice() {
   const campaign = state.questCampaign;
   const resolution = campaign.resolution;
-  const quest = CYCLE_ONE_QUESTS.find((entry) => entry.id === resolution?.questId);
+  const quest = ALL_QUESTS.find((entry) => entry.id === resolution?.questId);
   if (!quest || !resolution.playerIds.length) {
     resolution.result = { success: false, title: "Manca la ciurma", text: "Scegli almeno un pirata prima di risolvere la prova." };
     saveState(); renderQuestCycle(); return;
@@ -3310,7 +3348,7 @@ function resolveCrewDice() {
 
 function resolveGroupQuestion(success) {
   const resolution = state.questCampaign.resolution;
-  const quest = CYCLE_ONE_QUESTS.find((entry) => entry.id === resolution?.questId);
+  const quest = ALL_QUESTS.find((entry) => entry.id === resolution?.questId);
   if (!quest || !resolution) return;
   if (!resolution.playerIds.length) {
     resolution.result = { success: false, title: "Manca la ciurma", text: "Scegli almeno un pirata che collabori alla risposta." };
@@ -3427,7 +3465,7 @@ function questGrowthStat(quest, resolution) {
 
 function completeQuest(questId, opts) {
   opts = opts || {};
-  const quest = CYCLE_ONE_QUESTS.find((entry) => entry.id === questId);
+  const quest = ALL_QUESTS.find((entry) => entry.id === questId);
   if (!quest || state.questCampaign.completedQuestIds.includes(questId)) return;
   const resolution = state.questCampaign.resolution;
   const participantIds = (resolution?.playerIds || []).filter((id) => state.players.some((p) => p.id === id));
@@ -3747,6 +3785,15 @@ function bindEvents() {
     const useItem = event.target.closest("[data-use-item]");
     if (useItem) useSpecialItem(useItem.dataset.ownerKey, useItem.dataset.characterId, useItem.dataset.useItem);
 
+    const questPack = event.target.closest("[data-quest-pack]");
+    if (questPack) {
+      state.questCampaign.selectedPackId = questPack.dataset.questPack;
+      state.questCampaign.selectedIslandId = null;   // renderQuestCycle sceglie la prima isola del ciclo
+      state.questCampaign.revealedQuestId = null;
+      sfx("click");
+      saveState();
+      renderQuestCycle();
+    }
     const questIsland = event.target.closest("[data-quest-island]");
     if (questIsland) {
       state.questCampaign.selectedIslandId = questIsland.dataset.questIsland;

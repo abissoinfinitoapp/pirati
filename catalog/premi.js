@@ -27,7 +27,11 @@ PIRATI.registerRewards({
     { id: "vela-nuvola-loot",          name: "Vela di Nuvola",            icon: "☁️", rarity: "epico",  text: "La nave attraversa una rotta senza consumare Rifornimenti." },
     { id: "uovo-brezza-loot",          name: "Uovo di Brezza",            icon: "🥚", rarity: "raro",   text: "Aprendolo, libera un vento che soffia via nebbia, gas o fumo." },
     { id: "chiave-maree-loot",         name: "Chiave delle Maree",        icon: "🗝️", rarity: "epico",  text: "Apre un forziere o una porta rara senza bisogno di una prova." },
-    { id: "stella-ciurma-loot",        name: "Frammento di Stella",       icon: "💫", rarity: "epico",  text: "Custodito insieme, ricorda alla ciurma tutte le avventure del ciclo." }
+    { id: "stella-ciurma-loot",        name: "Frammento di Stella",       icon: "💫", rarity: "epico",  text: "Custodito insieme, ricorda alla ciurma tutte le avventure del ciclo." },
+
+    /* --- Ciclo II · La Rotta delle Maree Perdute --- */
+    { id: "frammento-ombra",           name: "Frammento d'Ombra",         icon: "🌑", rarity: "raro",   text: "Illuminato dalla Stella della Ciurma, punta verso la nave misteriosa." },
+    { id: "foglia-finale",             name: "Foglia del Finale",         icon: "🍂", rarity: "comune", text: "Sussurrata a un racconto, gli regala un finale a scelta della ciurma." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */
@@ -48,7 +52,11 @@ PIRATI.registerRewards({
     { id: "custode-dei-venti",       name: "Custode dei Venti",       icon: "🪺", text: "Hai messo al sicuro le tre uova di vento." },
     { id: "amico-della-banca",       name: "Amico della Banca",       icon: "🦀", text: "Hai convinto il Granchio Banchiere con uno scambio giusto." },
     { id: "stella-della-ciurma",     name: "Stella della Ciurma",     icon: "🌟", text: "Avete scelto un desiderio comune e chiuso il primo ciclo." },
-    { id: "sonno-dell-abisso",       name: "Il Sonno dell'Abisso",    icon: "🌊", text: "Avete fatto tornare a dormire Barbabisso, il Vecchio del Fondale." }
+    { id: "sonno-dell-abisso",       name: "Il Sonno dell'Abisso",    icon: "🌊", text: "Avete fatto tornare a dormire Barbabisso, il Vecchio del Fondale." },
+
+    /* --- Ciclo II · La Rotta delle Maree Perdute --- */
+    { id: "luce-delle-ombre",        name: "Luce delle Ombre",        icon: "🕯️", text: "Hai riportato a casa le ombre della ciurma e sentito la voce sulla nave." },
+    { id: "voce-degli-alberi",       name: "Voce degli Alberi",       icon: "🌳", text: "Hai ridato un finale a ogni storia della Biblioteca degli Alberi." }
   ],
 
   /* --- TITOLI: onorificenze della ciurma (per usi futuri / Gradi) ------- */

@@ -153,6 +153,22 @@ PIRATI.registerPowers([
     art: "Una stella marina a cinque punte che brilla di luce dorata, ogni punta di un colore diverso che si fondono verso il centro luminoso. Sospesa e riflessa nell'acqua nera calma."
   },
 
+  /* --- CICLO II · La Rotta delle Maree Perdute (Grado 3) ------------- */
+  {
+    id: "richiamo-ombra", name: "Richiamo dell'Ombra", icon: "🌑",
+    category: "carta", grade: 3, cooldown: "quest",
+    effect: "Chiami la tua ombra: per una scena fa una cosa al posto tuo senza tirare — raccogliere qualcosa, distrarre qualcuno, sbirciare dietro un angolo.",
+    play: { type: "skip", note: "un compito semplice svolto dall'ombra (raccogliere, distrarre, sbirciare)" },
+    art: "Un'ombra a forma di bambino pirata staccata da terra, tenuta per mano come un palloncino da una manina illuminata. L'ombra fa l'occhiolino. Sfondo di rovine nella giungla al crepuscolo, lucciole."
+  },
+  {
+    id: "pagina-bianca", name: "La Pagina Bianca", icon: "📄",
+    category: "magia", grade: 3, cooldown: "quest",
+    effect: "Scrivi su una pagina bianca come vorresti che andasse una scena. Se il Master la trova sensata, succede davvero — una volta sola.",
+    play: { type: "narrative", note: "la ciurma scrive l'esito di una scena; il Master decide se è sensato" },
+    art: "Una pagina di quaderno vuota che si riempie da sola di parole dorate luminose mentre una penna d'oca scrive senza mano. Foglie d'albero incorniciano il foglio, luce calda."
+  },
+
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).
      Per ora il Master le assegna a mano quando la ciurma se le merita. */
