@@ -300,6 +300,7 @@ const QUEST_ISLANDS = PIRATI.islands;
 
 const ALL_QUESTS = PIRATI.quests;
 const RAID_CORE = window.PIRATI_SACCH_CORE;
+const RAID_RETURN_VIEWS = Object.freeze({ map: "mappa", story: "quests" });
 
 /* La domanda collaborativa ora vive dentro ogni quest (campo groupChallenge). */
 function questGroupChallenge(quest) {
@@ -438,6 +439,7 @@ function withDefaults(saved) {
   }
   const savedRaid = saved && saved.raid && typeof saved.raid === "object" ? saved.raid : {};
   merged.raid = RAID_CORE.withRaidDefaults(savedRaid);
+  merged.raid.returnTo = normalizeRaidReturnTo(merged.raid.returnTo);
   const validPhases = new Set(["idle", "choice", "roll", "retry-choice", "result"]);
   const pair = merged.raid.pairId ? PIRATI.raidPair(merged.raid.pairId) : null;
   const ship = pair && merged.raid.shipId
@@ -445,7 +447,38 @@ function withDefaults(saved) {
     : null;
   const needsPair = merged.raid.phase !== "idle";
   const needsShip = ["roll", "retry-choice", "result"].includes(merged.raid.phase);
+  const validAttempt = merged.raid.attempt === 1 || merged.raid.attempt === 2;
+  const validRewardsFlag = typeof merged.raid.rewardsApplied === "boolean";
+  const hasValidOutcome = merged.raid.outcome !== null
+    && typeof merged.raid.outcome === "object"
+    && !Array.isArray(merged.raid.outcome)
+    && typeof merged.raid.outcome.success === "boolean";
+  const rollsAreEmpty = Object.keys(merged.raid.rolls).length === 0;
+  const validPhaseAttempt = (merged.raid.phase === "idle" && merged.raid.attempt === 1)
+    || (merged.raid.phase === "choice" && merged.raid.attempt === 1)
+    || (merged.raid.phase === "roll" && validAttempt)
+    || (merged.raid.phase === "retry-choice" && merged.raid.attempt === 2)
+    || (merged.raid.phase === "result" && validAttempt);
+  const validPhaseState = (merged.raid.phase === "idle"
+      && merged.raid.pairId === null && merged.raid.shipId === null
+      && merged.raid.outcome === null && rollsAreEmpty && merged.raid.rewardsApplied === false)
+    || (merged.raid.phase === "choice"
+      && Boolean(pair) && merged.raid.shipId === null
+      && merged.raid.outcome === null && rollsAreEmpty && merged.raid.rewardsApplied === false)
+    || (merged.raid.phase === "roll"
+      && Boolean(pair && ship) && merged.raid.outcome === null && merged.raid.rewardsApplied === false)
+    || (merged.raid.phase === "retry-choice"
+      && Boolean(pair && ship) && hasValidOutcome && merged.raid.outcome.success === false
+      && rollsAreEmpty && merged.raid.rewardsApplied === false)
+    || (merged.raid.phase === "result"
+      && Boolean(pair && ship) && hasValidOutcome
+      && (!merged.raid.rewardsApplied || merged.raid.outcome.success === true));
   const invalidFlow = !validPhases.has(merged.raid.phase)
+    || !validAttempt
+    || !validRewardsFlag
+    || !validPhaseAttempt
+    || !validPhaseState
+    || (merged.raid.rewardsApplied && merged.raid.phase !== "result")
     || (needsPair && !pair)
     || (merged.raid.pairId && !pair)
     || (needsShip && !ship)
@@ -541,6 +574,10 @@ function reportRaidProblem(message) {
   console.warn(`[PIRATI] ${text}`);
 }
 
+function normalizeRaidReturnTo(returnTo) {
+  return Object.prototype.hasOwnProperty.call(RAID_RETURN_VIEWS, returnTo) ? returnTo : "map";
+}
+
 function currentRaidPair() {
   return state.raid && state.raid.pairId ? PIRATI.raidPair(state.raid.pairId) : null;
 }
@@ -569,18 +606,19 @@ function startRaid(pairId, returnTo) {
     pairId: pair.id,
     phase: "choice",
     recentPairIds,
-    returnTo: typeof returnTo === "string" && returnTo ? returnTo : "map"
+    returnTo: normalizeRaidReturnTo(returnTo)
   });
   saveState();
 }
 
 function chooseRaidShip(shipId) {
   if (!state.raid || !["choice", "retry-choice"].includes(state.raid.phase)) return;
+  const isInitialChoice = state.raid.phase === "choice";
   const pair = currentRaidPair();
   const ship = pair && pair.ships.find((entry) => entry.id === shipId);
   if (!ship) return;
   state.raid.shipId = ship.id;
-  state.raid.usedDay = state.day;
+  if (isInitialChoice) state.raid.usedDay = state.day;
   state.raid.phase = "roll";
   state.raid.rolls = {};
   state.raid.outcome = null;
@@ -643,9 +681,9 @@ function resolveRaidAttempt() {
     text: resolution.success ? ship.success : ship.fail
   };
   if (resolution.success) {
-    RAID_CORE.applyRaidRewardsOnce(state, ship);
+    const rewardsApplied = RAID_CORE.applyRaidRewardsOnce(state, ship);
     state.raid.phase = "result";
-    pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`);
+    if (rewardsApplied) pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`);
   } else if (attempt < 2) {
     state.raid.phase = "retry-choice";
     state.raid.attempt = 2;
@@ -659,13 +697,14 @@ function resolveRaidAttempt() {
 
 function closeRaid() {
   if (!state.raid || state.raid.phase !== "result") return;
-  const returnTo = state.raid.returnTo || "map";
+  const returnTo = normalizeRaidReturnTo(state.raid.returnTo);
+  const returnView = RAID_RETURN_VIEWS[returnTo];
   state.raid = RAID_CORE.withRaidDefaults({
     usedDay: state.raid.usedDay,
     recentPairIds: state.raid.recentPairIds
   });
   saveState();
-  showView(returnTo);
+  showView(returnView);
 }
 
 function togglePlayerActive(id) {

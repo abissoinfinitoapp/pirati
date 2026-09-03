@@ -29,8 +29,12 @@ function appHarness(savedState) {
     },
     document: {
       querySelector(selector) {
-        if (selector.startsWith('.nav-item[data-view="')) {
-          const view = selector.match(/data-view="([^"]+)/)?.[1];
+        const viewMatch = /^\.nav-item\[data-view="([^"]+)"\]$/.exec(selector);
+        if (viewMatch) {
+          const view = viewMatch[1];
+          if (!["mappa", "quests"].includes(view)) {
+            throw new Error(`Destinazione vista non valida: ${view}`);
+          }
           return { click() { navigated.push(view); } };
         }
         return null;
@@ -144,7 +148,7 @@ test("withDefaults aggiunge raid e azzera riferimenti rimossi conservando il gio
       phase: "roll",
       rolls: { p1: 6 },
       recentPairIds: "malformati",
-      returnTo: "quest",
+      returnTo: "story",
       rewardsApplied: false
     }
   }));
@@ -157,16 +161,51 @@ test("withDefaults aggiunge raid e azzera riferimenti rimossi conservando il gio
   assert.deepEqual(plain(migrated.raid.recentPairIds), []);
 });
 
+test("withDefaults azzera combinazioni phase-attempt-premio incoerenti senza riaprire il giorno consumato", () => {
+  const { api } = appHarness();
+  const invalidRaids = [
+    { usedDay: null, pairId: "dolce-freddo", shipId: null, attempt: 0, phase: "choice", rewardsApplied: false },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "retry-choice", rewardsApplied: false },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 3, phase: "roll", rewardsApplied: false },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "roll", rewardsApplied: true },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "choice", outcome: null, rewardsApplied: false },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "roll", outcome: { success: false }, rewardsApplied: false },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 2, phase: "retry-choice", outcome: null, rewardsApplied: false },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 2, phase: "result", outcome: null, rewardsApplied: false },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "result", outcome: { success: false }, rewardsApplied: true }
+  ];
+
+  invalidRaids.forEach((raid, index) => {
+    const migrated = api.withDefaults(baseState({ raid }));
+    assert.equal(migrated.raid.phase, "idle", `fixture ${index + 1}`);
+    assert.equal(migrated.raid.attempt, 1, `fixture ${index + 1}`);
+    assert.equal(migrated.raid.usedDay, raid.shipId ? 4 : null, `fixture ${index + 1}`);
+  });
+
+  const retryRoll = api.withDefaults(baseState({
+    raid: {
+      usedDay: 4,
+      pairId: "dolce-freddo",
+      shipId: "nave-gelato",
+      attempt: 2,
+      phase: "roll",
+      rewardsApplied: false
+    }
+  }));
+  assert.equal(retryRoll.raid.phase, "roll");
+  assert.equal(retryRoll.raid.attempt, 2);
+});
+
 test("startRaid salva la coppia e chooseRaidShip consuma subito il tentativo giornaliero", () => {
   const { api, saved } = appHarness();
   assert.equal(typeof api.startRaid, "function");
   api.setState(baseState());
 
-  api.startRaid("dolce-freddo", "quest");
+  api.startRaid("dolce-freddo", "story");
   assert.equal(api.getState().raid.phase, "choice");
   assert.equal(api.getState().raid.pairId, "dolce-freddo");
   assert.deepEqual(plain(api.getState().raid.recentPairIds), ["dolce-freddo"]);
-  assert.equal(api.getState().raid.returnTo, "quest");
+  assert.equal(api.getState().raid.returnTo, "story");
   assert.equal(saved().raid.pairId, "dolce-freddo");
 
   api.chooseRaidShip("nave-non-della-coppia");
@@ -266,7 +305,10 @@ test("il primo fallimento offre il retry e il secondo chiude senza premio", () =
   assert.deepEqual(plain(api.getState().raid.rolls), {});
   assert.equal(api.getState().log.length, 0);
 
+  api.getState().day = 5;
   api.chooseRaidShip("nave-gelato");
+  assert.equal(api.getState().raid.usedDay, 4);
+  assert.equal(api.getState().raid.attempt, 2);
   api.setRaidRoll("p1", 1);
   api.setRaidRoll("p2", 1);
   api.resolveRaidAttempt();
@@ -276,6 +318,31 @@ test("il primo fallimento offre il retry e il secondo chiude senza premio", () =
   assert.equal(api.getState().fame, 0);
   assert.deepEqual(plain(api.getState().crew.loot), []);
   assert.equal(api.getState().log.length, 1);
+});
+
+test("resolveRaidAttempt non duplica il Diario quando il premio risulta già applicato", () => {
+  const { api } = appHarness();
+  api.setState(baseState({
+    crew: { coins: 3, loot: [], powers: [], cardUse: {} },
+    raid: {
+      usedDay: 4,
+      pairId: "dolce-freddo",
+      shipId: "nave-gelato",
+      attempt: 1,
+      phase: "roll",
+      rolls: { p1: 6, p2: 6 },
+      outcome: null,
+      recentPairIds: ["dolce-freddo"],
+      returnTo: "map",
+      rewardsApplied: false
+    }
+  }));
+  api.getState().raid.rewardsApplied = true;
+
+  api.resolveRaidAttempt();
+
+  assert.equal(api.getState().crew.coins, 3);
+  assert.equal(api.getState().log.length, 0);
 });
 
 test("closeRaid pulisce solo il flusso transitorio e torna alla vista chiamante", () => {
@@ -290,7 +357,7 @@ test("closeRaid pulisce solo il flusso transitorio e torna alla vista chiamante"
       rolls: { p1: 6, p2: 6 },
       outcome: { success: true },
       recentPairIds: ["dolce-freddo"],
-      returnTo: "quest",
+      returnTo: "story",
       rewardsApplied: true
     }
   }));
@@ -309,6 +376,28 @@ test("closeRaid pulisce solo il flusso transitorio e torna alla vista chiamante"
     returnTo: "map",
     rewardsApplied: false
   });
-  assert.deepEqual(navigated, ["quest"]);
+  assert.deepEqual(navigated, ["quests"]);
   assert.equal(saved().raid.usedDay, 4);
+});
+
+test("le destinazioni importate sono normalizzate e non raggiungono mai il selettore DOM", () => {
+  const { api, navigated } = appHarness();
+  api.setState(baseState({
+    raid: {
+      usedDay: 4,
+      pairId: "dolce-freddo",
+      shipId: "nave-gelato",
+      attempt: 1,
+      phase: "result",
+      rolls: { p1: 6, p2: 6 },
+      outcome: { success: true },
+      recentPairIds: ["dolce-freddo"],
+      returnTo: 'quests"] *',
+      rewardsApplied: true
+    }
+  }));
+  assert.equal(api.getState().raid.returnTo, "map");
+
+  assert.doesNotThrow(() => api.closeRaid());
+  assert.deepEqual(navigated, ["mappa"]);
 });
