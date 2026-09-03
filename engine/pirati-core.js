@@ -32,6 +32,8 @@ window.PIRATI = (function () {
     eventById: new Map(),
     words: [],               // parole del Pesce Crostone (una al giorno)
     wordById: new Map(),
+    raidPairs: [],
+    raidPairById: new Map(),
     map: null,               // { id, start, nodes:{}, legs:{}, routes:{} }
     gradeLadder: [
       { grade: 1, questsNeeded: 0, name: "Mozzi Coraggiosi" },
@@ -280,6 +282,92 @@ window.PIRATI = (function () {
     });
   }
 
+  /* ---------- catalogo saccheggi ---------------------------------------- */
+
+  function registerRaidPairs(pairs) {
+    if (!Array.isArray(pairs)) return warn("registerRaidPairs: serve un array di coppie di saccheggio.");
+
+    const shipIds = new Set(state.raidPairs.flatMap((pair) => pair.ships.map((ship) => ship.id)));
+    pairs.forEach((pair, index) => {
+      const where = `saccheggio #${index + 1}`;
+      if (!pair || typeof pair !== "object" || typeof pair.id !== "string" || !pair.id)
+        return warn(`${where}: coppia senza 'id'.`);
+      if (state.raidPairById.has(pair.id)) return warn(`saccheggio: coppia duplicata "${pair.id}".`);
+      if (!Array.isArray(pair.ships) || pair.ships.length !== 2)
+        return warn(`saccheggio "${pair.id}": servono esattamente due navi.`);
+
+      const ships = pair.ships.map((ship, shipIndex) => normalizeRaidShip(ship, pair.id, shipIndex));
+      if (ships.some((ship) => !ship)) return;
+      if (ships.some((ship) => shipIds.has(ship.id)) || ships[0].id === ships[1].id)
+        return warn(`saccheggio "${pair.id}": nave duplicata.`);
+
+      const clean = { id: pair.id, ships };
+      state.raidPairs.push(clean);
+      state.raidPairById.set(clean.id, clean);
+      ships.forEach((ship) => shipIds.add(ship.id));
+    });
+  }
+
+  function normalizeRaidShip(ship, pairId, index) {
+    const where = `saccheggio "${pairId}" nave #${index + 1}`;
+    if (!ship || typeof ship !== "object" || typeof ship.id !== "string" || !ship.id) {
+      warn(`${where}: manca 'id'.`);
+      return null;
+    }
+    if (typeof ship.name !== "string" || !ship.name) { warn(`${where}: manca 'name'.`); return null; }
+    if (typeof ship.sighting !== "string" || !ship.sighting) { warn(`${where}: manca 'sighting'.`); return null; }
+    if (!STATS.includes(ship.stat)) { warn(`${where}: 'stat' deve essere coraggio/astuzia/fortuna.`); return null; }
+    if (!Number.isInteger(ship.target) || ![5, 6, 7].includes(ship.target)) { warn(`${where}: 'target' deve essere 5, 6 o 7.`); return null; }
+    if (typeof ship.success !== "string" || !ship.success) { warn(`${where}: manca 'success'.`); return null; }
+    if (typeof ship.fail !== "string" || !ship.fail) { warn(`${where}: manca 'fail'.`); return null; }
+    if (typeof ship.missed !== "string" || !ship.missed) { warn(`${where}: manca 'missed'.`); return null; }
+
+    const rewards = normalizeRaidRewards(ship.rewards, where);
+    if (!rewards) return null;
+    return {
+      id: ship.id,
+      name: ship.name,
+      image: window.PIRATI_ASSET(`saccheggi/${ship.id}.webp`),
+      sighting: ship.sighting,
+      stat: ship.stat,
+      target: ship.target,
+      rewards,
+      success: ship.success,
+      fail: ship.fail,
+      missed: ship.missed
+    };
+  }
+
+  function normalizeRaidRewards(rewards, where) {
+    if (!Array.isArray(rewards) || !rewards.length) {
+      warn(`${where}: serve almeno una ricompensa.`);
+      return null;
+    }
+    const clean = [];
+    for (let index = 0; index < rewards.length; index += 1) {
+      const reward = rewards[index];
+      const rewardWhere = `${where} ricompensa #${index + 1}`;
+      if (!reward || typeof reward !== "object" || !["coins", "fame", "loot"].includes(reward.type)) {
+        warn(`${rewardWhere}: 'type' deve essere coins/fame/loot.`);
+        return null;
+      }
+      if (reward.type === "loot") {
+        if (typeof reward.id !== "string" || !reward.id) {
+          warn(`${rewardWhere}: bottino senza 'id'.`);
+          return null;
+        }
+        clean.push({ type: "loot", id: reward.id });
+      } else {
+        if (!Number.isFinite(reward.amount) || reward.amount <= 0) {
+          warn(`${rewardWhere}: quantità non valida.`);
+          return null;
+        }
+        clean.push({ type: reward.type, amount: reward.amount });
+      }
+    }
+    return clean;
+  }
+
   /* ---------- bestiario: nemici e boss --------------------------------- */
 
   function registerEnemies(list) {
@@ -478,6 +566,7 @@ window.PIRATI = (function () {
     registerPack,
     registerRewards,
     registerPowers,
+    registerRaidPairs,
     registerEnemies,
     registerEvents,
     registerWords,
@@ -486,6 +575,8 @@ window.PIRATI = (function () {
     get islands() { return state.islands; },
     get quests() { return state.quests; },
     get powers() { return state.powers; },
+    get raidPairs() { return state.raidPairs; },
+    raidPair: (id) => state.raidPairById.get(id) || null,
     get enemies() { return state.enemies; },
     get bosses() { return state.bosses; },
     get boss() { return state.bosses[0] || null; },
