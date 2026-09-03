@@ -23,4 +23,5 @@ supabase/
 # Roba dell'assistente / editor
 .claude/
 .agents/
+.worktrees/
 .DS_Store
