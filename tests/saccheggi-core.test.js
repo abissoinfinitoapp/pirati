@@ -55,6 +55,17 @@ test("withRaidDefaults inizializza lo stato e conserva valori validi", () => {
   });
 });
 
+test("withRaidDefaults non condivide rolls e recentPairIds con il salvataggio", () => {
+  const saved = { rolls: { p1: 4 }, recentPairIds: ["pair-1"] };
+  const raid = core.withRaidDefaults(saved);
+
+  raid.rolls.p1 = 6;
+  raid.recentPairIds.push("pair-2");
+
+  assert.equal(saved.rolls.p1, 4);
+  assert.deepEqual(saved.recentPairIds, ["pair-1"]);
+});
+
 test("applyRaidRewardsOnce assegna ricompense una sola volta", () => {
   const state = {
     day: 3,
@@ -80,4 +91,25 @@ test("applyRaidRewardsOnce assegna ricompense una sola volta", () => {
   assert.equal(state.crew.coins, 4);
   assert.equal(state.fame, 4);
   assert.deepEqual(state.crew.loot, [{ id: "gelato", questId: null, day: 3 }]);
+});
+
+test("applyRaidRewardsOnce rifiuta uno stato raid non oggetto senza lanciare", () => {
+  const state = { raid: "malformato", crew: { coins: 1, loot: [] }, fame: 2 };
+
+  assert.doesNotThrow(() => assert.equal(core.applyRaidRewardsOnce(state, {
+    rewards: [{ type: "coins", amount: 3 }]
+  }), false));
+  assert.equal(state.crew.coins, 1);
+  assert.equal(state.fame, 2);
+});
+
+test("applyRaidRewardsOnce rifiuta uno stato crew array senza assegnare", () => {
+  const state = { raid: { rewardsApplied: false }, crew: [], fame: 2 };
+
+  assert.doesNotThrow(() => assert.equal(core.applyRaidRewardsOnce(state, {
+    rewards: [{ type: "coins", amount: 3 }]
+  }), false));
+  assert.deepEqual(state.crew, []);
+  assert.equal(state.fame, 2);
+  assert.equal(state.raid.rewardsApplied, false);
 });

@@ -50,9 +50,15 @@
     };
     const saved = savedRaid && typeof savedRaid === "object" ? savedRaid : {};
     const raid = { ...defaults, ...saved };
-    if (!Array.isArray(raid.recentPairIds)) raid.recentPairIds = [];
-    if (!raid.rolls || typeof raid.rolls !== "object" || Array.isArray(raid.rolls)) raid.rolls = {};
+    raid.recentPairIds = Array.isArray(raid.recentPairIds) ? raid.recentPairIds.slice() : [];
+    raid.rolls = raid.rolls && typeof raid.rolls === "object" && !Array.isArray(raid.rolls)
+      ? { ...raid.rolls }
+      : {};
     return raid;
+  }
+
+  function isRecord(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
   }
 
   function reportRewardProblem(state, message) {
@@ -66,9 +72,13 @@
   }
 
   function applyRaidRewardsOnce(state, ship) {
-    if (!state || !state.raid || state.raid.rewardsApplied) return false;
+    if (!isRecord(state) || !isRecord(state.raid) || !isRecord(state.crew)) {
+      reportRewardProblem(state, "stato del saccheggio non valido");
+      return false;
+    }
+    if (state.raid.rewardsApplied) return false;
 
-    const crew = state.crew || (state.crew = {});
+    const crew = state.crew;
     if (!Array.isArray(crew.loot)) crew.loot = [];
     const rewards = ship && Array.isArray(ship.rewards) ? ship.rewards : [];
 
