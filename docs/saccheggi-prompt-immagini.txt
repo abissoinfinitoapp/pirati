@@ -1,0 +1,75 @@
+illustrazione pittorica da libro per bambini, nave intera in vista tre quarti, mare fantastico, luce morbida, forme leggibili, umorismo visivo, nessuna violenza, nessun testo o logo, formato 4:3
+
+Prompt riutilizzabili per le 24 navi del catalogo saccheggi. Per ogni immagine mantenere il soggetto principale ben leggibile e il carico solo suggerito, mai mostrato per intero.
+
+1. ID: nave-gelato — La Gelatiera del Mare
+Silhouette: piccolo veliero panciuto con prua a cucchiaio e vele ondulate come palline sciolte; suggerire casse fredde e un gelato gigante sotto coperta, senza mostrarne il contenuto intero. Palette: bianco panna, azzurro ghiaccio, rosa fragola, turchese mare. Marinai buffi sorridono con baffi di panna e cappelli storti, mai terrorizzati. Dettaglio: dalla prua spunta una nuvola bianca che sembra panna ma potrebbe essere una vela gelata. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+2. ID: nave-zucchero-filato — La Nuvola Zuccherina
+Silhouette: nave alta e leggera, scafo arrotondato e pennoni sottili avvolti da fili rosa; suggerire sacchi di zucchero e dolci misteriosi nella stiva semiaperta. Palette: rosa confetto, lavanda, crema, azzurro cielo. Marinai buffi con barbe appiccicose fanno un nodo alle corde ridendo, mai terrorizzati. Dettaglio: dall'albero maestro pende una grande massa rosa, a metà tra nuvola e parrucca gigante. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+3. ID: galeone-cuscini — Il Galeone Pisolone
+Silhouette: galeone largo e morbidissimo con vele gonfie come guanciali e poppa a forma di letto; suggerire pile di cuscini sotto una coperta arrotolata, senza rivelare il bottino. Palette: blu notte, crema, lilla, oro tenue. Marinai buffi sbadigliano, uno usa una piuma come cannocchiale, tutti sereni. Dettaglio: vele visibilmente morbide e un enorme sbadiglio suggerito dalla prua. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+4. ID: brigantino-trampolini — Il Brigantino Balzellante
+Silhouette: brigantino snello con ponte elastico arcuato e alberi inclinati come molle; suggerire un baule che rimbalza dietro un parapetto. Palette: verde menta, giallo sole, blu mare, rosso corallo. Marinai buffi saltano in pose eleganti e sorridono, mai terrorizzati. Dettaglio: il ponte sobbalza da solo come se sotto ci fosse un branco di rane educate. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+5. ID: nave-patatine — La Croccantina
+Silhouette: barca compatta con scafo ondulato da sacchetto e vela triangolare croccante; suggerire scatole di merenda impilate senza mostrarne l'interno. Palette: giallo patatina, rosso pomodoro, blu oltremare, crema. Marinai buffi ascoltano il ponte con orecchie enormi e sorridono. Dettaglio: briciole e piccole onde grafiche fanno intuire un sonoro cric-croc proveniente dal ponte. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+6. ID: veliero-cioccolata-calda — Il Veliero Fumante
+Silhouette: veliero tondeggiante con fumaiolo a tazza e vele color cacao; suggerire una gigantesca tazza nella cabina, avvolta dal vapore. Palette: marrone cacao, panna, rame, azzurro nebbia. Marinai buffi con guance rosee sventolano cucchiaini come bandiere, mai terrorizzati. Dettaglio: vapore profumato esce dalla cabina, ambiguo tra nebbia e tazza gigante. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+7. ID: caravella-dinosauri — La Caravella Ruggente
+Silhouette: caravella bassa con prua dentellata giocosa e vela a scaglie; suggerire giocattoli preistorici e una coda nascosta sopra la cabina. Palette: verde foglia, arancio mandarino, blu petrolio, sabbia. Marinai buffi portano cappelli con piccole creste e ridono, mai terrorizzati. Dettaglio: una coda verde spunta sopra la cabina, ambigua tra dinosauro e scopa ambiziosa. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+8. ID: nave-robot-svitati — La Meccanica Svitata
+Silhouette: nave squadrata con alberi a ingranaggi e prua a chiave inglese arrotondata; suggerire robot di latta e viti in una stiva in ombra. Palette: grigio stagno, azzurro elettrico, giallo limone, rosso ruggine. Marinai buffi con occhialoni regolano una vite troppo grande e sorridono. Dettaglio: dal ponte arrivano tin-tin e piccoli bozzi, mentre pentole e robot sembrano discutere. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+9. ID: vascello-bolle — Il Vascello Frizzante
+Silhouette: vascello rotondo con vele traslucide e oblò circolari come bolle; suggerire bottiglie e un baule dietro una cortina di bollicine. Palette: viola uva, turchese, bianco perla, rosa pesca. Marinai buffi fluttuano appena aggrappati alle corde, sorridenti e tranquilli. Dettaglio: una fila di bolle viola galleggia sopra le vele come un messaggio illeggibile. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+10. ID: galeone-fuochi-silenziosi — Il Galeone Muto
+Silhouette: galeone maestoso e scuro con alberi sottili e lanterne rotonde; suggerire casse festive e razzi colorati appena intravisti. Palette: blu indaco, viola, giallo luminoso, rosa acceso. Marinai buffi mimano applausi senza suono e fanno smorfie felici, mai terrorizzati. Dettaglio: luci colorate esplodono mute sopra le vele, come baffi e stelle brillanti. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+11. ID: nave-calzini-spaiati — La Spaiatissima
+Silhouette: nave stretta con sartie decorate da calzini diversi e vela a righe irregolari; suggerire un mucchio di calze e piccoli bauli di bucato sottocoperta. Palette: turchese, arancio, viola, bianco panna, rosso ciliegia. Marinai buffi cercano coppie di calzini con una lente d'ingrandimento e sorridono. Dettaglio: alle sartie sventolano calzini tutti spaiati, apparentemente alla ricerca dei propri piedi. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+12. ID: veliero-scarpe-saltellanti — Il Veliero Saltellone
+Silhouette: veliero agile con scafo ricurvo da scarpa e pennoni elastici; suggerire stivali lucidi che spuntano da una cassa socchiusa. Palette: blu cobalto, giallo senape, bianco, verde prato. Marinai buffi inseguono una scarpa con retini da farfalle e risate, mai terrorizzati. Dettaglio: due scarpe corrono da sole sul ponte, come in ritardo per una festa segreta. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+13. ID: galeone-torte — Il Galeone a Strati
+Silhouette: galeone enorme a tre livelli, con poppa rotonda come una fetta di torta e vele di panna; suggerire dolci a strati e un baule nascosto sotto la crema. Palette: rosa fragola, bianco panna, marrone biscotto, oro caramello. Marinai buffi scalano una ciliegia con scalette e fanno cenni allegri. Dettaglio: una torre di panna ondeggia sul ponte, incerta tra vela e torta troppo coraggiosa. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+14. ID: nave-caramelle-mutacolore — La Cambiacolore
+Silhouette: nave dalle assi curve, con vele a pannelli che cambiano colore lungo l'onda; suggerire caramelle e pennelli nascosti nella stiva. Palette: fucsia, azzurro, giallo limone, verde menta, viola. Marinai buffi indicano le assi con tavolozze e facce meravigliate ma felici. Dettaglio: lo scafo cambia tinta a ogni onda, come se pennelli invisibili lavorassero sottocoperta. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+15. ID: nave-pappagalli-cantanti — La Corale Alata
+Silhouette: nave elegante con prua a becco e vele a ventaglio di piume; suggerire gabbiette aperte, spartiti senza scritte e un carico musicale non rivelato. Palette: verde smeraldo, rosso corallo, giallo oro, blu cielo. Marinai buffi dirigono con cucchiai mentre pappagalli sorridenti cantano, tutti sereni. Dettaglio: un coro di pappagalli emette una nota lunghissima sopra l'albero maestro. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+16. ID: caravella-cuccioli-pirata — La Caravella Bau Bau
+Silhouette: caravella accogliente con prua a osso e vele rattoppate come una coperta; suggerire ciotole, giocattoli e una cuccia nella stiva. Palette: marrone miele, blu mare, rosso bandana, crema. Marinai buffi giocano con cuccioli dagli stivali troppo grandi, mai terrorizzati. Dettaglio: piccole impronte bagnate attraversano il ponte in direzione di una ciotola fuori campo. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+17. ID: vascello-pennarelli-magici — Il Vascello Disegnato
+Silhouette: vascello dalle tavole contornate a mano e vele scarabocchiate con linee morbide; suggerire astucci e fogli arrotolati nella cabina. Palette: azzurro, giallo sole, rosso, bianco carta. Marinai buffi hanno monocolo e baffi disegnati, ridono e mai terrorizzati. Dettaglio: una freccia azzurra appare sull'acqua e fa una linguaccia, indicando una rotta birichina. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+18. ID: nave-libri-parlanti — La Biblioteca Galleggiante
+Silhouette: grande nave-casa con scafo simile a un volume chiuso e alberi-segnalibro; suggerire pile di libri parlanti dalla stiva socchiusa. Palette: verde bosco, bordeaux, oro antico, azzurro polvere. Marinai buffi leggono capovolti e sorridono, mai terrorizzati. Dettaglio: dalla stiva esce un piccolo «psst» visivo, reso da una copertina socchiusa e dita tra le pagine, senza testo. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+19. ID: galeone-palloni-infiniti — Il Galeone Gonfiabile
+Silhouette: galeone alto e leggero con vele gonfie e prua a palloncino; suggerire una stiva piena di palloni che continuano a uscire, senza mostrarla interamente. Palette: rosso, giallo, blu, verde, bianco. Marinai buffi restano sospesi a pochi centimetri dal ponte con sorrisi enormi. Dettaglio: una cascata infinita di palloni colorati esce dalla stiva come se il mare festeggiasse un compleanno. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+20. ID: nave-aquiloni-cavalcabili — La Nave degli Aquiloni
+Silhouette: nave slanciata con prua rivolta in alto e grandi vele-aquilone a rombo; suggerire aquiloni arrotolati e corde di volo in una cassa ombrosa. Palette: azzurro cielo, rosso, giallo, bianco nuvola. Marinai buffi si aggrappano ai cavi con sciarpe svolazzanti e sorridono, mai terrorizzati. Dettaglio: un aquilone enorme tira la prua verso le nuvole come per una passeggiata in cielo. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+21. ID: nave-mostri-gelatina — La Gelatinosa
+Silhouette: nave bassa e tremolante con scafo semitrasparente e vele mollicce; suggerire barattoli colorati e un mostro gelatina nascosto dietro la cabina. Palette: verde lime, viola gelatina, turchese, rosa. Marinai buffi imitano pose da ballerini mentre una gobba gelatinosa li copia, tutti divertiti. Dettaglio: una gobba tremolante fa ciao dal ponte, incerta tra mostro e budino con cappello. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+22. ID: vascello-pozioni-ruttanti — Il Vascello Gorgogliante
+Silhouette: vascello panciuto con oblò-boccetta e fumaiolo a spirale; suggerire flaconi verdi, tubi e casse di alchimia nella stiva in penombra. Palette: verde mela, viola, azzurro profondo, rame. Marinai buffi con occhiali protettivi si tappano il naso ridendo, mai terrorizzati. Dettaglio: boccette verdi fanno bolle in coperta, come se preparassero una zuppa per sirene. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+23. ID: caravella-corone-assurde — La Caravella Incoronata
+Silhouette: caravella regale con poppa a corona e vele appuntite come diademi; suggerire scatole di gioielli e corone a molla nascoste sotto un drappo. Palette: porpora, oro, turchese, bianco crema. Marinai buffi indossano corone troppo grandi che rimbalzano sui cappelli, tutti divertiti. Dettaglio: sulle vele brillano corone con molle, apparentemente in cerca di una testa abbastanza buffa. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.
+
+24. ID: nave-mantelli-meta-invisibili — La Mezza Sparita
+Silhouette: nave asimmetrica con metà scafo visibile e metà sfumata nel mare, vele tagliate a metà; suggerire mantelli piegati e casse misteriose nelle zone semitrasparenti. Palette: blu notte, grigio perla, viola, argento. Marinai buffi mostrano solo metà corpo e si salutano tra loro con tranquillità, mai terrorizzati. Dettaglio: a poppa sono visibili soltanto mezzi marinai, come se l'altra metà stesse facendo il bucato invisibile. stile coerente con Pirati: Isole del Teschio d'Oro, sfondo semplice.

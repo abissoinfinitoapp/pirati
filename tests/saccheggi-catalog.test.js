@@ -18,6 +18,7 @@ function loadCatalog() {
   vm.runInContext(fs.readFileSync(path.join(root, "engine/pirati-core.js"), "utf8"), context, { filename: "engine/pirati-core.js" });
   context.PIRATI = context.window.PIRATI;
   vm.runInContext(fs.readFileSync(path.join(root, "catalog/saccheggi.js"), "utf8"), context, { filename: "catalog/saccheggi.js" });
+  vm.runInContext(fs.readFileSync(path.join(root, "catalog/premi.js"), "utf8"), context, { filename: "catalog/premi.js" });
   return context.window.PIRATI;
 }
 
@@ -77,6 +78,10 @@ test("registra dodici coppie di saccheggio curate e complete", () => {
     if (reward.type === "fame") return reward.amount === 1;
     return reward.type === "loot" && typeof reward.id === "string" && reward.id;
   }));
+  for (const reward of PIRATI.raidPairs.flatMap(pair => pair.ships).flatMap(ship => ship.rewards)) {
+    assert.ok(["coins", "fame", "loot"].includes(reward.type));
+    if (reward.type === "loot") assert.ok(PIRATI.reward(reward.id), `premio mancante: ${reward.id}`);
+  }
 });
 
 test("rifiuta le coppie di saccheggio con struttura o ricompense non valide", () => {

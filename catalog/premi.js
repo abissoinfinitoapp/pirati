@@ -28,6 +28,12 @@ PIRATI.registerRewards({
     { id: "uovo-brezza-loot",          name: "Uovo di Brezza",            icon: "🥚", rarity: "raro",   text: "Aprendolo, libera un vento che soffia via nebbia, gas o fumo." },
     { id: "chiave-maree-loot",         name: "Chiave delle Maree",        icon: "🗝️", rarity: "epico",  text: "Apre un forziere o una porta rara senza bisogno di una prova." },
     { id: "stella-ciurma-loot",        name: "Frammento di Stella",       icon: "💫", rarity: "epico",  text: "Custodito insieme, ricorda alla ciurma tutte le avventure del ciclo." },
+    { id: "cuscino-capitano",          name: "Cuscino del Capitano",      icon: "🛏️", rarity: "comune", text: "Una volta, trasforma un riposo scomodo in un riposo perfetto." },
+    { id: "scarpe-saltellanti-loot",   name: "Scarpe Saltellanti",        icon: "👟", rarity: "raro",   text: "Una volta al giorno superano un piccolo ostacolo con un balzo." },
+    { id: "pennarello-magico",         name: "Pennarello Magico",         icon: "🖍️", rarity: "raro",   text: "Disegna una freccia o un simbolo che resta visibile per una scena." },
+    { id: "aquilone-cavalcabile",      name: "Aquilone Cavalcabile",      icon: "🪁", rarity: "raro",   text: "Porta un pirata oltre un ostacolo o fino a un punto alto." },
+    { id: "pozione-rutto",             name: "Pozione Ruttante",          icon: "🧪", rarity: "comune", text: "Produce un rutto così forte da distrarre tutti per un istante." },
+    { id: "mantello-meta-invisibile",  name: "Mantello Invisibile a Metà", icon: "🧥", rarity: "raro",   text: "Nasconde perfettamente metà di chi lo indossa; la ciurma decide quale." },
 
     /* --- Ciclo II · La Rotta delle Maree Perdute --- */
     { id: "frammento-ombra",           name: "Frammento d'Ombra",         icon: "🌑", rarity: "raro",   text: "Illuminato dalla Stella della Ciurma, punta verso la nave misteriosa." },
