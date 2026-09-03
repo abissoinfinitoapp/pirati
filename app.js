@@ -299,6 +299,7 @@ const TUTORIAL_STEPS = [
 const QUEST_ISLANDS = PIRATI.islands;
 
 const ALL_QUESTS = PIRATI.quests;
+const RAID_CORE = window.PIRATI_SACCH_CORE;
 
 /* La domanda collaborativa ora vive dentro ogni quest (campo groupChallenge). */
 function questGroupChallenge(quest) {
@@ -356,6 +357,7 @@ const defaultState = {
   session: {
     danger: 0   // Pericolo condiviso: mappa, Barbabisso, effetti delle avventure guidate
   },
+  raid: RAID_CORE.withRaidDefaults({}),
   log: []
 };
 
@@ -434,6 +436,26 @@ function withDefaults(saved) {
   } else {
     merged.questCampaign.story = null;
   }
+  const savedRaid = saved && saved.raid && typeof saved.raid === "object" ? saved.raid : {};
+  merged.raid = RAID_CORE.withRaidDefaults(savedRaid);
+  const validPhases = new Set(["idle", "choice", "roll", "retry-choice", "result"]);
+  const pair = merged.raid.pairId ? PIRATI.raidPair(merged.raid.pairId) : null;
+  const ship = pair && merged.raid.shipId
+    ? pair.ships.find((entry) => entry.id === merged.raid.shipId)
+    : null;
+  const needsPair = merged.raid.phase !== "idle";
+  const needsShip = ["roll", "retry-choice", "result"].includes(merged.raid.phase);
+  const invalidFlow = !validPhases.has(merged.raid.phase)
+    || (needsPair && !pair)
+    || (merged.raid.pairId && !pair)
+    || (needsShip && !ship)
+    || (merged.raid.shipId && !ship);
+  if (invalidFlow) {
+    merged.raid = RAID_CORE.withRaidDefaults({
+      usedDay: savedRaid.shipId ? merged.raid.usedDay : null,
+      recentPairIds: merged.raid.recentPairIds
+    });
+  }
   return merged;
 }
 
@@ -507,6 +529,143 @@ function removePlayer(id) {
    tiene tutti i suoi progressi e torna in gioco quando riappare. */
 function activePlayers() {
   return state.players.filter((player) => player.active !== false);
+}
+
+/* =========================================================================
+   Saccheggi giornalieri: stato persistente e controller
+   ===================================================================== */
+
+function reportRaidProblem(message) {
+  const text = `saccheggio: ${message}`;
+  if (PIRATI._state && Array.isArray(PIRATI._state.problems)) PIRATI._state.problems.push(text);
+  console.warn(`[PIRATI] ${text}`);
+}
+
+function currentRaidPair() {
+  return state.raid && state.raid.pairId ? PIRATI.raidPair(state.raid.pairId) : null;
+}
+
+function currentRaidShip() {
+  const pair = currentRaidPair();
+  return pair && state.raid.shipId
+    ? pair.ships.find((ship) => ship.id === state.raid.shipId) || null
+    : null;
+}
+
+function startRaid(pairId, returnTo) {
+  if (!state.raid || state.raid.phase !== "idle" || !RAID_CORE.dayAvailable(state.raid, state.day)) return;
+  let pair = pairId ? PIRATI.raidPair(pairId) : null;
+  if (pairId && !pair) {
+    reportRaidProblem(`coppia sconosciuta (${pairId}); scelta casuale usata`);
+  }
+  if (!pair) pair = RAID_CORE.pickPair(PIRATI.raidPairs, state.raid.recentPairIds);
+  if (!pair) {
+    reportRaidProblem("nessuna coppia disponibile");
+    return;
+  }
+  const recentPairIds = state.raid.recentPairIds.concat(pair.id).slice(-4);
+  state.raid = RAID_CORE.withRaidDefaults({
+    usedDay: state.raid.usedDay,
+    pairId: pair.id,
+    phase: "choice",
+    recentPairIds,
+    returnTo: typeof returnTo === "string" && returnTo ? returnTo : "map"
+  });
+  saveState();
+}
+
+function chooseRaidShip(shipId) {
+  if (!state.raid || !["choice", "retry-choice"].includes(state.raid.phase)) return;
+  const pair = currentRaidPair();
+  const ship = pair && pair.ships.find((entry) => entry.id === shipId);
+  if (!ship) return;
+  state.raid.shipId = ship.id;
+  state.raid.usedDay = state.day;
+  state.raid.phase = "roll";
+  state.raid.rolls = {};
+  state.raid.outcome = null;
+  state.raid.rewardsApplied = false;
+  saveState();
+}
+
+function setRaidRoll(playerId, die) {
+  if (!state.raid || state.raid.phase !== "roll") return;
+  if (!activePlayers().some((player) => player.id === playerId)) return;
+  const value = Number(die);
+  if (Number.isInteger(value) && value >= 1 && value <= 6) state.raid.rolls[playerId] = value;
+  else delete state.raid.rolls[playerId];
+  saveState();
+}
+
+function validRaidCardBonuses(ship) {
+  const cards = Array.isArray(state.raid.cardBonuses) ? state.raid.cardBonuses : [];
+  const seen = new Set();
+  return cards.map((entry) => {
+    const power = entry && PIRATI.power(entry.id);
+    const play = power && power.play;
+    if (!power || seen.has(power.id) || !play || !["bonus", "teambonus"].includes(play.type)) return null;
+    if (play.stat && play.stat !== ship.stat) return null;
+    if (!Number.isFinite(play.amount) || play.amount <= 0) return null;
+    if (!state.crew.powers.some((owned) => owned.id === power.id) || isCardPlayed(power)) return null;
+    if (!power.legendary && power.grade > (state.crew.grade || 1)) return null;
+    seen.add(power.id);
+    return { power, amount: play.amount };
+  }).filter(Boolean);
+}
+
+function resolveRaidAttempt() {
+  if (!state.raid || state.raid.phase !== "roll") return;
+  const ship = currentRaidShip();
+  if (!ship) return;
+  const players = activePlayers().map((player) => {
+    const character = getCharacter(player.characterId);
+    return character ? { id: player.id, stats: character.stats } : null;
+  }).filter(Boolean);
+  const cards = validRaidCardBonuses(ship);
+  let score;
+  try {
+    score = RAID_CORE.scoreRolls(players, state.raid.rolls, ship.stat,
+      cards.reduce((sum, card) => sum + card.amount, 0));
+  } catch (error) {
+    if (error instanceof RangeError) return;
+    throw error;
+  }
+  cards.forEach((card) => markCardPlayed(card.power));
+  const attempt = state.raid.attempt;
+  const resolution = RAID_CORE.resolveAttempt(score.average, ship.target, attempt);
+  state.raid.outcome = {
+    success: resolution.success,
+    attempt,
+    shipId: ship.id,
+    average: score.average,
+    target: ship.target,
+    entries: score.entries,
+    text: resolution.success ? ship.success : ship.fail
+  };
+  if (resolution.success) {
+    RAID_CORE.applyRaidRewardsOnce(state, ship);
+    state.raid.phase = "result";
+    pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`);
+  } else if (attempt < 2) {
+    state.raid.phase = "retry-choice";
+    state.raid.attempt = 2;
+    state.raid.rolls = {};
+  } else {
+    state.raid.phase = "result";
+    pushLog(`Saccheggio concluso senza bottino contro ${ship.name}. ${ship.fail}`);
+  }
+  saveState();
+}
+
+function closeRaid() {
+  if (!state.raid || state.raid.phase !== "result") return;
+  const returnTo = state.raid.returnTo || "map";
+  state.raid = RAID_CORE.withRaidDefaults({
+    usedDay: state.raid.usedDay,
+    recentPairIds: state.raid.recentPairIds
+  });
+  saveState();
+  showView(returnTo);
 }
 
 function togglePlayerActive(id) {

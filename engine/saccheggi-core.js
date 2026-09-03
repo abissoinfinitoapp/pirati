@@ -97,7 +97,14 @@
         else reportRewardProblem(state, "quantità di Fama non valida ignorata");
       } else if (reward.type === "loot") {
         if (typeof reward.id === "string" && reward.id) {
-          crew.loot.push({ id: reward.id, questId: null, day: state.day });
+          const rewardLookup = root && root.PIRATI && typeof root.PIRATI.reward === "function"
+            ? root.PIRATI.reward
+            : null;
+          if (rewardLookup && !rewardLookup(reward.id)) {
+            reportRewardProblem(state, `bottino sconosciuto (${reward.id}) ignorato`);
+          } else {
+            crew.loot.push({ id: reward.id, questId: null, day: state.day });
+          }
         } else {
           reportRewardProblem(state, "bottino senza ID ignorato");
         }
