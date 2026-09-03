@@ -268,7 +268,7 @@ const TUTORIAL_STEPS = [
     kicker: "Passo 5 · La mappa",
     title: "La ciurma naviga unita",
     text: "Sulla mappa c'è una sola pedina per tutto il gruppo. Dal Porto scegliete la rotta, poi TUTTI i pirati in gioco tirano 1d6: la media dei tiri sono le miglia. La nave si muove da sola. Se si ferma su un incontro (mostro, tesoro, evento) o su un'isola con un'avventura, lo risolvete lì.",
-    tip: "I bambini tirano il dado vero sul tavolo; tu premi solo il numero uscito. Falli tirare tutti: gli piace comunque."
+    tip: "I bambini tirano il dado vero sul tavolo e tu premi il numero uscito. Non avete dadi? Nel menu attiva «Dadi digitali»: compare un pulsante «🎲 Tira» e l'app tira al posto vostro."
   },
   {
     icon: "📖",
@@ -281,7 +281,7 @@ const TUTORIAL_STEPS = [
     icon: "🎲",
     kicker: "Passo 7 · Il Destino e i dadi",
     title: "Fallire vuol dire andare avanti diversi",
-    text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
+    text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
     tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
   },
   {
@@ -372,6 +372,12 @@ const sfx = (name) => {
   window.PIRATI_SFX.play(name);
   sfxTick++;
 };
+
+/* Dadi digitali: se attivi, l'app tira al posto dei bambini (per chi gioca
+   senza dadi veri). Ricordato in localStorage. */
+let diceDigital = false;
+try { diceDigital = localStorage.getItem("pirati-dice-digital") === "1"; } catch (e) {}
+const d6 = () => 1 + Math.floor(Math.random() * 6);
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -1930,9 +1936,13 @@ function renderMap() {
   const diceBox = $("#map-dice");
   if (diceBox) {
     const bossRoll = v.pending && v.pending.kind === "boss" && v.pending.offerIndex != null;
-    diceBox.hidden = !((v.pending && v.pending.roll) || bossRoll);
+    const showDice = (v.pending && v.pending.roll) || bossRoll;
+    diceBox.hidden = !showDice;
     const hint = $("#map-dice-hint");
     if (hint) hint.textContent = bossRoll ? "Il pirata tira 1d6: premi il numero uscito." : "Premi il numero uscito sul dado per risolvere l'incontro.";
+    const auto = $("#map-dice-auto");
+    if (auto) auto.innerHTML = (showDice && diceDigital)
+      ? `<button type="button" class="dice-roll-all" data-map-roll-one>🎲 Tira il dado</button>` : "";
   }
 
   // movimento: tutti i pirati in gioco tirano, la media = miglia
@@ -1954,6 +1964,7 @@ function renderMap() {
       moveBox.hidden = false;
       moveBox.innerHTML = `
         <p class="map-console-label">Tutti tirano per navigare <span class="count-pill">${vals.length}/${roster.length}</span></p>
+        ${diceDigital && roster.length ? `<button type="button" class="dice-roll-all" data-move-roll-all>🎲 Tira i dadi per la ciurma</button>` : ""}
         ${roster.length ? roster.map((p) => {
           const cur = Number(rolls[p.id]) || 0;
           return `<div class="move-roll-row">
@@ -2525,6 +2536,7 @@ function questResolutionMarkup(quest, campaign) {
       </div>
       ${resolution.mode === "dice" ? `
         <div class="resolution-block"><strong class="resolution-label">Scegli l'approccio</strong><div class="resolution-approach-buttons">${quest.choices.map((choice, index) => `<button type="button" class="${index === resolution.approachIndex ? "is-active" : ""}" data-resolution-approach="${index}"><strong>${choice.label}</strong><small>${choice.stat} · soglia ${choice.target + Math.max(0, campaign.cycle - 1)}</small></button>`).join("")}</div></div>
+        ${diceDigital && resolution.playerIds.length ? `<button type="button" class="dice-roll-all" data-quest-roll-all>🎲 Tira i dadi per tutti</button>` : ""}
         <div class="crew-rolls">${diceInputs || `<p class="resolution-placeholder">Scegli almeno un membro della ciurma: comparirà qui il suo dado.</p>`}</div>
         ${questHandMarkup(resolution)}
         <div class="average-rule"><span>Regola</span><p>Ogni bambino tira 1d6 e aggiunge la caratteristica del proprio pirata. La media dei risultati deve raggiungere <strong>${target}</strong>.</p></div>
@@ -2905,6 +2917,16 @@ function setStoryRoll(playerId, n) {
   renderQuestCycle();
 }
 
+/* dadi digitali: tira per tutta la ciurma in gioco */
+function rollStoryDiceAll() {
+  const a = activeStory();
+  if (!a) return;
+  activePlayers().forEach((p) => { a.s.rolls[p.id] = d6(); });
+  sfx("click");
+  saveState();
+  renderQuestCycle();
+}
+
 /* carte giocabili dentro lo storyFlow */
 function playStoryCard(id) {
   const a = activeStory();
@@ -3156,6 +3178,7 @@ function storyDiceMarkup(scene, dice) {
   return `
     <p class="story-question">Tutti i pirati in gioco tirano 1d6 + <strong>${titleCase(dice.stat)}</strong>. La media deve raggiungere <strong>${dice.target}</strong>.</p>
     ${storyCardsMarkup(scene)}
+    ${diceDigital && roster.length ? `<button type="button" class="dice-roll-all" data-story-roll-all>🎲 Tira i dadi per la ciurma</button>` : ""}
     ${roster.length ? roster.map((p) => {
       const ch = getCharacter(p.characterId);
       const cur = Number(rolls[p.id]) || 0;
@@ -3723,6 +3746,24 @@ function bindEvents() {
     });
   }
 
+  const diceToggle = $("#dice-toggle");
+  if (diceToggle) {
+    const paintDice = () => {
+      diceToggle.setAttribute("aria-pressed", String(diceDigital));
+      diceToggle.querySelector(".nav-ico").textContent = diceDigital ? "🖥️" : "🎲";
+      const l = $("#dice-label");
+      if (l) l.textContent = diceDigital ? "Dadi digitali" : "Dadi veri";
+    };
+    paintDice();
+    diceToggle.addEventListener("click", () => {
+      diceDigital = !diceDigital;
+      try { localStorage.setItem("pirati-dice-digital", diceDigital ? "1" : "0"); } catch (e) {}
+      paintDice();
+      sfx("click");
+      render();
+    });
+  }
+
   document.addEventListener("click", (event) => {
     // clic "generale": voci di menu e pulsanti principali
     const clickable = event.target.closest(
@@ -3860,6 +3901,11 @@ function bindEvents() {
       if (state.voyage.pending.kind === "boss") resolveBossOffer(n);
       else if (state.voyage.pending.roll) resolveMapEncounter(n);
     }
+    if (event.target.closest("[data-map-roll-one]") && state.voyage.pending) {
+      const n = d6();
+      if (state.voyage.pending.kind === "boss") resolveBossOffer(n);
+      else if (state.voyage.pending.roll) resolveMapEncounter(n);
+    }
     const bossOffer = event.target.closest("[data-boss-offer]");
     if (bossOffer) chooseBossOffer(Number(bossOffer.dataset.bossOffer));
     if (event.target.closest("[data-summon-boss]")) startBossEncounter();
@@ -3867,6 +3913,14 @@ function bindEvents() {
     if (moveDie) {
       const [pid, n] = moveDie.dataset.moveDie.split(":");
       setMoveDie(pid, Number(n));
+    }
+    if (event.target.closest("[data-move-roll-all]")) {
+      const v = voyage();
+      v.moveRoll = v.moveRoll || { rolls: {} };
+      activePlayers().forEach((p) => { v.moveRoll.rolls[p.id] = d6(); });
+      sfx("click");
+      saveState();
+      renderMap();
     }
     if (event.target.closest("[data-crew-sail]")) doCrewMove();
     const mapRoute = event.target.closest("[data-map-route]");
@@ -3919,6 +3973,14 @@ function bindEvents() {
     }
     const playQuestCardBtn = event.target.closest("[data-play-quest-card]");
     if (playQuestCardBtn) playQuestCard(playQuestCardBtn.dataset.playQuestCard);
+    if (event.target.closest("[data-quest-roll-all]") && state.questCampaign.resolution) {
+      const r = state.questCampaign.resolution;
+      (r.playerIds || []).forEach((id) => { r.rolls[id] = d6(); });
+      r.result = null;
+      sfx("click");
+      saveState();
+      renderQuestCycle();
+    }
     if (event.target.closest("[data-resolve-dice]")) resolveCrewDice();
     if (event.target.closest("[data-question-hint]")) resolveGroupQuestion(false);
     if (event.target.closest("[data-resolve-question]")) resolveGroupQuestion(true);
@@ -3937,6 +3999,7 @@ function bindEvents() {
     if (event.target.closest("[data-story-soft]")) resolveStorySoft();
     const storyGroupBtn = event.target.closest("[data-story-group]");
     if (storyGroupBtn) resolveStoryGroup(storyGroupBtn.dataset.storyGroup === "1");
+    if (event.target.closest("[data-story-roll-all]")) rollStoryDiceAll();
     if (event.target.closest("[data-story-resolve-dice]")) resolveStoryDice();
     if (event.target.closest("[data-story-outcome-next]")) advanceFromOutcome();
     if (event.target.closest("[data-story-finish]")) finishStory();

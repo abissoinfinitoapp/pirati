@@ -73,6 +73,7 @@
             <div id="map-move" class="map-move" hidden></div>
             <div id="map-dice" class="map-dice">
               <p id="map-dice-hint" class="map-dice-hint">Tira 1d6 e premi il numero uscito per risolvere l'incontro.</p>
+              <div id="map-dice-auto"></div>
               <div class="physical-dice map-physical-dice">
                 <button type="button" data-map-die="1">1</button>
                 <button type="button" data-map-die="2">2</button>
@@ -344,6 +345,7 @@
       <button type="button" class="nav-item" data-view="print"><span class="nav-ico" aria-hidden="true">&#128424;&#65039;</span>Stampa</button>
     </div>
 
+    <button type="button" class="nav-item" id="dice-toggle" aria-pressed="false"><span class="nav-ico" aria-hidden="true">&#127922;</span><span id="dice-label">Dadi veri</span></button>
     <button type="button" class="nav-item" id="sfx-toggle" aria-pressed="true"><span class="nav-ico" aria-hidden="true">&#128266;</span><span id="sfx-label">Suoni</span></button>
     <button type="button" class="nav-item nav-help" data-tutorial-toggle aria-expanded="false" aria-controls="tutorial-overlay"><span class="nav-ico" aria-hidden="true">&#10067;</span>Guida</button>
     <button type="button" class="nav-item nav-logout" id="logout-btn" hidden><span class="nav-ico" aria-hidden="true">&#8618;</span><span id="logout-label">Esci</span></button>

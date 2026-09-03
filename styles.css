@@ -2799,6 +2799,22 @@ body.magnifier-open { overflow: hidden; }
 .map-dice-hint { font-size: 15px; color: rgba(255,255,255,.8); }
 .map-physical-dice button { min-height: 46px; font-size: 20px; }
 
+/* dadi digitali: pulsante "tira" (funziona sia su sfondo chiaro che scuro) */
+.dice-roll-all {
+  display: block;
+  width: 100%;
+  margin: 6px 0 12px;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #d69a2d, #f3c76f);
+  color: #17202a;
+  font-weight: 900;
+  font-size: 15px;
+  cursor: pointer;
+}
+.dice-roll-all:hover { filter: brightness(1.07); }
+
 /* --- movimento: tutti i pirati tirano --- */
 .map-move { display: grid; gap: 8px; }
 .move-roll-row {
