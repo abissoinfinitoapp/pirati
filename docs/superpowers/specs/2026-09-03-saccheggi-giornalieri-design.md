@@ -25,15 +25,20 @@ premio favoloso che si trovava sulla nave lasciata andare.
 5. Tutti i pirati presenti tirano `1d6 + caratteristica richiesta`. Sono
    supportati sia i dadi fisici sia quelli digitali.
 6. L'app calcola la media dei risultati e la confronta con la soglia della nave.
-7. In caso di successo, assegna e mostra il bottino scelto. La nave scartata
+7. Se il primo tiro riesce, assegna e mostra il bottino scelto. La nave scartata
    fugge e il suo contenuto non viene rivelato.
-8. In caso di fallimento, mostra la beffa innocua trovata sulla nave scelta e
-   poi rivela il bottino meraviglioso della nave scartata. La rivelazione è
-   narrativa: il premio scartato non viene assegnato.
-9. Il risultato viene registrato nel Diario e si torna al contesto precedente.
+8. Se il primo tiro fallisce, mostra la beffa innocua trovata sulla nave scelta
+   e rivela il bottino della nave scartata. La ciurma ottiene un secondo e ultimo
+   tentativo: può insistere sulla stessa nave oppure inseguire l'altra, ora
+   conoscendone il premio.
+9. Se il secondo tiro riesce, assegna il bottino della nave scelta per il
+   secondo tentativo. Se fallisce, entrambe le navi fuggono con una conclusione
+   comica e non viene assegnato alcun premio.
+10. Il risultato viene registrato nel Diario e si torna al contesto precedente.
 
-Non esistono esiti intermedi. Un tiro fallito non causa perdita di monete,
-oggetti o Fama e non modifica il Pericolo.
+Non esistono ulteriori tentativi dopo il secondo tiro. Un tiro fallito non causa
+perdita di monete, oggetti o Fama e non modifica il Pericolo. Cambiare bersaglio
+non modifica la caratteristica o la soglia definite dalla nuova nave.
 
 Le soglie iniziali sono `5` (**abbordaggio facile**), `6` (**abbordaggio
 audace**) e `7` (**abbordaggio leggendario**). Le due navi di una coppia possono
@@ -136,16 +141,17 @@ quest: un risultato per ogni pirata presente, pulsante collettivo per i dadi
 digitali e inserimento manuale per quelli fisici. Durante un saccheggio in corso
 non sarà possibile scegliere una rotta o aprire un secondo avvistamento.
 
-I testi distingueranno nettamente tre momenti: scelta, tiro e rivelazione. Nel
-fallimento, la beffa della nave scelta apparirà prima del tesoro perduto, per
-conservare il tempo comico.
+I testi distingueranno nettamente scelta, tiro, rivelazione, seconda scelta ed
+esito finale. Dopo il primo fallimento, la beffa della nave scelta apparirà prima
+del tesoro alternativo, per conservare il tempo comico. I due bersagli saranno
+poi nuovamente selezionabili e mostreranno chiaramente che resta un solo tiro.
 
 ## Stato persistente
 
 Il salvataggio aggiungerà un blocco isolato dedicato ai saccheggi con:
 
 - giorno dell'ultimo tentativo;
-- coppia corrente, nave scelta e fase del flusso;
+- coppia corrente, nave scelta, numero del tentativo e fase del flusso;
 - tiri già inseriti;
 - risultato risolto, finché la schermata non viene chiusa;
 - cronologia recente delle coppie mostrate.
@@ -196,11 +202,15 @@ La realizzazione sarà verificata almeno sui seguenti casi:
 
 - disponibilità una sola volta per ogni giornata della campagna;
 - consumo salvato al momento della scelta;
-- ripresa dopo ricaricamento nelle fasi di scelta, tiro e risultato;
+- ripresa dopo ricaricamento nelle fasi di prima scelta, primo tiro, seconda
+  scelta, secondo tiro e risultato;
 - media cooperativa corretta con uno e più pirati presenti;
 - flussi con dadi fisici e dadi digitali;
 - successo con assegnazione unica di monete, Fama e bottino;
-- fallimento senza penalità e con rivelazione esclusiva della nave scartata;
+- primo fallimento senza penalità, con rivelazione della nave scartata;
+- secondo tentativo sulla stessa nave e sull'altra nave;
+- secondo fallimento senza penalità e senza un terzo tentativo;
+- successo al secondo tentativo con assegnazione del solo premio allora scelto;
 - successo senza rivelazione della nave scartata;
 - esclusione delle quattro coppie viste più recentemente;
 - apertura libera dalla Mappa;
