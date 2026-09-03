@@ -128,3 +128,38 @@ test("rifiuta gli ID duplicati di coppie e navi", () => {
   assert.equal(PIRATI.raidPairs.length, 1);
   assert.ok(PIRATI.problems.some(problem => problem.includes("coppia duplicata")));
 });
+
+test("rifiuta una coppia distinta che riusa un ID nave già registrato", () => {
+  const context = vm.createContext({
+    window: {},
+    console: { log() {}, warn() {} },
+    PIRATI_ASSET: (assetPath) => "assets/" + assetPath
+  });
+  context.window.window = context.window;
+  context.window.PIRATI_ASSET = context.PIRATI_ASSET;
+  vm.runInContext(fs.readFileSync(path.join(root, "engine/pirati-core.js"), "utf8"), context, { filename: "engine/pirati-core.js" });
+  const PIRATI = context.window.PIRATI;
+
+  PIRATI.registerRaidPairs([
+    {
+      id: "prima",
+      ships: [
+        { id: "nave-condivisa", name: "Condivisa", sighting: "Forse una nuvola.", stat: "coraggio", target: 6, rewards: [{ type: "coins", amount: 2 }], success: "Presa.", fail: "Beffa.", missed: "Perse 2 monete." },
+        { id: "nave-prima", name: "Prima", sighting: "Forse una balena.", stat: "fortuna", target: 6, rewards: [{ type: "fame", amount: 1 }], success: "Presa.", fail: "Beffa.", missed: "Perso 1 punto Fama." }
+      ]
+    }
+  ]);
+  PIRATI.registerRaidPairs([
+    {
+      id: "seconda",
+      ships: [
+        { id: "nave-condivisa", name: "Condivisa", sighting: "Forse una nuvola.", stat: "coraggio", target: 6, rewards: [{ type: "coins", amount: 2 }], success: "Presa.", fail: "Beffa.", missed: "Perse 2 monete." },
+        { id: "nave-seconda", name: "Seconda", sighting: "Forse un gabbiano.", stat: "astuzia", target: 6, rewards: [{ type: "coins", amount: 3 }], success: "Presa.", fail: "Beffa.", missed: "Perse 3 monete." }
+      ]
+    }
+  ]);
+
+  assert.equal(PIRATI.raidPairs.length, 1);
+  assert.equal(PIRATI.raidPair("seconda"), null);
+  assert.ok(PIRATI.problems.some(problem => problem.includes('saccheggio "seconda": nave duplicata')));
+});
