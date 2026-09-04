@@ -281,8 +281,8 @@ const TUTORIAL_STEPS = [
     icon: "🏚️",
     kicker: "Passo 7 · La casa di Nonna Belarda",
     title: "Cianfrusaglie che esplodono in premi",
-    text: "Quasi ogni azione della ciurma — quest, saccheggi, Pesce Crostone, incontri — regala anche qualche cianfrusaglia. Sulla Mappa, sotto la parola del giorno, c'è un secondo pannello a scomparsa: mostra quante cianfrusaglie avete in giro e quanto è piena la casa di Nonna Belarda su ogni isola. Quando la ciurma sbarca da qualche parte, le consegna tutte a lei. Se una casa si riempie, esplode: la ciurma vince un premio e Nonna Belarda, paziente, la ricostruisce vuota.",
-    tip: "Fate guardare ai bambini quale isola è più vicina a esplodere: decidere dove sbarcare per far scoppiare una casa è la parte tattica del gioco."
+    text: "Quasi ogni azione della ciurma — quest, saccheggi, Pesce Crostone, incontri — regala anche qualche kg di cianfrusaglie. Sulla Mappa, sotto la parola del giorno, c'è un secondo pannello a scomparsa: mostra quanti kg avete in giro e quanto pesa la casa di Nonna Belarda su ogni isola. Quando la ciurma sbarca da qualche parte, li consegna tutti a lei. Servono 12.000 kg — cioè 12 tonnellate — per far esplodere una casa: allora la ciurma vince un premio e Nonna Belarda, paziente, la ricostruisce vuota.",
+    tip: "Fate fare la conversione a voce alta: «1.000 kg fanno una tonnellata, quindi ce ne mancano ancora tante». È un modo divertente per far maneggiare ai bambini i numeri grandi e le unità di peso, non solo le monete."
   },
   {
     icon: "📖",
@@ -315,7 +315,7 @@ const QUEST_ISLANDS = PIRATI.islands;
 const ALL_QUESTS = PIRATI.quests;
 const RAID_CORE = window.PIRATI_SACCH_CORE;
 const BELARDA_CORE = window.PIRATI_BELARDA_CORE;
-const BELARDA_THRESHOLD = 12; // cianfrusaglie per far esplodere una casa
+const BELARDA_THRESHOLD = 12000; // kg (12 tonnellate) per far esplodere una casa
 const RAID_RETURN_VIEWS = Object.freeze({ map: "mappa", story: "quests" });
 
 /* La domanda collaborativa ora vive dentro ogni quest (campo groupChallenge). */
@@ -738,7 +738,7 @@ function resolveRaidAttempt() {
   if (resolution.success) {
     const rewardsApplied = RAID_CORE.applyRaidRewardsOnce(state, ship);
     state.raid.phase = "result";
-    if (rewardsApplied) { awardJunk(1); pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`); }
+    if (rewardsApplied) { awardJunk(600); pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`); }
   } else if (attempt < 2) {
     state.raid.phase = "retry-choice";
     state.raid.attempt = 2;
@@ -1261,6 +1261,12 @@ const POTENZA_SCALE = 100;    // Potenza mostrata = valore reale x100
 const _nfIT = new Intl.NumberFormat("it-IT");
 const fmtCoins = (n) => _nfIT.format(Math.round(Number(n) || 0));
 const fmtPotenza = (raw) => _nfIT.format(Math.round((Number(raw) || 0) * POTENZA_SCALE));
+/* Cianfrusaglie di Nonna Belarda: si contano in kg, le case si riempiono in
+   tonnellate (1 t = 1.000 kg) — occasione per far maneggiare ai bambini
+   numeri grandi E un'unità di misura reale, non solo cifre astratte. */
+const fmtKg = (n) => `${_nfIT.format(Math.round(Number(n) || 0))} kg`;
+const fmtTonnellate = (kg) => (Math.round((Number(kg) || 0) / 100) / 10)
+  .toLocaleString("it-IT", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 function animateNumber(el, from, to) {
   if (!el) return;
@@ -1709,7 +1715,7 @@ function deliverJunkToIsland(node) {
   state.belarda.houses = result.houses;
   state.belarda.pending = 0;
   if (!result.exploded) {
-    pushLog(`Consegnate ${delivered} cianfrusaglie alla casa di Nonna Belarda su ${node.name} (${result.after}/${state.belarda.threshold}).`);
+    pushLog(`Consegnati ${fmtKg(delivered)} di cianfrusaglie alla casa di Nonna Belarda su ${node.name} (${fmtKg(result.after)} su ${fmtKg(state.belarda.threshold)} · ${fmtTonnellate(result.after)} t su ${fmtTonnellate(state.belarda.threshold)} t).`);
     return "";
   }
   const entry = BELARDA_CORE.pickReward(PIRATI.belardaLoot, state.belarda.recentRewardIds);
@@ -1718,7 +1724,7 @@ function deliverJunkToIsland(node) {
   const gained = entry ? applyBelardaReward(entry) : [];
   state.belarda.lastReveal = { islandId: node.island, islandName: node.name, day: state.day, text: entry ? entry.text : "", gained };
   sfx("trionfo");
-  const note = `🏚️ La casa di Nonna Belarda su ${node.name} esplode di cianfrusaglie!${entry ? " " + entry.text : ""}`;
+  const note = `🏚️ La casa di Nonna Belarda su ${node.name} esplode con oltre ${fmtTonnellate(result.filled)} tonnellate di cianfrusaglie!${entry ? " " + entry.text : ""}`;
   pushLog(`${note} Premi: ${gained.length ? gained.join(", ") : "—"}. Nonna Belarda, paziente, ricomincia a riempirla.`);
   return note;
 }
@@ -2082,21 +2088,21 @@ function resolveMapEncounter(die, opts) {
     if (success) {
       const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(1);
+      awardJunk(500);
       if (enc.treasure) state.crew.loot.push({ id: null, name: enc.treasure.title, text: enc.treasure.text, day: state.day, fromMap: true });
       gains.push(`${fmtCoins(coins)} monete`);
       if (enc.treasure) gains.push(enc.treasure.title);
     } else {
       const coins = (1 + Math.floor(Math.random() * 2)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(1);
+      awardJunk(150);
       gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "razzia") {
     if (success) {
       const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(1);
+      awardJunk(500);
       gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "mostro" || enc.kind === "assalto") {
@@ -2104,7 +2110,7 @@ function resolveMapEncounter(die, opts) {
       state.session.danger = Math.max(0, state.session.danger - 1);
       const coins = (3 + Math.ceil(Math.random() * 4)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(1);
+      awardJunk(400);
       gains.push(`${fmtCoins(coins)} monete`, `bottino: ${enc.enemy.reward}`, "Pericolo -1");
     } else {
       const hit = enc.kind === "assalto" ? Math.min(state.crew.coins, (3 + Math.floor(Math.random() * 3)) * COIN_UNIT) : 0;
@@ -2116,7 +2122,7 @@ function resolveMapEncounter(die, opts) {
   } else if (success) { // evento riuscito
     const coins = (3 + Math.ceil(Math.random() * 3)) * COIN_UNIT;
     state.crew.coins += coins;
-    awardJunk(1);
+    awardJunk(300);
     gains.push(`${fmtCoins(coins)} monete`);
   }
 
@@ -2139,7 +2145,7 @@ function resolveEventChoice(index) {
   if (!options || !options[index]) return;
   const opt = options[index];
   const gains = [];
-  if (opt.coins) { state.crew.coins += opt.coins; if (opt.coins > 0) awardJunk(1); gains.push(`${fmtCoins(opt.coins)} monete`); }
+  if (opt.coins) { state.crew.coins += opt.coins; if (opt.coins > 0) awardJunk(300); gains.push(`${fmtCoins(opt.coins)} monete`); }
   if (opt.danger) {
     state.session.danger = Math.min(12, Math.max(0, state.session.danger + opt.danger));
     gains.push(`Pericolo ${opt.danger > 0 ? "+" : ""}${opt.danger}`);
@@ -2264,7 +2270,7 @@ function calmBoss() {
   state.fame += 4;
   const bossCoins = 20 * COIN_UNIT;
   state.crew.coins += bossCoins;
-  awardJunk(3);
+  awardJunk(3500);
   if (!state.crew.trophies.some((t) => t.id === "sonno-dell-abisso")) {
     state.crew.trophies.push({ id: "sonno-dell-abisso", questId: null, day: state.day });
   }
@@ -2626,6 +2632,8 @@ function renderBestiario() {
 
 const CROSTONE_COINS_SUBITO = 5 * COIN_UNIT;    // indovinata al primo colpo (125.000)
 const CROSTONE_COINS_RECUPERO = 3 * COIN_UNIT;  // ripetuta dal Taccuino Nero il giorno dopo (75.000)
+const CROSTONE_JUNK_SUBITO = 500;    // kg per Nonna Belarda, indovinata al primo colpo
+const CROSTONE_JUNK_RECUPERO = 400;  // kg per Nonna Belarda, ripetuta dal Taccuino Nero
 
 function crostoneWord(id) {
   return PIRATI.word(id) || { id, parola: id, significato: "(parola non nel catalogo)", esempio: "", tranello: "" };
@@ -2658,7 +2666,7 @@ function crostoneIndovinata() {
   c.today.status = "vinta";
   if (!c.pass.includes(state.day)) c.pass.push(state.day);
   state.crew.coins += CROSTONE_COINS_SUBITO;
-  awardJunk(1);
+  awardJunk(CROSTONE_JUNK_SUBITO);
   sfx("win-event");
   pushLog(`Pesce Crostone: la ciurma spiega «${crostoneWord(c.today.wordId).parola}». Lasciapassare ottenuto, +${fmtCoins(CROSTONE_COINS_SUBITO)} monete.`);
   saveState();
@@ -2685,7 +2693,7 @@ function crostoneRecupera(wordId) {
   c.taccuino.splice(i, 1);
   c.libro.push({ wordId, day: state.day, recuperata: true });
   state.crew.coins += CROSTONE_COINS_RECUPERO;
-  awardJunk(1);
+  awardJunk(CROSTONE_JUNK_RECUPERO);
   pushLog(`Pesce Crostone: la ciurma ripete «${crostoneWord(wordId).parola}». Archiviata nel Libro delle Parole Impossibili, +${fmtCoins(CROSTONE_COINS_RECUPERO)} monete.`);
   saveState();
   lastShownCoins = state.crew.coins - CROSTONE_COINS_RECUPERO;
@@ -2861,8 +2869,8 @@ function renderMapBelarda() {
   const statusEl = $("#map-belarda-status");
   if (statusEl) {
     const fullest = nodes.map((n) => ({ n, fill: b.houses[n.island] || 0 })).sort((x, y) => y.fill - x.fill)[0];
-    let s = `zaino: ${b.pending} pront${b.pending === 1 ? "a" : "e"} da consegnare`;
-    if (fullest && fullest.fill > 0) s += ` · ${fullest.n.name} ${fullest.fill}/${b.threshold}`;
+    let s = `zaino: ${fmtKg(b.pending)} pronti da consegnare`;
+    if (fullest && fullest.fill > 0) s += ` · ${fullest.n.name} ${fmtKg(fullest.fill)} su ${fmtKg(b.threshold)}`;
     if (b.explosions) s += ` · esplosa ${b.explosions} volt${b.explosions === 1 ? "a" : "e"}`;
     statusEl.textContent = s;
   }
@@ -2888,19 +2896,19 @@ function mapBelardaMarkup(b, nodes) {
     const pct = Math.round((fill / b.threshold) * 100);
     return `<li class="belarda-house">
       <span class="belarda-house-name">${n.icon || "🏝️"} ${n.name}</span>
-      <span class="belarda-house-bar" role="img" aria-label="${n.name}: ${fill} di ${b.threshold} cianfrusaglie">
+      <span class="belarda-house-bar" role="img" aria-label="${n.name}: ${fmtKg(fill)} (${fmtTonnellate(fill)} t) su ${fmtKg(b.threshold)} (${fmtTonnellate(b.threshold)} t)">
         <i style="width:${pct}%"></i>
       </span>
-      <span class="belarda-house-val">${fill}/${b.threshold}</span>
+      <span class="belarda-house-val">${fmtKg(fill)}</span>
     </li>`;
   }).join("");
 
   return `
-    <p class="crostone-intro">Ogni avventura, saccheggio o parola indovinata regala qualche cianfrusaglia in più. Quando sbarcate su un'isola le consegnate tutte a Nonna Belarda: se la sua casa lì scoppia, la ciurma vince un premio e lei la ricostruisce, pronta a riempirsi ancora.</p>
+    <p class="crostone-intro">Ogni avventura, saccheggio o parola indovinata regala qualche cianfrusaglia in più, in kg. Quando sbarcate su un'isola le consegnate tutte a Nonna Belarda: 1.000 kg fanno 1 tonnellata, e servono <strong>${fmtTonnellate(b.threshold)} tonnellate</strong> (${fmtKg(b.threshold)}) per far scoppiare una casa. Se scoppia, la ciurma vince un premio e lei la ricostruisce, pronta a riempirsi ancora.</p>
     <div class="crostone-counters">
-      <div><span>Nello zaino</span><strong>${b.pending}</strong></div>
+      <div><span>Nello zaino</span><strong>${fmtKg(b.pending)}</strong></div>
       <div><span>Case esplose</span><strong>${b.explosions}</strong></div>
-      <div><span>Soglia per casa</span><strong>${b.threshold}</strong></div>
+      <div><span>Soglia per casa</span><strong>${fmtTonnellate(b.threshold)} t</strong></div>
     </div>
     ${reveal}
     <ul class="belarda-houses">${rows}</ul>`;
@@ -4126,9 +4134,10 @@ function completeQuest(questId, opts) {
   state.questCampaign.resolution = null;
 
   const gained = grantQuestRewards(quest);
-  awardJunk(2);
+  const questJunk = 1200;
+  awardJunk(questJunk);
   if (!opts.silent) sfx("trionfo");
-  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati. +2 cianfrusaglie per Nonna Belarda.`);
+  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati. +${fmtKg(questJunk)} per Nonna Belarda.`);
   const gradeUp = refreshGrade();
   if (gradeUp) { if (!opts.silent) sfx("grado"); pushLog(`La ciurma sale al Grado ${gradeUp.grade}: ${gradeUp.name}! Nuovi poteri sbloccati.`); }
   checkLegendaryGrants();

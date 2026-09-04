@@ -17,7 +17,7 @@
 })(typeof window !== "undefined" ? window : globalThis, function (root) {
   "use strict";
 
-  const DEFAULT_THRESHOLD = 12;
+  const DEFAULT_THRESHOLD = 12000; // kg = 12 tonnellate
 
   function withBelardaDefaults(saved) {
     const defaults = {
