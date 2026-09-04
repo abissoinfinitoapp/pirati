@@ -19,7 +19,7 @@ const require = createRequire(import.meta.url);
 const ROOT = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
 const ASSETS = join(ROOT, "assets");
 
-const FOLDERS = ["carte", "contendenti", "personaggi", "oggetti", "ciurma", "sfondi"];
+const FOLDERS = ["carte", "contendenti", "personaggi", "oggetti", "ciurma", "sfondi", "saccheggi"];
 const LOOSE = ["pirati-character-atlas.png"];
 
 const MAX_WIDTH = 1200;   // le carte si vedono molto più piccole; ok anche per la stampa casalinga
