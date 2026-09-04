@@ -128,3 +128,13 @@ test("la risoluzione resta disabilitata finché manca anche un solo tiro valido"
     rolls: { p1: 6, p2: 9 }
   }).canResolve, false);
 });
+
+test("Tab resta nel dialogo del saccheggio in entrambe le direzioni", () => {
+  assert.equal(core.raidFocusTargetIndex(-1, 3, false), 0);
+  assert.equal(core.raidFocusTargetIndex(-1, 3, true), 2);
+  assert.equal(core.raidFocusTargetIndex(2, 3, false), 0);
+  assert.equal(core.raidFocusTargetIndex(0, 3, true), 2);
+  assert.equal(core.raidFocusTargetIndex(1, 3, false), null);
+  assert.equal(core.raidFocusTargetIndex(1, 3, true), null);
+  assert.equal(core.raidFocusTargetIndex(-1, 0, false), -1);
+});

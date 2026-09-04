@@ -35,6 +35,15 @@
     return { success, nextPhase: success || attempt >= 2 ? "result" : "retry-choice" };
   }
 
+  function raidFocusTargetIndex(currentIndex, focusableCount, backwards) {
+    const count = Number.isInteger(focusableCount) && focusableCount > 0 ? focusableCount : 0;
+    if (!count) return -1;
+    if (currentIndex < 0) return backwards ? count - 1 : 0;
+    if (backwards && currentIndex === 0) return count - 1;
+    if (!backwards && currentIndex === count - 1) return 0;
+    return null;
+  }
+
   function raidViewModel(options) {
     const source = options && typeof options === "object" ? options : {};
     const raid = source.raid && typeof source.raid === "object" ? source.raid : {};
@@ -166,5 +175,5 @@
     return true;
   }
 
-  return { dayAvailable, pickPair, scoreRolls, resolveAttempt, raidViewModel, withRaidDefaults, applyRaidRewardsOnce };
+  return { dayAvailable, pickPair, scoreRolls, resolveAttempt, raidFocusTargetIndex, raidViewModel, withRaidDefaults, applyRaidRewardsOnce };
 });

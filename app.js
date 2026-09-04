@@ -364,6 +364,7 @@ const defaultState = {
 
 let state = loadState();
 let raidOverlayOpen = state.raid.phase !== "idle";
+let raidPreviousFocus = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -781,6 +782,34 @@ function renderRaidLocks(locked) {
   ].join(", ")).forEach((control) => { control.disabled = locked || control.disabled; });
 }
 
+function setRaidBackgroundInert(overlay, inert) {
+  Array.from(overlay.parentElement.children).forEach((element) => {
+    if (element !== overlay) element.inert = inert;
+  });
+}
+
+function raidFocusableElements() {
+  const dialog = $("#raid-overlay .raid-dialog");
+  if (!dialog) return [];
+  return Array.from(dialog.querySelectorAll([
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "[tabindex]:not([tabindex='-1'])"
+  ].join(", "))).filter((element) => !element.hidden && element.getClientRects().length > 0);
+}
+
+function restoreRaidFocus() {
+  let target = raidPreviousFocus;
+  if (!target || !target.isConnected || target.disabled || target.closest("[inert]")) {
+    target = $("#map-raid-entry button:not([disabled])") || $(".nav-item.is-active");
+  }
+  if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+  raidPreviousFocus = null;
+}
+
 function renderRaid() {
   const overlay = $("#raid-overlay");
   const content = $("#raid-content");
@@ -793,9 +822,11 @@ function renderRaid() {
   overlay.hidden = !isOpen;
   overlay.setAttribute("aria-hidden", String(!isOpen));
   document.body.classList.toggle("raid-open", isOpen);
+  setRaidBackgroundInert(overlay, isOpen);
   renderRaidLocks(model.lockNavigation);
   if (!model.inProgress) {
     content.innerHTML = "";
+    if (wasOpen) restoreRaidFocus();
     return;
   }
 
@@ -849,7 +880,7 @@ function renderRaid() {
   if (isOpen && (!wasOpen || !overlay.contains(document.activeElement))) {
     overlay.querySelector(".raid-dialog")?.focus({ preventScroll: true });
   } else if (!isOpen && wasOpen) {
-    $("#map-raid-entry button")?.focus({ preventScroll: true });
+    restoreRaidFocus();
   }
 }
 
@@ -4054,11 +4085,27 @@ function bindEvents() {
     carouselStartX = null;
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      if (raidOverlayOpen && state.raid.phase !== "idle") {
+    if (raidOverlayOpen && state.raid.phase !== "idle") {
+      if (event.key === "Tab") {
+        const focusable = raidFocusableElements();
+        const currentIndex = focusable.indexOf(document.activeElement);
+        const targetIndex = RAID_CORE.raidFocusTargetIndex(currentIndex, focusable.length, event.shiftKey);
+        if (targetIndex !== null) {
+          event.preventDefault();
+          if (targetIndex === -1) $("#raid-overlay .raid-dialog")?.focus({ preventScroll: true });
+          else focusable[targetIndex].focus({ preventScroll: true });
+        }
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
         raidOverlayOpen = false;
         renderRaid();
-      } else if (magnifierState) closeMagnifier();
+        return;
+      }
+    }
+    if (event.key === "Escape") {
+      if (magnifierState) closeMagnifier();
       else if ($("#tutorial-overlay").classList.contains("is-open")) setTutorialOverlay(false);
       else closeNavDrawer();
     }
@@ -4150,12 +4197,14 @@ function bindEvents() {
     if (event.target.closest("[data-tutorial-close]")) setTutorialOverlay(false);
 
     if (event.target.closest("[data-raid-start]")) {
+      raidPreviousFocus = event.target.closest("[data-raid-start]");
       startRaid(null, "map");
       raidOverlayOpen = state.raid.phase !== "idle";
       render();
       return;
     }
     if (event.target.closest("[data-raid-resume]")) {
+      raidPreviousFocus = event.target.closest("[data-raid-resume]");
       raidOverlayOpen = true;
       renderRaid();
       return;
