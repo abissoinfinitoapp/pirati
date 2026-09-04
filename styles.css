@@ -2994,7 +2994,7 @@ body.raid-open { overflow: hidden; }
   box-shadow: 0 14px 30px rgba(0,0,0,.24);
 }
 .raid-ship-card.has-revealed-reward { border-color: #f3c76f; box-shadow: 0 0 0 2px rgba(243,199,111,.18), 0 14px 30px rgba(0,0,0,.24); }
-.raid-ship-card > img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #dce9e5; }
+.raid-ship-card > img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: center 32%; display: block; background: #dce9e5; }
 .raid-ship-body { display: grid; gap: 10px; padding: 17px; }
 .raid-ship-body h3 { margin: 0; color: var(--sea-dark); font-size: 22px; }
 .raid-sighting { margin: 0; min-height: 3em; line-height: 1.5; color: rgba(23,32,42,.75); }
@@ -3065,7 +3065,6 @@ body.raid-open { overflow: hidden; }
   .raid-ships,
   .raid-reveal,
   .raid-roll-layout { grid-template-columns: 1fr; }
-  .raid-ship-card > img { aspect-ratio: 4 / 3; }
   .raid-dialog button,
   .raid-dialog input { min-height: 44px; }
 }
