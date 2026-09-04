@@ -271,22 +271,29 @@ const TUTORIAL_STEPS = [
     tip: "I bambini tirano il dado vero sul tavolo e tu premi il numero uscito. Non avete dadi? Nel menu attiva «Dadi digitali»: compare un pulsante «🎲 Tira» e l'app tira al posto vostro."
   },
   {
+    icon: "⚔️",
+    kicker: "Passo 6 · Navi all'orizzonte",
+    title: "Il saccheggio del giorno",
+    text: "Una volta per giornata di gioco, sulla Mappa compare «🏴‍☠️ Navi all'orizzonte!». Si avvistano due navi assurde: di ognuna vedete nome, indizio, caratteristica richiesta e difficoltà — ma NON il carico. La ciurma discute e ne sceglie una (la scelta consuma il saccheggio del giorno). Poi tutti tirano 1d6 + caratteristica: la media deve raggiungere la soglia. Se riesce, il bottino è vostro. Se il primo tiro fallisce, scoprite con una risata cosa c'era sulla nave lasciata andare e avete un secondo e ultimo tentativo — sulla stessa nave o inseguendo l'altra.",
+    tip: "Un tiro fallito non toglie mai niente e non alza il Pericolo: è solo una beffa buffa. Lasciate litigare i bambini su quale nave abbordare, è metà del divertimento."
+  },
+  {
     icon: "📖",
-    kicker: "Passo 6 · L'avventura guidata",
+    kicker: "Passo 7 · L'avventura guidata",
     title: "Una scena per volta",
     text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda (con spunti pronti e un «se nessuno parte»), 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
     tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Gli spunti servono a te, non ai bambini: usali solo se serve."
   },
   {
     icon: "🎲",
-    kicker: "Passo 7 · Il Destino e i dadi",
+    kicker: "Passo 8 · Il Destino e i dadi",
     title: "Fallire vuol dire andare avanti diversi",
     text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
     tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
   },
   {
     icon: "🏆",
-    kicker: "Passo 8 · Come cresce la ciurma",
+    kicker: "Passo 9 · Come cresce la ciurma",
     title: "Carte, Potenza, Gradi",
     text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte finiscono nel Baule dei Poteri (Tesoro): durante una prova puoi giocarne una — toccala per ingrandirla, leggila, poi «Gioca». Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
     tip: "Alla schermata dei premi leggi ad alta voce i numeri che salgono: monete, Potenza, Grado. È il momento che i bambini aspettano."
