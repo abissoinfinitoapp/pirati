@@ -51,7 +51,7 @@ PIRATI.registerEvents([
     situation: "Possono leggere il messaggio o venderlo così com'è al primo che passa.",
     choice: [
       { label: "Leggere il messaggio", result: "È un pezzo di mappa: la prossima casella Tesoro sarà più facile del solito.", danger: 0 },
-      { label: "Venderla chiusa", result: "Un mercante di passaggio la paga bene per la curiosità.", coins: 4 }
+      { label: "Venderla chiusa", result: "Un mercante di passaggio la paga bene per la curiosità.", coins: 100000 }
     ]
   },
   {
@@ -83,7 +83,7 @@ PIRATI.registerEvents([
     readAloud: "Migliaia di pesci argentati saltano fuori dall'acqua e volano sopra il ponte come uno sciame.",
     situation: "Possono acchiapparne un po' per cena, oppure lasciarli passare e seguire dove vanno.",
     choice: [
-      { label: "Acchiapparne per cena", result: "Cena abbondante per tutti: la ciurma è di ottimo umore e recupera le forze.", coins: 2 },
+      { label: "Acchiapparne per cena", result: "Cena abbondante per tutti: la ciurma è di ottimo umore e recupera le forze.", coins: 50000 },
       { label: "Seguire lo sciame", result: "I pesci volanti conoscono le rotte sicure: vi portano lontano dai guai.", danger: -1 }
     ]
   },
@@ -185,8 +185,8 @@ PIRATI.registerEvents([
     readAloud: "Un granchio grosso come un cane è seduto su un mucchietto di monete e vi fissa. Non scappa. Aspetta.",
     situation: "Non vuole combattere: colleziona cose. Si tratta o si aspetta.",
     choice: [
-      { label: "Offrirgli qualcosa di buffo", result: "Adora il vostro oggetto strano e in cambio vi lascia prendere tutto il mucchietto.", coins: 8 },
-      { label: "Aspettare che si distragga", result: "Prima o poi arriva un gabbiano: il granchio si volta e voi arraffate quello che potete.", coins: 5 }
+      { label: "Offrirgli qualcosa di buffo", result: "Adora il vostro oggetto strano e in cambio vi lascia prendere tutto il mucchietto.", coins: 200000 },
+      { label: "Aspettare che si distragga", result: "Prima o poi arriva un gabbiano: il granchio si volta e voi arraffate quello che potete.", coins: 125000 }
     ]
   },
   {

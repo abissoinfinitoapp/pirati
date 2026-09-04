@@ -177,8 +177,10 @@ test("registra dodici coppie di saccheggio curate e complete", () => {
   });
   assert.equal(ships.filter(ship => ship.rewards.some(reward => reward.type === "fame")).length, 4);
   assert.equal(ships.filter(ship => ship.rewards.some(reward => reward.type === "loot")).length, 6);
+  // ogni nave da' comunque un carico di monete: un galeone non si saccheggia per spiccioli
+  assert.ok(ships.every(ship => ship.rewards.some(reward => reward.type === "coins")));
   assert.ok(ships.flatMap(ship => ship.rewards).every(reward => {
-    if (reward.type === "coins") return Number.isInteger(reward.amount) && reward.amount >= 2 && reward.amount <= 5;
+    if (reward.type === "coins") return Number.isInteger(reward.amount) && reward.amount >= 100000 && reward.amount <= 5000000;
     if (reward.type === "fame") return reward.amount === 1;
     return reward.type === "loot" && typeof reward.id === "string" && reward.id;
   }));

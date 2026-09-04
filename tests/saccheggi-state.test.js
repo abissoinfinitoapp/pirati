@@ -220,7 +220,9 @@ test("startRaid salva la coppia e chooseRaidShip consuma subito il tentativo gio
 });
 
 test("un successo assegna il premio e scrive il Diario una sola volta", () => {
-  const { api } = appHarness();
+  const { api, PIRATI } = appHarness();
+  const expectedCoins = PIRATI.raidPair("dolce-freddo").ships
+    .find(s => s.id === "nave-gelato").rewards.find(r => r.type === "coins").amount;
   api.setState(baseState({
     raid: {
       usedDay: 4,
@@ -243,11 +245,11 @@ test("un successo assegna il premio e scrive il Diario una sola volta", () => {
 
   assert.equal(first.raid.phase, "result");
   assert.equal(first.raid.outcome.success, true);
-  assert.equal(first.crew.coins, 3);
+  assert.equal(first.crew.coins, expectedCoins);
   assert.equal(first.log.length, 1);
 
   api.resolveRaidAttempt();
-  assert.equal(api.getState().crew.coins, 3);
+  assert.equal(api.getState().crew.coins, expectedCoins);
   assert.equal(api.getState().log.length, 1);
 });
 

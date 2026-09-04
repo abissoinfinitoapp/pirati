@@ -55,7 +55,7 @@ PIRATI.registerPack({
       groupChallenge: "Inventate insieme una medicina per un tempio che starnutisce: serve un ingrediente, un modo per darlo e una parola magica.",
       rewards: [
         { type: "loot", id: "tavoletta-vento" },
-        { type: "coins", amount: 10 },
+        { type: "coins", amount: 250000 },
         { type: "trophy", id: "eroe-del-tempio" },
         { type: "power", id: "soffio-starnuto" }
       ],
@@ -323,7 +323,7 @@ PIRATI.registerPack({
       groupChallenge: "Create una parola che non esiste, decidete insieme cosa significa e usatela in una frase da pirati.",
       rewards: [
         { type: "loot", id: "richiamo-stormo" },
-        { type: "coins", amount: 9 },
+        { type: "coins", amount: 225000 },
         { type: "trophy", id: "voce-dello-stormo" },
         { type: "power", id: "fionda-parole" }
       ],
@@ -513,7 +513,7 @@ PIRATI.registerPack({
       groupChallenge: "Quali tre ingredienti fantastici calmano un vulcano senza spegnerlo? Spiegate perché funzionano insieme.",
       rewards: [
         { type: "loot", id: "pietra-tiepida" },
-        { type: "coins", amount: 11 },
+        { type: "coins", amount: 275000 },
         { type: "trophy", id: "cuoco-del-cratere" },
         { type: "power", id: "cucchiaione-gigante" }
       ],
@@ -734,7 +734,7 @@ PIRATI.registerPack({
       groupChallenge: "Costruite una catena di tre indizi che aiuti la salamandra a ricordare dove ha nascosto l'uovo.",
       rewards: [
         { type: "loot", id: "scaglia-lucente" },
-        { type: "coins", amount: 10 },
+        { type: "coins", amount: 250000 },
         { type: "trophy", id: "amico-della-salamandra" },
         { type: "power", id: "scaglia-salamandra" }
       ],
@@ -955,7 +955,7 @@ PIRATI.registerPack({
       groupChallenge: "Inventate tre frasi: una vera, una esagerata e una incompleta. Poi spiegate come si riconosce quella vera.",
       rewards: [
         { type: "loot", id: "conchiglia-veritiera-loot" },
-        { type: "coins", amount: 12 },
+        { type: "coins", amount: 300000 },
         { type: "trophy", id: "custode-della-verita" },
         { type: "power", id: "conchiglia-veritiera" }
       ],
@@ -1176,7 +1176,7 @@ PIRATI.registerPack({
       groupChallenge: "Create un ritmo di quattro gesti che tutta la ciurma riesca a ripetere nello stesso ordine.",
       rewards: [
         { type: "loot", id: "campanella-marea" },
-        { type: "coins", amount: 9 },
+        { type: "coins", amount: 225000 },
         { type: "trophy", id: "ballerino-delle-onde" },
         { type: "power", id: "tamburo-marea" }
       ],
@@ -1391,7 +1391,7 @@ PIRATI.registerPack({
       groupChallenge: "Scegliete una parola d'ordine, un gesto e un suono per riconoscervi nella nebbia senza confondervi.",
       rewards: [
         { type: "loot", id: "seme-bussola-loot" },
-        { type: "coins", amount: 10 },
+        { type: "coins", amount: 250000 },
         { type: "trophy", id: "guida-nella-nebbia" },
         { type: "power", id: "seme-bussola" }
       ],
@@ -1632,7 +1632,7 @@ PIRATI.registerPack({
       groupChallenge: "Progettate un freno usando solo tre oggetti trovati in una palude e date un compito preciso a ogni pirata.",
       rewards: [
         { type: "loot", id: "palafitta-loot" },
-        { type: "coins", amount: 11 },
+        { type: "coins", amount: 275000 },
         { type: "trophy", id: "domatore-di-case" },
         { type: "power", id: "palafitta-pieghevole" }
       ],
@@ -1855,7 +1855,7 @@ PIRATI.registerPack({
       groupChallenge: "Inventate un suono mai sentito prima combinando voce, mani e un oggetto che avete sul tavolo.",
       rewards: [
         { type: "loot", id: "barattolo-eco-loot" },
-        { type: "coins", amount: 12 },
+        { type: "coins", amount: 300000 },
         { type: "trophy", id: "liberatore-di-eco" },
         { type: "power", id: "barattolo-eco" }
       ],
@@ -2074,7 +2074,7 @@ PIRATI.registerPack({
       groupChallenge: "Decidete una ricetta di tre colori: quale fa salire, quale tiene fermi in aria e quale fa scendere?",
       rewards: [
         { type: "loot", id: "fiala-lucciole" },
-        { type: "coins", amount: 10 },
+        { type: "coins", amount: 250000 },
         { type: "trophy", id: "primo-volo" },
         { type: "power", id: "pozione-volo" }
       ],
@@ -2296,7 +2296,7 @@ PIRATI.registerPack({
       groupChallenge: "Inventate insieme un sogno breve con un luogo, un animale e una sorpresa che svegli la sirena facendola sorridere.",
       rewards: [
         { type: "loot", id: "perla-respiro-loot" },
-        { type: "coins", amount: 8 },
+        { type: "coins", amount: 200000 },
         { type: "trophy", id: "voce-gentile" },
         { type: "power", id: "perla-respiro" }
       ],
@@ -2484,7 +2484,7 @@ PIRATI.registerPack({
       groupChallenge: "Create una domanda in rima per la capra e trovate una risposta che indichi l'ordine delle tre ruote.",
       rewards: [
         { type: "loot", id: "bottiglia-corrente-loot" },
-        { type: "coins", amount: 11 },
+        { type: "coins", amount: 275000 },
         { type: "trophy", id: "raddrizza-fiumi" },
         { type: "power", id: "bottiglia-corrente" }
       ],
@@ -2700,7 +2700,7 @@ PIRATI.registerPack({
       groupChallenge: "Dividete tre compiti fra i pirati: recuperare la pala, tenere le corde e riparare il mulino, tutto nello stesso momento.",
       rewards: [
         { type: "loot", id: "vela-nuvola-loot" },
-        { type: "coins", amount: 13 },
+        { type: "coins", amount: 325000 },
         { type: "trophy", id: "riparatore-del-cielo" },
         { type: "power", id: "vela-nuvola" }
       ],
@@ -2913,7 +2913,7 @@ PIRATI.registerPack({
       groupChallenge: "Progettate un nido che non voli via: scegliete forma, materiale e posto, poi difendete insieme la vostra idea.",
       rewards: [
         { type: "loot", id: "uovo-brezza-loot" },
-        { type: "coins", amount: 10 },
+        { type: "coins", amount: 250000 },
         { type: "trophy", id: "custode-dei-venti" },
         { type: "power", id: "uovo-brezza" }
       ],
@@ -3136,7 +3136,7 @@ PIRATI.registerPack({
       groupChallenge: "Proponete al granchio uno scambio che non usi monete e che sia utile sia alla banca sia alla ciurma.",
       rewards: [
         { type: "loot", id: "chiave-maree-loot" },
-        { type: "coins", amount: 14 },
+        { type: "coins", amount: 350000 },
         { type: "trophy", id: "amico-della-banca" },
         { type: "power", id: "chiave-maree" }
       ],
@@ -3324,7 +3324,7 @@ PIRATI.registerPack({
       groupChallenge: "Unite tre desideri diversi in una sola promessa che aiuti tutta la ciurma nel prossimo ciclo.",
       rewards: [
         { type: "loot", id: "stella-ciurma-loot" },
-        { type: "coins", amount: 16 },
+        { type: "coins", amount: 400000 },
         { type: "fame", amount: 2 },
         { type: "trophy", id: "stella-della-ciurma" },
         { type: "power", id: "stella-ciurma" }

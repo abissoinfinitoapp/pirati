@@ -738,7 +738,7 @@ function raidDifficulty(target) {
 
 function raidRewardLabel(ship) {
   return (ship.rewards || []).map((reward) => {
-    if (reward.type === "coins") return `${reward.amount} monete`;
+    if (reward.type === "coins") return `${fmtCoins(reward.amount)} monete`;
     if (reward.type === "fame") return `${reward.amount} Fama`;
     if (reward.type === "loot") {
       const item = PIRATI.reward(reward.id);
@@ -1215,11 +1215,26 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/* =========================================================================
+   Economia mostrata ai bambini: numeri GRANDI.
+   -----------------------------------------------------------------------------
+   - Monete: valore reale e grande, gia' scritto per intero nei cataloghi e
+     nelle formule (COIN_UNIT = monete per "unita' di bottino" negli incontri).
+   - Potenza: mostrata x100. Il numero vero (piccolo) resta quello che si somma
+     al dado fisico d6 nelle prove -> la meccanica non cambia.
+   - Fama: resta un contatore piccolo e raro (medaglie).
+   ===================================================================== */
+const COIN_UNIT = 25000;      // 1 "unita' di bottino" degli incontri = 25.000 monete
+const POTENZA_SCALE = 100;    // Potenza mostrata = valore reale x100
+const _nfIT = new Intl.NumberFormat("it-IT");
+const fmtCoins = (n) => _nfIT.format(Math.round(Number(n) || 0));
+const fmtPotenza = (raw) => _nfIT.format(Math.round((Number(raw) || 0) * POTENZA_SCALE));
+
 function animateNumber(el, from, to) {
   if (!el) return;
-  if (from === to || !window.gsap || prefersReducedMotion()) { el.textContent = to; return; }
+  if (from === to || !window.gsap || prefersReducedMotion()) { el.textContent = _nfIT.format(Math.round(to)); return; }
   const box = { v: from };
-  gsap.to(box, { v: to, duration: 0.8, ease: "power1.out", onUpdate: () => { el.textContent = Math.round(box.v); } });
+  gsap.to(box, { v: to, duration: 0.8, ease: "power1.out", onUpdate: () => { el.textContent = _nfIT.format(Math.round(box.v)); } });
 }
 
 const POWER_GROUPS = [
@@ -1248,7 +1263,7 @@ function renderTreasury() {
   if (coinsEl) {
     const previous = lastShownCoins == null ? crew.coins : lastShownCoins;
     if (viewActive) animateNumber(coinsEl, previous, crew.coins);
-    else coinsEl.textContent = crew.coins;
+    else coinsEl.textContent = fmtCoins(crew.coins);
     lastShownCoins = crew.coins;
   }
 
@@ -1446,10 +1461,10 @@ function treasuryScoreboardMarkup() {
 
   const totals = `
     <div class="scoreboard-totals">
-      <div><span>Potenza ciurma</span><strong>${crewPower}</strong></div>
-      <div><span>Crescite totali</span><strong>${crewGrowth}</strong></div>
+      <div><span>Potenza ciurma</span><strong>${fmtPotenza(crewPower)}</strong></div>
+      <div><span>Crescite totali</span><strong>${fmtPotenza(crewGrowth)}</strong></div>
       <div><span>Grado</span><strong>${state.crew.grade}</strong></div>
-      <div><span>Monete</span><strong>${state.crew.coins}</strong></div>
+      <div><span>Monete</span><strong>${fmtCoins(state.crew.coins)}</strong></div>
       <div><span>Trofei</span><strong>${state.crew.trophies.length}</strong></div>
       <div><span>Poteri</span><strong>${state.crew.powers.length}</strong></div>
     </div>`;
@@ -1466,12 +1481,12 @@ function treasuryScoreboardMarkup() {
       const total = base + grown + pas;
       return `<div class="score-stat">
         <span class="score-stat-name">${STAT_META[stat].icon} ${STAT_META[stat].label}</span>
-        <div class="score-bar" role="img" aria-label="${STAT_META[stat].label} ${total}">
+        <div class="score-bar" role="img" aria-label="${STAT_META[stat].label} ${fmtPotenza(total)}">
           <i class="seg-base" style="width:${(base / SCALE) * 100}%"></i>
           <i class="seg-grow" style="width:${(grown / SCALE) * 100}%"></i>
           <i class="seg-pass" style="width:${(pas / SCALE) * 100}%"></i>
         </div>
-        <strong class="score-stat-val">${total}</strong>
+        <strong class="score-stat-val">${fmtPotenza(total)}</strong>
         <span class="score-steppers">
           <button type="button" data-award-growth data-player="${player.id}" data-stat="${stat}" data-delta="-1" aria-label="Togli crescita ${STAT_META[stat].label} a ${player.name}">−</button>
           <button type="button" data-award-growth data-player="${player.id}" data-stat="${stat}" data-delta="1" aria-label="Aggiungi crescita ${STAT_META[stat].label} a ${player.name}">+</button>
@@ -1492,16 +1507,16 @@ function treasuryScoreboardMarkup() {
         </div>
         <div class="score-power" title="Coraggio + Astuzia + Fortuna">
           <span>Potenza</span>
-          <strong>${power}</strong>
+          <strong>${fmtPotenza(power)}</strong>
         </div>
       </div>
       <div class="score-stats">${bars}</div>
-      <p class="score-foot">Avventure giocate: <b>${player.questsPlayed || 0}</b> · Crescite guadagnate: <b>${playerTotalGrowth(player)}</b></p>
+      <p class="score-foot">Avventure giocate: <b>${player.questsPlayed || 0}</b> · Crescite guadagnate: <b>${fmtPotenza(playerTotalGrowth(player))}</b></p>
     </article>`;
   }).join("");
 
   return `
-    <p class="treasury-hint">La Potenza è Coraggio + Astuzia + Fortuna insieme. Ogni avventura completata dà +1 nella caratteristica giusta; i pulsanti + / − servono solo per correggere a mano.</p>
+    <p class="treasury-hint">La Potenza è Coraggio + Astuzia + Fortuna insieme. Ogni avventura completata dà +${POTENZA_SCALE} Potenza nella caratteristica giusta; i pulsanti + / − servono solo per correggere a mano.</p>
     <div class="scoreboard-legend">
       <span><i style="background:var(--sea)"></i>Base del personaggio</span>
       <span><i style="background:var(--gold)"></i>Crescite guadagnate</span>
@@ -1789,7 +1804,7 @@ function awardGrowth(playerId, stat, delta) {
   const next = Math.max(0, (player.growth[stat] || 0) + delta);
   if (next === player.growth[stat]) return;
   player.growth[stat] = next;
-  if (delta > 0) pushLog(`${player.name}: +1 crescita ${titleCase(stat)} (ora ${next}).`);
+  if (delta > 0) pushLog(`${player.name}: +${POTENZA_SCALE} Potenza ${titleCase(stat)} (ora ${fmtPotenza(next)}).`);
   saveState();
   renderTreasury();
 }
@@ -1972,39 +1987,39 @@ function resolveMapEncounter(die, opts) {
 
   if (enc.kind === "tesoro") {
     if (success) {
-      const coins = 6 + Math.ceil(Math.random() * 7);
+      const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
       if (enc.treasure) state.crew.loot.push({ id: null, name: enc.treasure.title, text: enc.treasure.text, day: state.day, fromMap: true });
-      gains.push(`${coins} monete`);
+      gains.push(`${fmtCoins(coins)} monete`);
       if (enc.treasure) gains.push(enc.treasure.title);
     } else {
-      const coins = 1 + Math.floor(Math.random() * 2);
+      const coins = (1 + Math.floor(Math.random() * 2)) * COIN_UNIT;
       state.crew.coins += coins;
-      gains.push(`${coins} monete`);
+      gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "razzia") {
     if (success) {
-      const coins = 6 + Math.ceil(Math.random() * 7);
+      const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
-      gains.push(`${coins} monete`);
+      gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "mostro" || enc.kind === "assalto") {
     if (success) {
       state.session.danger = Math.max(0, state.session.danger - 1);
-      const coins = 3 + Math.ceil(Math.random() * 4);
+      const coins = (3 + Math.ceil(Math.random() * 4)) * COIN_UNIT;
       state.crew.coins += coins;
-      gains.push(`${coins} monete`, `bottino: ${enc.enemy.reward}`, "Pericolo -1");
+      gains.push(`${fmtCoins(coins)} monete`, `bottino: ${enc.enemy.reward}`, "Pericolo -1");
     } else {
-      const hit = enc.kind === "assalto" ? Math.min(state.crew.coins, 3 + Math.floor(Math.random() * 3)) : 0;
+      const hit = enc.kind === "assalto" ? Math.min(state.crew.coins, (3 + Math.floor(Math.random() * 3)) * COIN_UNIT) : 0;
       state.crew.coins -= hit;
       state.session.danger = Math.min(12, state.session.danger + 2);
-      if (hit) gains.push(`perse ${hit} monete`);
+      if (hit) gains.push(`perse ${fmtCoins(hit)} monete`);
       gains.push("Pericolo +2");
     }
   } else if (success) { // evento riuscito
-    const coins = 3 + Math.ceil(Math.random() * 3);
+    const coins = (3 + Math.ceil(Math.random() * 3)) * COIN_UNIT;
     state.crew.coins += coins;
-    gains.push(`${coins} monete`);
+    gains.push(`${fmtCoins(coins)} monete`);
   }
 
   const mech = effects.concat(gains).filter(Boolean).join(" · ");
@@ -2026,7 +2041,7 @@ function resolveEventChoice(index) {
   if (!options || !options[index]) return;
   const opt = options[index];
   const gains = [];
-  if (opt.coins) { state.crew.coins += opt.coins; gains.push(`${opt.coins} monete`); }
+  if (opt.coins) { state.crew.coins += opt.coins; gains.push(`${fmtCoins(opt.coins)} monete`); }
   if (opt.danger) {
     state.session.danger = Math.min(12, Math.max(0, state.session.danger + opt.danger));
     gains.push(`Pericolo ${opt.danger > 0 ? "+" : ""}${opt.danger}`);
@@ -2149,16 +2164,17 @@ function calmBoss() {
   const boss = v.pending && v.pending.enemy;
   state.session.danger = 0;
   state.fame += 4;
-  state.crew.coins += 20;
+  const bossCoins = 20 * COIN_UNIT;
+  state.crew.coins += bossCoins;
   if (!state.crew.trophies.some((t) => t.id === "sonno-dell-abisso")) {
     state.crew.trophies.push({ id: "sonno-dell-abisso", questId: null, day: state.day });
   }
   grantLegendary("cuore-abisso", "Barbabisso è tornato a dormire e vi ha lasciato il suo cuore di luce.");
   sfx("trionfo");
-  pushLog(`✨ ${boss ? boss.title : "Barbabisso"} torna a dormire! Fama +4, +20 monete, Pericolo azzerato. Trofeo: Il Sonno dell'Abisso.`);
+  pushLog(`✨ ${boss ? boss.title : "Barbabisso"} torna a dormire! Fama +4, +${fmtCoins(bossCoins)} monete, Pericolo azzerato. Trofeo: Il Sonno dell'Abisso.`);
   v.pending = null;
   v.bossCooldownDay = state.day;
-  v.message = `Un ultimo, lunghissimo sbadiglio e ${boss ? boss.title : "il Vecchio del Fondale"} scivola giù negli abissi. Vi riporta a galla con una corrente gentile. Fama +4 · +20 monete · Pericolo a 0.`;
+  v.message = `Un ultimo, lunghissimo sbadiglio e ${boss ? boss.title : "il Vecchio del Fondale"} scivola giù negli abissi. Vi riporta a galla con una corrente gentile. Fama +4 · +${fmtCoins(bossCoins)} monete · Pericolo a 0.`;
   refreshGrade();
   saveState();
   render();
@@ -2276,7 +2292,7 @@ function renderMap() {
   if (dangerFill) dangerFill.style.width = `${Math.min(100, (state.session.danger / 12) * 100)}%`;
   if ($("#map-danger-value")) $("#map-danger-value").textContent = state.session.danger;
   if ($("#map-potenza-value")) {
-    $("#map-potenza-value").textContent = state.players.reduce((sum, p) => sum + playerPower(p), 0);
+    $("#map-potenza-value").textContent = fmtPotenza(state.players.reduce((sum, p) => sum + playerPower(p), 0));
   }
   if ($("#map-week")) {
     const cal = state.schoolCalendar || { week: 1, weekday: 1 };
@@ -2509,8 +2525,8 @@ function renderBestiario() {
    Il Pesce Crostone: la parola difficile del giorno (lasciapassare)
    ===================================================================== */
 
-const CROSTONE_COINS_SUBITO = 5;    // indovinata al primo colpo
-const CROSTONE_COINS_RECUPERO = 3;  // ripetuta dal Taccuino Nero il giorno dopo
+const CROSTONE_COINS_SUBITO = 5 * COIN_UNIT;    // indovinata al primo colpo (125.000)
+const CROSTONE_COINS_RECUPERO = 3 * COIN_UNIT;  // ripetuta dal Taccuino Nero il giorno dopo (75.000)
 
 function crostoneWord(id) {
   return PIRATI.word(id) || { id, parola: id, significato: "(parola non nel catalogo)", esempio: "", tranello: "" };
@@ -2544,7 +2560,7 @@ function crostoneIndovinata() {
   if (!c.pass.includes(state.day)) c.pass.push(state.day);
   state.crew.coins += CROSTONE_COINS_SUBITO;
   sfx("win-event");
-  pushLog(`Pesce Crostone: la ciurma spiega «${crostoneWord(c.today.wordId).parola}». Lasciapassare ottenuto, +${CROSTONE_COINS_SUBITO} monete.`);
+  pushLog(`Pesce Crostone: la ciurma spiega «${crostoneWord(c.today.wordId).parola}». Lasciapassare ottenuto, +${fmtCoins(CROSTONE_COINS_SUBITO)} monete.`);
   saveState();
   lastShownCoins = state.crew.coins - CROSTONE_COINS_SUBITO;
   render();
@@ -2569,7 +2585,7 @@ function crostoneRecupera(wordId) {
   c.taccuino.splice(i, 1);
   c.libro.push({ wordId, day: state.day, recuperata: true });
   state.crew.coins += CROSTONE_COINS_RECUPERO;
-  pushLog(`Pesce Crostone: la ciurma ripete «${crostoneWord(wordId).parola}». Archiviata nel Libro delle Parole Impossibili, +${CROSTONE_COINS_RECUPERO} monete.`);
+  pushLog(`Pesce Crostone: la ciurma ripete «${crostoneWord(wordId).parola}». Archiviata nel Libro delle Parole Impossibili, +${fmtCoins(CROSTONE_COINS_RECUPERO)} monete.`);
   saveState();
   lastShownCoins = state.crew.coins - CROSTONE_COINS_RECUPERO;
   render();
@@ -2586,7 +2602,7 @@ function crostoneWordRow(entry, opts) {
     </div>
     <p class="crostone-word-mean">${w.significato}</p>
     ${w.esempio ? `<p class="crostone-word-ex">${w.esempio}</p>` : ""}
-    ${showActions ? `<button type="button" class="primary-button" data-crostone-recover="${w.id}">Ripetuta bene → al Libro (+${CROSTONE_COINS_RECUPERO} monete)</button>` : ""}
+    ${showActions ? `<button type="button" class="primary-button" data-crostone-recover="${w.id}">Ripetuta bene → al Libro (+${fmtCoins(CROSTONE_COINS_RECUPERO)} monete)</button>` : ""}
   </li>`;
 }
 
@@ -2667,7 +2683,7 @@ function mapParolaMarkup(c, t) {
             ${w.tranello ? `<p class="crostone-word-trap">⚠ ${w.tranello}</p>` : ""}
           </details>
           <div class="crostone-actions">
-            <button type="button" class="primary-button" data-crostone-ok>Indovinata! +${CROSTONE_COINS_SUBITO} monete e lasciapassare</button>
+            <button type="button" class="primary-button" data-crostone-ok>Indovinata! +${fmtCoins(CROSTONE_COINS_SUBITO)} monete e lasciapassare</button>
             <button type="button" class="secondary-button" data-crostone-ko>Non ci sono arrivati → Taccuino Nero</button>
           </div>
         </div>`;
@@ -2676,7 +2692,7 @@ function mapParolaMarkup(c, t) {
         <div class="crostone-block crostone-oggi is-won">
           <p class="eyebrow">La parola di oggi</p>
           <p class="crostone-parola">${w.parola}</p>
-          <p class="crostone-verdict">✓ Indovinata! Il lasciapassare spinge le vele: la ciurma naviga <strong>+1 miglio</strong>. +${CROSTONE_COINS_SUBITO} monete.</p>
+          <p class="crostone-verdict">✓ Indovinata! Il lasciapassare spinge le vele: la ciurma naviga <strong>+1 miglio</strong>. +${fmtCoins(CROSTONE_COINS_SUBITO)} monete.</p>
           <p class="crostone-word-mean">${w.significato}</p>
           <p class="crostone-hint">Nuova parola alla prossima giornata di scuola.</p>
         </div>`;
@@ -2688,7 +2704,7 @@ function mapParolaMarkup(c, t) {
           <p class="crostone-verdict">Segnata sul Taccuino Nero — oggi si naviga con andatura normale.</p>
           <p class="crostone-word-mean">${w.significato}</p>
           ${w.esempio ? `<p class="crostone-word-ex">${w.esempio}</p>` : ""}
-          <p class="crostone-hint">Stasera il Master rilegge il significato alla ciurma. Domani si ripete: se ci arrivano, la parola passa al Libro (+${CROSTONE_COINS_RECUPERO} monete).</p>
+          <p class="crostone-hint">Stasera il Master rilegge il significato alla ciurma. Domani si ripete: se ci arrivano, la parola passa al Libro (+${fmtCoins(CROSTONE_COINS_RECUPERO)} monete).</p>
         </div>`;
     }
   }
@@ -3093,7 +3109,7 @@ function renderQuestCycle() {
   if ($("#quest-grade-name")) $("#quest-grade-name").textContent = nextStep
     ? `${gradeStep.name} · al Grado ${nextStep.grade} con ${nextStep.questsNeeded - totalDone} quest`
     : `${gradeStep.name} · grado massimo`;
-  if ($("#quest-coins")) $("#quest-coins").textContent = state.crew.coins;
+  if ($("#quest-coins")) $("#quest-coins").textContent = fmtCoins(state.crew.coins);
   if ($("#quest-trophy-count")) $("#quest-trophy-count").textContent = state.crew.trophies.length;
 
   // intestazione del ciclo
@@ -3713,7 +3729,7 @@ function storyRewardMarkup(quest, story) {
     return was && p.power > was.power;
   }).map((p) => {
     const was = b.players.find((q) => q.id === p.id);
-    return `<li>${p.name}: Potenza ${was.power} <em>→</em> <strong>${p.power}</strong></li>`;
+    return `<li>${p.name}: Potenza ${fmtPotenza(was.power)} <em>→</em> <strong>${fmtPotenza(p.power)}</strong></li>`;
   }).join("");
 
   const powerCards = newPowerIds.map((id) => {
@@ -3739,9 +3755,9 @@ function storyRewardMarkup(quest, story) {
       <div class="story-rewards-block">
         <h4>Come è cresciuta la ciurma</h4>
         <div class="story-ba-grid">
-          ${ba("Monete", b.coins, af.coins)}
+          ${ba("Monete", fmtCoins(b.coins), fmtCoins(af.coins))}
           ${b.fame !== af.fame ? ba("Fama", b.fame, af.fame) : ""}
-          ${ba("Potenza della Ciurma", b.crewPower, af.crewPower)}
+          ${ba("Potenza della Ciurma", fmtPotenza(b.crewPower), fmtPotenza(af.crewPower))}
           ${ba("Grado", b.grade + " · " + b.gradeName, af.grade + " · " + af.gradeName)}
         </div>
         ${grew ? `<p class="story-ba-label">Crescita dei pirati</p><ul class="story-grew-list">${grew}</ul>` : ""}
@@ -3860,7 +3876,7 @@ function grantQuestRewards(quest) {
   const stamp = { questId: quest.id, day: state.day };
   const gained = [];
   items.forEach((item) => {
-    if (item.type === "coins") { crew.coins += item.amount; gained.push(`${item.amount} monete`); }
+    if (item.type === "coins") { crew.coins += item.amount; gained.push(`${fmtCoins(item.amount)} monete`); }
     else if (item.type === "fame") { state.fame += item.amount; gained.push(`${item.amount} Fama`); }
     else if (item.type === "trophy") { crew.trophies.push({ id: item.id, ...stamp }); gained.push(`trofeo "${item.name}"`); }
     else if (item.type === "loot") { crew.loot.push({ id: item.id, ...stamp }); gained.push(item.name); }
@@ -3945,7 +3961,7 @@ function completeQuest(questId, opts) {
 
   const gained = grantQuestRewards(quest);
   if (!opts.silent) sfx("trionfo");
-  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +1 crescita ${titleCase(growthStat)} a ${growthTargets.length} pirati.`);
+  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati.`);
   const gradeUp = refreshGrade();
   if (gradeUp) { if (!opts.silent) sfx("grado"); pushLog(`La ciurma sale al Grado ${gradeUp.grade}: ${gradeUp.name}! Nuovi poteri sbloccati.`); }
   checkLegendaryGrants();

@@ -45,7 +45,7 @@ PIRATI.registerPack({
       groupChallenge: "Inventate insieme cosa direbbe la vostra ombra se potesse parlare: una cosa che le piace di voi e una che vorrebbe fare da sola.",
       rewards: [
         { type: "loot", id: "frammento-ombra" },
-        { type: "coins", amount: 10 },
+        { type: "coins", amount: 250000 },
         { type: "trophy", id: "luce-delle-ombre" },
         { type: "power", id: "richiamo-ombra" }
       ],
@@ -257,7 +257,7 @@ PIRATI.registerPack({
       groupChallenge: "Scegliete una storia e inventatele un finale che non sia né felice né triste, ma sorprendente: una cosa che nessuno si aspetta.",
       rewards: [
         { type: "loot", id: "foglia-finale" },
-        { type: "coins", amount: 11 },
+        { type: "coins", amount: 275000 },
         { type: "trophy", id: "voce-degli-alberi" },
         { type: "power", id: "pagina-bianca" }
       ],

@@ -524,7 +524,7 @@ window.PIRATI = (function () {
   function expandRewards(quest) {
     // trasforma quest.rewards (riferimenti) in card visibili con testo pronto
     return (quest.rewards || []).map((r) => {
-      if (r.type === "coins") return { type: "coins", icon: "🪙", name: `${r.amount} monete`, amount: r.amount, rarity: "comune" };
+      if (r.type === "coins") return { type: "coins", icon: "🪙", name: `${Number(r.amount).toLocaleString("it-IT")} monete`, amount: r.amount, rarity: "comune" };
       if (r.type === "fame") return { type: "fame", icon: "⭐", name: `${r.amount} Fama`, amount: r.amount, rarity: "raro" };
       if (r.type === "power") {
         const p = state.powerById.get(r.id);

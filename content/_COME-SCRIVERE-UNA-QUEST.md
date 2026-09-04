@@ -73,16 +73,19 @@ dentro ogni quest.
   //   loot   -> id da catalog/premi.js  (oggetto utile che resta)
   //   trophy -> id da catalog/premi.js  (ricordo per la Sala dei Trofei)
   //   power  -> id da catalog/poteri.js (carta/magia/arma/marchingegno)
-  //   coins  -> { type:"coins", amount: 10 }
-  //   fame   -> { type:"fame",  amount: 2 }  (usalo raramente, per i finali)
+  //   coins  -> { type:"coins", amount: 250000 }
+  //             Le monete si scrivono GRANDI, per intero: una quest vale
+  //             ~200.000-400.000, un saccheggio ~500.000-3.000.000, il boss
+  //             ~500.000. I bambini vogliono numeri da veri pirati.
+  //   fame   -> { type:"fame",  amount: 2 }  (resta piccola: 1-2, per i finali)
   rewards: [
     { type: "loot",   id: "nome-oggetto" },
-    { type: "coins",  amount: 10 },
+    { type: "coins",  amount: 250000 },
     { type: "trophy", id: "nome-trofeo" },
     { type: "power",  id: "nome-potere" }
   ],
 
-  growth: "Chi fa X segna 1 crescita in <caratteristica>.",
+  growth: "Chi fa X segna 1 crescita in <caratteristica>.  (= +100 Potenza, mostrato x100)",
   fail:   "Cosa succede se falliscono: mai eliminazione, sempre un costo o una svolta.",
   escape: "Via di fuga se la ciurma resta bloccata su quest'isola."
 }
