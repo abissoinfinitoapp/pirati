@@ -68,6 +68,7 @@
           </div>
           <aside class="map-console" aria-live="polite">
             <p id="map-message" class="map-message"></p>
+            <div id="map-raid-entry"></div>
             <div id="map-choices" class="map-choices" hidden></div>
             <div id="map-encounter" class="map-encounter" hidden></div>
             <div id="map-move" class="map-move" hidden></div>
@@ -370,6 +371,17 @@
     </div>
   </section>
 
+  <section id="raid-overlay" class="raid-overlay no-print" role="dialog" aria-modal="true" aria-labelledby="raid-title" aria-hidden="true" hidden>
+    <div class="raid-backdrop" aria-hidden="true"></div>
+    <div class="raid-dialog" tabindex="-1">
+      <header class="raid-dialog-heading">
+        <p class="eyebrow">Avvistamento della ciurma</p>
+        <h2 id="raid-title">Saccheggio all'orizzonte</h2>
+      </header>
+      <div id="raid-content" aria-live="polite"></div>
+    </div>
+  </section>
+
   <div id="card-magnifier" class="card-magnifier no-print" hidden aria-live="polite"></div>
 </div>
 
@@ -377,6 +389,7 @@
 
 <!-- Motore contenuti (registro). Non contiene contenuti di gioco. -->
 <script src="engine/pirati-core.js"></script>
+<script src="engine/saccheggi-core.js"></script>
 <script src="engine/sfx.js"></script>
 
 <!-- Cataloghi condivisi: premi, poteri, bestiario. -->

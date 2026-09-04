@@ -363,6 +363,7 @@ const defaultState = {
 };
 
 let state = loadState();
+let raidOverlayOpen = state.raid.phase !== "idle";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -589,6 +590,27 @@ function currentRaidShip() {
     : null;
 }
 
+function raidViewData() {
+  const ship = currentRaidShip();
+  const players = activePlayers().map((player) => {
+    const character = getCharacter(player.characterId);
+    return {
+      id: player.id,
+      name: player.name,
+      characterName: character ? character.name : "Pirata",
+      active: true,
+      statValue: ship && character ? Number(character.stats[ship.stat]) || 0 : 0
+    };
+  });
+  return RAID_CORE.raidViewModel({
+    raid: state.raid,
+    day: state.day,
+    players,
+    pair: currentRaidPair(),
+    fallbackImage: "assets/sfondi/logo.webp"
+  });
+}
+
 function startRaid(pairId, returnTo) {
   if (!state.raid || state.raid.phase !== "idle" || !RAID_CORE.dayAvailable(state.raid, state.day)) return;
   let pair = pairId ? PIRATI.raidPair(pairId) : null;
@@ -705,6 +727,130 @@ function closeRaid() {
   });
   saveState();
   showView(returnView);
+}
+
+function raidDifficulty(target) {
+  return { 5: "abbordaggio facile", 6: "abbordaggio audace", 7: "abbordaggio leggendario" }[target]
+    || `soglia ${target}`;
+}
+
+function raidRewardLabel(ship) {
+  return (ship.rewards || []).map((reward) => {
+    if (reward.type === "coins") return `${reward.amount} monete`;
+    if (reward.type === "fame") return `${reward.amount} Fama`;
+    if (reward.type === "loot") {
+      const item = PIRATI.reward(reward.id);
+      return item ? `${item.icon || "🎁"} ${item.name}` : "un bottino misterioso";
+    }
+    return "un bottino misterioso";
+  }).join(" · ");
+}
+
+function raidShipCardMarkup(ship, options) {
+  const opts = options || {};
+  const reward = ship.rewardVisible || opts.revealReward
+    ? `<p class="raid-reward is-revealed"><span>Bottino rivelato</span><strong>${raidRewardLabel(ship)}</strong></p>`
+    : `<p class="raid-reward"><span>Carico</span><strong>?</strong> Misterioso</p>`;
+  let action = "";
+  if (opts.action === "choose") {
+    action = `<button type="button" class="primary-button" data-raid-choose="${ship.id}">Scegli questa nave</button>`;
+  } else if (opts.action === "retry") {
+    const label = ship.retryAction === "same" ? "Riprova questa nave" : "Insegui l'altra nave";
+    action = `<button type="button" class="primary-button" data-raid-retry="${ship.id}">${label}</button>`;
+  }
+  return `<article class="raid-ship-card ${ship.rewardVisible ? "has-revealed-reward" : ""}">
+    <img src="${ship.image}" alt="${ship.name}" loading="lazy" onerror="this.onerror=null;this.src='${ship.fallbackImage}'">
+    <div class="raid-ship-body">
+      <h3>${ship.name}</h3>
+      <p class="raid-sighting">“${ship.sighting}”</p>
+      <p class="raid-challenge"><strong>${titleCase(ship.stat)}</strong><span>Soglia ${ship.target} · ${raidDifficulty(ship.target)}</span></p>
+      ${reward}
+      ${action}
+    </div>
+  </article>`;
+}
+
+function renderRaidLocks(locked) {
+  $$([
+    "[data-map-route]",
+    "[data-crew-sail]",
+    "[data-map-open-quest]",
+    "[data-prepare-today]",
+    "[data-reveal-quest]",
+    "[data-story-start]"
+  ].join(", ")).forEach((control) => { control.disabled = locked || control.disabled; });
+}
+
+function renderRaid() {
+  const overlay = $("#raid-overlay");
+  const content = $("#raid-content");
+  const title = $("#raid-title");
+  if (!overlay || !content || !title) return;
+
+  const model = raidViewData();
+  const wasOpen = !overlay.hidden;
+  const isOpen = model.inProgress && raidOverlayOpen;
+  overlay.hidden = !isOpen;
+  overlay.setAttribute("aria-hidden", String(!isOpen));
+  document.body.classList.toggle("raid-open", isOpen);
+  renderRaidLocks(model.lockNavigation);
+  if (!model.inProgress) {
+    content.innerHTML = "";
+    return;
+  }
+
+  title.textContent = model.heading;
+  if (model.phase === "choice") {
+    content.innerHTML = `
+      <p class="raid-intro">Due navi sospette incrociano la rotta. Osservate gli indizi e scegliete quale abbordare: il carico resta segreto fino all'esito.</p>
+      <div class="raid-ships">${model.ships.map(ship => raidShipCardMarkup(ship, { action: "choose" })).join("")}</div>`;
+  } else if (model.phase === "retry-choice") {
+    content.innerHTML = `
+      <div class="raid-reveal">
+        ${model.reveals.map((reveal, index) => `<article class="raid-reveal-card is-${reveal.kind}"><span>${index === 0 ? "La beffa trovata" : "La nave lasciata fuggire"}</span><p>${reveal.text}</p></article>`).join("")}
+      </div>
+      <p class="raid-intro"><strong>Secondo e ultimo tentativo.</strong> Insistete oppure inseguite l'altra nave, ora che conoscete il suo bottino.</p>
+      <div class="raid-ships">${model.ships.map(ship => raidShipCardMarkup(ship, { action: "retry" })).join("")}</div>`;
+  } else if (model.phase === "roll" && model.selectedShip) {
+    const ship = model.ships.find(entry => entry.id === model.selectedShip.id);
+    content.innerHTML = `
+      <div class="raid-roll-layout">
+        ${raidShipCardMarkup(ship)}
+        <section class="raid-rolls" aria-labelledby="raid-roll-title">
+          <p class="eyebrow">Tentativo ${state.raid.attempt} di 2</p>
+          <h3 id="raid-roll-title">Tutta la ciurma tira</h3>
+          <p>Inserisci per ogni pirata il risultato di <strong>1d6 + ${titleCase(ship.stat)}</strong>.</p>
+          ${diceDigital && model.players.length ? `<button type="button" class="dice-roll-all" data-raid-roll-all>🎲 Tira i dadi per tutti</button>` : ""}
+          <div class="raid-roll-list">
+            ${model.players.length ? model.players.map(player => `<label class="raid-roll-row">
+              <span><strong>${player.name}</strong><small>${player.characterName}</small></span>
+              <span class="roll-formula">1d6 + ${player.statValue}</span>
+              <input type="number" inputmode="numeric" min="1" max="6" value="${player.die || ""}" data-raid-roll="${player.id}" aria-label="Risultato del dado di ${player.name}">
+            </label>`).join("") : `<p class="raid-empty">Nessun pirata in gioco. Riattiva almeno un membro della ciurma per tirare.</p>`}
+          </div>
+          <button type="button" class="primary-button raid-resolve" data-raid-resolve ${model.canResolve ? "" : "disabled"}>Risolvi il saccheggio</button>
+        </section>
+      </div>`;
+  } else if (model.phase === "result" && model.selectedShip && state.raid.outcome) {
+    const success = state.raid.outcome.success;
+    const ship = model.ships.find(entry => entry.id === model.selectedShip.id);
+    content.innerHTML = `
+      <section class="raid-result ${success ? "is-success" : "is-failure"}">
+        <span class="raid-result-icon" aria-hidden="true">${success ? "🏆" : "🌊"}</span>
+        <p class="eyebrow">${success ? "Abbordaggio riuscito" : "Fuga finale"}</p>
+        <h3>${success ? "Bottino conquistato!" : "Le navi spariscono all'orizzonte"}</h3>
+        <p>${state.raid.outcome.text}</p>
+        ${success ? `<p class="raid-result-reward"><span>La ciurma ottiene</span><strong>${raidRewardLabel(ship)}</strong></p>` : `<p class="raid-result-reward"><span>Nessuna perdita</span><strong>Domani ci sarà un altro avvistamento.</strong></p>`}
+        <p class="raid-score">Media ${Number(state.raid.outcome.average).toFixed(1)} · soglia ${state.raid.outcome.target}</p>
+        <button type="button" class="primary-button" data-raid-close>Continua la rotta</button>
+      </section>`;
+  }
+
+  if (isOpen && (!wasOpen || !overlay.contains(document.activeElement))) {
+    overlay.querySelector(".raid-dialog")?.focus({ preventScroll: true });
+  } else if (!isOpen && wasOpen) {
+    $("#map-raid-entry button")?.focus({ preventScroll: true });
+  }
 }
 
 function togglePlayerActive(id) {
@@ -2087,6 +2233,7 @@ function renderMap() {
   const stage = $("#archipelago");
   if (!stage || !PIRATI.map) return;
   const v = voyage();
+  const raidLocked = raidViewData().lockNavigation;
 
   if (v.cursor.at === "node" && !v.pending && !v.choosing) openRouteChoice();
 
@@ -2105,12 +2252,25 @@ function renderMap() {
 
   if ($("#map-message")) $("#map-message").textContent = v.message || "";
 
+  const raidEntry = $("#map-raid-entry");
+  if (raidEntry) {
+    const raidModel = raidViewData();
+    if (raidModel.entry.kind === "available") {
+      raidEntry.innerHTML = `<button type="button" class="map-raid-button" data-raid-start ${raidModel.entry.disabled ? "disabled" : ""}>${raidModel.entry.label}</button>
+        ${raidModel.entry.disabled ? `<p class="map-raid-note">Riattiva almeno un pirata per avvistare le navi.</p>` : ""}`;
+    } else if (raidModel.entry.kind === "in-progress") {
+      raidEntry.innerHTML = `<button type="button" class="map-raid-button is-resume" data-raid-resume>${raidModel.entry.label}</button>`;
+    } else {
+      raidEntry.innerHTML = `<p class="map-raid-complete">✓ ${raidModel.entry.label}</p>`;
+    }
+  }
+
   // scelta rotta
   const choicesBox = $("#map-choices");
   if (choicesBox) {
     if (v.choosing && v.choosing.length) {
       choicesBox.innerHTML = `<p class="map-console-label">Dove vira la ciurma?</p>` +
-        v.choosing.map((opt, i) => `<button type="button" class="map-route-button" data-map-route="${i}">${opt.label}</button>`).join("");
+        v.choosing.map((opt, i) => `<button type="button" class="map-route-button" data-map-route="${i}" ${raidLocked ? "disabled" : ""}>${opt.label}</button>`).join("");
       choicesBox.hidden = false;
     } else {
       choicesBox.innerHTML = "";
@@ -2173,7 +2333,7 @@ function renderMap() {
         ${hasPass ? `<p class="move-pass">🐟 Lasciapassare del Pesce Crostone: +1 miglio a questa navigazione</p>` : ""}
         ${roster.length ? `<div class="move-foot">
           <span class="move-avg">${vals.length ? `Media ${avg.toFixed(1)} → <strong>${miles} miglia</strong>${hasPass ? ` <span class="move-pass-tag">+1 🐟</span>` : ""}` : "In attesa dei tiri…"}</span>
-          <button type="button" class="primary-button" data-crew-sail ${allIn ? "" : "disabled"}>Salpa! ⛵</button>
+          <button type="button" class="primary-button" data-crew-sail ${allIn && !raidLocked ? "" : "disabled"}>Salpa! ⛵</button>
         </div>` : ""}`;
     }
   }
@@ -2223,7 +2383,7 @@ function mapEncounterMarkup(enc) {
     return `<div class="map-encounter-card is-quest">
       <span class="map-encounter-tag">★ Avventura</span>
       <p>${enc.prompt}</p>
-      <button type="button" class="primary-button" data-map-open-quest>Apri la scheda dell'avventura</button>
+      <button type="button" class="primary-button" data-map-open-quest ${state.raid.phase !== "idle" ? "disabled" : ""}>Apri la scheda dell'avventura</button>
     </div>`;
   }
   if (enc.kind === "boss") return bossEncounterMarkup(enc);
@@ -2783,7 +2943,7 @@ function renderTodayPlan() {
            <h4>${suggested.title}</h4>
            <p class="today-quest-meta">${island ? island.icon + " " + island.name : ""} · ${suggested.kind} · ~${suggested.minutes} min</p>
          </div>
-         <button type="button" class="primary-button" data-prepare-today="${suggested.id}">${inProgress ? "Torna alla scheda" : "Prepara l'avventura"}</button>
+         <button type="button" class="primary-button" data-prepare-today="${suggested.id}" ${state.raid.phase !== "idle" ? "disabled" : ""}>${inProgress ? "Torna alla scheda" : "Prepara l'avventura"}</button>
        </div>`
     : `<div class="today-quest"><div><h4>Ciclo completato!</h4><p class="today-quest-meta">La ciurma ha finito tutte le ${total} avventure. Aggiungi un nuovo pacchetto in <code>content/</code> per continuare.</p></div></div>`;
 
@@ -2932,7 +3092,7 @@ function renderQuestCycle() {
   $("#quest-event-choices").innerHTML = islandQuests.map((quest) => {
     const isDone = completed.has(quest.id);
     const isRevealed = campaign.revealedQuestId === quest.id;
-    return `<button type="button" class="quest-choice-card ${isDone ? "is-complete" : ""} ${isRevealed ? "is-active" : ""}" data-reveal-quest="${quest.id}" ${isDone ? "disabled" : ""}><span>${quest.kind}</span><strong>${quest.title}</strong><small>Soglia base ${quest.difficulty}</small><em>${isDone ? "Completata" : isRevealed ? "In preparazione" : "Prepara la quest"}</em></button>`;
+    return `<button type="button" class="quest-choice-card ${isDone ? "is-complete" : ""} ${isRevealed ? "is-active" : ""}" data-reveal-quest="${quest.id}" ${isDone || state.raid.phase !== "idle" ? "disabled" : ""}><span>${quest.kind}</span><strong>${quest.title}</strong><small>Soglia base ${quest.difficulty}</small><em>${isDone ? "Completata" : isRevealed ? "In preparazione" : "Prepara la quest"}</em></button>`;
   }).join("");
 
   const quest = PIRATI.quest(campaign.revealedQuestId);
@@ -3297,7 +3457,7 @@ function storyFlowMarkup(quest, island, classicSheet) {
     return `${header}
       <div class="read-aloud-card"><span>Da leggere ai bambini · apertura</span><p>“${quest.readAloud}”</p></div>
       <p class="story-intro">Avventura <strong>guidata</strong>: un momento di gioco alla volta — cosa leggere, cosa chiedere, la scelta della ciurma, l'esito, e alla fine cosa è cambiato per la ciurma.</p>
-      <button type="button" class="complete-quest-button" data-story-start="${quest.id}">▸ Comincia l'avventura</button>
+      <button type="button" class="complete-quest-button" data-story-start="${quest.id}" ${state.raid.phase !== "idle" ? "disabled" : ""}>▸ Comincia l'avventura</button>
       ${classic}`;
   }
   return `${header}${storyPhaseMarkup()}${classic}`;
@@ -3810,6 +3970,7 @@ function render() {
   renderQuestCycle();
   renderTreasury();
   renderMap();
+  renderRaid();
   renderBestiario();
   renderMapParola();
   renderLog();
@@ -3894,7 +4055,10 @@ function bindEvents() {
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if (magnifierState) closeMagnifier();
+      if (raidOverlayOpen && state.raid.phase !== "idle") {
+        raidOverlayOpen = false;
+        renderRaid();
+      } else if (magnifierState) closeMagnifier();
       else if ($("#tutorial-overlay").classList.contains("is-open")) setTutorialOverlay(false);
       else closeNavDrawer();
     }
@@ -3904,6 +4068,12 @@ function bindEvents() {
   });
 
   document.addEventListener("input", (event) => {
+    if (event.target.matches("[data-raid-roll]")) {
+      setRaidRoll(event.target.dataset.raidRoll, event.target.value);
+      const resolveButton = $("[data-raid-resolve]");
+      if (resolveButton) resolveButton.disabled = !raidViewData().canResolve;
+      return;
+    }
     if (event.target.matches("[data-story-note]")) {
       noteStoryIdea(event.target.value);
       return;
@@ -3978,6 +4148,40 @@ function bindEvents() {
     }
 
     if (event.target.closest("[data-tutorial-close]")) setTutorialOverlay(false);
+
+    if (event.target.closest("[data-raid-start]")) {
+      startRaid(null, "map");
+      raidOverlayOpen = state.raid.phase !== "idle";
+      render();
+      return;
+    }
+    if (event.target.closest("[data-raid-resume]")) {
+      raidOverlayOpen = true;
+      renderRaid();
+      return;
+    }
+    const raidChoice = event.target.closest("[data-raid-choose], [data-raid-retry]");
+    if (raidChoice) {
+      chooseRaidShip(raidChoice.dataset.raidChoose || raidChoice.dataset.raidRetry);
+      renderRaid();
+      return;
+    }
+    if (event.target.closest("[data-raid-roll-all]")) {
+      activePlayers().forEach((player) => setRaidRoll(player.id, d6()));
+      renderRaid();
+      return;
+    }
+    if (event.target.closest("[data-raid-resolve]")) {
+      resolveRaidAttempt();
+      renderRaid();
+      return;
+    }
+    if (event.target.closest("[data-raid-close]")) {
+      raidOverlayOpen = false;
+      closeRaid();
+      render();
+      return;
+    }
     const tutorialStep = event.target.closest("[data-tutorial-step]");
     if (tutorialStep) {
       const nextStep = Number(tutorialStep.dataset.tutorialStep);

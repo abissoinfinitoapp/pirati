@@ -35,6 +35,55 @@
     return { success, nextPhase: success || attempt >= 2 ? "result" : "retry-choice" };
   }
 
+  function raidViewModel(options) {
+    const source = options && typeof options === "object" ? options : {};
+    const raid = source.raid && typeof source.raid === "object" ? source.raid : {};
+    const players = Array.isArray(source.players)
+      ? source.players.filter(player => player && player.active !== false)
+      : [];
+    const phase = typeof raid.phase === "string" ? raid.phase : "idle";
+    const inProgress = phase !== "idle";
+    const available = dayAvailable(raid, source.day);
+    const entry = inProgress
+      ? { kind: "in-progress", label: "Riprendi il saccheggio", disabled: false }
+      : available
+        ? { kind: "available", label: "🏴‍☠️ Navi all'orizzonte!", disabled: players.length === 0 }
+        : { kind: "used", label: "Il saccheggio di oggi è concluso", disabled: true };
+    const pair = source.pair && Array.isArray(source.pair.ships) ? source.pair : { ships: [] };
+    const selectedShip = pair.ships.find(ship => ship.id === raid.shipId) || null;
+    const alternativeShip = selectedShip
+      ? pair.ships.find(ship => ship.id !== selectedShip.id) || null
+      : null;
+    const retryChoice = phase === "retry-choice";
+    const rolls = raid.rolls && typeof raid.rolls === "object" ? raid.rolls : {};
+    const validRoll = player => {
+      const die = Number(rolls[player.id]);
+      return Number.isInteger(die) && die >= 1 && die <= 6;
+    };
+
+    return {
+      phase,
+      inProgress,
+      lockNavigation: inProgress,
+      entry,
+      heading: retryChoice ? "Secondo e ultimo tentativo" : "Saccheggio all'orizzonte",
+      canResolve: phase === "roll" && players.length > 0 && players.every(validRoll),
+      players: players.map(player => ({ ...player, die: validRoll(player) ? Number(rolls[player.id]) : null })),
+      selectedShip,
+      alternativeShip,
+      ships: pair.ships.map(ship => ({
+        ...ship,
+        fallbackImage: source.fallbackImage || "",
+        rewardVisible: retryChoice && Boolean(alternativeShip) && ship.id === alternativeShip.id,
+        retryAction: retryChoice ? (ship.id === raid.shipId ? "same" : "other") : null
+      })),
+      reveals: retryChoice && selectedShip && alternativeShip ? [
+        { kind: "fail", shipId: selectedShip.id, text: selectedShip.fail },
+        { kind: "missed", shipId: alternativeShip.id, text: alternativeShip.missed }
+      ] : []
+    };
+  }
+
   function withRaidDefaults(savedRaid) {
     const defaults = {
       usedDay: null,
@@ -117,5 +166,5 @@
     return true;
   }
 
-  return { dayAvailable, pickPair, scoreRolls, resolveAttempt, withRaidDefaults, applyRaidRewardsOnce };
+  return { dayAvailable, pickPair, scoreRolls, resolveAttempt, raidViewModel, withRaidDefaults, applyRaidRewardsOnce };
 });
