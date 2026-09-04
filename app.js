@@ -472,7 +472,7 @@ function withDefaults(saved) {
       && rollsAreEmpty && merged.raid.rewardsApplied === false)
     || (merged.raid.phase === "result"
       && Boolean(pair && ship) && hasValidOutcome
-      && (!merged.raid.rewardsApplied || merged.raid.outcome.success === true));
+      && merged.raid.rewardsApplied === merged.raid.outcome.success);
   const invalidFlow = !validPhases.has(merged.raid.phase)
     || !validAttempt
     || !validRewardsFlag

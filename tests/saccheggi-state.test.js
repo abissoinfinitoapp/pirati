@@ -172,7 +172,8 @@ test("withDefaults azzera combinazioni phase-attempt-premio incoerenti senza ria
     { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "roll", outcome: { success: false }, rewardsApplied: false },
     { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 2, phase: "retry-choice", outcome: null, rewardsApplied: false },
     { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 2, phase: "result", outcome: null, rewardsApplied: false },
-    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "result", outcome: { success: false }, rewardsApplied: true }
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "result", outcome: { success: false }, rewardsApplied: true },
+    { usedDay: 4, pairId: "dolce-freddo", shipId: "nave-gelato", attempt: 1, phase: "result", outcome: { success: true }, rewardsApplied: false }
   ];
 
   invalidRaids.forEach((raid, index) => {
