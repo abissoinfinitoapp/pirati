@@ -44,6 +44,17 @@
           </summary>
           <div id="map-parola-body" class="map-parola-body"></div>
         </details>
+        <details id="map-belarda" class="map-parola no-print">
+          <summary class="map-parola-summary">
+            <span class="map-parola-ico" aria-hidden="true">&#127968;</span>
+            <span class="map-parola-head">
+              <strong>La casa di Nonna Belarda</strong>
+              <small id="map-belarda-status">&mdash;</small>
+            </span>
+            <span class="map-parola-chev" aria-hidden="true">&#9662;</span>
+          </summary>
+          <div id="map-belarda-body" class="map-parola-body"></div>
+        </details>
         <div class="map-topbar">
           <div>
             <p class="eyebrow">Rotta della ciurma</p>
@@ -294,6 +305,10 @@
           <p>Si avvistano due navi: ne vedete indizio, caratteristica e difficoltà, non il carico. La ciurma ne sceglie una (la scelta consuma il saccheggio del giorno), poi tutti tirano <strong>1d6 + caratteristica</strong>: la media deve raggiungere la Soglia.</p>
           <p><strong>Riuscita:</strong> il bottino è vostro. <strong>Primo fallimento:</strong> una beffa buffa, si scopre il tesoro dell'altra nave e resta <strong>un solo</strong> tiro (stessa nave o l'altra). Un tiro fallito non toglie nulla e non tocca il Pericolo.</p>
         </div>
+        <div class="dice-rule-card">
+          <h3>La casa di Nonna Belarda</h3>
+          <p>Quasi ogni azione (quest, saccheggio, Pesce Crostone, incontro) regala anche qualche <strong>cianfrusaglia</strong>. Quando sbarcate su un'isola, le consegnate tutte alla casa di Nonna Belarda lì. Se la casa si riempie, <strong>esplode</strong>: la ciurma vince un premio e lei la ricostruisce vuota, pronta a riempirsi ancora.</p>
+        </div>
       </article>
 
       <article class="print-sheet">
@@ -395,11 +410,13 @@
 <!-- Motore contenuti (registro). Non contiene contenuti di gioco. -->
 <script src="engine/pirati-core.js"></script>
 <script src="engine/saccheggi-core.js"></script>
+<script src="engine/belarda-core.js"></script>
 <script src="engine/sfx.js"></script>
 
 <!-- Cataloghi condivisi: premi, poteri, bestiario. -->
 <script src="catalog/premi.js"></script>
 <script src="catalog/saccheggi.js"></script>
+<script src="catalog/belarda.js"></script>
 <script src="catalog/poteri.js"></script>
 <script src="catalog/nemici.js"></script>
 <script src="catalog/eventi.js"></script>

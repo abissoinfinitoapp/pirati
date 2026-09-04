@@ -34,6 +34,8 @@ window.PIRATI = (function () {
     wordById: new Map(),
     raidPairs: [],
     raidPairById: new Map(),
+    belardaLoot: [],          // premi quando esplode la casa di Nonna Belarda
+    belardaLootById: new Map(),
     map: null,               // { id, start, nodes:{}, legs:{}, routes:{} }
     gradeLadder: [
       { grade: 1, questsNeeded: 0, name: "Mozzi Coraggiosi" },
@@ -372,6 +374,24 @@ window.PIRATI = (function () {
     return clean;
   }
 
+  /* ---------- La casa di Nonna Belarda ----------------------------------- */
+
+  function registerBelardaLoot(list) {
+    if (!Array.isArray(list)) return warn("registerBelardaLoot: serve un array.");
+    list.forEach((entry, index) => {
+      const where = `casa di Nonna Belarda #${index + 1}`;
+      if (!entry || typeof entry !== "object" || typeof entry.id !== "string" || !entry.id)
+        return warn(`${where}: manca 'id'.`);
+      if (state.belardaLootById.has(entry.id)) return warn(`casa di Nonna Belarda: premio duplicato "${entry.id}".`);
+      if (typeof entry.text !== "string" || !entry.text) return warn(`${where}: manca 'text'.`);
+      const rewards = normalizeRaidRewards(entry.rewards, where);
+      if (!rewards) return;
+      const clean = { id: entry.id, text: entry.text, rewards };
+      state.belardaLoot.push(clean);
+      state.belardaLootById.set(clean.id, clean);
+    });
+  }
+
   /* ---------- bestiario: nemici e boss --------------------------------- */
 
   function registerEnemies(list) {
@@ -558,6 +578,8 @@ window.PIRATI = (function () {
       `Carte rotta: ${state.events.length}`,
       `Parole Pesce Crostone: ${state.words.length}`,
       `Mappa: ${state.map ? Object.keys(state.map.nodes).length + " nodi, " + Object.keys(state.map.legs).length + " tratte" : "nessuna"}`,
+      `Coppie di saccheggio: ${state.raidPairs.length}`,
+      `Premi di Nonna Belarda: ${state.belardaLoot.length}`,
       `Avvisi: ${state.problems.length}`
     ];
     console.log("%c[PIRATI] " + lines.join("  |  "), "font-weight:bold");
@@ -571,6 +593,7 @@ window.PIRATI = (function () {
     registerRewards,
     registerPowers,
     registerRaidPairs,
+    registerBelardaLoot,
     registerEnemies,
     registerEvents,
     registerWords,
@@ -581,6 +604,8 @@ window.PIRATI = (function () {
     get powers() { return state.powers; },
     get raidPairs() { return state.raidPairs; },
     raidPair: (id) => state.raidPairById.get(id) || null,
+    get belardaLoot() { return state.belardaLoot; },
+    belardaReward: (id) => state.belardaLootById.get(id) || null,
     get enemies() { return state.enemies; },
     get bosses() { return state.bosses; },
     get boss() { return state.bosses[0] || null; },

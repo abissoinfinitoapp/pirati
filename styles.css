@@ -2554,6 +2554,38 @@ body.magnifier-open { overflow: hidden; }
   font-size: 14px;
   font-weight: 900;
 }
+
+/* La casa di Nonna Belarda: lista delle isole con barra di riempimento */
+.belarda-reveal { border-color: rgba(243,199,111,.4); background: rgba(243,199,111,.08); }
+.belarda-reveal .secondary-button { margin-top: 10px; }
+.belarda-houses { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.belarda-house {
+  display: grid;
+  grid-template-columns: minmax(64px, 1.3fr) minmax(60px, 1fr) 50px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: rgba(255,255,255,.05);
+}
+.belarda-house-name { font-size: 15px; font-weight: 700; color: #fffaf0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.belarda-house-bar {
+  position: relative;
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.3);
+  overflow: hidden;
+}
+.belarda-house-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f3c76f, #d5893e);
+  transition: width .3s ease;
+}
+.belarda-house-val { font-size: 13px; font-weight: 900; color: rgba(255,255,255,.68); text-align: right; }
+
 .map-topbar {
   display: flex;
   align-items: flex-start;

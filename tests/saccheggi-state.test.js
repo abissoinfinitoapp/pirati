@@ -48,9 +48,11 @@ function appHarness(savedState) {
 
   runScript(context, "engine/pirati-core.js");
   runScript(context, "engine/saccheggi-core.js");
+  runScript(context, "engine/belarda-core.js");
   runScript(context, "catalog/premi.js");
   runScript(context, "catalog/saccheggi.js");
   runScript(context, "catalog/poteri.js");
+  runScript(context, "catalog/belarda.js");
 
   const appSource = fs.readFileSync(path.join(root, "app.js"), "utf8")
     .replace(/\nbindEvents\(\);\r?\nrender\(\);\s*$/, `

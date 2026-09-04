@@ -278,22 +278,29 @@ const TUTORIAL_STEPS = [
     tip: "Un tiro fallito non toglie mai niente e non alza il Pericolo: è solo una beffa buffa. Lasciate litigare i bambini su quale nave abbordare, è metà del divertimento."
   },
   {
+    icon: "🏚️",
+    kicker: "Passo 7 · La casa di Nonna Belarda",
+    title: "Cianfrusaglie che esplodono in premi",
+    text: "Quasi ogni azione della ciurma — quest, saccheggi, Pesce Crostone, incontri — regala anche qualche cianfrusaglia. Sulla Mappa, sotto la parola del giorno, c'è un secondo pannello a scomparsa: mostra quante cianfrusaglie avete in giro e quanto è piena la casa di Nonna Belarda su ogni isola. Quando la ciurma sbarca da qualche parte, le consegna tutte a lei. Se una casa si riempie, esplode: la ciurma vince un premio e Nonna Belarda, paziente, la ricostruisce vuota.",
+    tip: "Fate guardare ai bambini quale isola è più vicina a esplodere: decidere dove sbarcare per far scoppiare una casa è la parte tattica del gioco."
+  },
+  {
     icon: "📖",
-    kicker: "Passo 7 · L'avventura guidata",
+    kicker: "Passo 8 · L'avventura guidata",
     title: "Una scena per volta",
     text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda (con spunti pronti e un «se nessuno parte»), 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
     tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Gli spunti servono a te, non ai bambini: usali solo se serve."
   },
   {
     icon: "🎲",
-    kicker: "Passo 8 · Il Destino e i dadi",
+    kicker: "Passo 9 · Il Destino e i dadi",
     title: "Fallire vuol dire andare avanti diversi",
     text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
     tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
   },
   {
     icon: "🏆",
-    kicker: "Passo 9 · Come cresce la ciurma",
+    kicker: "Passo 10 · Come cresce la ciurma",
     title: "Carte, Potenza, Gradi",
     text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte finiscono nel Baule dei Poteri (Tesoro): durante una prova puoi giocarne una — toccala per ingrandirla, leggila, poi «Gioca». Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
     tip: "Alla schermata dei premi leggi ad alta voce i numeri che salgono: monete, Potenza, Grado. È il momento che i bambini aspettano."
@@ -307,6 +314,8 @@ const QUEST_ISLANDS = PIRATI.islands;
 
 const ALL_QUESTS = PIRATI.quests;
 const RAID_CORE = window.PIRATI_SACCH_CORE;
+const BELARDA_CORE = window.PIRATI_BELARDA_CORE;
+const BELARDA_THRESHOLD = 12; // cianfrusaglie per far esplodere una casa
 const RAID_RETURN_VIEWS = Object.freeze({ map: "mappa", story: "quests" });
 
 /* La domanda collaborativa ora vive dentro ogni quest (campo groupChallenge). */
@@ -366,6 +375,7 @@ const defaultState = {
     danger: 0   // Pericolo condiviso: mappa, Barbabisso, effetti delle avventure guidate
   },
   raid: RAID_CORE.withRaidDefaults({}),
+  belarda: BELARDA_CORE.withBelardaDefaults({}),
   log: []
 };
 
@@ -498,6 +508,21 @@ function withDefaults(saved) {
       recentPairIds: merged.raid.recentPairIds
     });
   }
+
+  merged.belarda = BELARDA_CORE.withBelardaDefaults(saved && saved.belarda);
+  merged.belarda.threshold = BELARDA_THRESHOLD; // la soglia è del codice, non del salvataggio
+  const knownIslandIds = belardaIslandIds();
+  Object.keys(merged.belarda.houses).forEach((islandId) => {
+    const fill = merged.belarda.houses[islandId];
+    if (!knownIslandIds.has(islandId) || !Number.isFinite(fill)) { delete merged.belarda.houses[islandId]; return; }
+    merged.belarda.houses[islandId] = Math.max(0, Math.min(merged.belarda.threshold - 1, Math.round(fill)));
+  });
+  if (merged.belarda.lastReveal) {
+    const r = merged.belarda.lastReveal;
+    const rewardOk = r && typeof r === "object" && typeof r.islandId === "string" && typeof r.text === "string";
+    merged.belarda.lastReveal = rewardOk ? r : null;
+  }
+
   return merged;
 }
 
@@ -713,7 +738,7 @@ function resolveRaidAttempt() {
   if (resolution.success) {
     const rewardsApplied = RAID_CORE.applyRaidRewardsOnce(state, ship);
     state.raid.phase = "result";
-    if (rewardsApplied) pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`);
+    if (rewardsApplied) { awardJunk(1); pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`); }
   } else if (attempt < 2) {
     state.raid.phase = "retry-choice";
     state.raid.attempt = 2;
@@ -1639,6 +1664,65 @@ function currentIslandId() {
   return null;
 }
 
+/* --- La casa di Nonna Belarda ------------------------------------------- */
+
+function belardaIslandIds() {
+  if (!PIRATI.map) return new Set();
+  return new Set(Object.values(PIRATI.map.nodes).filter((n) => !n.home).map((n) => n.island));
+}
+
+function belardaIslandNodes() {
+  if (!PIRATI.map) return [];
+  return Object.values(PIRATI.map.nodes).filter((n) => !n.home);
+}
+
+/* Ogni azione che regala qualcosa alla ciurma le regala anche un po' di
+   cianfrusaglie: si accumulano finché non si sbarca su un'isola. */
+function awardJunk(amount) {
+  if (!state.belarda || !(amount > 0)) return;
+  state.belarda.pending = (Number(state.belarda.pending) || 0) + amount;
+}
+
+function applyBelardaReward(entry) {
+  const crew = state.crew;
+  const gained = [];
+  (entry.rewards || []).forEach((item) => {
+    if (item.type === "coins") { crew.coins += item.amount; gained.push(`${fmtCoins(item.amount)} monete`); }
+    else if (item.type === "fame") { state.fame += item.amount; gained.push(`${item.amount} Fama`); }
+    else if (item.type === "loot") {
+      const def = PIRATI.reward(item.id);
+      if (def) { crew.loot.push({ id: item.id, questId: null, day: state.day }); gained.push(def.name); }
+    }
+  });
+  return gained;
+}
+
+/* Consegna le cianfrusaglie in sospeso alla casa di Nonna Belarda sull'isola
+   appena raggiunta. Se la casa esplode, assegna un premio e la fa ricostruire
+   (l'eccesso resta nella casa nuova, non si perde). Ritorna una frase da
+   aggiungere al messaggio della mappa solo se la casa è appena esplosa. */
+function deliverJunkToIsland(node) {
+  if (!node || node.home || !state.belarda.pending) return "";
+  const result = BELARDA_CORE.deliverJunk(state.belarda, node.island);
+  if (!result) return "";
+  const delivered = state.belarda.pending;
+  state.belarda.houses = result.houses;
+  state.belarda.pending = 0;
+  if (!result.exploded) {
+    pushLog(`Consegnate ${delivered} cianfrusaglie alla casa di Nonna Belarda su ${node.name} (${result.after}/${state.belarda.threshold}).`);
+    return "";
+  }
+  const entry = BELARDA_CORE.pickReward(PIRATI.belardaLoot, state.belarda.recentRewardIds);
+  state.belarda.explosions = (state.belarda.explosions || 0) + 1;
+  if (entry) state.belarda.recentRewardIds = state.belarda.recentRewardIds.concat(entry.id).slice(-2);
+  const gained = entry ? applyBelardaReward(entry) : [];
+  state.belarda.lastReveal = { islandId: node.island, islandName: node.name, day: state.day, text: entry ? entry.text : "", gained };
+  sfx("trionfo");
+  const note = `🏚️ La casa di Nonna Belarda su ${node.name} esplode di cianfrusaglie!${entry ? " " + entry.text : ""}`;
+  pushLog(`${note} Premi: ${gained.length ? gained.join(", ") : "—"}. Nonna Belarda, paziente, ricomincia a riempirla.`);
+  return note;
+}
+
 /* Movimento: tutti i pirati in gioco tirano, la media = miglia nautiche. */
 function setMoveDie(playerId, n) {
   const v = voyage();
@@ -1732,6 +1816,8 @@ function handleArrival(nodeId) {
   } else {
     v.message = `Approdate a ${node.name}. Qui avete già fatto tutto: scegliete dove salpare.`;
   }
+  const belardaNote = deliverJunkToIsland(node);
+  if (belardaNote) v.message += ` ${belardaNote}`;
   openRouteChoice();
 }
 
@@ -1996,18 +2082,21 @@ function resolveMapEncounter(die, opts) {
     if (success) {
       const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
+      awardJunk(1);
       if (enc.treasure) state.crew.loot.push({ id: null, name: enc.treasure.title, text: enc.treasure.text, day: state.day, fromMap: true });
       gains.push(`${fmtCoins(coins)} monete`);
       if (enc.treasure) gains.push(enc.treasure.title);
     } else {
       const coins = (1 + Math.floor(Math.random() * 2)) * COIN_UNIT;
       state.crew.coins += coins;
+      awardJunk(1);
       gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "razzia") {
     if (success) {
       const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
+      awardJunk(1);
       gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "mostro" || enc.kind === "assalto") {
@@ -2015,6 +2104,7 @@ function resolveMapEncounter(die, opts) {
       state.session.danger = Math.max(0, state.session.danger - 1);
       const coins = (3 + Math.ceil(Math.random() * 4)) * COIN_UNIT;
       state.crew.coins += coins;
+      awardJunk(1);
       gains.push(`${fmtCoins(coins)} monete`, `bottino: ${enc.enemy.reward}`, "Pericolo -1");
     } else {
       const hit = enc.kind === "assalto" ? Math.min(state.crew.coins, (3 + Math.floor(Math.random() * 3)) * COIN_UNIT) : 0;
@@ -2026,6 +2116,7 @@ function resolveMapEncounter(die, opts) {
   } else if (success) { // evento riuscito
     const coins = (3 + Math.ceil(Math.random() * 3)) * COIN_UNIT;
     state.crew.coins += coins;
+    awardJunk(1);
     gains.push(`${fmtCoins(coins)} monete`);
   }
 
@@ -2048,7 +2139,7 @@ function resolveEventChoice(index) {
   if (!options || !options[index]) return;
   const opt = options[index];
   const gains = [];
-  if (opt.coins) { state.crew.coins += opt.coins; gains.push(`${fmtCoins(opt.coins)} monete`); }
+  if (opt.coins) { state.crew.coins += opt.coins; if (opt.coins > 0) awardJunk(1); gains.push(`${fmtCoins(opt.coins)} monete`); }
   if (opt.danger) {
     state.session.danger = Math.min(12, Math.max(0, state.session.danger + opt.danger));
     gains.push(`Pericolo ${opt.danger > 0 ? "+" : ""}${opt.danger}`);
@@ -2173,6 +2264,7 @@ function calmBoss() {
   state.fame += 4;
   const bossCoins = 20 * COIN_UNIT;
   state.crew.coins += bossCoins;
+  awardJunk(3);
   if (!state.crew.trophies.some((t) => t.id === "sonno-dell-abisso")) {
     state.crew.trophies.push({ id: "sonno-dell-abisso", questId: null, day: state.day });
   }
@@ -2566,6 +2658,7 @@ function crostoneIndovinata() {
   c.today.status = "vinta";
   if (!c.pass.includes(state.day)) c.pass.push(state.day);
   state.crew.coins += CROSTONE_COINS_SUBITO;
+  awardJunk(1);
   sfx("win-event");
   pushLog(`Pesce Crostone: la ciurma spiega «${crostoneWord(c.today.wordId).parola}». Lasciapassare ottenuto, +${fmtCoins(CROSTONE_COINS_SUBITO)} monete.`);
   saveState();
@@ -2592,6 +2685,7 @@ function crostoneRecupera(wordId) {
   c.taccuino.splice(i, 1);
   c.libro.push({ wordId, day: state.day, recuperata: true });
   state.crew.coins += CROSTONE_COINS_RECUPERO;
+  awardJunk(1);
   pushLog(`Pesce Crostone: la ciurma ripete «${crostoneWord(wordId).parola}». Archiviata nel Libro delle Parole Impossibili, +${fmtCoins(CROSTONE_COINS_RECUPERO)} monete.`);
   saveState();
   lastShownCoins = state.crew.coins - CROSTONE_COINS_RECUPERO;
@@ -2752,6 +2846,71 @@ function mapParolaMarkup(c, t) {
     ${ripasso}
     ${oggi}
     ${archivi}`;
+}
+
+/* La casa di Nonna Belarda vive in un secondo accordion, subito sotto quello
+   del Pesce Crostone: stesso schema (ricostruisce il corpo solo se cambia
+   qualcosa, così i bambini non perdono l'apertura/chiusura da soli). */
+function renderMapBelarda() {
+  const acc = $("#map-belarda");
+  const body = $("#map-belarda-body");
+  if (!acc || !body) return;
+  const b = state.belarda;
+  const nodes = belardaIslandNodes();
+
+  const statusEl = $("#map-belarda-status");
+  if (statusEl) {
+    const fullest = nodes.map((n) => ({ n, fill: b.houses[n.island] || 0 })).sort((x, y) => y.fill - x.fill)[0];
+    let s = `zaino: ${b.pending} pront${b.pending === 1 ? "a" : "e"} da consegnare`;
+    if (fullest && fullest.fill > 0) s += ` · ${fullest.n.name} ${fullest.fill}/${b.threshold}`;
+    if (b.explosions) s += ` · esplosa ${b.explosions} volt${b.explosions === 1 ? "a" : "e"}`;
+    statusEl.textContent = s;
+  }
+
+  const sig = JSON.stringify([b.pending, b.houses, b.threshold, b.explosions, b.lastReveal && b.lastReveal.day + b.lastReveal.islandId]);
+  if (acc.dataset.sig !== sig) {
+    acc.dataset.sig = sig;
+    body.innerHTML = mapBelardaMarkup(b, nodes);
+  }
+}
+
+function mapBelardaMarkup(b, nodes) {
+  const reveal = b.lastReveal ? `
+    <div class="crostone-block belarda-reveal">
+      <p class="eyebrow">Ultima esplosione — ${b.lastReveal.islandName}</p>
+      <p class="crostone-verdict">🏚️ ${b.lastReveal.text}</p>
+      ${b.lastReveal.gained.length ? `<p class="crostone-hint">Premi: ${b.lastReveal.gained.join(", ")}.</p>` : ""}
+      <button type="button" class="secondary-button" data-belarda-dismiss>Va bene, richiudi l'avviso</button>
+    </div>` : "";
+
+  const rows = nodes.map((n) => {
+    const fill = Math.min(b.threshold, b.houses[n.island] || 0);
+    const pct = Math.round((fill / b.threshold) * 100);
+    return `<li class="belarda-house">
+      <span class="belarda-house-name">${n.icon || "🏝️"} ${n.name}</span>
+      <span class="belarda-house-bar" role="img" aria-label="${n.name}: ${fill} di ${b.threshold} cianfrusaglie">
+        <i style="width:${pct}%"></i>
+      </span>
+      <span class="belarda-house-val">${fill}/${b.threshold}</span>
+    </li>`;
+  }).join("");
+
+  return `
+    <p class="crostone-intro">Ogni avventura, saccheggio o parola indovinata regala qualche cianfrusaglia in più. Quando sbarcate su un'isola le consegnate tutte a Nonna Belarda: se la sua casa lì scoppia, la ciurma vince un premio e lei la ricostruisce, pronta a riempirsi ancora.</p>
+    <div class="crostone-counters">
+      <div><span>Nello zaino</span><strong>${b.pending}</strong></div>
+      <div><span>Case esplose</span><strong>${b.explosions}</strong></div>
+      <div><span>Soglia per casa</span><strong>${b.threshold}</strong></div>
+    </div>
+    ${reveal}
+    <ul class="belarda-houses">${rows}</ul>`;
+}
+
+function dismissBelardaReveal() {
+  if (!state.belarda || !state.belarda.lastReveal) return;
+  state.belarda.lastReveal = null;
+  saveState();
+  render();
 }
 
 function setNavDrawer(open) {
@@ -3967,8 +4126,9 @@ function completeQuest(questId, opts) {
   state.questCampaign.resolution = null;
 
   const gained = grantQuestRewards(quest);
+  awardJunk(2);
   if (!opts.silent) sfx("trionfo");
-  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati.`);
+  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati. +2 cianfrusaglie per Nonna Belarda.`);
   const gradeUp = refreshGrade();
   if (gradeUp) { if (!opts.silent) sfx("grado"); pushLog(`La ciurma sale al Grado ${gradeUp.grade}: ${gradeUp.name}! Nuovi poteri sbloccati.`); }
   checkLegendaryGrants();
@@ -4064,6 +4224,7 @@ function render() {
   renderRaid();
   renderBestiario();
   renderMapParola();
+  renderMapBelarda();
   renderLog();
   renderPrint();
 }
@@ -4401,6 +4562,7 @@ function bindEvents() {
       }
     }
 
+    if (event.target.closest("[data-belarda-dismiss]")) dismissBelardaReveal();
     if (event.target.closest("[data-crostone-ok]")) crostoneIndovinata();
     if (event.target.closest("[data-crostone-ko]")) crostoneSbagliata();
     const crostoneRecoverBtn = event.target.closest("[data-crostone-recover]");
