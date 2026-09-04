@@ -22,6 +22,110 @@ function loadCatalog() {
   return context.window.PIRATI;
 }
 
+function storyAppHarness() {
+  const storage = new Map();
+  const navigated = [];
+  const elements = new Map();
+  const element = (selector) => {
+    if (!elements.has(selector)) {
+      elements.set(selector, {
+        innerHTML: "",
+        textContent: "",
+        disabled: false,
+        classList: { contains() { return false; }, toggle() {}, add() {}, remove() {} },
+        scrollIntoView() {},
+        setAttribute() {},
+        click() {}
+      });
+    }
+    return elements.get(selector);
+  };
+  const context = vm.createContext({
+    console: { log() {}, warn() {}, error() {} },
+    localStorage: {
+      getItem(key) { return storage.has(key) ? storage.get(key) : null; },
+      setItem(key, value) { storage.set(key, String(value)); }
+    },
+    document: {
+      querySelector(selector) {
+        const viewMatch = /^\.nav-item\[data-view="([^"]+)"\]$/.exec(selector);
+        if (viewMatch) return { click() { navigated.push(viewMatch[1]); } };
+        return element(selector);
+      },
+      querySelectorAll() { return []; }
+    }
+  });
+  context.window = context;
+  context.globalThis = context;
+  context.window.PIRATI_ASSET = (assetPath) => assetPath;
+
+  vm.runInContext(fs.readFileSync(path.join(root, "engine/pirati-core.js"), "utf8"), context, { filename: "engine/pirati-core.js" });
+  vm.runInContext(fs.readFileSync(path.join(root, "engine/saccheggi-core.js"), "utf8"), context, { filename: "engine/saccheggi-core.js" });
+  context.PIRATI = context.window.PIRATI;
+  for (const relativePath of ["catalog/premi.js", "catalog/saccheggi.js", "catalog/poteri.js"]) {
+    vm.runInContext(fs.readFileSync(path.join(root, relativePath), "utf8"), context, { filename: relativePath });
+  }
+  vm.runInContext(`PIRATI.registerPack({
+    id: "pack-story-raid",
+    name: "Fixture StoryFlow raid",
+    islands: [{ id: "isola-story-raid", name: "Isola StoryFlow" }],
+    quests: [{
+      id: "quest-story-raid",
+      island: "isola-story-raid",
+      title: "Avventura con saccheggio",
+      readAloud: "Una vela appare.",
+      readKids: { facile: ["Eccola!"], avanzato: ["Una vela all'orizzonte!"] },
+      beats: ["Avvistamento"],
+      choices: [{ label: "Avanti", stat: "coraggio", target: 6 }],
+      rewards: [{ type: "coins", amount: 1 }],
+      storyFlow: {
+        start: "apertura",
+        progression: [
+          { scene_id: "apertura", scene: { read: "Guardate il mare." }, outcome: { title: "Vele", text: "Arrivano.", next: "navi-dolci" } },
+          { id: "navi-dolci", type: "raid", pairId: "dolce-freddo", skippedText: "Le vele sono ormai lontane." },
+          { scene_id: "finale", scene: { read: "Riprendete la rotta." }, completion: { action_label: "Concludi" } }
+        ]
+      }
+    }]
+  });`, context);
+
+  const appSource = fs.readFileSync(path.join(root, "app.js"), "utf8")
+    .replace(/\nbindEvents\(\);\r?\nrender\(\);\s*$/, `
+globalThis.__storyRaidTest = {
+  storyPhaseMarkup: typeof storyPhaseMarkup === "function" ? storyPhaseMarkup : undefined,
+  startStoryRaid: typeof startStoryRaid === "function" ? startStoryRaid : undefined,
+  advanceStoryRaid: typeof advanceStoryRaid === "function" ? advanceStoryRaid : undefined,
+  closeRaid: typeof closeRaid === "function" ? closeRaid : undefined,
+  getState: () => state,
+  setState: (nextState) => { state = withDefaults(nextState); }
+};`);
+  vm.runInContext(appSource, context, { filename: "app.js" });
+  return { api: context.__storyRaidTest, navigated, PIRATI: context.PIRATI };
+}
+
+function storyRaidState(overrides = {}) {
+  return {
+    day: 4,
+    players: [],
+    crew: { coins: 0, loot: [], powers: [], cardUse: {} },
+    questCampaign: {
+      selectedPackId: "pack-story-raid",
+      selectedIslandId: "isola-story-raid",
+      revealedQuestId: "quest-story-raid",
+      completedQuestIds: [],
+      story: {
+        questId: "quest-story-raid",
+        sceneId: "navi-dolci",
+        phase: "SCENE",
+        step: 2,
+        notes: {}, choices: {}, destiny: {}, rolls: {}, resolved: {}, cards: {},
+        completionSnapshot: null
+      }
+    },
+    ...overrides
+  };
+}
+
 test("registra dodici coppie di saccheggio curate e complete", () => {
   const PIRATI = loadCatalog();
 
@@ -167,4 +271,130 @@ test("rifiuta una coppia distinta che riusa un ID nave già registrato", () => {
   assert.equal(PIRATI.raidPairs.length, 1);
   assert.equal(PIRATI.raidPair("seconda"), null);
   assert.ok(PIRATI.problems.some(problem => problem.includes('saccheggio "seconda": nave duplicata')));
+});
+
+test("valida i riferimenti alle coppie negli step raid dello StoryFlow", () => {
+  const PIRATI = loadCatalog();
+  const storyPack = (packId, questId, pairId) => ({
+    id: packId,
+    name: "Fixture StoryFlow",
+    islands: [{ id: `isola-${packId}`, name: "Isola fixture" }],
+    quests: [{
+      id: questId,
+      island: `isola-${packId}`,
+      title: "Avventura fixture",
+      readAloud: "Una storia di prova.",
+      readKids: { facile: ["Ciao."], avanzato: ["Salve, ciurma."] },
+      beats: ["Primo momento"],
+      choices: [{ label: "Avanti", stat: "coraggio", target: 6 }],
+      rewards: [{ type: "coins", amount: 1 }],
+      storyFlow: {
+        start: "apertura",
+        progression: [
+          {
+            scene_id: "apertura",
+            scene: { read: "Due vele compaiono all'orizzonte." },
+            outcome: { title: "Vele!", text: "La ciurma si prepara.", next: "navi-dolci" }
+          },
+          {
+            id: "navi-dolci",
+            type: "raid",
+            pairId,
+            skippedText: "Le due navi sono già oltre l'orizzonte."
+          },
+          {
+            scene_id: "finale",
+            scene: { read: "La rotta continua." },
+            completion: { action_label: "Concludi" }
+          }
+        ]
+      }
+    }]
+  });
+
+  const beforeValid = PIRATI.problems.length;
+  PIRATI.registerPack(storyPack("pack-raid-valido", "quest-raid-valido", "dolce-freddo"));
+  assert.deepEqual(Array.from(PIRATI.problems).slice(beforeValid), []);
+  const raidStep = PIRATI.quest("quest-raid-valido").storyFlow.scenes["navi-dolci"];
+  assert.deepEqual(JSON.parse(JSON.stringify(raidStep)), {
+    id: "navi-dolci",
+    type: "raid",
+    pairId: "dolce-freddo",
+    skippedText: "Le due navi sono già oltre l'orizzonte.",
+    scene_id: "navi-dolci"
+  });
+
+  const beforeInvalid = PIRATI.problems.length;
+  PIRATI.registerPack(storyPack("pack-raid-invalido", "quest-raid-invalido", "coppia-assente"));
+  const invalidProblems = Array.from(PIRATI.problems).slice(beforeInvalid);
+  assert.equal(invalidProblems.length, 1);
+  assert.match(invalidProblems[0], /coppia di saccheggio sconosciuta/);
+});
+
+test("uno step StoryFlow avvia il saccheggio e closeRaid riprende esattamente dalla scena successiva", () => {
+  const { api, navigated } = storyAppHarness();
+  assert.equal(typeof api.startStoryRaid, "function");
+  assert.equal(typeof api.advanceStoryRaid, "function");
+  api.setState(storyRaidState());
+
+  const markup = api.storyPhaseMarkup();
+  assert.match(markup, /Avvistamento piratesco/);
+  assert.match(markup, /data-story-raid-start/);
+  api.startStoryRaid();
+  assert.equal(api.getState().raid.phase, "choice");
+  assert.equal(api.getState().raid.pairId, "dolce-freddo");
+  assert.equal(api.getState().raid.returnTo, "story");
+
+  Object.assign(api.getState().raid, {
+    usedDay: 4,
+    shipId: "nave-gelato",
+    phase: "result",
+    outcome: { success: false },
+    rewardsApplied: false
+  });
+  api.closeRaid();
+
+  assert.equal(api.getState().questCampaign.story.sceneId, "finale");
+  assert.equal(api.getState().questCampaign.story.phase, "SCENE");
+  assert.equal(api.getState().questCampaign.story.step, 3);
+  assert.deepEqual(JSON.parse(JSON.stringify(api.getState().questCampaign.story.resolved)), {});
+  assert.deepEqual(JSON.parse(JSON.stringify(api.getState().questCampaign.completedQuestIds)), []);
+  assert.deepEqual(navigated, ["quests"]);
+});
+
+test("uno step StoryFlow già consumato mostra il testo di passaggio e prosegue senza costo", () => {
+  const { api } = storyAppHarness();
+  api.setState(storyRaidState({
+    raid: { usedDay: 4, phase: "idle", recentPairIds: ["dolce-freddo"] }
+  }));
+
+  const before = JSON.parse(JSON.stringify(api.getState().raid));
+  const markup = api.storyPhaseMarkup();
+  assert.match(markup, /Le vele sono ormai lontane\./);
+  assert.match(markup, /data-story-raid-next/);
+  api.advanceStoryRaid();
+
+  assert.equal(api.getState().questCampaign.story.sceneId, "finale");
+  assert.deepEqual(JSON.parse(JSON.stringify(api.getState().raid)), before);
+});
+
+test("uno step StoryFlow senza skippedText usa il testo di passaggio predefinito", () => {
+  const { api, PIRATI } = storyAppHarness();
+  delete PIRATI.quest("quest-story-raid").storyFlow.scenes["navi-dolci"].skippedText;
+  api.setState(storyRaidState({ raid: { usedDay: 4, phase: "idle" } }));
+
+  assert.match(api.storyPhaseMarkup(), /Le due navi sono ormai troppo lontane\./);
+});
+
+test("uno step StoryFlow con pairId non valido apre una coppia casuale e conserva la diagnostica", () => {
+  const { api, PIRATI } = storyAppHarness();
+  PIRATI.quest("quest-story-raid").storyFlow.scenes["navi-dolci"].pairId = "coppia-assente";
+  api.setState(storyRaidState());
+  const problemsBefore = PIRATI.problems.length;
+
+  api.startStoryRaid();
+
+  assert.equal(api.getState().raid.phase, "choice");
+  assert.ok(PIRATI.raidPair(api.getState().raid.pairId));
+  assert.ok(PIRATI.problems.slice(problemsBefore).some(problem => problem.includes("coppia sconosciuta (coppia-assente)")));
 });

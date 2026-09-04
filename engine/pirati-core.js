@@ -176,6 +176,9 @@ window.PIRATI = (function () {
       scenes[id] = clone;
       order.push(id);
 
+      if (clone.type === "raid" && !state.raidPairById.has(clone.pairId))
+        warn(`${where}: storyFlow scena "${id}" usa una coppia di saccheggio sconosciuta "${clone.pairId}".`);
+
       const sc = clone.scene || {};
       if (sc.ask && (!Array.isArray(sc.hints) || !sc.hints.length))
         warn(`${where}: storyFlow scena "${id}" ha 'ask' ma nessun 'hints'.`);
@@ -191,7 +194,7 @@ window.PIRATI = (function () {
         if (needsDice && !(r.dice && STATS.includes(String(r.dice.stat || "").toLowerCase())))
           warn(`${where}: storyFlow scena "${id}" policy "${policy}" richiede resolution.dice {stat,target}.`);
       }
-      const ways = (clone.choices ? 1 : 0) + (clone.outcomes ? 1 : 0) + (clone.outcome ? 1 : 0) + (clone.completion ? 1 : 0);
+      const ways = clone.type === "raid" ? 1 : (clone.choices ? 1 : 0) + (clone.outcomes ? 1 : 0) + (clone.outcome ? 1 : 0) + (clone.completion ? 1 : 0);
       if (!ways) warn(`${where}: storyFlow scena "${id}" senza 'choices', 'outcomes', 'outcome' né 'completion'.`);
     });
 
@@ -200,6 +203,7 @@ window.PIRATI = (function () {
 
     const nextsOf = (s) => {
       const outs = [];
+      if (s.type === "raid") outs.push(order[order.indexOf(s.scene_id) + 1]);
       (s.choices || []).forEach((c) => { if (!c.next) warn(`${where}: storyFlow scena "${s.scene_id}" scelta "${c.id}" senza 'next'.`); outs.push(c.next); });
       if (s.outcomes) { ["success", "fail_forward"].forEach((k) => { if (s.outcomes[k]) outs.push(s.outcomes[k].next); }); }
       if (s.outcome) outs.push(s.outcome.next);

@@ -727,6 +727,7 @@ function closeRaid() {
     recentPairIds: state.raid.recentPairIds
   });
   saveState();
+  if (returnTo === "story") advanceStoryRaid();
   showView(returnView);
 }
 
@@ -778,7 +779,8 @@ function renderRaidLocks(locked) {
     "[data-map-open-quest]",
     "[data-prepare-today]",
     "[data-reveal-quest]",
-    "[data-story-start]"
+    "[data-story-start]",
+    "[data-story-raid-start]"
   ].join(", ")).forEach((control) => { control.disabled = locked || control.disabled; });
 }
 
@@ -3237,6 +3239,26 @@ function goToScene(sceneId) {
   storyScrollTop();
 }
 
+function nextStorySceneId(sceneId) {
+  const a = activeStory();
+  if (!a) return null;
+  const index = a.flow.order.indexOf(sceneId);
+  return index >= 0 ? a.flow.order[index + 1] || null : null;
+}
+
+function advanceStoryRaid() {
+  const scene = currentStoryScene();
+  if (!scene || scene.type !== "raid") return;
+  const nextSceneId = nextStorySceneId(scene.id);
+  if (nextSceneId) goToScene(nextSceneId);
+}
+
+function startStoryRaid() {
+  const scene = currentStoryScene();
+  if (!scene || scene.type !== "raid") return;
+  startRaid(scene.pairId, "story");
+}
+
 /* SCENE → fase successiva secondo il tipo di scena */
 function advanceFromScene() {
   const scene = currentStoryScene();
@@ -3501,9 +3523,24 @@ function storyPhaseMarkup() {
   if (!scene) return `<p class="helper-text">Scena "${a.s.sceneId}" non trovata. <button type="button" class="link-button" data-story-abandon>Chiudi</button></p>`;
   const phase = a.s.phase || "SCENE";
   const progress = `<div class="story-progress"><span>Scena ${a.s.step || 1}${scene.completion ? " · finale" : ""}</span><button type="button" class="link-button" data-story-abandon>Esci dall'avventura</button></div>`;
+  if (scene.type === "raid") return progress + storyRaidPhaseMarkup(scene);
   if (phase === "RESOLUTION") return progress + storyResolutionPhaseMarkup(scene);
   if (phase === "OUTCOME") return progress + storyOutcomePhaseMarkup(scene);
   return progress + storyScenePhaseMarkup(scene);
+}
+
+function storyRaidPhaseMarkup(scene) {
+  const heading = `<div class="story-block story-read"><span class="story-tag">⚔️ Avvistamento piratesco</span>`;
+  if (state.raid.phase !== "idle") {
+    return `${heading}<p>Il saccheggio è in corso.</p>
+      <button type="button" class="complete-quest-button" data-raid-resume>Riprendi il saccheggio</button></div>`;
+  }
+  if (!RAID_CORE.dayAvailable(state.raid, state.day)) {
+    return `${heading}<p>“${scene.skippedText || "Le due navi sono ormai troppo lontane."}”</p>
+      <button type="button" class="complete-quest-button" data-story-raid-next>Continua l'avventura ▸</button></div>`;
+  }
+  return `${heading}<p>Due navi compaiono all'orizzonte: la ciurma deve scegliere quale inseguire.</p>
+    <button type="button" class="complete-quest-button" data-story-raid-start>Insegui le navi ▸</button></div>`;
 }
 
 function storyScenePhaseMarkup(scene) {
@@ -4439,6 +4476,18 @@ function bindEvents() {
     if (completeQuestButton) completeQuest(completeQuestButton.dataset.completeQuest);
 
     // --- avventura guidata (storyFlow v2) ---
+    const storyRaidStartBtn = event.target.closest("[data-story-raid-start]");
+    if (storyRaidStartBtn) {
+      raidPreviousFocus = storyRaidStartBtn;
+      startStoryRaid();
+      raidOverlayOpen = state.raid.phase !== "idle";
+      render();
+      return;
+    }
+    if (event.target.closest("[data-story-raid-next]")) {
+      advanceStoryRaid();
+      return;
+    }
     const storyStartBtn = event.target.closest("[data-story-start]");
     if (storyStartBtn) startStory(storyStartBtn.dataset.storyStart);
     if (event.target.closest("[data-story-abandon]")) abandonStory();

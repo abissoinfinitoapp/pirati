@@ -91,6 +91,29 @@ Per far **riconvergere** i percorsi, basta puntarli alla stessa scena.
 }
 ```
 
+### Avvistamento piratesco (`type: "raid"`)
+
+Uno step può aprire il saccheggio giornaliero al posto di una scena ordinaria:
+
+```js
+{
+  id: "navi-dolci",
+  type: "raid",
+  pairId: "dolce-freddo",
+  skippedText: "Tra una discussione e l'altra, le due navi spariscono oltre l'orizzonte."
+}
+```
+
+`pairId` deve essere l'ID di una coppia registrata nel catalogo dei saccheggi.
+Quando il saccheggio si chiude, l'avventura riprende dallo step immediatamente
+successivo nell'array `progression`: lo step `raid` non richiede quindi un campo
+`next`. Se il tentativo giornaliero è già stato usato, non costa nulla e mostra
+subito `skippedText`; se manca, usa “Le due navi sono ormai troppo lontane.”.
+
+Il successo o il fallimento del saccheggio assegna soltanto gli eventuali premi
+del saccheggio: **non modifica l'esito della quest**, non risolve una prova dello
+StoryFlow e non decide se l'avventura è completata.
+
 ### `resolution.policy`
 
 | policy | fase RESOLUTION |
