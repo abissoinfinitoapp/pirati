@@ -2746,6 +2746,7 @@ body.magnifier-open { overflow: hidden; }
 .map-encounter-card.kind-razzia { border-left-color: var(--green); }
 .map-encounter-card.kind-boss { border-left-color: #6f5a8f; background: linear-gradient(180deg, rgba(111,90,143,.14), #fffaf0 55%); }
 .map-encounter-card.kind-domandona { border-left-color: #4f9d8e; }
+.map-encounter-card.kind-bazar { border-left-color: #c98a3e; }
 .domandona-ticket-count { font-size: 13px; font-weight: 800; color: var(--sea-dark); }
 .domandona-hint {
   border-radius: 10px;
@@ -2789,6 +2790,30 @@ body.magnifier-open { overflow: hidden; }
 .negozio-captain-ico { font-size: 30px; }
 .negozio-captain strong { display: block; font-size: 16px; }
 .negozio-captain small { color: rgba(23,32,42,.65); }
+.negozio-spree {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid #d5a43e;
+  background: linear-gradient(90deg, #fff1c9, #fffaf0);
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.negozio-spree-head { display: flex; align-items: center; gap: 14px; }
+.negozio-spree-timer {
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+  min-width: 66px;
+  text-align: center;
+  color: var(--sea-dark);
+  font-variant-numeric: tabular-nums;
+}
+.negozio-spree-timer.is-low { color: var(--red); }
+.negozio-spree-head strong { display: block; font-size: 16px; }
+.negozio-spree-head small { color: rgba(23,32,42,.6); }
+.negozio-spree-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .negozio-intro { margin: 0 0 14px; color: rgba(23,32,42,.7); line-height: 1.5; }
 .negozio-players { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .negozio-player-tab {

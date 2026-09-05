@@ -528,7 +528,7 @@ window.PIRATI = (function () {
 
   /* ---------- mappa dell'arcipelago ----------------------------------- */
 
-  const SPACE_TYPES = ["mare", "costa", "evento", "mostro", "assalto", "razzia", "tesoro", "quest", "sbarco", "porto", "domandona"];
+  const SPACE_TYPES = ["mare", "costa", "evento", "mostro", "assalto", "razzia", "tesoro", "quest", "sbarco", "porto", "domandona", "bazar"];
 
   function registerMap(map) {
     if (!map || typeof map !== "object") return warn("registerMap: mappa non valida.");

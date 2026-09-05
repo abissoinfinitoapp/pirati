@@ -295,7 +295,7 @@ const TUTORIAL_STEPS = [
     icon: "🛍️",
     kicker: "Passo 9 · Il Negozio delle Cose Inutili",
     title: "Comprare a valanghe per diventare Capitano",
-    text: "Il premio della Nave Domandona finisce nel borsellino PERSONALE di ogni pirata. Nella sezione Negozio ognuno può spenderlo in oggetti che non servono a niente: unicorni rosa, banane di gomma, action figure. L'unica cosa che conta è la quantità: per un solo punto di Prestigio ne servono centinaia o migliaia. Il primo pirata che arriva a Prestigio 3 diventa il Capitano del giorno e decide le rotte, le risposte e le scelte per tutta la ciurma. Ogni giorno il Prestigio si azzera e riparte la gara.",
+    text: "Il premio della Nave Domandona finisce nel borsellino PERSONALE di ogni pirata. Nella sezione Negozio ognuno può spenderlo in oggetti che non servono a niente: unicorni rosa, banane di gomma, action figure. L'unica cosa che conta è la quantità: per un solo punto di Prestigio ne servono centinaia o migliaia. Il primo pirata che arriva a Prestigio 3 diventa il Capitano del giorno e decide le rotte, le risposte e le scelte per tutta la ciurma. Ogni giorno il Prestigio si azzera e riparte la gara. Ogni tanto, navigando, si incontra il Bazar Galleggiante: parte lo «shopping sfrenato», 30 secondi a testa per ogni pirata, così nessuno litiga.",
     tip: "È qui che i bambini fanno pratica coi numeri grandi: «10 monete l'uno, ma ne servono 5.000...». Aspettati capitani saggi, capitani caotici e qualche sabotatore: fa parte del divertimento."
   },
   {
@@ -395,6 +395,7 @@ const defaultState = {
   belarda: BELARDA_CORE.withBelardaDefaults({}),
   domandona: DOMANDONA_CORE.withDomandonaDefaults({}),
   negozioSelectedPlayerId: null,   // quale pirata sta comprando nel Negozio
+  negozioSpree: null,              // shopping sfrenato in corso: { queue, idx, endsAt, day }
   log: []
 };
 
@@ -471,6 +472,7 @@ function withDefaults(saved) {
     && (merged.players || []).some((p) => p.id === cap.playerId)
     ? { playerId: cap.playerId, day: cap.day }
     : null;
+  merged.negozioSpree = null; // uno shopping sfrenato è in tempo reale: non sopravvive a un ricaricamento
   if (merged.voyage && !merged.voyage.moveRoll) merged.voyage.moveRoll = { rolls: {} };
   if (merged.questCampaign.story && typeof merged.questCampaign.story === "object" && merged.questCampaign.story.questId) {
     const st = merged.questCampaign.story;
@@ -1615,9 +1617,10 @@ const SPACE_INFO = {
   tesoro:  { icon: "💎", label: "Tesoro" },
   quest:   { icon: "⭐", label: "Avventura" },
   porto:   { icon: "⚓", label: "Porto" },
-  domandona: { icon: "❓", label: "Nave Domandona" }
+  domandona: { icon: "❓", label: "Nave Domandona" },
+  bazar:   { icon: "🛒", label: "Bazar Galleggiante" }
 };
-const SPECIAL_SPACES = ["evento", "mostro", "assalto", "razzia", "tesoro", "quest", "domandona"];
+const SPECIAL_SPACES = ["evento", "mostro", "assalto", "razzia", "tesoro", "quest", "domandona", "bazar"];
 
 function voyage() { return state.voyage; }
 
@@ -2042,6 +2045,7 @@ function sceneEncounter(kind, scope, baseTarget) {
 function buildEncounter(type, islandId) {
   const danger = state.session.danger;
   if (type === "domandona") return buildDomandonaEncounter();
+  if (type === "bazar") return bazarEncounter();
   if (type === "quest") {
     const questId = nextIslandQuestId(islandId);
     const quest = PIRATI.quest(questId);
@@ -2677,6 +2681,16 @@ function mapEncounterMarkup(enc) {
   }
   if (enc.kind === "boss") return bossEncounterMarkup(enc);
   if (enc.kind === "domandona") return domandonaEncounterMarkup(enc);
+  if (enc.kind === "bazar") {
+    return `<div class="map-encounter-card kind-bazar">
+      <div class="map-encounter-body">
+        <span class="map-encounter-tag">🛒 Bazar Galleggiante</span>
+        <p class="encounter-read">“${enc.prompt}”</p>
+        <button type="button" class="primary-button" data-bazar-start>Aprite il Bazar — shopping sfrenato!</button>
+        <button type="button" class="secondary-button" data-map-skip>Passate oltre senza comprare</button>
+      </div>
+    </div>`;
+  }
   const scene = enc.scene;
   const info = SPACE_INFO[enc.kind] || { icon: "❈", label: enc.kind };
   const tag = `<span class="map-encounter-tag">${info.icon} ${scene ? scene.title : info.label}</span>`;
@@ -3109,6 +3123,7 @@ function captainOfDay() {
 
 function negozioActivePlayer() {
   const byId = (id) => state.players.find((p) => p.id === id);
+  if (state.negozioSpree) return byId(state.negozioSpree.queue[state.negozioSpree.idx]) || state.players[0] || null;
   return byId(state.negozioSelectedPlayerId) || byId(state.selectedPlayerId) || state.players[0] || null;
 }
 
@@ -3137,10 +3152,89 @@ function buyShopItem(playerId, itemId, qty) {
 }
 
 function selectNegozioPlayer(playerId) {
+  if (state.negozioSpree) return; // durante lo shopping sfrenato il turno lo decide il timer
   if (state.negozioSelectedPlayerId === playerId) return;
   state.negozioSelectedPlayerId = playerId;
   saveState();
   renderNegozio();
+}
+
+/* --- Shopping sfrenato: 30 secondi a testa, poi al pirata successivo ---- */
+
+const SPREE_SECONDS = 30;
+let spreeTicker = null;
+
+function bazarEncounter() {
+  return {
+    kind: "bazar", phase: "arrivo",
+    prompt: "Una zattera stracarica di cianfrusaglie vi affianca: è il Bazar Galleggiante! Oggi si fa shopping sfrenato — ogni pirata ha 30 secondi per comprare quello che vuole, poi tocca al prossimo (così nessuno litiga)."
+  };
+}
+
+function startSpreeTicker() {
+  stopSpreeTicker();
+  spreeTicker = setInterval(() => {
+    const s = state.negozioSpree;
+    if (!s) { stopSpreeTicker(); return; }
+    if (Date.now() >= s.endsAt) { spreeNextPirate(); return; }
+    const el = $("#spree-countdown");
+    if (el) {
+      const left = Math.max(0, Math.ceil((s.endsAt - Date.now()) / 1000));
+      el.textContent = left;
+      el.classList.toggle("is-low", left <= 5);
+    }
+  }, 400);
+}
+function stopSpreeTicker() { if (spreeTicker) { clearInterval(spreeTicker); spreeTicker = null; } }
+
+function startBazarSpree() {
+  const v = voyage();
+  if (!v.pending || v.pending.kind !== "bazar" || state.negozioSpree) return;
+  const queue = activePlayers().map((p) => p.id);
+  if (!queue.length) {
+    v.message = "Nessun pirata in gioco: il Bazar Galleggiante prosegue per la sua rotta.";
+    v.pending = null;
+    saveState();
+    renderMap();
+    return;
+  }
+  state.negozioSpree = { queue, idx: 0, endsAt: Date.now() + SPREE_SECONDS * 1000, day: state.day };
+  state.negozioSelectedPlayerId = queue[0];
+  startSpreeTicker();
+  sfx("quest");
+  pushLog("🛒 Bazar Galleggiante: shopping sfrenato! 30 secondi a testa.");
+  saveState();
+  renderMap();
+  renderNegozio();
+  showView("negozio");
+}
+
+function spreeNextPirate() {
+  const s = state.negozioSpree;
+  if (!s) return;
+  const next = NEGOZIO_CORE.spreeNextIndex(s.idx, s.queue.length);
+  if (next === -1) { endBazarSpree(); return; }
+  s.idx = next;
+  s.endsAt = Date.now() + SPREE_SECONDS * 1000;
+  state.negozioSelectedPlayerId = s.queue[next];
+  sfx("click");
+  saveState();
+  renderNegozio();
+}
+
+function endBazarSpree() {
+  stopSpreeTicker();
+  state.negozioSpree = null;
+  const v = voyage();
+  if (v.pending && v.pending.kind === "bazar") {
+    v.pending = null;
+    v.message = "Il Bazar Galleggiante si allontana, la stiva più vuota e i vostri borsellini pure. Tirate per proseguire.";
+  }
+  sfx("campana");
+  pushLog("Il Bazar Galleggiante riparte. Fine dello shopping sfrenato.");
+  saveState();
+  render();
+  showView("mappa");
 }
 
 function renderNegozio() {
@@ -3158,13 +3252,25 @@ function renderNegozio() {
   const need = NEGOZIO_CORE.PRESTIGIO_CAPITANO;
   const pctToNext = Math.round(pr.fractionToNext * 100);
 
+  const spree = state.negozioSpree;
+  const spreeBar = spree ? `<div class="negozio-spree">
+    <div class="negozio-spree-head">
+      <span class="negozio-spree-timer" id="spree-countdown">${Math.max(0, Math.ceil((spree.endsAt - Date.now()) / 1000))}</span>
+      <div><strong>Shopping sfrenato — tocca a ${player.name}</strong><small>Pirata ${spree.idx + 1} di ${spree.queue.length} · 30 secondi a testa</small></div>
+    </div>
+    <div class="negozio-spree-actions">
+      <button type="button" class="primary-button" data-spree-next>Ho finito → prossimo pirata</button>
+      <button type="button" class="link-button" data-spree-stop>Chiudi il Bazar</button>
+    </div>
+  </div>` : "";
+
   const banner = captain
     ? `<div class="negozio-captain is-crowned"><span class="negozio-captain-ico">👑</span><div><strong>Capitano di oggi: ${captain.name}</strong><small>Ha raggiunto Prestigio ${need} comprando a quintali. Oggi decide lui le rotte, le risposte, tutto. Domani si ricomincia.</small></div></div>`
     : `<div class="negozio-captain"><span class="negozio-captain-ico">🧭</span><div><strong>Nessun capitano, per ora</strong><small>Il primo pirata che arriva a Prestigio ${need} comanda la ciurma per tutta la giornata.</small></div></div>`;
 
   const playerTabs = state.players.map((p) => {
     const pp = playerPrestigio(p);
-    return `<button type="button" class="negozio-player-tab ${p.id === player.id ? "is-active" : ""}" data-shop-player="${p.id}">
+    return `<button type="button" class="negozio-player-tab ${p.id === player.id ? "is-active" : ""}" data-shop-player="${p.id}" ${spree ? "disabled" : ""}>
       <strong>${p.name}</strong>
       <small>${fmtCoins(p.coins || 0)} monete · Prestigio ${pp.points}</small>
     </button>`;
@@ -3200,7 +3306,7 @@ function renderNegozio() {
   }).join("");
 
   body.innerHTML = `
-    ${banner}
+    ${spreeBar || banner}
     <p class="negozio-intro">Qui si comprano cose che non servono a niente. L'unica cosa che conta è la <strong>quantità</strong>: per fare un solo punto di Prestigio ne servono a centinaia o a migliaia. A Prestigio ${need} si diventa Capitano del giorno.</p>
     <div class="negozio-players">${playerTabs}</div>
     ${wallet}
@@ -4916,6 +5022,9 @@ function bindEvents() {
     if (shopPlayerBtn) selectNegozioPlayer(shopPlayerBtn.dataset.shopPlayer);
     const shopBuyBtn = event.target.closest("[data-shop-buy]");
     if (shopBuyBtn) buyShopItem(negozioActivePlayer()?.id, shopBuyBtn.dataset.shopBuy, Number(shopBuyBtn.dataset.shopQty));
+    if (event.target.closest("[data-bazar-start]")) startBazarSpree();
+    if (event.target.closest("[data-spree-next]")) spreeNextPirate();
+    if (event.target.closest("[data-spree-stop]")) endBazarSpree();
     const eventChoice = event.target.closest("[data-event-choice]");
     if (eventChoice) resolveEventChoice(Number(eventChoice.dataset.eventChoice));
     const playCardBtn = event.target.closest("[data-play-card]");
