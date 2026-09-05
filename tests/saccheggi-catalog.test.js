@@ -63,8 +63,9 @@ function storyAppHarness() {
   vm.runInContext(fs.readFileSync(path.join(root, "engine/saccheggi-core.js"), "utf8"), context, { filename: "engine/saccheggi-core.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "engine/belarda-core.js"), "utf8"), context, { filename: "engine/belarda-core.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "engine/domandona-core.js"), "utf8"), context, { filename: "engine/domandona-core.js" });
+  vm.runInContext(fs.readFileSync(path.join(root, "engine/negozio-core.js"), "utf8"), context, { filename: "engine/negozio-core.js" });
   context.PIRATI = context.window.PIRATI;
-  for (const relativePath of ["catalog/premi.js", "catalog/saccheggi.js", "catalog/poteri.js", "catalog/belarda.js", "catalog/domandona.js"]) {
+  for (const relativePath of ["catalog/premi.js", "catalog/saccheggi.js", "catalog/poteri.js", "catalog/belarda.js", "catalog/domandona.js", "catalog/negozio.js"]) {
     vm.runInContext(fs.readFileSync(path.join(root, relativePath), "utf8"), context, { filename: relativePath });
   }
   vm.runInContext(`PIRATI.registerPack({

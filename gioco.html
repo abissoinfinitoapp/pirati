@@ -77,6 +77,7 @@
             </div>
           </div>
         </div>
+        <div id="map-captain-banner" class="map-captain-banner" hidden></div>
         <div class="map-layout">
           <div class="map-stage">
             <svg id="archipelago" viewBox="-18 -9 136 118" role="img" aria-label="Mappa dell'arcipelago"></svg>
@@ -210,6 +211,18 @@
       </section>
     </section>
 
+    <section id="view-negozio" class="view" aria-labelledby="negozio-title">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Cose che non servono a niente</p>
+            <h2 id="negozio-title">Il Negozio delle Cose Inutili</h2>
+          </div>
+        </div>
+        <div id="negozio-body" aria-live="polite"></div>
+      </div>
+    </section>
+
     <section id="view-tesoreria" class="view" aria-labelledby="tesoreria-title">
       <section class="tesoreria-page">
         <div class="tesoreria-hero">
@@ -316,7 +329,12 @@
         <div class="dice-rule-card">
           <h3>La Nave Domandona</h3>
           <p>Ogni avventura completata dà <strong>1 biglietto</strong>. Quando in mare incontrate la Nave Domandona, con un biglietto potete tentare la sua domanda: il Master legge domanda e primo indizio, i bambini rispondono a voce, il Master giudica.</p>
-          <p><strong>Giusta:</strong> premio enorme in monete. <strong>Sbagliata:</strong> nessuna penalità, la stessa domanda ritorna con un indizio più chiaro. Domande «6-8 anni» o «9-10 anni» a scelta del Master.</p>
+          <p><strong>Giusta:</strong> premio enorme in monete, <strong>diviso tra tutti i pirati</strong> (borsellino personale). <strong>Sbagliata:</strong> nessuna penalità, la stessa domanda ritorna con un indizio più chiaro. Domande «6-8 anni» o «9-10 anni» a scelta del Master.</p>
+        </div>
+        <div class="dice-rule-card">
+          <h3>Il Negozio delle Cose Inutili</h3>
+          <p>Ognuno spende il suo borsellino in oggetti inutili (unicorni rosa, banane di gomma, action figure). Conta solo la <strong>quantità</strong>: per +1 Prestigio ne servono centinaia o migliaia.</p>
+          <p>Il primo che arriva a <strong>Prestigio 3</strong> è il <strong>Capitano del giorno</strong> e decide per tutta la ciurma. Ogni giorno il Prestigio si azzera e la gara riparte.</p>
         </div>
       </article>
 
@@ -366,6 +384,7 @@
       <p class="nav-group-label">Ciurma</p>
       <button type="button" class="nav-item" data-view="tesoreria"><span class="nav-ico" aria-hidden="true">&#127942;</span>Tesoro</button>
       <button type="button" class="nav-item" data-view="items"><span class="nav-ico" aria-hidden="true">&#10024;</span>Oggetti</button>
+      <button type="button" class="nav-item" data-view="negozio"><span class="nav-ico" aria-hidden="true">&#128717;</span>Negozio</button>
       <button type="button" class="nav-item" data-view="crew"><span class="nav-ico" aria-hidden="true">&#129517;</span>Giocatori</button>
     </div>
 
@@ -421,6 +440,7 @@
 <script src="engine/saccheggi-core.js"></script>
 <script src="engine/belarda-core.js"></script>
 <script src="engine/domandona-core.js"></script>
+<script src="engine/negozio-core.js"></script>
 <script src="engine/sfx.js"></script>
 
 <!-- Cataloghi condivisi: premi, poteri, bestiario. -->
@@ -428,6 +448,7 @@
 <script src="catalog/saccheggi.js"></script>
 <script src="catalog/belarda.js"></script>
 <script src="catalog/domandona.js"></script>
+<script src="catalog/negozio.js"></script>
 <script src="catalog/poteri.js"></script>
 <script src="catalog/nemici.js"></script>
 <script src="catalog/eventi.js"></script>

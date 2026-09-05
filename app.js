@@ -292,22 +292,29 @@ const TUTORIAL_STEPS = [
     tip: "Nel menu puoi scegliere le domande «6-8 anni» o «9-10 anni» con lo stesso interruttore del testo delle avventure (facile / avanzato). Tieni il biglietto se la ciurma non è sicura: la nave ripassa."
   },
   {
+    icon: "🛍️",
+    kicker: "Passo 9 · Il Negozio delle Cose Inutili",
+    title: "Comprare a valanghe per diventare Capitano",
+    text: "Il premio della Nave Domandona finisce nel borsellino PERSONALE di ogni pirata. Nella sezione Negozio ognuno può spenderlo in oggetti che non servono a niente: unicorni rosa, banane di gomma, action figure. L'unica cosa che conta è la quantità: per un solo punto di Prestigio ne servono centinaia o migliaia. Il primo pirata che arriva a Prestigio 3 diventa il Capitano del giorno e decide le rotte, le risposte e le scelte per tutta la ciurma. Ogni giorno il Prestigio si azzera e riparte la gara.",
+    tip: "È qui che i bambini fanno pratica coi numeri grandi: «10 monete l'uno, ma ne servono 5.000...». Aspettati capitani saggi, capitani caotici e qualche sabotatore: fa parte del divertimento."
+  },
+  {
     icon: "📖",
-    kicker: "Passo 9 · L'avventura guidata",
+    kicker: "Passo 10 · L'avventura guidata",
     title: "Una scena per volta",
     text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda (con spunti pronti e un «se nessuno parte»), 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
     tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Gli spunti servono a te, non ai bambini: usali solo se serve."
   },
   {
     icon: "🎲",
-    kicker: "Passo 10 · Il Destino e i dadi",
+    kicker: "Passo 11 · Il Destino e i dadi",
     title: "Fallire vuol dire andare avanti diversi",
     text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
     tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
   },
   {
     icon: "🏆",
-    kicker: "Passo 11 · Come cresce la ciurma",
+    kicker: "Passo 12 · Come cresce la ciurma",
     title: "Carte, Potenza, Gradi",
     text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte finiscono nel Baule dei Poteri (Tesoro): durante una prova puoi giocarne una — toccala per ingrandirla, leggila, poi «Gioca». Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
     tip: "Alla schermata dei premi leggi ad alta voce i numeri che salgono: monete, Potenza, Grado. È il momento che i bambini aspettano."
@@ -323,6 +330,7 @@ const ALL_QUESTS = PIRATI.quests;
 const RAID_CORE = window.PIRATI_SACCH_CORE;
 const BELARDA_CORE = window.PIRATI_BELARDA_CORE;
 const DOMANDONA_CORE = window.PIRATI_DOMANDONA_CORE;
+const NEGOZIO_CORE = window.PIRATI_NEGOZIO_CORE;
 const BELARDA_THRESHOLD = 12000; // kg (12 tonnellate) per far esplodere una casa
 const RAID_RETURN_VIEWS = Object.freeze({ map: "mappa", story: "quests" });
 
@@ -348,7 +356,8 @@ const defaultState = {
     readingLevel: "facile",
     cardUse: {},        // { powerId: token }  quali carte sono già state giocate nel periodo
     encounterCount: 0,  // contatore incontri/quest, per il cooldown "quest"
-    minQuestRollers: 2  // quanti pirati fa tirare il sistema in una quest
+    minQuestRollers: 2, // quanti pirati fa tirare il sistema in una quest
+    captainOfDay: null  // { playerId, day }  chi ha raggiunto Prestigio 3 per primo oggi
   },
   schoolCalendar: {
     week: 1,
@@ -385,6 +394,7 @@ const defaultState = {
   raid: RAID_CORE.withRaidDefaults({}),
   belarda: BELARDA_CORE.withBelardaDefaults({}),
   domandona: DOMANDONA_CORE.withDomandonaDefaults({}),
+  negozioSelectedPlayerId: null,   // quale pirata sta comprando nel Negozio
   log: []
 };
 
@@ -453,7 +463,14 @@ function withDefaults(saved) {
     });
     if (typeof player.questsPlayed !== "number") player.questsPlayed = 0;
     if (typeof player.active !== "boolean") player.active = true;
+    if (typeof player.coins !== "number" || !Number.isFinite(player.coins) || player.coins < 0) player.coins = 0;
+    player.shop = NEGOZIO_CORE.withPlayerShopDefaults(player.shop, merged.day);
   });
+  const cap = merged.crew.captainOfDay;
+  merged.crew.captainOfDay = cap && typeof cap === "object" && cap.day === merged.day
+    && (merged.players || []).some((p) => p.id === cap.playerId)
+    ? { playerId: cap.playerId, day: cap.day }
+    : null;
   if (merged.voyage && !merged.voyage.moveRoll) merged.voyage.moveRoll = { rolls: {} };
   if (merged.questCampaign.story && typeof merged.questCampaign.story === "object" && merged.questCampaign.story.questId) {
     const st = merged.questCampaign.story;
@@ -591,7 +608,8 @@ function addPlayer() {
     coins: 0,
     notes: "",
     growth: { coraggio: 0, astuzia: 0, fortuna: 0 },
-    questsPlayed: 0
+    questsPlayed: 0,
+    shop: { day: state.day, bought: {} }
   };
   state.players.push(player);
   state.selectedPlayerId = player.id;
@@ -955,7 +973,8 @@ function seedTestCrew() {
     state.players.push({
       id: globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
       name, characterId: character.id, coins: 0, notes: "",
-      growth: { coraggio: 0, astuzia: 0, fortuna: 0 }, questsPlayed: 0
+      growth: { coraggio: 0, astuzia: 0, fortuna: 0 }, questsPlayed: 0,
+      shop: { day: state.day, bought: {} }
     });
   });
   state.selectedPlayerId = state.players[0]?.id || null;
@@ -2111,17 +2130,25 @@ function domandonaGiusta() {
   const enc = v.pending;
   if (!enc || enc.kind !== "domandona" || enc.phase !== "domanda") return;
   const question = enc.question;
+  const shareHolders = activePlayers().length ? activePlayers() : state.players;
+  const heads = Math.max(1, shareHolders.length);
   const gained = [];
   (question.rewards || []).forEach((reward) => {
-    if (reward.type === "coins") { state.crew.coins += reward.amount; gained.push(`${fmtCoins(reward.amount)} monete`); }
-    else if (reward.type === "fame") { state.fame += reward.amount; gained.push(`${reward.amount} Fama`); }
+    if (reward.type === "coins") {
+      const each = Math.floor(reward.amount / heads);
+      shareHolders.forEach((p) => { p.coins = (p.coins || 0) + each; });
+      gained.push(`${fmtCoins(reward.amount)} monete divise tra ${heads} pirati (${fmtCoins(each)} a testa, nel borsellino personale)`);
+    } else if (reward.type === "fame") {
+      state.fame += reward.amount;
+      gained.push(`${reward.amount} Fama`);
+    }
   });
   state.domandona.solvedIds = (state.domandona.solvedIds || []).concat(question.id);
   state.domandona.recentIds = (state.domandona.recentIds || []).concat(question.id).slice(-2);
   state.domandona.pending = null;
   sfx("trionfo");
-  pushLog(`Nave Domandona: «${question.domanda}» — risposta giusta! Premi: ${gained.join(", ") || "—"}.`);
-  v.message = `🎉 Risposta giusta! La Nave Domandona festeggia e regala ${gained.join(", ") || "un premio"}. Tirate per proseguire.`;
+  pushLog(`Nave Domandona: «${question.domanda}» — risposta giusta! ${gained.join(", ") || "—"}.`);
+  v.message = `🎉 Risposta giusta! La Nave Domandona festeggia: ${gained.join(", ") || "un premio"}. Ora ognuno può spendere il suo al Negozio delle Cose Inutili. Tirate per proseguire.`;
   v.pending = null;
   refreshGrade();
   saveState();
@@ -2501,6 +2528,12 @@ function renderMap() {
     $("#map-potenza-value").textContent = fmtPotenza(state.players.reduce((sum, p) => sum + playerPower(p), 0));
   }
   if ($("#map-domandona-value")) $("#map-domandona-value").textContent = state.domandona.tickets;
+  const capBanner = $("#map-captain-banner");
+  if (capBanner) {
+    const captain = captainOfDay();
+    capBanner.hidden = !captain;
+    if (captain) capBanner.innerHTML = `<span>👑</span> Oggi comanda <strong>${captain.name}</strong>: il Capitano decide rotte, risposte e scelte per tutta la ciurma.`;
+  }
   if ($("#map-week")) {
     const cal = state.schoolCalendar || { week: 1, weekday: 1 };
     $("#map-week").textContent = `Settimana ${cal.week} · ${WEEKDAYS[(cal.weekday - 1) % 5]}`;
@@ -3053,6 +3086,127 @@ function dismissBelardaReveal() {
   render();
 }
 
+/* =========================================================================
+   Il Negozio delle Cose Inutili — Prestigio e Capitano del giorno
+   ===================================================================== */
+
+function playerShop(player) {
+  if (!player.shop || player.shop.day !== state.day) {
+    player.shop = NEGOZIO_CORE.withPlayerShopDefaults(player.shop, state.day);
+  }
+  return player.shop;
+}
+
+function playerPrestigio(player) {
+  return NEGOZIO_CORE.prestigioFromBought(playerShop(player).bought, PIRATI.negozio);
+}
+
+function captainOfDay() {
+  const cap = state.crew.captainOfDay;
+  if (!cap || cap.day !== state.day) return null;
+  return state.players.find((p) => p.id === cap.playerId) || null;
+}
+
+function negozioActivePlayer() {
+  const byId = (id) => state.players.find((p) => p.id === id);
+  return byId(state.negozioSelectedPlayerId) || byId(state.selectedPlayerId) || state.players[0] || null;
+}
+
+function buyShopItem(playerId, itemId, qty) {
+  const player = state.players.find((p) => p.id === playerId);
+  const item = PIRATI.negozioItem(itemId);
+  if (!player || !item) return;
+  const amount = Math.max(1, Math.round(Number(qty) || 1));
+  if (!NEGOZIO_CORE.canAfford(player.coins, item.price, amount)) return;
+
+  const shop = playerShop(player);
+  player.coins -= item.price * amount;
+  shop.bought[itemId] = (shop.bought[itemId] || 0) + amount;
+
+  const after = playerPrestigio(player);
+  sfx("star");
+  if (after.isCaptainEligible && !state.crew.captainOfDay) {
+    state.crew.captainOfDay = { playerId: player.id, day: state.day };
+    sfx("trionfo");
+    pushLog(`👑 ${player.name} raggiunge Prestigio ${after.points} comprando cose inutili a valanghe: oggi è il CAPITANO DELLA CIURMA e decide per tutti!`);
+  } else {
+    pushLog(`${player.name} compra ${amount}× ${item.name} (${fmtCoins(item.price * amount)} monete). Prestigio: ${after.points}.`);
+  }
+  saveState();
+  render();
+}
+
+function selectNegozioPlayer(playerId) {
+  if (state.negozioSelectedPlayerId === playerId) return;
+  state.negozioSelectedPlayerId = playerId;
+  saveState();
+  renderNegozio();
+}
+
+function renderNegozio() {
+  const body = $("#negozio-body");
+  if (!body) return;
+
+  if (!state.players.length) {
+    body.innerHTML = `<p class="helper-text">Aggiungi i bambini nella sezione Giocatori: qui potranno spendere il premio della Nave Domandona in cose totalmente inutili.</p>`;
+    return;
+  }
+
+  const captain = captainOfDay();
+  const player = negozioActivePlayer();
+  const pr = playerPrestigio(player);
+  const need = NEGOZIO_CORE.PRESTIGIO_CAPITANO;
+  const pctToNext = Math.round(pr.fractionToNext * 100);
+
+  const banner = captain
+    ? `<div class="negozio-captain is-crowned"><span class="negozio-captain-ico">👑</span><div><strong>Capitano di oggi: ${captain.name}</strong><small>Ha raggiunto Prestigio ${need} comprando a quintali. Oggi decide lui le rotte, le risposte, tutto. Domani si ricomincia.</small></div></div>`
+    : `<div class="negozio-captain"><span class="negozio-captain-ico">🧭</span><div><strong>Nessun capitano, per ora</strong><small>Il primo pirata che arriva a Prestigio ${need} comanda la ciurma per tutta la giornata.</small></div></div>`;
+
+  const playerTabs = state.players.map((p) => {
+    const pp = playerPrestigio(p);
+    return `<button type="button" class="negozio-player-tab ${p.id === player.id ? "is-active" : ""}" data-shop-player="${p.id}">
+      <strong>${p.name}</strong>
+      <small>${fmtCoins(p.coins || 0)} monete · Prestigio ${pp.points}</small>
+    </button>`;
+  }).join("");
+
+  const wallet = `<div class="negozio-wallet">
+    <div><span>Borsellino di ${player.name}</span><strong>${fmtCoins(player.coins || 0)} monete</strong></div>
+    <div><span>Prestigio di oggi</span><strong class="negozio-prestige">${pr.points}${captain && captain.id === player.id ? " 👑" : ""}</strong></div>
+    <div class="negozio-progress">
+      <span>Verso Prestigio ${pr.points + 1}</span>
+      <div class="negozio-progress-track"><i style="width:${pctToNext}%"></i></div>
+      <small>${pctToNext}% · comprando ancora cose inutili</small>
+    </div>
+  </div>`;
+
+  const grid = PIRATI.negozio.map((item) => {
+    const owned = playerShop(player).bought[item.id] || 0;
+    const buy = [1, 10, 100].map((q) => {
+      const ok = NEGOZIO_CORE.canAfford(player.coins, item.price, q);
+      return `<button type="button" data-shop-buy="${item.id}" data-shop-qty="${q}" ${ok ? "" : "disabled"}>×${q}<small>${fmtCoins(item.price * q)}</small></button>`;
+    }).join("");
+    return `<article class="negozio-item">
+      <div class="negozio-item-img">
+        <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.closest('.negozio-item-img').classList.add('no-img'); this.remove();">
+        ${owned ? `<span class="negozio-owned">${_nfIT.format(owned)}</span>` : ""}
+      </div>
+      <div class="negozio-item-body">
+        <h3>${item.name}</h3>
+        <p class="negozio-item-price">${fmtCoins(item.price)} monete l'uno · servono <strong>${_nfIT.format(item.perPrestigio)}</strong> pezzi per +1 Prestigio</p>
+        <div class="negozio-buy">${buy}</div>
+      </div>
+    </article>`;
+  }).join("");
+
+  body.innerHTML = `
+    ${banner}
+    <p class="negozio-intro">Qui si comprano cose che non servono a niente. L'unica cosa che conta è la <strong>quantità</strong>: per fare un solo punto di Prestigio ne servono a centinaia o a migliaia. A Prestigio ${need} si diventa Capitano del giorno.</p>
+    <div class="negozio-players">${playerTabs}</div>
+    ${wallet}
+    <div class="negozio-grid">${grid}</div>`;
+}
+
 function setNavDrawer(open) {
   const nav = $("#app-nav");
   const toggle = $("#nav-toggle");
@@ -3370,6 +3524,12 @@ function endSchoolDay() {
   if (cal.weekday >= 5) { cal.week += 1; cal.weekday = 1; }
   else cal.weekday += 1;
   state.day += 1;
+
+  // il Negozio si azzera: nuovo giro per il Prestigio e per il Capitano
+  const outgoingCaptain = captainOfDay();
+  state.crew.captainOfDay = null;
+  state.players.forEach((p) => { p.shop = { day: state.day, bought: {} }; });
+  if (outgoingCaptain) pushLog(`${outgoingCaptain.name} lascia il comando: il Prestigio di tutti riparte da zero.`);
 
   sfx("campana");
   saveState();
@@ -4367,6 +4527,7 @@ function render() {
   renderBestiario();
   renderMapParola();
   renderMapBelarda();
+  renderNegozio();
   renderLog();
   renderPrint();
 }
@@ -4751,6 +4912,10 @@ function bindEvents() {
     if (event.target.closest("[data-domandona-use-ticket]")) domandonaUseTicket();
     if (event.target.closest("[data-domandona-giusta]")) domandonaGiusta();
     if (event.target.closest("[data-domandona-sbagliata]")) domandonaSbagliata();
+    const shopPlayerBtn = event.target.closest("[data-shop-player]");
+    if (shopPlayerBtn) selectNegozioPlayer(shopPlayerBtn.dataset.shopPlayer);
+    const shopBuyBtn = event.target.closest("[data-shop-buy]");
+    if (shopBuyBtn) buyShopItem(negozioActivePlayer()?.id, shopBuyBtn.dataset.shopBuy, Number(shopBuyBtn.dataset.shopQty));
     const eventChoice = event.target.closest("[data-event-choice]");
     if (eventChoice) resolveEventChoice(Number(eventChoice.dataset.eventChoice));
     const playCardBtn = event.target.closest("[data-play-card]");

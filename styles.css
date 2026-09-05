@@ -2760,6 +2760,115 @@ body.magnifier-open { overflow: hidden; }
 .encounter-choice.is-good { border-color: var(--green); background: rgba(63,125,88,.08); }
 .encounter-choice.is-good:hover { background: rgba(63,125,88,.16); }
 
+/* --- Capitano del giorno (banner sulla Mappa) --- */
+.map-captain-banner {
+  margin: 10px 0 0;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(243,199,111,.55);
+  background: linear-gradient(90deg, rgba(243,199,111,.22), rgba(243,199,111,.08));
+  color: #ffe6ab;
+  font-size: 15px;
+}
+.map-captain-banner strong { color: #f3c76f; }
+.map-captain-banner span { font-size: 18px; }
+
+/* --- Il Negozio delle Cose Inutili --- */
+.negozio-captain {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fffaf0;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.negozio-captain.is-crowned { border-color: #d5a43e; background: #fff1c9; }
+.negozio-captain-ico { font-size: 30px; }
+.negozio-captain strong { display: block; font-size: 16px; }
+.negozio-captain small { color: rgba(23,32,42,.65); }
+.negozio-intro { margin: 0 0 14px; color: rgba(23,32,42,.7); line-height: 1.5; }
+.negozio-players { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.negozio-player-tab {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 7px 12px;
+  background: white;
+  color: var(--ink);
+  text-align: left;
+  display: grid;
+  gap: 1px;
+}
+.negozio-player-tab.is-active { border-color: var(--sea); background: rgba(45,138,166,.1); }
+.negozio-player-tab strong { font-size: 14px; }
+.negozio-player-tab small { font-size: 12px; color: rgba(23,32,42,.6); }
+.negozio-wallet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #0e2733;
+  color: #f3e7c8;
+  margin-bottom: 16px;
+}
+.negozio-wallet > div > span { font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #9db2ae; display: block; }
+.negozio-wallet > div > strong { font-size: 20px; }
+.negozio-prestige { color: #f3c76f; }
+.negozio-progress { grid-column: 1 / -1; display: grid; gap: 5px; }
+.negozio-progress-track { height: 9px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+.negozio-progress-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #f3c76f); }
+.negozio-progress small { color: #9db2ae; }
+.negozio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.negozio-item {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fffaf0;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+.negozio-item-img { position: relative; aspect-ratio: 1 / 1; background: #eef3f1; }
+.negozio-item-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.negozio-item-img.no-img::after { content: "🛍️"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 40px; opacity: .5; }
+.negozio-owned {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(14,39,51,.88); color: #f3c76f;
+  font-size: 13px; font-weight: 900;
+  padding: 2px 8px; border-radius: 999px;
+}
+.negozio-item-body { padding: 10px 12px 12px; display: grid; gap: 7px; flex: 1; }
+.negozio-item-body h3 { margin: 0; font-size: 14px; line-height: 1.2; }
+.negozio-item-price { margin: 0; font-size: 12px; color: rgba(23,32,42,.65); line-height: 1.35; }
+.negozio-buy { display: flex; gap: 5px; margin-top: auto; }
+.negozio-buy button {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 6px 4px;
+  background: white;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  display: grid;
+  gap: 1px;
+  min-height: 42px;
+}
+.negozio-buy button small { font-size: 10px; font-weight: 600; color: rgba(23,32,42,.55); }
+.negozio-buy button:hover:not([disabled]) { border-color: var(--sea); background: rgba(45,138,166,.08); }
+.negozio-buy button[disabled] { opacity: .4; cursor: not-allowed; }
+@media (max-width: 560px) {
+  .negozio-wallet { grid-template-columns: 1fr; }
+  .negozio-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+
 /* --- Barbabisso, il boss --- */
 .foe-portrait.is-boss img { aspect-ratio: 3 / 4; }
 .boss-pirates {

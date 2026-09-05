@@ -1,0 +1,143 @@
+PROMPT PER LE IMMAGINI — IL NEGOZIO DELLE COSE INUTILI
+=====================================================
+
+30 oggetti. File finali: assets/negozio/<id>.webp  (quadrati 1:1, 1200x1200).
+Se un file manca, il gioco mostra un'icona 🛍️ di riserva: nessun blocco.
+
+STILE COMUNE (da anteporre a ogni prompt)
+-----------------------------------------
+"Product photography of a single small toy object, centered, on a clean plain
+off-white / very light grey seamless background, soft even studio lighting, gentle
+shadow beneath, slightly playful, high detail, no text, no logos, no packaging text,
+no watermark, square 1:1 framing. The object looks like a cheap fun collectible."
+
+REGOLE PER LE FIGURE DI PERSONE (calciatori / eroi / cartoni)
+------------------------------------------------------------
+- NON somiglianti a persone reali: sono giocattoli di plastica in stile "action
+  figure" generica, proporzioni da bambolotto, articolazioni visibili, vernice
+  lucida. Nomi inventati, niente stemmi o loghi di squadre o marchi reali.
+- Colori dei completi/costumi generici (blu, rosso, verde...), niente scritte.
+- Espressione buffa e amichevole, mai realistica o minacciosa.
+
+
+CIANFRUSAGLIE ASSURDE
+---------------------
+
+1. unicorno-rosa — Unicorno Rosa in Miniatura
+   tiny glossy pink plastic unicorn figurine, single small toy, sparkly horn.
+
+2. banana-gomma — Banana di Gomma
+   a single rubber banana toy, bright yellow, slightly bendy, matte finish.
+
+3. elastico-arcobaleno — Elastico Arcobaleno
+   one colorful rubber loom band lying in a loose loop, macro close-up.
+
+4. calzino-spaiato — Calzino Spaiato da Collezione
+   one lonely mismatched striped sock, neatly folded once, cotton texture.
+
+5. sasso-faccina — Sasso Dipinto con la Faccina
+   a smooth grey river pebble hand-painted with a simple smiling face.
+
+6. graffetta-oro — Graffetta Dorata Firmata
+   a single gold-coloured paperclip resting on a tiny clear display stand.
+
+7. papera-mini — Paperella di Gomma Minuscola
+   a very small classic yellow rubber duck, macro shot, glossy.
+
+8. adesivi-brillanti — Foglio di Adesivi Brillantinati
+   a small sheet of glittery star and heart stickers, flat lay, sparkle.
+
+9. baffo-finto — Baffo Finto Adesivo
+   a fake self-adhesive black curly moustache prop, on its paper backing.
+
+10. biglia-galassia — Biglia Galassia
+    a single glass marble with swirled blue and purple galaxy pattern, macro.
+
+11. cuscino-pernacchia — Cuscino Pernacchia Tascabile
+    a small deflated red rubber whoopee cushion, folded, comedic prop.
+
+12. dado-24-facce — Dado a 24 Facce (inutile)
+    an unusual 24-sided polyhedral die, teal plastic with white numbers.
+
+13. cappello-cono — Cappellino a Cono da Festa
+    a striped cone-shaped paper party hat with a thin elastic string.
+
+14. girandola-plastica — Girandola di Plastica
+    a colorful plastic pinwheel toy on a short wooden stick, blades mid-spin.
+
+15. tappo-firmato — Tappo di Sughero Autografato
+    a plain cork stopper with a tiny scribbled autograph in black ink.
+
+
+ACTION FIGURE — CAMPIONI DELLO SPORT (stilizzate, nomi inventati)
+----------------------------------------------------------------
+
+16. fenomeno-gol — «Il Fenomeno del Gol»
+    stylized plastic action figure of a cartoonish football striker mid-kick,
+    generic plain blue kit, no numbers or crests, cheerful face, doll-like.
+
+17. bomber-mancino — «Il Bomber Mancino»
+    stylized plastic action figure of a chunky cartoon footballer celebrating
+    with arms up, generic plain red kit, big grin.
+
+18. portiere-volante — «Il Portiere Volante»
+    stylized plastic action figure of a cartoon goalkeeper diving sideways,
+    generic green jersey, oversized gloves.
+
+19. regista-numero10 — «Il Numero Dieci»
+    stylized plastic action figure of a small cartoon playmaker footballer
+    resting a foot on a ball, generic white kit with a plain number 10.
+
+20. maratoneta-oro — «La Maratoneta d'Oro»
+    stylized plastic action figure of a cartoon runner breaking a finish-line
+    ribbon, generic gold tracksuit, joyful expression.
+
+
+ACTION FIGURE — EROI DEI CARTONI (parodie, nomi inventati)
+---------------------------------------------------------
+
+21. idraulico-baffuto — «L'Idraulico Baffuto Saltatore»
+    stylized plastic action figure of a stout moustached plumber in a red cap
+    and blue overalls, mid-jump pose, friendly cartoon face. Parody, not a
+    real character.
+
+22. riccio-turbo — «Il Riccio Turbo Blu»
+    stylized plastic action figure of a spiky blue cartoon hedgehog leaning
+    forward as if running fast, big confident smile. Parody, not a real
+    character.
+
+23. ninja-guscio — «Il Ninja col Guscio»
+    stylized plastic action figure of a cartoon turtle ninja with a green
+    shell, a colored bandana over the eyes, holding nunchaku. Parody.
+
+24. maga-stelline — «La Maghetta delle Stelline»
+    stylized plastic action figure of a cheerful magical girl holding a star
+    wand, pastel pink and lilac outfit, tiny wings. Parody.
+
+25. robot-camion — «Il Robot che si Fa Camion»
+    stylized chunky plastic transforming robot toy, mid-way between a boxy
+    robot and a truck, bright primary colors. Parody, not a real character.
+
+
+ACTION FIGURE — EROI ED ESPLORATORI
+-----------------------------------
+
+26. supereroe-mantello — «Il Supereroe dal Mantello Rosso»
+    stylized plastic superhero action figure, generic plain blue bodysuit,
+    flowing red cape, hands on hips, heroic stance, no chest symbol.
+
+27. uomo-ragnatela — «L'Uomo Ragnatela»
+    stylized plastic action figure of a masked hero in a red-and-blue webbed
+    suit, crouching pose, hand extended. Parody, not a real character.
+
+28. cavaliere-luce — «Il Cavaliere dalla Spada di Luce»
+    stylized plastic action figure of a hooded knight in brown robes holding
+    a glowing blue energy sword. Parody, not a real character.
+
+29. esploratrice-zaino — «L'Esploratrice dello Zaino»
+    stylized plastic action figure of a young cartoon explorer girl with a
+    large purple backpack and a folded map, safari outfit, big eyes. Parody.
+
+30. astronauta-bandiera — «L'Astronauta con la Bandierina»
+    stylized plastic astronaut action figure in a white space suit, planting
+    a tiny flag on a small grey rock base.

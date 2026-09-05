@@ -38,6 +38,8 @@ window.PIRATI = (function () {
     belardaLootById: new Map(),
     domandonaQuestions: [],   // domande della Nave Domandona
     domandonaQuestionById: new Map(),
+    negozio: [],              // oggetti del Negozio delle Cose Inutili
+    negozioById: new Map(),
     map: null,               // { id, start, nodes:{}, legs:{}, routes:{} }
     gradeLadder: [
       { grade: 1, questsNeeded: 0, name: "Mozzi Coraggiosi" },
@@ -420,6 +422,28 @@ window.PIRATI = (function () {
     });
   }
 
+  /* ---------- Il Negozio delle Cose Inutili ---------------------------- */
+
+  function registerNegozio(list) {
+    if (!Array.isArray(list)) return warn("registerNegozio: serve un array.");
+    list.forEach((item, index) => {
+      const where = `Negozio #${index + 1}`;
+      if (!item || typeof item !== "object" || typeof item.id !== "string" || !item.id)
+        return warn(`${where}: manca 'id'.`);
+      if (state.negozioById.has(item.id)) return warn(`Negozio: oggetto duplicato "${item.id}".`);
+      if (typeof item.name !== "string" || !item.name) return warn(`${where}: manca 'name'.`);
+      if (!Number.isInteger(item.price) || item.price <= 0) return warn(`${where}: 'price' deve essere un intero positivo.`);
+      if (!Number.isInteger(item.perPrestigio) || item.perPrestigio <= 0) return warn(`${where}: 'perPrestigio' deve essere un intero positivo.`);
+      const clean = {
+        id: item.id, name: item.name, price: item.price, perPrestigio: item.perPrestigio,
+        categoria: item.categoria || "assurdo", art: item.art || "",
+        image: window.PIRATI_ASSET(`negozio/${item.id}.webp`)
+      };
+      state.negozio.push(clean);
+      state.negozioById.set(clean.id, clean);
+    });
+  }
+
   /* ---------- bestiario: nemici e boss --------------------------------- */
 
   function registerEnemies(list) {
@@ -609,6 +633,7 @@ window.PIRATI = (function () {
       `Coppie di saccheggio: ${state.raidPairs.length}`,
       `Premi di Nonna Belarda: ${state.belardaLoot.length}`,
       `Domande della Nave Domandona: ${state.domandonaQuestions.length}`,
+      `Oggetti del Negozio: ${state.negozio.length}`,
       `Avvisi: ${state.problems.length}`
     ];
     console.log("%c[PIRATI] " + lines.join("  |  "), "font-weight:bold");
@@ -624,6 +649,7 @@ window.PIRATI = (function () {
     registerRaidPairs,
     registerBelardaLoot,
     registerDomandonaQuestions,
+    registerNegozio,
     registerEnemies,
     registerEvents,
     registerWords,
@@ -638,6 +664,8 @@ window.PIRATI = (function () {
     belardaReward: (id) => state.belardaLootById.get(id) || null,
     get domandonaQuestions() { return state.domandonaQuestions; },
     domandonaQuestion: (id) => state.domandonaQuestionById.get(id) || null,
+    get negozio() { return state.negozio; },
+    negozioItem: (id) => state.negozioById.get(id) || null,
     get enemies() { return state.enemies; },
     get bosses() { return state.bosses; },
     get boss() { return state.bosses[0] || null; },
