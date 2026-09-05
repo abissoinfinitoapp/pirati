@@ -2611,6 +2611,19 @@ body.magnifier-open { overflow: hidden; }
 .map-potenza-button:hover { background: rgba(243,199,111,.26); color: #fff; }
 .map-potenza-button span { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .map-potenza-button strong { font-size: 24px; line-height: 1; color: #f3c76f; }
+.map-domandona-badge {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-width: 110px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(154,205,196,.45);
+  background: rgba(154,205,196,.14);
+  color: #dff5ef;
+}
+.map-domandona-badge span { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.map-domandona-badge strong { font-size: 24px; line-height: 1; color: #9acdc4; }
 .map-danger {
   display: grid;
   grid-template-columns: auto auto;
@@ -2732,6 +2745,20 @@ body.magnifier-open { overflow: hidden; }
 .map-encounter-card.kind-tesoro, .map-encounter-card.is-quest { border-left-color: var(--gold); }
 .map-encounter-card.kind-razzia { border-left-color: var(--green); }
 .map-encounter-card.kind-boss { border-left-color: #6f5a8f; background: linear-gradient(180deg, rgba(111,90,143,.14), #fffaf0 55%); }
+.map-encounter-card.kind-domandona { border-left-color: #4f9d8e; }
+.domandona-ticket-count { font-size: 13px; font-weight: 800; color: var(--sea-dark); }
+.domandona-hint {
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: rgba(79,157,142,.1);
+  font-size: 15px !important;
+}
+.domandona-hint strong { display: block; color: #2f6e61; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 2px; }
+.domandona-answer { font-size: 13px; color: rgba(23,32,42,.6); }
+.domandona-answer summary { cursor: pointer; font-weight: 700; color: var(--sea-dark); }
+.domandona-answer p { margin: 6px 0 0; font-size: 14px !important; }
+.encounter-choice.is-good { border-color: var(--green); background: rgba(63,125,88,.08); }
+.encounter-choice.is-good:hover { background: rgba(63,125,88,.16); }
 
 /* --- Barbabisso, il boss --- */
 .foe-portrait.is-boss img { aspect-ratio: 3 / 4; }

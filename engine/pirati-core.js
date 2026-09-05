@@ -36,6 +36,8 @@ window.PIRATI = (function () {
     raidPairById: new Map(),
     belardaLoot: [],          // premi quando esplode la casa di Nonna Belarda
     belardaLootById: new Map(),
+    domandonaQuestions: [],   // domande della Nave Domandona
+    domandonaQuestionById: new Map(),
     map: null,               // { id, start, nodes:{}, legs:{}, routes:{} }
     gradeLadder: [
       { grade: 1, questsNeeded: 0, name: "Mozzi Coraggiosi" },
@@ -392,6 +394,32 @@ window.PIRATI = (function () {
     });
   }
 
+  /* ---------- La Nave Domandona ------------------------------------------ */
+
+  function registerDomandonaQuestions(list) {
+    if (!Array.isArray(list)) return warn("registerDomandonaQuestions: serve un array.");
+    list.forEach((q, index) => {
+      const where = `Nave Domandona #${index + 1}`;
+      if (!q || typeof q !== "object" || typeof q.id !== "string" || !q.id)
+        return warn(`${where}: manca 'id'.`);
+      if (state.domandonaQuestionById.has(q.id)) return warn(`Nave Domandona: domanda duplicata "${q.id}".`);
+      if (q.level !== "facile" && q.level !== "avanzato")
+        return warn(`${where}: 'level' deve essere "facile" o "avanzato".`);
+      if (typeof q.domanda !== "string" || !q.domanda) return warn(`${where}: manca 'domanda'.`);
+      if (typeof q.risposta !== "string" || !q.risposta) return warn(`${where}: manca 'risposta'.`);
+      if (!Array.isArray(q.indizi) || q.indizi.length < 2 || q.indizi.some((h) => typeof h !== "string" || !h))
+        return warn(`${where}: 'indizi' deve essere un array di almeno 2 testi, dal più vago al più chiaro.`);
+      const rewards = normalizeRaidRewards(q.rewards, where);
+      if (!rewards) return;
+      const clean = {
+        id: q.id, level: q.level, categoria: q.categoria || "",
+        domanda: q.domanda, risposta: q.risposta, indizi: q.indizi.slice(), rewards
+      };
+      state.domandonaQuestions.push(clean);
+      state.domandonaQuestionById.set(clean.id, clean);
+    });
+  }
+
   /* ---------- bestiario: nemici e boss --------------------------------- */
 
   function registerEnemies(list) {
@@ -476,7 +504,7 @@ window.PIRATI = (function () {
 
   /* ---------- mappa dell'arcipelago ----------------------------------- */
 
-  const SPACE_TYPES = ["mare", "costa", "evento", "mostro", "assalto", "razzia", "tesoro", "quest", "sbarco", "porto"];
+  const SPACE_TYPES = ["mare", "costa", "evento", "mostro", "assalto", "razzia", "tesoro", "quest", "sbarco", "porto", "domandona"];
 
   function registerMap(map) {
     if (!map || typeof map !== "object") return warn("registerMap: mappa non valida.");
@@ -580,6 +608,7 @@ window.PIRATI = (function () {
       `Mappa: ${state.map ? Object.keys(state.map.nodes).length + " nodi, " + Object.keys(state.map.legs).length + " tratte" : "nessuna"}`,
       `Coppie di saccheggio: ${state.raidPairs.length}`,
       `Premi di Nonna Belarda: ${state.belardaLoot.length}`,
+      `Domande della Nave Domandona: ${state.domandonaQuestions.length}`,
       `Avvisi: ${state.problems.length}`
     ];
     console.log("%c[PIRATI] " + lines.join("  |  "), "font-weight:bold");
@@ -594,6 +623,7 @@ window.PIRATI = (function () {
     registerPowers,
     registerRaidPairs,
     registerBelardaLoot,
+    registerDomandonaQuestions,
     registerEnemies,
     registerEvents,
     registerWords,
@@ -606,6 +636,8 @@ window.PIRATI = (function () {
     raidPair: (id) => state.raidPairById.get(id) || null,
     get belardaLoot() { return state.belardaLoot; },
     belardaReward: (id) => state.belardaLootById.get(id) || null,
+    get domandonaQuestions() { return state.domandonaQuestions; },
+    domandonaQuestion: (id) => state.domandonaQuestionById.get(id) || null,
     get enemies() { return state.enemies; },
     get bosses() { return state.bosses; },
     get boss() { return state.bosses[0] || null; },

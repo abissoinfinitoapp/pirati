@@ -285,22 +285,29 @@ const TUTORIAL_STEPS = [
     tip: "Fate fare la conversione a voce alta: «1.000 kg fanno una tonnellata, quindi ce ne mancano ancora tante». È un modo divertente per far maneggiare ai bambini i numeri grandi e le unità di peso, non solo le monete."
   },
   {
+    icon: "🎫",
+    kicker: "Passo 8 · La Nave Domandona",
+    title: "Un biglietto, una domanda, tanti milioni",
+    text: "Ogni volta che la ciurma completa un'avventura riceve un biglietto (li conti nella barra in alto sulla Mappa). Ogni tanto, navigando, si incontra la Nave Domandona: se avete un biglietto potete usarlo per tentare una domanda. Tu leggi la domanda e il primo indizio, i bambini rispondono a voce, tu giudici «giusta» o «sbagliata» (la risposta per te è nascosta in un pieghevole). Se sbagliano non si perde niente: la stessa domanda tornerà con un indizio più chiaro. Se azzeccano, vincono un premio enorme in monete.",
+    tip: "Nel menu puoi scegliere le domande «6-8 anni» o «9-10 anni» con lo stesso interruttore del testo delle avventure (facile / avanzato). Tieni il biglietto se la ciurma non è sicura: la nave ripassa."
+  },
+  {
     icon: "📖",
-    kicker: "Passo 8 · L'avventura guidata",
+    kicker: "Passo 9 · L'avventura guidata",
     title: "Una scena per volta",
     text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda (con spunti pronti e un «se nessuno parte»), 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
     tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Gli spunti servono a te, non ai bambini: usali solo se serve."
   },
   {
     icon: "🎲",
-    kicker: "Passo 9 · Il Destino e i dadi",
+    kicker: "Passo 10 · Il Destino e i dadi",
     title: "Fallire vuol dire andare avanti diversi",
     text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
     tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
   },
   {
     icon: "🏆",
-    kicker: "Passo 10 · Come cresce la ciurma",
+    kicker: "Passo 11 · Come cresce la ciurma",
     title: "Carte, Potenza, Gradi",
     text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte finiscono nel Baule dei Poteri (Tesoro): durante una prova puoi giocarne una — toccala per ingrandirla, leggila, poi «Gioca». Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
     tip: "Alla schermata dei premi leggi ad alta voce i numeri che salgono: monete, Potenza, Grado. È il momento che i bambini aspettano."
@@ -315,6 +322,7 @@ const QUEST_ISLANDS = PIRATI.islands;
 const ALL_QUESTS = PIRATI.quests;
 const RAID_CORE = window.PIRATI_SACCH_CORE;
 const BELARDA_CORE = window.PIRATI_BELARDA_CORE;
+const DOMANDONA_CORE = window.PIRATI_DOMANDONA_CORE;
 const BELARDA_THRESHOLD = 12000; // kg (12 tonnellate) per far esplodere una casa
 const RAID_RETURN_VIEWS = Object.freeze({ map: "mappa", story: "quests" });
 
@@ -376,6 +384,7 @@ const defaultState = {
   },
   raid: RAID_CORE.withRaidDefaults({}),
   belarda: BELARDA_CORE.withBelardaDefaults({}),
+  domandona: DOMANDONA_CORE.withDomandonaDefaults({}),
   log: []
 };
 
@@ -522,6 +531,13 @@ function withDefaults(saved) {
     const rewardOk = r && typeof r === "object" && typeof r.islandId === "string" && typeof r.text === "string";
     merged.belarda.lastReveal = rewardOk ? r : null;
   }
+
+  merged.domandona = DOMANDONA_CORE.withDomandonaDefaults(saved && saved.domandona);
+  if (merged.domandona.pending && !PIRATI.domandonaQuestion(merged.domandona.pending.questionId)) {
+    merged.domandona.pending = null; // domanda rimossa dal catalogo: si azzera in sicurezza
+  }
+  merged.domandona.solvedIds = merged.domandona.solvedIds.filter((id) => PIRATI.domandonaQuestion(id));
+  merged.domandona.recentIds = merged.domandona.recentIds.filter((id) => PIRATI.domandonaQuestion(id));
 
   return merged;
 }
@@ -1579,9 +1595,10 @@ const SPACE_INFO = {
   razzia:  { icon: "🪙", label: "Razzia" },
   tesoro:  { icon: "💎", label: "Tesoro" },
   quest:   { icon: "⭐", label: "Avventura" },
-  porto:   { icon: "⚓", label: "Porto" }
+  porto:   { icon: "⚓", label: "Porto" },
+  domandona: { icon: "❓", label: "Nave Domandona" }
 };
-const SPECIAL_SPACES = ["evento", "mostro", "assalto", "razzia", "tesoro", "quest"];
+const SPECIAL_SPACES = ["evento", "mostro", "assalto", "razzia", "tesoro", "quest", "domandona"];
 
 function voyage() { return state.voyage; }
 
@@ -2005,6 +2022,7 @@ function sceneEncounter(kind, scope, baseTarget) {
 
 function buildEncounter(type, islandId) {
   const danger = state.session.danger;
+  if (type === "domandona") return buildDomandonaEncounter();
   if (type === "quest") {
     const questId = nextIslandQuestId(islandId);
     const quest = PIRATI.quest(questId);
@@ -2040,6 +2058,89 @@ function buildEncounter(type, islandId) {
   if (scene) return scene;
   return { kind: "evento", roll: { stat: "fortuna", target, act: "Prova libera scelta dal Master" },
     prompt: "Succede qualcosa lungo la rotta. Il Master descrive la scena." };
+}
+
+/* --- La Nave Domandona --------------------------------------------------- */
+
+function domandonaLevel() {
+  return state.crew.readingLevel === "avanzato" ? "avanzato" : "facile";
+}
+
+function buildDomandonaEncounter() {
+  const hasTicket = (state.domandona.tickets || 0) > 0;
+  return {
+    kind: "domandona",
+    phase: "arrivo",
+    hasTicket,
+    prompt: hasTicket
+      ? "La Nave Domandona incrocia la vostra rotta: un vecchio veliero coperto di punti interrogativi dipinti a mano. Se avete un biglietto, potete provare a rispondere alla sua domanda."
+      : "La Nave Domandona incrocia la vostra rotta, ma senza un biglietto in mano la ciurma non riesce nemmeno ad avvicinarsi: sparisce di nuovo tra le onde, in attesa di un'altra avventura completata."
+  };
+}
+
+function domandonaUseTicket() {
+  const v = voyage();
+  const enc = v.pending;
+  if (!enc || enc.kind !== "domandona" || enc.phase !== "arrivo" || (state.domandona.tickets || 0) <= 0) return;
+
+  let pending = state.domandona.pending;
+  if (!pending) {
+    const q = DOMANDONA_CORE.pickQuestion(PIRATI.domandonaQuestions, domandonaLevel(), state.domandona.solvedIds, state.domandona.recentIds);
+    if (!q) {
+      v.message = "La Nave Domandona non ha più domande pronte per oggi: strano davvero. Tirate per proseguire.";
+      v.pending = null;
+      saveState();
+      renderMap();
+      return;
+    }
+    pending = { questionId: q.id, hintLevel: 0 };
+    state.domandona.pending = pending;
+  }
+
+  state.domandona.tickets -= 1;
+  enc.phase = "domanda";
+  enc.question = PIRATI.domandonaQuestion(pending.questionId);
+  enc.hintLevel = pending.hintLevel;
+  sfx("quest");
+  saveState();
+  renderMap();
+}
+
+function domandonaGiusta() {
+  const v = voyage();
+  const enc = v.pending;
+  if (!enc || enc.kind !== "domandona" || enc.phase !== "domanda") return;
+  const question = enc.question;
+  const gained = [];
+  (question.rewards || []).forEach((reward) => {
+    if (reward.type === "coins") { state.crew.coins += reward.amount; gained.push(`${fmtCoins(reward.amount)} monete`); }
+    else if (reward.type === "fame") { state.fame += reward.amount; gained.push(`${reward.amount} Fama`); }
+  });
+  state.domandona.solvedIds = (state.domandona.solvedIds || []).concat(question.id);
+  state.domandona.recentIds = (state.domandona.recentIds || []).concat(question.id).slice(-2);
+  state.domandona.pending = null;
+  sfx("trionfo");
+  pushLog(`Nave Domandona: «${question.domanda}» — risposta giusta! Premi: ${gained.join(", ") || "—"}.`);
+  v.message = `🎉 Risposta giusta! La Nave Domandona festeggia e regala ${gained.join(", ") || "un premio"}. Tirate per proseguire.`;
+  v.pending = null;
+  refreshGrade();
+  saveState();
+  renderMap();
+}
+
+function domandonaSbagliata() {
+  const v = voyage();
+  const enc = v.pending;
+  if (!enc || enc.kind !== "domandona" || enc.phase !== "domanda") return;
+  const question = enc.question;
+  const nextHint = DOMANDONA_CORE.bumpHint(enc.hintLevel, question.indizi.length - 1);
+  state.domandona.pending = { questionId: question.id, hintLevel: nextHint };
+  sfx("fallimento");
+  pushLog(`Nave Domandona: «${question.domanda}» — risposta sbagliata, niente premio. Al prossimo incontro un indizio più chiaro.`);
+  v.message = "Risposta sbagliata, ma niente paura: nessuna penalità. La Nave Domandona tornerà a incrociarvi con un indizio più chiaro. Tirate per proseguire.";
+  v.pending = null;
+  saveState();
+  renderMap();
 }
 
 function eventStat(eventType) {
@@ -2399,6 +2500,7 @@ function renderMap() {
   if ($("#map-potenza-value")) {
     $("#map-potenza-value").textContent = fmtPotenza(state.players.reduce((sum, p) => sum + playerPower(p), 0));
   }
+  if ($("#map-domandona-value")) $("#map-domandona-value").textContent = state.domandona.tickets;
   if ($("#map-week")) {
     const cal = state.schoolCalendar || { week: 1, weekday: 1 };
     $("#map-week").textContent = `Settimana ${cal.week} · ${WEEKDAYS[(cal.weekday - 1) % 5]}`;
@@ -2541,6 +2643,7 @@ function mapEncounterMarkup(enc) {
     </div>`;
   }
   if (enc.kind === "boss") return bossEncounterMarkup(enc);
+  if (enc.kind === "domandona") return domandonaEncounterMarkup(enc);
   const scene = enc.scene;
   const info = SPACE_INFO[enc.kind] || { icon: "❈", label: enc.kind };
   const tag = `<span class="map-encounter-tag">${info.icon} ${scene ? scene.title : info.label}</span>`;
@@ -2584,6 +2687,35 @@ function mapEncounterMarkup(enc) {
       ${readAloud}
       ${action}
       <button type="button" class="secondary-button" data-map-skip>Passa oltre (nessun bottino)</button>
+    </div>
+  </div>`;
+}
+
+function domandonaEncounterMarkup(enc) {
+  if (enc.phase === "domanda") {
+    const q = enc.question;
+    const hintIndex = Math.min(enc.hintLevel, q.indizi.length - 1);
+    return `<div class="map-encounter-card kind-domandona">
+      <div class="map-encounter-body">
+        <span class="map-encounter-tag">❓ Nave Domandona</span>
+        <p class="encounter-read">“${q.domanda}”</p>
+        <p class="domandona-hint"><strong>Indizio ${hintIndex + 1} di ${q.indizi.length}</strong> ${q.indizi[hintIndex]}</p>
+        <details class="domandona-answer"><summary>Mostra la risposta (solo per il Master)</summary><p>${q.risposta}</p></details>
+        <p class="map-console-label">Cosa ha risposto la ciurma?</p>
+        <div class="encounter-choices">
+          <button type="button" class="encounter-choice is-good" data-domandona-giusta>✔ Risposta giusta!</button>
+          <button type="button" class="encounter-choice" data-domandona-sbagliata>✘ Risposta sbagliata</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<div class="map-encounter-card kind-domandona">
+    <div class="map-encounter-body">
+      <span class="map-encounter-tag">❓ Nave Domandona</span>
+      <p class="encounter-read">“${enc.prompt}”</p>
+      ${enc.hasTicket ? `<p class="domandona-ticket-count">🎫 Biglietti in mano: ${state.domandona.tickets}</p>
+        <button type="button" class="primary-button" data-domandona-use-ticket>Usa un biglietto e rispondi</button>` : ""}
+      <button type="button" class="secondary-button" data-map-skip>${enc.hasTicket ? "Non adesso (tieni il biglietto)" : "Passa oltre"}</button>
     </div>
   </div>`;
 }
@@ -4136,8 +4268,9 @@ function completeQuest(questId, opts) {
   const gained = grantQuestRewards(quest);
   const questJunk = 1200;
   awardJunk(questJunk);
+  state.domandona.tickets = (state.domandona.tickets || 0) + 1;
   if (!opts.silent) sfx("trionfo");
-  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati. +${fmtKg(questJunk)} per Nonna Belarda.`);
+  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati. +${fmtKg(questJunk)} per Nonna Belarda. +1 biglietto della Nave Domandona (ora ${state.domandona.tickets}).`);
   const gradeUp = refreshGrade();
   if (gradeUp) { if (!opts.silent) sfx("grado"); pushLog(`La ciurma sale al Grado ${gradeUp.grade}: ${gradeUp.name}! Nuovi poteri sbloccati.`); }
   checkLegendaryGrants();
@@ -4615,6 +4748,9 @@ function bindEvents() {
     }
     if (event.target.closest("[data-map-skip]")) skipMapEncounter();
     if (event.target.closest("[data-map-open-quest]")) openMapQuest();
+    if (event.target.closest("[data-domandona-use-ticket]")) domandonaUseTicket();
+    if (event.target.closest("[data-domandona-giusta]")) domandonaGiusta();
+    if (event.target.closest("[data-domandona-sbagliata]")) domandonaSbagliata();
     const eventChoice = event.target.closest("[data-event-choice]");
     if (eventChoice) resolveEventChoice(Number(eventChoice.dataset.eventChoice));
     const playCardBtn = event.target.closest("[data-play-card]");

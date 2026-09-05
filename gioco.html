@@ -66,6 +66,10 @@
               <span>💪 Potenza ciurma</span>
               <strong id="map-potenza-value">0</strong>
             </button>
+            <div class="map-domandona-badge" title="Biglietti della Nave Domandona: uno per ogni avventura completata">
+              <span>🎫 Biglietti</span>
+              <strong id="map-domandona-value">0</strong>
+            </div>
             <div class="map-danger">
               <span>Pericolo</span>
               <strong id="map-danger-value">0</strong>
@@ -309,6 +313,11 @@
           <h3>La casa di Nonna Belarda</h3>
           <p>Quasi ogni azione (quest, saccheggio, Pesce Crostone, incontro) regala anche qualche <strong>kg di cianfrusaglie</strong>. Quando sbarcate su un'isola, li consegnate tutti alla casa di Nonna Belarda lì. Servono <strong>12.000 kg (12 tonnellate)</strong> per far esplodere una casa: allora la ciurma vince un premio e lei la ricostruisce vuota, pronta a riempirsi ancora.</p>
         </div>
+        <div class="dice-rule-card">
+          <h3>La Nave Domandona</h3>
+          <p>Ogni avventura completata dà <strong>1 biglietto</strong>. Quando in mare incontrate la Nave Domandona, con un biglietto potete tentare la sua domanda: il Master legge domanda e primo indizio, i bambini rispondono a voce, il Master giudica.</p>
+          <p><strong>Giusta:</strong> premio enorme in monete. <strong>Sbagliata:</strong> nessuna penalità, la stessa domanda ritorna con un indizio più chiaro. Domande «6-8 anni» o «9-10 anni» a scelta del Master.</p>
+        </div>
       </article>
 
       <article class="print-sheet">
@@ -411,12 +420,14 @@
 <script src="engine/pirati-core.js"></script>
 <script src="engine/saccheggi-core.js"></script>
 <script src="engine/belarda-core.js"></script>
+<script src="engine/domandona-core.js"></script>
 <script src="engine/sfx.js"></script>
 
 <!-- Cataloghi condivisi: premi, poteri, bestiario. -->
 <script src="catalog/premi.js"></script>
 <script src="catalog/saccheggi.js"></script>
 <script src="catalog/belarda.js"></script>
+<script src="catalog/domandona.js"></script>
 <script src="catalog/poteri.js"></script>
 <script src="catalog/nemici.js"></script>
 <script src="catalog/eventi.js"></script>

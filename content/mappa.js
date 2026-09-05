@@ -13,6 +13,7 @@
      razzia - relitto / accampamento da saccheggiare: prova di Astuzia, si guadagna
      tesoro - forziere: prova di Fortuna, si guadagna bottino
      quest  - avventura dell'isola: apre la scheda quest completa
+     domandona - la Nave Domandona: con un biglietto si tenta una domanda
    ========================================================================== */
 
 PIRATI.registerMap({
@@ -45,21 +46,21 @@ PIRATI.registerMap({
      le caselle vengono lette in ordine inverso. */
   legs: [
     /* raggi: dal Porto centrale a ogni isola */
-    { id: "porto-rovine",    from: "porto", to: "rovine",    spaces: ["mare", "evento", "mare", "mostro", "mare", "tesoro"] },
+    { id: "porto-rovine",    from: "porto", to: "rovine",    spaces: ["domandona", "evento", "mare", "mostro", "mare", "tesoro"] },
     { id: "porto-vulcano",   from: "porto", to: "vulcano",   spaces: ["mare", "mare", "razzia", "mare", "evento", "mare"] },
-    { id: "porto-corallo",   from: "porto", to: "corallo",   spaces: ["mare", "mostro", "mare", "mare", "tesoro", "mare"] },
+    { id: "porto-corallo",   from: "porto", to: "corallo",   spaces: ["mare", "mostro", "mare", "domandona", "tesoro", "mare"] },
     { id: "porto-palude",    from: "porto", to: "palude",    spaces: ["mare", "evento", "mare", "assalto", "mare", "mare"] },
-    { id: "porto-grotta",    from: "porto", to: "grotta",    spaces: ["mare", "mare", "tesoro", "mare", "mostro", "mare"] },
+    { id: "porto-grotta",    from: "porto", to: "grotta",    spaces: ["mare", "mare", "tesoro", "mare", "mostro", "domandona"] },
     { id: "porto-cascata",   from: "porto", to: "cascata",   spaces: ["mare", "razzia", "mare", "mare", "evento", "mare"] },
-    { id: "porto-scogliere", from: "porto", to: "scogliere", spaces: ["mare", "mare", "evento", "mostro", "mare", "mare"] },
+    { id: "porto-scogliere", from: "porto", to: "scogliere", spaces: ["domandona", "mare", "evento", "mostro", "mare", "mare"] },
     { id: "porto-tesoro",    from: "porto", to: "tesoro",    spaces: ["mare", "tesoro", "mare", "assalto", "mare", "evento"] },
 
     /* anello: da un'isola alla successiva senza tornare al Porto */
     { id: "rovine-vulcano",     from: "rovine",    to: "vulcano",   spaces: ["mare", "mostro", "mare", "evento"] },
-    { id: "vulcano-corallo",    from: "vulcano",   to: "corallo",   spaces: ["mare", "mare", "tesoro", "mare"] },
+    { id: "vulcano-corallo",    from: "vulcano",   to: "corallo",   spaces: ["domandona", "mare", "tesoro", "mare"] },
     { id: "corallo-palude",     from: "corallo",   to: "palude",    spaces: ["mare", "evento", "mare", "mostro"] },
     { id: "palude-grotta",      from: "palude",    to: "grotta",    spaces: ["mare", "razzia", "mare", "mare"] },
-    { id: "grotta-cascata",     from: "grotta",    to: "cascata",   spaces: ["mare", "mare", "evento", "tesoro"] },
+    { id: "grotta-cascata",     from: "grotta",    to: "cascata",   spaces: ["mare", "domandona", "evento", "tesoro"] },
     { id: "cascata-scogliere",  from: "cascata",   to: "scogliere", spaces: ["mare", "mostro", "mare", "mare"] },
     { id: "scogliere-tesoro",   from: "scogliere", to: "tesoro",    spaces: ["mare", "evento", "mare", "razzia"] },
     { id: "tesoro-rovine",      from: "tesoro",    to: "rovine",    spaces: ["mare", "mare", "mostro", "mare"] }
