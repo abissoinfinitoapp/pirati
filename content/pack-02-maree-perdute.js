@@ -2183,6 +2183,497 @@ PIRATI.registerPack({
           close_button: "⛵ Torna alla rotta"
         }
       }
+    },
+
+    /* ---- LAGUNA DELLE CASCATE ------------------------------------- */
+    {
+      id: "mare-che-ride", island: "cascata", order: 1,
+      title: "Il Mare che Ride", kind: "Commedia magica",
+      difficulty: 6, minutes: 50,
+      readAloud: "Nella Laguna delle Cascate l'acqua ride. Sul serio: fa glu-glu-ah-ah e non smette mai. Gli abitanti, invece, non ci riescono più: aprono la bocca per ridere e non esce niente. Le loro risate sono finite tutte in acqua.",
+      readKids: {
+        facile: [
+          "L'acqua della laguna ride.",
+          "Gli abitanti non riescono più a ridere.",
+          "Le risate sono cadute in acqua.",
+          "Bisogna ripescarle."
+        ],
+        avanzato: [
+          "La laguna gorgoglia di risate: sono nell'acqua, migliaia, tutte insieme.",
+          "Gli abitanti provano a ridere e non ci riescono: fanno solo aria.",
+          "Ogni risata nell'acqua è diversa e appartiene a qualcuno.",
+          "Bisogna ripescarle e ridarle ai proprietari giusti."
+        ]
+      },
+      goal: "Riportare le risate ai loro proprietari.",
+      beats: [
+        "Le risate galleggiano come bollicine e scivolano via se le afferri di forza.",
+        "Ogni risata ha un suono diverso: si può capire di chi è.",
+        "Sul fondo resta una bottiglia vuota con un'etichetta."
+      ],
+      choices: [
+        { label: "Far ridere di nuovo gli abitanti", stat: "fortuna", target: 6, result: "Fate i buffoni finché a qualcuno scappa una risata vera: e quella richiama la sua, dall'acqua." },
+        { label: "Pescare le risate una per una", stat: "astuzia", target: 6, result: "Con retini e pazienza tirate su le risate e ascoltate quale suono ha ognuna." }
+      ],
+      groupChallenge: "Ogni pirata inventa la risata più strana che riesce (risata da gabbiano, risata-motore, risata senza aprire la bocca) e la ciurma indovina di chi è.",
+      rewards: [
+        { type: "loot", id: "bolla-di-risata" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "ridai-le-risate" },
+        { type: "power", id: "risata-contagiosa" }
+      ],
+      growth: "Chi fa ridere per primo un abitante segna 1 crescita Fortuna.",
+      fail: "Ridate una risata alla persona sbagliata e scoppia una gara di risate scambiate, tutte fuori posto: Pericolo +1, ma nel caos vi accorgete che sul fondo c'è una bottiglia.",
+      escape: "Ridere così forte da farvi trasportare a valle dalla corrente della laguna, fino alla costa: prova di Fortuna 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Un pescatore serissimo vi mostra la sua risata, che gli galleggia davanti nell'acqua: un «ih-ih-ih» timido dentro una bolla. «Quella è mia», dice, senza sorridere. «La riconosco. Ma se allungo la mano, scappa».",
+              ask: "Come si riconosce la risata di qualcuno? Provate a descrivere quella di un amico.",
+              hints: [
+                "Dal suono: acuta, roca, a scatti, silenziosa.",
+                "Da quando arriva: subito o dopo un secondo.",
+                "Da cosa la fa partire.",
+                "Da come fa muovere la faccia."
+              ],
+              rescue: "Una risata-bolla vi passa accanto facendo «BWAH-ah-ah» e tre pesci si mettono a ridere di riflesso.",
+              masterTip: "Fai imitare a due bambini la risata di qualcuno che conoscono (senza dire chi) e fatela indovinare."
+            },
+            interaction: "Nessun tiro: si ascoltano le risate.",
+            outcome: {
+              title: "Le risate si fanno vicine",
+              text: "Parlando delle risate, quelle nell'acqua si avvicinano curiose alla riva. Non scappano più: aspettano che qualcuno le chiami per nome, cioè col suono giusto.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete provare a far ridere di nuovo gli abitanti: se a uno scappa una risata vera, quella richiama la sua dall'acqua. Oppure potete pescare le risate a una a una, ascoltarle e riconsegnarle.",
+              ask: "Li facciamo ridere, o peschiamo le risate una per una?",
+              hints: [
+                "Far ridere è veloce e allegro, ma non tutti ridono facilmente.",
+                "Pescare è preciso, ma lungo: le risate sono tante.",
+                "Un gruppo pesca, l'altro fa i buffoni."
+              ],
+              rescue: "Il pescatore serissimo, senza volerlo, fa un mezzo sorriso: la sua risata nell'acqua vibra."
+            },
+            choices: [
+              {
+                id: "far-ridere",
+                label: "🤡 Facciamo ridere gli abitanti",
+                reaction_title: "La ciurma apre lo spettacolo",
+                reaction: "Cominciate con facce buffe, capriole finte, battute pessime. Gli abitanti resistono, seri seri. Ma è una battaglia che potete vincere.",
+                next: "far-ridere"
+              },
+              {
+                id: "pescare",
+                label: "🎣 Peschiamo le risate a una a una",
+                reaction_title: "La ciurma tira fuori i retini",
+                reaction: "Vi disponete lungo la riva con retini e barattoli. Le risate si lasciano prendere piano, e ognuna, appena presa, rifà il suo suono.",
+                next: "pescare"
+              }
+            ]
+          },
+          {
+            scene_id: "far-ridere",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Avete quasi rotto il ghiaccio. Il fornaio ha sbuffato dal naso, la maestra ha nascosto un sorriso. Ne serve una vera, grossa, di quelle che partono da sole: quella spalancherà la porta a tutte le altre.",
+              ask: "Qual è la cosa più buffa che potete fare TUTTI INSIEME per strappare una risata vera?",
+              hints: [
+                "Cadere tutti nello stesso momento, fingendo.",
+                "Una gara di facce brutte.",
+                "Imitare il pescatore serissimo che ride.",
+                "Scivolare a catena su una buccia (finta)."
+              ],
+              rescue: "Un bambino del villaggio scoppia a ridere per conto suo e si tappa la bocca, imbarazzato: siete vicini.",
+              masterTip: "Fate DAVVERO la scenetta buffa scelta dai bambini, tutti insieme."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 55, dice: 45 },
+              destiny_screen: {
+                title: "✦ Il Destino aspetta la risata",
+                button: "Affidiamoci al Destino",
+                group_result: "La vostra scenetta funziona: parte una risata enorme e la laguna gliela restituisce tutta.",
+                dice_result: "Gli abitanti trattengono ancora: serve una prova di Fortuna perché scappi loro la risata giusta."
+              },
+              dice: { stat: "fortuna", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ RIDONO TUTTI DI COLPO",
+                text: "La risata parte e si spande. Dall'acqua, di rimando, escono in volo centinaia di risate-bolle che tornano ognuna alla sua bocca. Per un minuto la laguna è tutta un boato allegro.",
+                audio: "win-event",
+                next: "bottiglia-vuota"
+              },
+              fail_forward: {
+                title: "😆 RISATE SCAMBIATE",
+                text: "Le risate escono di scatto e finiscono nelle bocche sbagliate: il fabbro ride come un topolino, la bimba con un vocione da gigante. Che caos, Pericolo +1. Ma cercando quella giusta trovate, sul fondo, una bottiglia.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "bottiglia-vuota"
+              }
+            }
+          },
+          {
+            scene_id: "pescare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Avete un secchio pieno di risate. Adesso il difficile: ridare a ognuno la sua. Se sbagliate, la risata non attacca e torna in acqua. Bisogna ascoltare bene e abbinare.",
+              ask: "Come fate a essere sicuri che questa risata è proprio di quella persona?",
+              hints: [
+                "Farla sentire alla persona e guardare se le si illuminano gli occhi.",
+                "Chiederle di ridere 'a vuoto' e confrontare il ritmo.",
+                "Chiedere agli amici che risata fa di solito.",
+                "Provare, e se torna in acqua riprovare con un'altra."
+              ],
+              rescue: "Una risata pescata rifà il suo verso e un abitante, sentendola, si porta la mano al petto: «Quella... è la mia».",
+              masterTip: "Fai abbinare a due bambini una risata (che imiti tu) alla persona giusta di una lista."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ OGNI RISATA A CASA SUA",
+                text: "Una per una, le risate tornano ai proprietari. Appena la sente, ognuno la riconosce e sorride di sollievo. Alla fine la laguna è di nuovo acqua normale — silenziosa, tranquilla — e il villaggio ride di nuovo da solo.",
+                audio: "win-event",
+                next: "bottiglia-vuota"
+              },
+              fail_forward: {
+                title: "🪣 SECCHIO ROVESCIATO",
+                text: "Inciampate e il secchio delle risate si rovescia: metà scappano di nuovo in acqua, Pericolo +1. Rincorrendole con i retini, però, ne raschiate una dal fondo insieme a una vecchia bottiglia.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "bottiglia-vuota"
+              }
+            }
+          },
+          {
+            scene_id: "bottiglia-vuota",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Sul fondo della laguna c'è una bottiglia di vetro spesso, tappata, ma vuota. Sull'etichetta, con una calligrafia ordinata: «RISATE». E sotto, più piccolo: «Ne servono tante. Da sole non bastano. Bisogna capire cosa le fa partire».",
+              ask: "Perché qualcuno ha provato a chiudere le risate in una bottiglia?",
+              hints: [
+                "Voleva portarsele via, come le ombre e i nomi.",
+                "Ma una risata in bottiglia si spegne: non ride più.",
+                "È la stessa nave che raccoglie le cose delle isole.",
+                "Forse cercava qualcosa che lo facesse ridere di nuovo."
+              ],
+              rescue: "La bottiglia, accanto alla Stella della Ciurma, per un attimo si riempie di una risata che nessuno riesce a trattenere."
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio nella bottiglia",
+              text: "Stappate la bottiglia: dentro non c'è niente, solo un profumo di risata vecchia. Sull'etichetta, dietro, è disegnata la nave. Qualcuno ha provato a rubare le risate di un'isola intera — e ha scoperto che in bottiglia non ridono.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "La Laguna delle Cascate torna a essere un posto dove si ride perché si è insieme, non perché lo fa l'acqua. Il pescatore serissimo vi regala una bollicina chiusa in un guscio: se la aprite in un momento difficile, libera una risata contagiosa.",
+              masterTip: "Chiudi con la domanda: qual è una cosa che fa ridere tutta la vostra ciurma?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "Il Mare che Ride",
+          final_read: "Le risate tornano alle loro bocche. La Bolla di Risata resta alla ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
+    },
+
+    {
+      id: "cascata-delle-decisioni", island: "cascata", order: 2,
+      title: "La Cascata delle Decisioni", kind: "Scelta e Destino",
+      difficulty: 6, minutes: 50,
+      readAloud: "La cascata più grande della laguna si divide in tre corsi d'acqua, e sopra ciascuno una scritta di schiuma: VELOCE, SICURO, SCONOSCIUTO. Solo uno vi porta dove volete andare. Ma nessuno — nessuno — può sapere prima quale.",
+      readKids: {
+        facile: [
+          "La cascata si divide in tre strade.",
+          "VELOCE, SICURO, SCONOSCIUTO.",
+          "Solo una porta dove volete.",
+          "Ma non si può sapere prima quale."
+        ],
+        avanzato: [
+          "Tre corsi d'acqua, tre parole di schiuma: VELOCE, SICURO, SCONOSCIUTO.",
+          "Ognuno sparisce dentro una galleria di roccia.",
+          "Uno solo vi porta a destinazione — gli altri due, chissà.",
+          "E non c'è nessun trucco per indovinare: bisogna scegliere e basta."
+        ]
+      },
+      goal: "Scegliere una strada e accettarne insieme le conseguenze.",
+      beats: [
+        "Nessuna strada è quella giusta: sono solo diverse.",
+        "Il Destino decide cosa offre e cosa complica ogni strada.",
+        "Da qualunque galleria, a un certo punto, si vede la stessa nave all'orizzonte."
+      ],
+      choices: [
+        { label: "VELOCE — arriviamo prima", stat: "fortuna", target: 6, result: "La corrente vi spara giù come uno scivolo: si arriva presto, ma senza fiato e senza aver visto niente." },
+        { label: "SICURO — niente sorprese", stat: "fortuna", target: 6, result: "Acqua bassa e calma: nessun pericolo, ma è lunga e a un certo punto sembra non finire mai." },
+        { label: "SCONOSCIUTO — vediamo cosa c'è", stat: "coraggio", target: 6, result: "Buio pesto e nessuna idea di dove porti: fa un po' paura, ma potrebbe esserci qualcosa di bello." }
+      ],
+      groupChallenge: "Prima di scegliere, decidete COME decidere: a votazione? Un pirata difende ogni strada? Vi affidate alla Stella? Provate un metodo e usatelo davvero.",
+      rewards: [
+        { type: "loot", id: "ciottolo-delle-scelte" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "strada-scelta-insieme" },
+        { type: "power", id: "tre-strade" }
+      ],
+      growth: "Chi accetta per primo una scelta della ciurma che non era la sua preferita segna 1 crescita Coraggio.",
+      fail: "La ciurma non si mette d'accordo e si divide su due strade diverse: Pericolo +1, ma da entrambe le gallerie vedete la stessa nave e vi ritrovate poco dopo.",
+      escape: "Non scegliere nessuna delle tre e risalire la cascata controcorrente fino a un sentiero laterale: prova di Coraggio 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Siete sull'orlo della cascata, i tre corsi d'acqua davanti. Un vecchio traghettatore vi guarda: «Ho portato di qua tante ciurme. Quelle che litigano su quale strada, di solito, finiscono male. Quelle che scelgono insieme, arrivano — da qualche parte».",
+              ask: "Come decidete, quando non potete sapere in anticipo qual è la scelta giusta?",
+              hints: [
+                "Fare una votazione e accettare il risultato.",
+                "Far parlare qualcuno a favore di ogni strada, poi decidere.",
+                "Scegliere quella che fa paura di meno a tutti.",
+                "Tirare a sorte, ma solo dopo esserne stati d'accordo."
+              ],
+              rescue: "Il traghettatore vi mette in mano un ciottolo tondo: «Tenetelo tutti insieme mentre decidete. Aiuta».",
+              masterTip: "Fai scegliere ai bambini UN metodo di decisione e usatelo per davvero nel prossimo bivio."
+            },
+            interaction: "Nessun tiro: si decide come decidere.",
+            outcome: {
+              title: "La ciurma sceglie il suo metodo",
+              text: "Vi accordate su come decidere. Non su cosa: su come. È già metà del lavoro. Il traghettatore annuisce: «Bene. Adesso guardate le tre strade e scegliete».",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "VELOCE è una rapida ripidissima: si arriva subito, ma è una scarica di adrenalina. SICURO è un canale d'acqua bassa: tranquillo, ma lunghissimo. SCONOSCIUTO sparisce nel buio: nessuno sa dove va.",
+              ask: "Quale strada prende la ciurma? Usate il metodo che avete scelto.",
+              hints: [
+                "VELOCE se avete fretta e non vi spaventa il brivido.",
+                "SICURO se preferite la calma e avete pazienza.",
+                "SCONOSCIUTO se siete curiosi e pronti a tutto.",
+                "Ricordatevi: nessuna è sbagliata, sono solo diverse."
+              ],
+              rescue: "Il traghettatore: «Non c'è una risposta giusta. C'è la vostra risposta»."
+            },
+            choices: [
+              {
+                id: "veloce",
+                label: "⚡ VELOCE",
+                reaction_title: "La ciurma si butta nella rapida",
+                reaction: "Vi tuffate nel corso VELOCE. L'acqua vi afferra e vi spara giù come una fionda: urla, spruzzi, il cuore in gola.",
+                next: "veloce"
+              },
+              {
+                id: "sicuro",
+                label: "🛟 SICURO",
+                reaction_title: "La ciurma sceglie l'acqua calma",
+                reaction: "Entrate nel canale SICURO. L'acqua vi arriva alle caviglie e scorre piano. Nessun pericolo. Solo un lungo, lungo cammino.",
+                next: "sicuro"
+              },
+              {
+                id: "sconosciuto",
+                label: "❔ SCONOSCIUTO",
+                reaction_title: "La ciurma entra nel buio",
+                reaction: "Prendete il corso SCONOSCIUTO. Dopo tre passi non si vede più niente. Si sente solo l'acqua e il vostro respiro. E qualcosa, in fondo, che luccica.",
+                next: "sconosciuto"
+              }
+            ]
+          },
+          {
+            scene_id: "veloce",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "La rapida vi porta giù a velocità pazzesca. Serve tenersi tutti insieme e non farsi separare dalla corrente: chi resta indietro rischia di finire in una diramazione secondaria.",
+              ask: "Come restate uniti dentro una rapida che vi sbatte da tutte le parti?",
+              hints: [
+                "Aggrapparsi ai polsi, non alle mani.",
+                "Fare una fila e tenere il ritmo di chi guida.",
+                "Gridare i nomi per sapere che ci sono tutti.",
+                "Puntare i piedi contro le rocce per rallentare insieme."
+              ],
+              rescue: "Un tronco galleggiante vi passa accanto: se lo prendete, ci potete stare aggrappati tutti.",
+              masterTip: "Il Destino qui pesa opportunità e complicazione: la scelta VELOCE non è né giusta né sbagliata."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 45, dice: 55 },
+              destiny_screen: {
+                title: "✦ Il Destino cavalca la rapida con voi",
+                button: "Affidiamoci al Destino",
+                group_result: "Restate compatti e la rapida vi deposita a valle in un lampo: siete arrivati, primi e senza fiato.",
+                dice_result: "La corrente prova a separarvi: serve una prova di Fortuna per non perdere nessuno per strada."
+              },
+              dice: { stat: "fortuna", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ ARRIVATI IN UN BATTITO",
+                text: "La rapida vi sputa in una pozza calma, tutti insieme, zuppi e ridenti. Avete guadagnato un sacco di tempo — anche se non avete visto niente del viaggio.",
+                audio: "win-event",
+                next: "stessa-nave"
+              },
+              fail_forward: {
+                title: "💦 SEPARATI PER UN TRATTO",
+                text: "La corrente vi divide in due gruppetti che finiscono in gallerie diverse: Pericolo +1. Ma da tutte e due, prima di ricongiungervi, vedete la stessa cosa all'orizzonte.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "stessa-nave"
+              }
+            }
+          },
+          {
+            scene_id: "sicuro",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Il canale SICURO è tranquillo, sì, ma non finisce mai. Dopo un'ora camminate ancora nell'acqua bassa. La noia comincia a mordere, e qualcuno vorrebbe tornare indietro a prendere un'altra strada.",
+              ask: "Come si tiene su il morale della ciurma in un cammino lungo e noioso?",
+              hints: [
+                "Cantare, contare, raccontarsi storie a turno.",
+                "Fare piccoli traguardi: «fino a quella roccia, poi si riposa».",
+                "Ricordarsi perché avete scelto SICURO.",
+                "Fare a turno a decidere una cosa buffa da fare mentre si cammina."
+              ],
+              rescue: "Sul soffitto della galleria ci sono lucciole: se le seguite, danno un ritmo al passo.",
+              masterTip: "Il Destino qui decide se la pazienza viene premiata o se la noia crea un problemino."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 60, dice: 40 },
+              destiny_screen: {
+                title: "✦ Il Destino misura la vostra pazienza",
+                button: "Affidiamoci al Destino",
+                group_result: "Tenete duro insieme, cantando: il canale si apre su una spiaggia bella come premio a chi ha aspettato.",
+                dice_result: "Qualcuno si scoraggia e vuole tornare indietro: serve una prova di Fortuna per non spezzare il gruppo."
+              },
+              dice: { stat: "fortuna", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LA CALMA HA PAGATO",
+                text: "Alla fine il canale sbuca in una laguna nascosta, tranquilla e piena di pesci colorati. Ci avete messo il doppio del tempo, ma siete arrivati senza un graffio e avete visto un posto che pochi conoscono.",
+                audio: "win-event",
+                next: "stessa-nave"
+              },
+              fail_forward: {
+                title: "🐌 QUASI INDIETRO",
+                text: "Un gruppetto si stufa e torna verso l'imbocco, e vi disperdete per un po': Pericolo +1. Ma anche da lì, guardando fuori, vedete la stessa vela lontana degli altri.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "stessa-nave"
+              }
+            }
+          },
+          {
+            scene_id: "sconosciuto",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Nel buio, quel luccichio in fondo si avvicina. Potrebbe essere un tesoro, o un pericolo, o solo cristalli. Non lo saprete finché non ci arrivate. E per arrivarci bisogna fidarsi del buio.",
+              ask: "Come si va avanti al buio, verso qualcosa che non si sa cos'è, senza farsi prendere dalla paura?",
+              hints: [
+                "Tenersi per mano e descrivere ad alta voce quello che si tocca.",
+                "Uno davanti che tasta la strada, gli altri dietro in fila.",
+                "Parlare, cantare, fare rumore: il silenzio spaventa più del buio.",
+                "Decidere in anticipo cosa fare se il luccichio è un pericolo."
+              ],
+              rescue: "Il luccichio, avvicinandosi, si divide in tanti puntini: sono lucciole d'acqua, e non fanno paura.",
+              masterTip: "Il Destino qui decide se lo SCONOSCIUTO regala una sorpresa bella o un ostacolo."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 40, dice: 60 },
+              destiny_screen: {
+                title: "✦ Il Destino accende la luce",
+                button: "Affidiamoci al Destino",
+                group_result: "Il luccichio è una grotta di cristalli che rimandano la luce della luna: un posto che nessuna ciurma aveva mai visto.",
+                dice_result: "Il passaggio si restringe e diventa scivoloso: serve una prova di Coraggio per attraversarlo tutti insieme."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LO SCONOSCIUTO ERA BELLO",
+                text: "Sbucate in una grotta di cristalli che brillano come stelle cadute. Non lo sapevate, ma questa era la strada che vi portava a destinazione — passando per un posto meraviglioso.",
+                audio: "win-event",
+                next: "stessa-nave"
+              },
+              fail_forward: {
+                title: "🕳 PASSAGGIO STRETTO",
+                text: "Il cunicolo si fa stretto e viscido e vi divide: Pericolo +1. Ma ognuno, sbucando dal suo pertugio, si affaccia sullo stesso mare e vede la stessa cosa.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "stessa-nave"
+              }
+            }
+          },
+          {
+            scene_id: "stessa-nave",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Qualunque strada abbiate preso, a un certo punto vi siete affacciati sul mare aperto. E tutti, dalla vostra galleria, avete visto la stessa cosa: una nave dalle vele stranissime che attraversava l'orizzonte, lenta, senza fare rumore.",
+              ask: "Cosa vuol dire che da tutte e tre le strade si vede la stessa nave?",
+              hints: [
+                "Che la nave è vicina, e va da qualche parte di preciso.",
+                "Che il vostro viaggio, comunque scelto, vi sta portando verso di lei.",
+                "Che è la stessa delle ombre, dei nomi, delle risate.",
+                "Che presto la incontrerete davvero."
+              ],
+              rescue: "La Stella della Ciurma, nel cielo, sembra puntare esattamente verso la vela lontana."
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio all'orizzonte",
+              text: "La nave sparisce dietro un promontorio. Ma adesso lo sapete: tutte le strade, prima o poi, vi porteranno a lei. Il traghettatore, raggiungendovi, mormora: «Anche io l'ho vista. Ogni ciurma la vede, quando è pronta».",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Siete arrivati. Per una strada o per l'altra, con più o meno graffi, tutti insieme. Il traghettatore vi lascia tenere il ciottolo tondo: «Serve a decidere insieme. Adesso sapete usarlo».",
+              masterTip: "Chiudi con la domanda: una buona decisione può avere lo stesso una conseguenza sfortunata?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "La Cascata delle Decisioni",
+          final_read: "La ciurma ha scelto insieme e insieme è arrivata. Il Ciottolo delle Scelte resta a tutti.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
     }
 
   ]

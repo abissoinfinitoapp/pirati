@@ -45,7 +45,9 @@ PIRATI.registerRewards({
     { id: "taccuino-dei-nomi",         name: "Taccuino dei Nomi",          icon: "📓", rarity: "comune", text: "Ci scrivi il nome di qualcosa che l'ha perso: per un giorno quel nome torna vero." },
     { id: "lente-della-calma",         name: "Lente della Calma",          icon: "🔍", rarity: "raro",   text: "Guardata attraverso, una cosa spaventosa mostra com'è davvero, senza la paura addosso." },
     { id: "boccetta-di-colore",        name: "Boccetta di Colore",         icon: "🎨", rarity: "comune", text: "Versata su qualcosa di grigio o spento, gli ridà un colore vivo per una scena." },
-    { id: "coperta-presentazioni",     name: "Coperta delle Presentazioni", icon: "🛏️", rarity: "raro",   text: "Sotto questa coperta due che si temono possono parlarsi senza vedersi, finché non sono pronti." }
+    { id: "coperta-presentazioni",     name: "Coperta delle Presentazioni", icon: "🛏️", rarity: "raro",   text: "Sotto questa coperta due che si temono possono parlarsi senza vedersi, finché non sono pronti." },
+    { id: "bolla-di-risata",           name: "Bolla di Risata",            icon: "🫧", rarity: "comune", text: "Aperta, libera una risata contagiosa: per una scena tutti nei paraggi hanno voglia di ridere." },
+    { id: "ciottolo-delle-scelte",     name: "Ciottolo delle Scelte",      icon: "🪨", rarity: "raro",   text: "Tenuto in mano da tutta la ciurma mentre si decide, aiuta a scegliere insieme senza litigare." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */
@@ -78,7 +80,9 @@ PIRATI.registerRewards({
     { id: "ridai-i-nomi",            name: "Ridai-Nomi",              icon: "🏷️", text: "Hai restituito il suo nome a ogni cosa del villaggio che li aveva persi." },
     { id: "domatore-di-paure",       name: "Domatore di Paure",       icon: "👁️", text: "Hai guardato in faccia la Bestia che Nessuno aveva Visto." },
     { id: "libera-colori",           name: "Libera-Colori",           icon: "🌈", text: "Hai liberato i colori della Grotta della Luna e li hai messi d'accordo." },
-    { id: "pace-tra-mostri",         name: "Pace tra Mostri",         icon: "🤝", text: "Hai fatto diventare amici un gigante e il mostro sotto il suo letto." }
+    { id: "pace-tra-mostri",         name: "Pace tra Mostri",         icon: "🤝", text: "Hai fatto diventare amici un gigante e il mostro sotto il suo letto." },
+    { id: "ridai-le-risate",         name: "Ridai-Risate",            icon: "😄", text: "Hai ripescato dalla laguna la risata di ogni abitante delle Cascate." },
+    { id: "strada-scelta-insieme",   name: "Strada Scelta Insieme",   icon: "🛤️", text: "Hai preso la Cascata delle Decisioni e ne hai accettato le conseguenze con la ciurma." }
   ],
 
   /* --- TITOLI: onorificenze della ciurma (per usi futuri / Gradi) ------- */

@@ -224,6 +224,20 @@ PIRATI.registerPowers([
     play: { type: "narrative", note: "due che si temono, presentati, non si attaccano per una scena" },
     art: "Due manone pelose, una da gigante e una da mostriciattolo, che si stringono al centro sotto una coperta a quadri. Luce di candela calda in una grotta."
   },
+  {
+    id: "risata-contagiosa", name: "La Risata Contagiosa", icon: "😄",
+    category: "carta", grade: 3, cooldown: "quest",
+    effect: "Gioca in una scena tesa: tutti si mettono a ridere e per un momento nessuno può fare del male a nessuno.",
+    play: { type: "skip", note: "una risata contagiosa scioglie una scena tesa" },
+    art: "Bolle di sapone che scoppiano liberando faccine ridenti, sopra una laguna con cascate. Pirati e abitanti piegati in due dalle risate, arcobaleno nella foschia."
+  },
+  {
+    id: "tre-strade", name: "Le Tre Strade", icon: "🛤️",
+    category: "magia", grade: 3, cooldown: "quest",
+    effect: "Davanti a una scelta difficile, la ciurma sbircia in anticipo un piccolo pezzo di ciascuna strada, poi decide insieme.",
+    play: { type: "narrative", note: "la ciurma vede un pezzetto di ogni strada possibile prima di scegliere" },
+    art: "Una cascata che si divide in tre corsi d'acqua luminosi, ognuno di un colore diverso, che spariscono in tre gallerie di roccia. Un ciottolo tondo galleggia al bivio."
+  },
 
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).
