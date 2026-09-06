@@ -475,7 +475,7 @@ window.PIRATI = (function () {
       if (!f || typeof f !== "object" || typeof f.id !== "string" || !f.id) return warn(`${where}: manca 'id'.`);
       if (state.teschioFacciaById.has(f.id)) return warn(`Teschio: faccia duplicata "${f.id}".`);
       if (typeof f.nome !== "string" || !f.nome) return warn(`${where}: manca 'nome'.`);
-      const clean = { id: f.id, nome: f.nome, art: f.art || "", image: window.PIRATI_ASSET(`teschio/${f.id}.webp`) };
+      const clean = { id: f.id, nome: f.nome, art: f.art || "", image: window.PIRATI_ASSET(`teschi/${f.id}.webp`) };
       state.teschioFacce.push(clean);
       state.teschioFacciaById.set(clean.id, clean);
     });

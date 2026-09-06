@@ -1,7 +1,7 @@
 PROMPT PER LE IMMAGINI — LE FACCE DEL TESCHIO MULTICOLORE
 =======================================================
 
-File finali: assets/teschio/<id>.webp (quadrati 1:1, 1200x1200).
+File finali: assets/teschi/<id>.webp (quadrati 1:1, 1200x1200).
 Fallback: emoji 💀 se il file manca.
 
 STILE COMUNE (da anteporre a ogni prompt):
