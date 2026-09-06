@@ -1743,6 +1743,446 @@ PIRATI.registerPack({
           close_button: "⛵ Torna alla rotta"
         }
       }
+    },
+
+    /* ---- GROTTA DELLA LUNA ---------------------------------------- */
+    {
+      id: "ladro-dei-colori", island: "grotta", order: 1,
+      title: "Il Ladro dei Colori", kind: "Mistero cromatico",
+      difficulty: 6, minutes: 55,
+      readAloud: "La Grotta della Luna sta diventando grigia. I colori sono chiusi dentro i cristalli e non fanno che litigare: «Prima io!» «No, io: senza il rosso non si vede niente!» «E il blu? Il blu serve per il mare!» Se non li liberate, la grotta resta a tinte di cenere.",
+      readKids: {
+        facile: [
+          "La grotta sta diventando grigia.",
+          "I colori sono chiusi nei cristalli.",
+          "Litigano su chi esce per primo.",
+          "Bisogna liberarli e metterli d'accordo."
+        ],
+        avanzato: [
+          "Nella Grotta della Luna i colori si sono staccati da tutto.",
+          "Sono intrappolati dentro i cristalli, uno per cristallo.",
+          "E litigano di continuo su chi sia il più importante e chi vada liberato per primo.",
+          "Finché litigano, la grotta resta grigia come la polvere."
+        ]
+      },
+      goal: "Liberare i colori e capire chi li ha imprigionati.",
+      beats: [
+        "Ogni colore ha un carattere e una buona ragione per voler uscire per primo.",
+        "Liberarli a caso peggiora il litigio: serve un modo giusto.",
+        "In fondo alla grotta c'è un cristallo vuoto col simbolo della nave."
+      ],
+      choices: [
+        { label: "Decidere noi l'ordine di liberazione", stat: "coraggio", target: 6, result: "Scegliete un ordine e lo difendete davanti a tutti i colori: qualcuno protesta, ma la grotta si sblocca." },
+        { label: "Convincere i colori a collaborare", stat: "astuzia", target: 6, result: "Fate capire ai colori che da soli valgono meno: escono in coppia e si tengono per mano." }
+      ],
+      groupChallenge: "Inventate insieme un colore nuovo che non esiste: come si chiama, di cosa è fatto (rosso + cosa?), e a cosa serve.",
+      rewards: [
+        { type: "loot", id: "boccetta-di-colore" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "libera-colori" },
+        { type: "power", id: "mescola-colori" }
+      ],
+      growth: "Chi propone il modo più giusto di decidere l'ordine segna 1 crescita Coraggio.",
+      fail: "Liberate il colore sbagliato per primo e i colori si azzuffano tutti insieme: Pericolo +1, ma nel lampo di luce colorata vedete in fondo il cristallo vuoto.",
+      escape: "Uscire dalla grotta seguendo l'unico filo di colore rimasto libero — un grigio timido — fino alla luce: prova di Fortuna 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "I cristalli brillano ognuno di un colore, ma tremano di rabbia. Il Rosso è impaziente e batte contro il vetro. Il Blu è lentissimo e offeso. Il Giallo interrompe tutti. Il Verde prova a fare da paciere e nessuno lo ascolta.",
+              ask: "Se i colori fossero persone, che carattere avrebbe ognuno? Datene uno a Rosso, Blu, Giallo e Verde.",
+              hints: [
+                "Rosso: sempre di fretta.",
+                "Blu: calmo ma si offende.",
+                "Giallo: parla sopra a tutti.",
+                "Verde: cerca sempre il compromesso."
+              ],
+              rescue: "Il Verde preme dolcemente sul suo cristallo e vi guarda: sembra dire «aiutatemi voi».",
+              masterTip: "Fai fare a quattro bambini la voce di un colore per una frase."
+            },
+            interaction: "Nessun tiro: si dà voce ai colori.",
+            outcome: {
+              title: "I colori si sentono ascoltati",
+              text: "Per la prima volta qualcuno li tratta come persone e non come vernice. Litigano un po' meno. Ma vogliono ancora tutti uscire per primi.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete decidere voi un ordine di liberazione e imporlo con calma, spiegando il perché. Oppure potete convincere i colori a uscire insieme, a coppie, così nessuno è «primo».",
+              ask: "Decidiamo noi l'ordine, o li convinciamo a collaborare?",
+              hints: [
+                "Decidere è più rapido, ma qualche colore si offenderà.",
+                "Convincerli a collaborare è più lento, ma alla fine sono contenti.",
+                "Un ordine giusto ha una ragione che tutti possono capire."
+              ],
+              rescue: "Il Rosso e il Blu, per sbaglio, brillano insieme e fanno un lampo viola bellissimo: si zittiscono, sorpresi."
+            },
+            choices: [
+              {
+                id: "ordine",
+                label: "📋 Decidiamo noi l'ordine",
+                reaction_title: "La ciurma stabilisce le regole",
+                reaction: "Vi mettete davanti ai cristalli e annunciate un ordine, spiegando la ragione di ciascuna scelta. Qualche colore brontola, ma ascolta.",
+                next: "ordine"
+              },
+              {
+                id: "collaborare",
+                label: "🤲 Li convinciamo a uscire insieme",
+                reaction_title: "La ciurma fa da paciere",
+                reaction: "Cominciate a far notare a ogni colore quanto vale poco da solo: il rosso senza il giallo non fa l'arancione, il blu senza il giallo non fa il verde. I cristalli si guardano.",
+                next: "collaborare"
+              }
+            ]
+          },
+          {
+            scene_id: "ordine",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Avete deciso un ordine, ma il Giallo protesta a voce altissima: «Perché io per ultimo?!» Serve una ragione così chiara che anche il colore più permaloso non possa dire di no.",
+              ask: "Qual è un ordine giusto per liberare i colori, e la ragione che lo rende giusto per tutti?",
+              hints: [
+                "Prima il colore che serve subito per vedere gli altri.",
+                "Ultimo il colore più forte, così aiuta a sistemare.",
+                "In ordine di quanto ognuno è stato paziente.",
+                "A turni, un pezzetto per volta, così è uguale per tutti."
+              ],
+              rescue: "Il Verde dice piano: «A me va bene qualsiasi ordine, basta che ci sia una ragione». Gli altri lo sentono.",
+              masterTip: "Fai proporre l'ordine e la motivazione a due bambini; scegliete la più convincente."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 55, dice: 45 },
+              destiny_screen: {
+                title: "✦ Il Destino pesa la vostra regola",
+                button: "Affidiamoci al Destino",
+                group_result: "La vostra ragione è così chiara che anche il Giallo tace: i colori escono nell'ordine, senza drammi.",
+                dice_result: "Il Giallo fa i capricci: serve una prova di Coraggio per tenere il punto con gentilezza."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LA GROTTA SI RIACCENDE",
+                text: "Uno dopo l'altro i colori escono dai cristalli e tornano al loro posto: le pareti, i funghi luminosi, l'acqua. La grotta smette di essere grigia e ricomincia a brillare come una luna piena.",
+                audio: "win-event",
+                next: "cristallo-vuoto"
+              },
+              fail_forward: {
+                title: "🌈 LAMPO GENERALE",
+                text: "Liberate il colore sbagliato per primo e tutti gli altri scappano fuori insieme in un lampo accecante: Pericolo +1. Ma in quel lampo, in fondo alla grotta, vedete un cristallo che non brilla di nessun colore — è vuoto.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "cristallo-vuoto"
+              }
+            }
+          },
+          {
+            scene_id: "collaborare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "I colori hanno quasi capito, ma sono orgogliosi. Nessuno vuole essere il primo ad ammettere che ha bisogno di un altro. Serve una spinta gentile perché si diano la mano.",
+              ask: "Come convincete due colori orgogliosi a uscire insieme, tenendosi per mano?",
+              hints: [
+                "Facendogli vedere cosa creano se si uniscono (arancione, viola, verde).",
+                "Chiedendo a ognuno di dire una cosa bella di un altro colore.",
+                "Facendo uscire per primi i due che vanno più d'accordo, come esempio.",
+                "Promettendo che dentro un dipinto ci sono tutti, nessuno escluso."
+              ],
+              rescue: "Il Rosso e il Giallo, guardandosi, formano una striscia d'arancione che sembra un sorriso.",
+              masterTip: "Fai dire a un bambino la frase con cui un colore ringrazia un altro."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 60, dice: 40 },
+              destiny_screen: {
+                title: "✦ Il Destino guarda i colori darsi la mano",
+                button: "Affidiamoci al Destino",
+                group_result: "I colori si convincono e escono in coppia, mescolandosi: la grotta si riempie di sfumature nuove.",
+                dice_result: "Un colore testardo resta indietro: serve una prova di Astuzia per trovare l'argomento giusto."
+              },
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ COLORI CHE SI TENGONO PER MANO",
+                text: "Escono a coppie: rosso e giallo, blu e verde, e in mezzo nascono arancioni, viola, turchesi mai visti. La grotta non è mai stata così colorata, nemmeno prima.",
+                audio: "win-event",
+                next: "cristallo-vuoto"
+              },
+              fail_forward: {
+                title: "💥 UNO RESTA INDIETRO",
+                text: "Un colore testardo si rifiuta e nel trattenerlo gli altri sbottano fuori tutti insieme: Pericolo +1. Ma nella luce vedete, in fondo alla grotta, un cristallo completamente vuoto.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "cristallo-vuoto"
+              }
+            }
+          },
+          {
+            scene_id: "cristallo-vuoto",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "In fondo alla grotta c'è un cristallo grande come voi, limpido e vuoto. Non ci ha mai abitato nessun colore. Sul supporto è inciso il simbolo di una nave, e una frase: «Qui mettevo il colore che mi manca. Ma non l'ho ancora trovato».",
+              ask: "Che colore può mancare a qualcuno? E perché lo cercherebbe qui?",
+              hints: [
+                "Non un colore vero: forse il 'colore' di una ciurma, quello che si crea stando insieme.",
+                "È la stessa nave delle ombre, dei nomi, delle risate.",
+                "Chi è sulla nave prova a mettere insieme pezzi di isole diverse.",
+                "Un colore lo puoi rubare, ma resta spento se non è tuo."
+              ],
+              rescue: "Il cristallo vuoto, accanto alla Stella della Ciurma, per un attimo si riempie di tutti i vostri colori insieme."
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio del cristallo",
+              text: "Toccate il cristallo vuoto: è freddo e triste. Chi l'ha portato qui voleva riempirlo con qualcosa di rubato — ma un colore preso agli altri, nel cristallo, resta grigio.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "La Grotta della Luna è di nuovo un caleidoscopio. I colori, adesso amici, vi accompagnano all'uscita facendo un arcobaleno sul soffitto. Uno di loro si stacca un goccio e ve lo mette in una boccetta: da versare su qualcosa di spento, quando serve.",
+              masterTip: "Chiudi con la domanda: quale colore rappresenta meglio la vostra ciurma?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "Il Ladro dei Colori",
+          final_read: "I colori tornano liberi e amici. La Boccetta di Colore resta alla ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
+    },
+
+    {
+      id: "mostro-sotto-letto-del-mostro", island: "grotta", order: 2,
+      title: "Il Mostro sotto il Letto del Mostro", kind: "Paura comica",
+      difficulty: 6, minutes: 50,
+      readAloud: "Un gigante buono non dorme da settimane: è convinto che sotto la sua pietra-letto ci sia un mostro. E ha ragione: c'è. È un mostriciattolo piccolo così, che a sua volta non dorme perché ha il terrore del gigante.",
+      readKids: {
+        facile: [
+          "Un gigante non dorme più.",
+          "Ha paura di un mostro sotto il letto.",
+          "Il mostro c'è davvero, ma è piccolissimo.",
+          "E ha paura del gigante."
+        ],
+        avanzato: [
+          "Il gigante buono della grotta ha le occhiaie fino ai piedi.",
+          "Giura che sotto la sua pietra-letto c'è un mostro.",
+          "Ed è vero: c'è un mostriciattolo minuscolo, spaventato.",
+          "Che non dorme perché sopra di lui c'è un gigante enorme."
+        ]
+      },
+      goal: "Far incontrare le due creature senza provocare una fuga generale.",
+      beats: [
+        "Ognuno dei due è, per l'altro, 'il mostro'.",
+        "Serve un modo di presentarli che non li faccia scappare al primo sguardo.",
+        "Il piccolo mostro racconta che una nave gli ha rubato il riflesso nello specchio."
+      ],
+      choices: [
+        { label: "Parlare prima col gigante", stat: "coraggio", target: 6, result: "Convincete il gigante che un mostro grande come un dito non può fargli niente." },
+        { label: "Parlare prima col piccolo mostro", stat: "astuzia", target: 6, result: "Fate capire al mostriciattolo che il gigante è più spaventato di lui." }
+      ],
+      groupChallenge: "Inventate insieme un gioco che due creature che si spaventano a vicenda possono fare senza guardarsi in faccia (tipo indovinelli sotto una coperta).",
+      rewards: [
+        { type: "loot", id: "coperta-presentazioni" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "pace-tra-mostri" },
+        { type: "power", id: "le-presentazioni" }
+      ],
+      growth: "Chi trova le parole per far incontrare le due creature segna 1 crescita Coraggio.",
+      fail: "Il gigante e il mostriciattolo si vedono di colpo e scappano in direzioni opposte: Pericolo +1, ma il mostriciattolo, nella fuga, lascia cadere il pezzo di specchio.",
+      escape: "Uscire dalla grotta camminando sotto la coperta del gigante, così sembrate un mostro solo e nessuno vi ferma: prova di Astuzia 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Il gigante vi sussurra (un sussurro che comunque fa tremare i sassi): «È lì sotto. Lo sento respirare». Voi guardate sotto la pietra-letto e trovate un mostriciattolo grande come un calzino, che tremando vi fa: «Ditegli che non gli faccio niente! È lui il gigante!»",
+              ask: "A qualcuno che ha paura di qualcosa che tu sai essere innocuo, cosa diresti?",
+              hints: [
+                "Che hai controllato tu di persona e non c'è pericolo.",
+                "Che anche la cosa dall'altra parte ha paura.",
+                "Che si può guardare la paura da vicino, un pezzetto alla volta.",
+                "Che stanotte resti tu a fare la guardia, così può dormire."
+              ],
+              rescue: "Il mostriciattolo starnutisce e il gigante fa un balzo indietro che fa cadere tre stalattiti.",
+              masterTip: "Chiedi ai bambini di cosa avevano paura sotto il letto da piccoli e come è passata."
+            },
+            interaction: "Nessun tiro: si conoscono le due creature.",
+            outcome: {
+              title: "Due paure, una grotta",
+              text: "Adesso avete capito la situazione: due creature convinte, ognuna, che l'altra sia il mostro. E ognuna con un buon motivo per pensarlo. Bisogna presentarle, ma con cautela.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete parlare prima col gigante, che è grande e ragiona lento ma ascolta. Oppure prima col mostriciattolo, che è veloce e sospettoso ma capisce al volo.",
+              ask: "Con chi parliamo per primo: il gigante o il mostriciattolo?",
+              hints: [
+                "Il gigante è più facile da rassicurare: un mostro piccolo così non fa paura.",
+                "Il mostriciattolo capisce prima, ma bisogna guadagnarsi la sua fiducia.",
+                "Chi convincete per primo può aiutarvi con l'altro."
+              ],
+              rescue: "Il gigante e il mostriciattolo, senza saperlo, si nascondono dietro lo stesso sasso, schiena contro schiena."
+            },
+            choices: [
+              {
+                id: "gigante",
+                label: "🗻 Parliamo prima col gigante",
+                reaction_title: "La ciurma sale sulla spalla del gigante",
+                reaction: "Vi arrampicate fino all'orecchio del gigante e cominciate a spiegargli, piano, che il suo mostro è più piccolo di un topo e ha più paura di lui.",
+                next: "gigante"
+              },
+              {
+                id: "mostriciattolo",
+                label: "🐛 Parliamo prima col mostriciattolo",
+                reaction_title: "La ciurma si infila sotto il letto",
+                reaction: "Vi accovacciate sotto la pietra-letto, dove il mostriciattolo trema. «Il gigante non ti vede nemmeno», gli dite. «E comunque è più fifone di te».",
+                next: "mostriciattolo"
+              }
+            ]
+          },
+          {
+            scene_id: "gigante",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Il gigante quasi ci crede, ma la paura di anni non si scioglie con due parole. «E se... e se cresce di notte?» chiede. «E se ne arrivano tanti?» Serve qualcosa che lo faccia sentire davvero al sicuro.",
+              ask: "Come fate sentire al sicuro un gigante che ha paura da tanto tempo?",
+              hints: [
+                "Fargli vedere il mostriciattolo alla luce, da lontano, un secondo.",
+                "Dargli qualcosa da tenere in mano mentre dorme, come una guardia.",
+                "Fargli contare i respiri del mostriciattolo: sono così piccoli.",
+                "Dormire voi lì vicino la prima notte."
+              ],
+              rescue: "Il gigante stringe forte un sasso liscio: gli piace avere qualcosa da tenere.",
+              masterTip: "Fai proporre a due bambini l'oggetto-guardia che darebbero al gigante."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 55, dice: 45 },
+              destiny_screen: {
+                title: "✦ Il Destino misura il coraggio del gigante",
+                button: "Affidiamoci al Destino",
+                group_result: "Il gigante si fida abbastanza da provare a dormire con il mostriciattolo a vista: e dorme.",
+                dice_result: "All'ultimo il gigante si blocca: serve una prova di Coraggio della ciurma per restare lì con lui."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ IL GIGANTE CHIUDE UN OCCHIO",
+                text: "Il gigante si sdraia, tiene il suo sasso-guardia, guarda il mostriciattolo per un lungo minuto... e si addormenta. Russa così forte che il mostriciattolo, sotto, si dondola come in una culla.",
+                audio: "win-event",
+                next: "specchio-rubato"
+              },
+              fail_forward: {
+                title: "😴 NOTTE IN BIANCO",
+                text: "Il gigante non ce la fa e si tira su di scatto: il mostriciattolo scappa terrorizzato, Pericolo +1. Ma nella corsa lascia cadere una scheggia di specchio, e voi la raccogliete.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "specchio-rubato"
+              }
+            }
+          },
+          {
+            scene_id: "mostriciattolo",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Il mostriciattolo si fida quasi di voi, ma non del gigante. «È troppo grande», dice. «Se mi calpesta manco se ne accorge». Serve un modo perché non si senta più in pericolo.",
+              ask: "Come rassicurate una creatura piccola che ha paura di essere schiacciata da una grande?",
+              hints: [
+                "Trovargli un posto dove il gigante non arriva, ma vicino.",
+                "Fargli sapere sempre dove mette i piedi il gigante.",
+                "Fare da tramite: quello che vuole dire al gigante, lo dite voi.",
+                "Fargli scegliere lui quando farsi vedere, senza fretta."
+              ],
+              rescue: "Il mostriciattolo si infila in un guscio di lumaca vuoto: da lì si sente più tranquillo.",
+              masterTip: "Fai inventare ai bambini il 'posto sicuro' del mostriciattolo."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ IL MOSTRICIATTOLO ESCE ALLO SCOPERTO",
+                text: "Gli trovate una nicchia nella parete, all'altezza dell'orecchio del gigante, protetta ma vicina. Da lì, il mostriciattolo si azzarda a dire al gigante: «Ciao. Non ronfare troppo forte». Il gigante ride di sollievo.",
+                audio: "win-event",
+                next: "specchio-rubato"
+              },
+              fail_forward: {
+                title: "🏃 FUGA SOTTO IL LETTO",
+                text: "Un movimento brusco del gigante e il mostriciattolo scappa via nel buio: Pericolo +1. Ma lascia dietro di sé una piccola scheggia di specchio, che raccogliete.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "specchio-rubato"
+              }
+            }
+          },
+          {
+            scene_id: "specchio-rubato",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Il mostriciattolo vi mostra una cosa: uno specchietto rotto, con un pezzo mancante. «Prima avevo un riflesso», dice. «Mi ci guardavo e mi vedevo grande e coraggioso. Poi è passata una nave silenziosa e il riflesso non c'è stato più. Da allora mi vedo solo piccolo».",
+              ask: "Cosa vuol dire che una nave ti ruba il riflesso?",
+              hints: [
+                "La nave raccoglie le cose che ti fanno sentire qualcuno.",
+                "Un riflesso è come ti vedi tu: se te lo tolgono, ti vedi come ti vedono gli altri.",
+                "È lo stesso della nave delle ombre, dei nomi, delle risate.",
+                "Forse chi ha rubato il riflesso non aveva un riflesso suo di cui essere contento."
+              ],
+              rescue: "Il mostriciattolo si specchia in una pozza e, con voi accanto, per un attimo si vede grande."
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio nello specchio",
+              text: "Nel pezzo di specchio rimasto si riflette, un istante, una vela. La stessa nave. Raccoglie ombre, nomi, risate — e anche il modo in cui le creature si vedono da sole.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Quella notte, nella grotta, dormono tutti: il gigante che russa, il mostriciattolo cullato dal russare, e voi. Al risveglio il gigante regala alla ciurma una sua coperta a quadri: sotto, due che si temono possono parlarsi senza vedersi, finché non sono pronti a togliere la coperta.",
+              masterTip: "Chiudi con la domanda: come fai a capire se qualcuno è davvero pericoloso?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "Il Mostro sotto il Letto del Mostro",
+          final_read: "Il gigante e il mostriciattolo dormono, finalmente. La Coperta delle Presentazioni resta alla ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
     }
 
   ]

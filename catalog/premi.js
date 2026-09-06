@@ -43,7 +43,9 @@ PIRATI.registerRewards({
     { id: "sigillo-del-perdono",       name: "Sigillo del Perdono",        icon: "📜", rarity: "comune", text: "Mostrato a chi ha sbagliato, gli apre una via per rimediare invece di una punizione." },
     { id: "chiave-del-forse",          name: "Chiave del Forse",           icon: "🗝️", rarity: "raro",   text: "Apre una porta che ha detto no, se le fai la domanda giusta. Una volta." },
     { id: "taccuino-dei-nomi",         name: "Taccuino dei Nomi",          icon: "📓", rarity: "comune", text: "Ci scrivi il nome di qualcosa che l'ha perso: per un giorno quel nome torna vero." },
-    { id: "lente-della-calma",         name: "Lente della Calma",          icon: "🔍", rarity: "raro",   text: "Guardata attraverso, una cosa spaventosa mostra com'è davvero, senza la paura addosso." }
+    { id: "lente-della-calma",         name: "Lente della Calma",          icon: "🔍", rarity: "raro",   text: "Guardata attraverso, una cosa spaventosa mostra com'è davvero, senza la paura addosso." },
+    { id: "boccetta-di-colore",        name: "Boccetta di Colore",         icon: "🎨", rarity: "comune", text: "Versata su qualcosa di grigio o spento, gli ridà un colore vivo per una scena." },
+    { id: "coperta-presentazioni",     name: "Coperta delle Presentazioni", icon: "🛏️", rarity: "raro",   text: "Sotto questa coperta due che si temono possono parlarsi senza vedersi, finché non sono pronti." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */
@@ -74,7 +76,9 @@ PIRATI.registerRewards({
     { id: "ciurma-assolta",          name: "Ciurma Assolta",          icon: "⚖️", text: "Hai mostrato al Tribunale del Corallo cosa la ciurma ha imparato dai suoi errori." },
     { id: "passa-porte",             name: "Passa-Porte",             icon: "🚪", text: "Hai attraversato la Porta che Dice Sempre No senza forzarla." },
     { id: "ridai-i-nomi",            name: "Ridai-Nomi",              icon: "🏷️", text: "Hai restituito il suo nome a ogni cosa del villaggio che li aveva persi." },
-    { id: "domatore-di-paure",       name: "Domatore di Paure",       icon: "👁️", text: "Hai guardato in faccia la Bestia che Nessuno aveva Visto." }
+    { id: "domatore-di-paure",       name: "Domatore di Paure",       icon: "👁️", text: "Hai guardato in faccia la Bestia che Nessuno aveva Visto." },
+    { id: "libera-colori",           name: "Libera-Colori",           icon: "🌈", text: "Hai liberato i colori della Grotta della Luna e li hai messi d'accordo." },
+    { id: "pace-tra-mostri",         name: "Pace tra Mostri",         icon: "🤝", text: "Hai fatto diventare amici un gigante e il mostro sotto il suo letto." }
   ],
 
   /* --- TITOLI: onorificenze della ciurma (per usi futuri / Gradi) ------- */

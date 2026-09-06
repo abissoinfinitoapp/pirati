@@ -210,6 +210,20 @@ PIRATI.registerPowers([
     play: { type: "narrative", note: "il Master svela il dettaglio che disinnesca una minaccia" },
     art: "Una grande lente di vetro tenuta a due mani, e dentro il riflesso di un mostro nero che si scopre essere solo un mucchio di foglie e ombre. Luce lunare fredda."
   },
+  {
+    id: "mescola-colori", name: "Mescola-Colori", icon: "🎨",
+    category: "magia", grade: 3, cooldown: "quest",
+    effect: "Unisci due cose — due idee, due oggetti, due personaggi: per una scena ne nasce una terza con il meglio di tutte e due.",
+    play: { type: "narrative", note: "unire due cose fa nascere una terza col meglio di entrambe, per una scena" },
+    art: "Due gocce di colore, una rossa e una blu, che cadono nella stessa pozza e si fondono in una spirale viola luminosa. Cristalli tutt'intorno riflettono la luce."
+  },
+  {
+    id: "le-presentazioni", name: "Le Presentazioni", icon: "🤝",
+    category: "carta", grade: 3, cooldown: "quest",
+    effect: "Metti due che si temono nella stessa scena e li presenti come si deve: per quella scena non si attaccano e possono parlarsi.",
+    play: { type: "narrative", note: "due che si temono, presentati, non si attaccano per una scena" },
+    art: "Due manone pelose, una da gigante e una da mostriciattolo, che si stringono al centro sotto una coperta a quadri. Luce di candela calda in una grotta."
+  },
 
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).
