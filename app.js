@@ -3914,6 +3914,14 @@ function endSchoolDay() {
   state.players.forEach((p) => { p.shop = { day: state.day, bought: {} }; });
   if (outgoingCaptain) pushLog(`${outgoingCaptain.name} lascia il comando: il Prestigio di tutti riparte da zero.`);
 
+  // uno show del Teschio o un Bazar rimasti aperti si chiudono con la giornata
+  stopTeschioTicker();
+  stopSpreeTicker();
+  state.negozioSpree = null;
+  if (state.voyage.pending && (state.voyage.pending.kind === "teschio" || state.voyage.pending.kind === "bazar")) {
+    state.voyage.pending = null;
+  }
+
   sfx("campana");
   saveState();
   render();
