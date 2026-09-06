@@ -2751,6 +2751,22 @@ body.magnifier-open { overflow: hidden; }
 .map-summon-button.is-teschio { border-color: rgba(180,85,201,.55); background: rgba(180,85,201,.16); color: #efd6f5; }
 .map-summon-button.is-teschio:hover { background: rgba(180,85,201,.3); color: #fff; }
 .map-summon-button.is-teschio small { display: block; font-size: 11px; font-weight: 600; opacity: .8; }
+.map-teschio-button {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-width: 128px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(180,85,201,.5);
+  background: rgba(180,85,201,.16);
+  color: #efd6f5;
+}
+.map-teschio-button:hover { background: rgba(180,85,201,.32); color: #fff; }
+.map-teschio-button span { font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.map-teschio-button strong { font-size: 16px; line-height: 1; color: #d99ce6; }
+.map-teschio-button.is-done { opacity: .55; border-style: dashed; }
+.map-teschio-button.is-live { border-color: #d5a43e; background: rgba(243,199,111,.18); color: #ffe6ab; }
 .map-teschio-done { margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(180,85,201,.1); color: var(--sea-dark); font-size: 13px; font-weight: 700; }
 .teschio-annuncio { font-family: Georgia, serif; font-size: 16px !important; line-height: 1.5 !important; color: #7a3b8c; }
 .teschio-sfida { border-radius: 10px; padding: 9px 11px; background: rgba(180,85,201,.1); font-size: 15px !important; }

@@ -2683,16 +2683,17 @@ function renderMap() {
     extraBox.innerHTML = canSummonBoss ? `<button type="button" class="map-summon-button" data-summon-boss>☠ Le acque ribollono… evoca Barbabisso</button>` : "";
   }
 
-  // Show del Teschio Multicolore: bottone del Master, sempre disponibile, 1 al giorno
-  const teschioEntry = $("#map-teschio-entry");
-  if (teschioEntry) {
+  // Show del Teschio Multicolore: bottone del Master nella barra in alto, 1 al giorno
+  const teschioTopbar = $("#map-teschio-topbar");
+  if (teschioTopbar) {
+    const facce = `${state.teschio.facce.length}/${PIRATI.teschioFacce.length}`;
     const showing = v.pending && v.pending.kind === "teschio";
     const canSummon = !v.pending && TESCHIO_CORE.dayAvailable(state.teschio, state.day) && activePlayers().length > 0;
-    const alreadyDone = !TESCHIO_CORE.dayAvailable(state.teschio, state.day);
-    teschioEntry.innerHTML = showing ? ""
-      : canSummon ? `<button type="button" class="map-summon-button is-teschio" data-teschio-summon>💀 Chiama il Teschio Multicolore <small>lo show del giorno · facce: ${state.teschio.facce.length}/${PIRATI.teschioFacce.length}</small></button>`
-      : alreadyDone ? `<p class="map-teschio-done">💀 Lo show del Teschio è già andato in scena oggi (facce: ${state.teschio.facce.length}/${PIRATI.teschioFacce.length})</p>`
-      : "";
+    teschioTopbar.innerHTML = showing
+      ? `<div class="map-teschio-button is-live"><span>💀 SHOW IN CORSO</span><strong>${facce} facce</strong></div>`
+      : canSummon
+        ? `<button type="button" class="map-teschio-button" data-teschio-summon><span>💀 Show del Teschio</span><strong>chiama · ${facce}</strong></button>`
+        : `<div class="map-teschio-button is-done" title="Lo show del Teschio è già andato in scena oggi"><span>💀 Show del Teschio</span><strong>fatto oggi · ${facce}</strong></div>`;
   }
 }
 
