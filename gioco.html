@@ -55,6 +55,17 @@
           </summary>
           <div id="map-belarda-body" class="map-parola-body"></div>
         </details>
+        <details id="map-teschio-facce" class="map-parola no-print">
+          <summary class="map-parola-summary">
+            <span class="map-parola-ico" aria-hidden="true">&#128128;</span>
+            <span class="map-parola-head">
+              <strong>Le Facce del Teschio Multicolore</strong>
+              <small id="map-teschio-facce-status">&mdash;</small>
+            </span>
+            <span class="map-parola-chev" aria-hidden="true">&#9662;</span>
+          </summary>
+          <div id="map-teschio-facce-body" class="map-parola-body"></div>
+        </details>
         <div class="map-topbar">
           <div>
             <p class="eyebrow">Rotta della ciurma</p>
@@ -85,6 +96,7 @@
           <aside class="map-console" aria-live="polite">
             <p id="map-message" class="map-message"></p>
             <div id="map-raid-entry"></div>
+            <div id="map-teschio-entry"></div>
             <div id="map-choices" class="map-choices" hidden></div>
             <div id="map-encounter" class="map-encounter" hidden></div>
             <div id="map-move" class="map-move" hidden></div>
@@ -336,6 +348,11 @@
           <p>Ognuno spende il suo borsellino in oggetti inutili (unicorni rosa, banane di gomma, action figure). Conta solo la <strong>quantità</strong>: per +1 Prestigio ne servono centinaia o migliaia.</p>
           <p>Il primo che arriva a <strong>Prestigio 3</strong> è il <strong>Capitano del giorno</strong> e decide per tutta la ciurma. Ogni giorno il Prestigio si azzera e la gara riparte. Al <strong>Bazar Galleggiante</strong> (in mare) parte lo shopping sfrenato: 30 secondi a testa.</p>
         </div>
+        <div class="dice-rule-card">
+          <h3>Lo Show del Teschio Multicolore</h3>
+          <p>1 volta al giorno (bottone sulla Mappa o casella dedicata). Il Teschio pesca una sfida assurda e innocua — su una gamba sola, dito nel naso, uno scioglilingua in coro — e parte un timer di 10-30 sec. <strong>Tutti la fanno insieme.</strong></p>
+          <p>Allo STOP il Master decide chi ha tenuto: chi passa prende monete personali, si sblocca una faccia del Teschio da collezione. Chi crolla non perde niente (mezzo premio al «crollo più buffo»).</p>
+        </div>
       </article>
 
       <article class="print-sheet">
@@ -441,6 +458,7 @@
 <script src="engine/belarda-core.js"></script>
 <script src="engine/domandona-core.js"></script>
 <script src="engine/negozio-core.js"></script>
+<script src="engine/teschio-core.js"></script>
 <script src="engine/sfx.js"></script>
 
 <!-- Cataloghi condivisi: premi, poteri, bestiario. -->
@@ -449,6 +467,7 @@
 <script src="catalog/belarda.js"></script>
 <script src="catalog/domandona.js"></script>
 <script src="catalog/negozio.js"></script>
+<script src="catalog/teschio.js"></script>
 <script src="catalog/poteri.js"></script>
 <script src="catalog/nemici.js"></script>
 <script src="catalog/eventi.js"></script>

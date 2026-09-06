@@ -299,22 +299,29 @@ const TUTORIAL_STEPS = [
     tip: "È qui che i bambini fanno pratica coi numeri grandi: «10 monete l'uno, ma ne servono 5.000...». Aspettati capitani saggi, capitani caotici e qualche sabotatore: fa parte del divertimento."
   },
   {
+    icon: "💀",
+    kicker: "Passo 10 · Lo Show del Teschio Multicolore",
+    title: "20 secondi di follia tutti insieme",
+    text: "Ogni giorno, dalla Mappa (bottone «Chiama il Teschio» o casella dedicata), puoi far partire lo show. Il Teschio Multicolore pesca una sfida assurda e innocua — stare su una gamba sola, dito nel naso, uno scioglilingua da dire in coro — e parte un conto alla rovescia di 10-30 secondi. TUTTI i pirati la fanno insieme. Allo STOP tocchi tu ogni pirata: ha tenuto o è crollato. Chi tiene prende monete personali (soldi per il Negozio); a ogni show si sblocca una nuova «faccia del Teschio» da collezione. Chi crolla non perde niente — anzi, puoi dare mezzo premio al «crollo più buffo».",
+    tip: "È la valvola di sfogo: dopo tanto stare seduti, 20 secondi di ciurma che fa la linguaccia rimettono tutti in carreggiata. Nessuna acrobazia, niente di ginnico."
+  },
+  {
     icon: "📖",
-    kicker: "Passo 10 · L'avventura guidata",
+    kicker: "Passo 11 · L'avventura guidata",
     title: "Una scena per volta",
     text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda (con spunti pronti e un «se nessuno parte»), 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
     tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Gli spunti servono a te, non ai bambini: usali solo se serve."
   },
   {
     icon: "🎲",
-    kicker: "Passo 11 · Il Destino e i dadi",
+    kicker: "Passo 12 · Il Destino e i dadi",
     title: "Fallire vuol dire andare avanti diversi",
     text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
     tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
   },
   {
     icon: "🏆",
-    kicker: "Passo 12 · Come cresce la ciurma",
+    kicker: "Passo 13 · Come cresce la ciurma",
     title: "Carte, Potenza, Gradi",
     text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte finiscono nel Baule dei Poteri (Tesoro): durante una prova puoi giocarne una — toccala per ingrandirla, leggila, poi «Gioca». Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
     tip: "Alla schermata dei premi leggi ad alta voce i numeri che salgono: monete, Potenza, Grado. È il momento che i bambini aspettano."
@@ -331,6 +338,7 @@ const RAID_CORE = window.PIRATI_SACCH_CORE;
 const BELARDA_CORE = window.PIRATI_BELARDA_CORE;
 const DOMANDONA_CORE = window.PIRATI_DOMANDONA_CORE;
 const NEGOZIO_CORE = window.PIRATI_NEGOZIO_CORE;
+const TESCHIO_CORE = window.PIRATI_TESCHIO_CORE;
 const BELARDA_THRESHOLD = 12000; // kg (12 tonnellate) per far esplodere una casa
 const RAID_RETURN_VIEWS = Object.freeze({ map: "mappa", story: "quests" });
 
@@ -396,6 +404,7 @@ const defaultState = {
   domandona: DOMANDONA_CORE.withDomandonaDefaults({}),
   negozioSelectedPlayerId: null,   // quale pirata sta comprando nel Negozio
   negozioSpree: null,              // shopping sfrenato in corso: { queue, idx, endsAt, day }
+  teschio: TESCHIO_CORE.withTeschioDefaults({}),  // { lastShowDay, facce, recentSfideIds, showsFatti }
   log: []
 };
 
@@ -473,6 +482,13 @@ function withDefaults(saved) {
     ? { playerId: cap.playerId, day: cap.day }
     : null;
   merged.negozioSpree = null; // uno shopping sfrenato è in tempo reale: non sopravvive a un ricaricamento
+
+  merged.teschio = TESCHIO_CORE.withTeschioDefaults(saved && saved.teschio);
+  merged.teschio.facce = merged.teschio.facce.filter((id) => PIRATI.teschioFaccia(id));
+  merged.teschio.recentSfideIds = merged.teschio.recentSfideIds.filter((id) => PIRATI.teschioSfida(id));
+  if (merged.voyage && merged.voyage.pending && merged.voyage.pending.kind === "teschio") {
+    merged.voyage.pending = null; // lo show del Teschio è in tempo reale: non sopravvive a un ricaricamento
+  }
   if (merged.voyage && !merged.voyage.moveRoll) merged.voyage.moveRoll = { rolls: {} };
   if (merged.questCampaign.story && typeof merged.questCampaign.story === "object" && merged.questCampaign.story.questId) {
     const st = merged.questCampaign.story;
@@ -1618,9 +1634,10 @@ const SPACE_INFO = {
   quest:   { icon: "⭐", label: "Avventura" },
   porto:   { icon: "⚓", label: "Porto" },
   domandona: { icon: "❓", label: "Nave Domandona" },
-  bazar:   { icon: "🛒", label: "Bazar Galleggiante" }
+  bazar:   { icon: "🛒", label: "Bazar Galleggiante" },
+  teschio: { icon: "💀", label: "Teschio Multicolore" }
 };
-const SPECIAL_SPACES = ["evento", "mostro", "assalto", "razzia", "tesoro", "quest", "domandona", "bazar"];
+const SPECIAL_SPACES = ["evento", "mostro", "assalto", "razzia", "tesoro", "quest", "domandona", "bazar", "teschio"];
 
 function voyage() { return state.voyage; }
 
@@ -2046,6 +2063,7 @@ function buildEncounter(type, islandId) {
   const danger = state.session.danger;
   if (type === "domandona") return buildDomandonaEncounter();
   if (type === "bazar") return bazarEncounter();
+  if (type === "teschio") return teschioEncounter();
   if (type === "quest") {
     const questId = nextIslandQuestId(islandId);
     const quest = PIRATI.quest(questId);
@@ -2659,15 +2677,22 @@ function renderMap() {
   // evoca Barbabisso: quando il mare è pericoloso, o per il finale di ciclo
   const extraBox = $("#map-extra");
   if (extraBox) {
-    const canSummon = !v.pending && !v.choosing && !bossOnCooldown() && theBoss()
+    const canSummonBoss = !v.pending && !v.choosing && !bossOnCooldown() && theBoss()
       && (state.session.danger >= 6 || (state.questCampaign.completedQuestIds || []).length >= 14);
-    if (canSummon) {
-      extraBox.hidden = false;
-      extraBox.innerHTML = `<button type="button" class="map-summon-button" data-summon-boss>☠ Le acque ribollono… evoca Barbabisso</button>`;
-    } else {
-      extraBox.hidden = true;
-      extraBox.innerHTML = "";
-    }
+    extraBox.hidden = !canSummonBoss;
+    extraBox.innerHTML = canSummonBoss ? `<button type="button" class="map-summon-button" data-summon-boss>☠ Le acque ribollono… evoca Barbabisso</button>` : "";
+  }
+
+  // Show del Teschio Multicolore: bottone del Master, sempre disponibile, 1 al giorno
+  const teschioEntry = $("#map-teschio-entry");
+  if (teschioEntry) {
+    const showing = v.pending && v.pending.kind === "teschio";
+    const canSummon = !v.pending && TESCHIO_CORE.dayAvailable(state.teschio, state.day) && activePlayers().length > 0;
+    const alreadyDone = !TESCHIO_CORE.dayAvailable(state.teschio, state.day);
+    teschioEntry.innerHTML = showing ? ""
+      : canSummon ? `<button type="button" class="map-summon-button is-teschio" data-teschio-summon>💀 Chiama il Teschio Multicolore <small>lo show del giorno · facce: ${state.teschio.facce.length}/${PIRATI.teschioFacce.length}</small></button>`
+      : alreadyDone ? `<p class="map-teschio-done">💀 Lo show del Teschio è già andato in scena oggi (facce: ${state.teschio.facce.length}/${PIRATI.teschioFacce.length})</p>`
+      : "";
   }
 }
 
@@ -2691,6 +2716,7 @@ function mapEncounterMarkup(enc) {
       </div>
     </div>`;
   }
+  if (enc.kind === "teschio") return teschioEncounterMarkup(enc);
   const scene = enc.scene;
   const info = SPACE_INFO[enc.kind] || { icon: "❈", label: enc.kind };
   const tag = `<span class="map-encounter-tag">${info.icon} ${scene ? scene.title : info.label}</span>`;
@@ -2765,6 +2791,71 @@ function domandonaEncounterMarkup(enc) {
       <button type="button" class="secondary-button" data-map-skip>${enc.hasTicket ? "Non adesso (tieni il biglietto)" : "Passa oltre"}</button>
     </div>
   </div>`;
+}
+
+function teschioEncounterMarkup(enc) {
+  const sfida = enc.sfidaId ? PIRATI.teschioSfida(enc.sfidaId) : null;
+  const tag = `<span class="map-encounter-tag">💀 Lo Show del Teschio Multicolore</span>`;
+
+  if (enc.phase === "annuncio") {
+    return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">
+      ${tag}
+      <p class="encounter-read">“Fermi tutti! È l'ora dello SHOW! Il Teschio Multicolore fluttua davanti alla ciurma, cambiando colore a ogni parola. «Tra un attimo vi dirò una cosa assurda da fare. La fate TUTTI, INSIEME, per pochi secondi. Poi decido io chi ha tenuto. Pronti?»”</p>
+      <button type="button" class="primary-button" data-teschio-start>Il Teschio pesca una sfida ▸</button>
+      <button type="button" class="secondary-button" data-map-skip>Non adesso, Teschio</button>
+    </div></div>`;
+  }
+
+  if (enc.phase === "conto" && sfida) {
+    const left = Math.max(0, Math.ceil((enc.endsAt - Date.now()) / 1000));
+    return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">
+      ${tag}
+      <p class="teschio-annuncio">“${sfida.annuncio}”</p>
+      <p class="teschio-sfida"><strong>Cosa fanno tutti insieme:</strong> ${sfida.sfida}</p>
+      <div class="teschio-timer" id="teschio-countdown">${left}</div>
+      <p class="map-console-label">Il Master conta ad alta voce. Allo STOP si giudica.</p>
+      <button type="button" class="secondary-button" data-teschio-stop>STOP subito</button>
+    </div></div>`;
+  }
+
+  if (enc.phase === "giudizio" && sfida) {
+    const roster = activePlayers();
+    const chips = roster.map((p) => {
+      const held = enc.passers.includes(p.id);
+      const buffo = enc.buffoId === p.id;
+      return `<button type="button" class="teschio-chip ${held ? "is-held" : "is-fallen"} ${buffo ? "is-buffo" : ""}" data-teschio-passer="${p.id}">
+        <strong>${p.name}</strong><span>${held ? "ha tenuto ✅" : "è crollato 💀"}</span>
+        ${!held ? `<em data-teschio-buffo="${p.id}">${buffo ? "★ crollo più buffo" : "segna come crollo più buffo"}</em>` : ""}
+      </button>`;
+    }).join("");
+    return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">
+      ${tag}
+      <p class="teschio-sfida"><strong>La sfida era:</strong> ${sfida.sfida}</p>
+      <p class="map-console-label">Il Teschio (cioè tu) tocca chi è crollato per toglierlo. Chi resta verde ha tenuto.</p>
+      <div class="teschio-chips">${chips || `<span class="helper-text">Nessun pirata in gioco.</span>`}</div>
+      <button type="button" class="primary-button" data-teschio-finish>Il Teschio ha deciso! (${enc.passers.length} promossi)</button>
+    </div></div>`;
+  }
+
+  if (enc.phase === "esito") {
+    const faccia = enc.faccia ? PIRATI.teschioFaccia(enc.faccia) : null;
+    const names = enc.passers.map((id) => state.players.find((p) => p.id === id)?.name).filter(Boolean);
+    const verbo = names.length === 1 ? "ha tenuto" : "hanno tenuto";
+    const chiHaTenuto = names.length ? `${names.join(", ")} ${verbo}` : "Nessuno ha tenuto, che disastro glorioso";
+    return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">
+      ${tag}
+      <p class="encounter-read">“Applausi, applausi! ${chiHaTenuto}!”</p>
+      <p class="teschio-esito-reward">${fmtCoins(enc.reward.total)} monete personali distribuite${enc.buffoId ? " (metà premio al crollo più buffo)" : ""}.</p>
+      ${faccia ? `<div class="teschio-faccia-nuova">
+        <img src="${faccia.image}" alt="${faccia.nome}" loading="lazy" onerror="this.closest('.teschio-faccia-nuova').classList.add('no-img'); this.remove();">
+        <span>Nuova faccia in collezione:<br><strong>${faccia.nome}</strong> (${state.teschio.facce.length}/${PIRATI.teschioFacce.length})</span>
+      </div>` : ""}
+      <button type="button" class="primary-button" data-teschio-close>Fine dello show ▸</button>
+    </div></div>`;
+  }
+
+  return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">${tag}
+    <button type="button" class="secondary-button" data-map-skip>Chiudi</button></div></div>`;
 }
 
 function showView(viewName) {
@@ -3235,6 +3326,150 @@ function endBazarSpree() {
   saveState();
   render();
   showView("mappa");
+}
+
+/* =========================================================================
+   Lo Show del Teschio Multicolore — un momento folle di pochi secondi
+   ===================================================================== */
+
+let teschioTicker = null;
+
+function teschioEncounter() {
+  return { kind: "teschio", phase: "annuncio", sfidaId: null, passers: [], buffoId: null, faccia: null };
+}
+
+function stopTeschioTicker() { if (teschioTicker) { clearInterval(teschioTicker); teschioTicker = null; } }
+
+function summonTeschioShow() {
+  const v = voyage();
+  if (v.pending) return;
+  if (!TESCHIO_CORE.dayAvailable(state.teschio, state.day)) return;
+  if (!activePlayers().length) return;
+  v.choosing = null; // la scelta della rotta si riapre da sola alla fine dello show
+  v.pending = teschioEncounter();
+  v.message = "💀 Il Teschio Multicolore compare a mezz'aria e si schiarisce la gola (non ha la gola, ma ci prova).";
+  sfx("quest");
+  saveState();
+  renderMap();
+}
+
+function startTeschioSfida() {
+  const v = voyage();
+  const enc = v.pending;
+  if (!enc || enc.kind !== "teschio" || enc.phase !== "annuncio") return;
+  const sfida = TESCHIO_CORE.pickSfida(PIRATI.teschioSfide, state.teschio.recentSfideIds);
+  if (!sfida) { v.pending = null; v.message = "Il Teschio non ha sfide pronte oggi. Che strano."; saveState(); renderMap(); return; }
+  enc.sfidaId = sfida.id;
+  enc.phase = "conto";
+  enc.endsAt = Date.now() + sfida.durata * 1000;
+  state.teschio.lastShowDay = state.day; // consumato: lo show del giorno è iniziato
+  state.teschio.recentSfideIds = state.teschio.recentSfideIds.concat(sfida.id).slice(-4);
+  startTeschioTicker();
+  sfx("star");
+  pushLog(`💀 Show del Teschio Multicolore: «${sfida.sfida}» per ${sfida.durata} secondi!`);
+  saveState();
+  renderMap();
+}
+
+function startTeschioTicker() {
+  stopTeschioTicker();
+  teschioTicker = setInterval(() => {
+    const enc = voyage().pending;
+    if (!enc || enc.kind !== "teschio" || enc.phase !== "conto") { stopTeschioTicker(); return; }
+    if (Date.now() >= enc.endsAt) { teschioToJudging(); return; }
+    const el = $("#teschio-countdown");
+    if (el) {
+      const left = Math.max(0, Math.ceil((enc.endsAt - Date.now()) / 1000));
+      el.textContent = left;
+      el.classList.toggle("is-low", left <= 3);
+    }
+  }, 300);
+}
+
+function teschioToJudging() {
+  stopTeschioTicker();
+  const enc = voyage().pending;
+  if (!enc || enc.kind !== "teschio") return;
+  enc.phase = "giudizio";
+  enc.passers = activePlayers().map((p) => p.id); // parte "tutti hanno tenuto", il Master toglie i crollati
+  sfx("campana");
+  saveState();
+  renderMap();
+}
+
+function toggleTeschioPasser(playerId) {
+  const enc = voyage().pending;
+  if (!enc || enc.kind !== "teschio" || enc.phase !== "giudizio") return;
+  const set = new Set(enc.passers);
+  if (set.has(playerId)) { set.delete(playerId); if (enc.buffoId === playerId) enc.buffoId = null; }
+  else { set.add(playerId); }
+  enc.passers = [...set];
+  saveState();
+  renderMap();
+}
+
+function setTeschioBuffo(playerId) {
+  const enc = voyage().pending;
+  if (!enc || enc.kind !== "teschio" || enc.phase !== "giudizio") return;
+  if (enc.passers.includes(playerId)) return; // il "crollo più buffo" è tra chi NON ha tenuto
+  enc.buffoId = enc.buffoId === playerId ? null : playerId;
+  saveState();
+  renderMap();
+}
+
+function finishTeschioShow() {
+  const v = voyage();
+  const enc = v.pending;
+  if (!enc || enc.kind !== "teschio" || enc.phase !== "giudizio") return;
+  const sfida = PIRATI.teschioSfida(enc.sfidaId);
+  const res = TESCHIO_CORE.applyShowRewards(state, sfida, enc.passers, enc.buffoId);
+  const faccia = TESCHIO_CORE.pickFaccia(PIRATI.teschioFacce, state.teschio.facce);
+  if (faccia && !state.teschio.facce.includes(faccia.id)) state.teschio.facce.push(faccia.id);
+  state.teschio.showsFatti = (state.teschio.showsFatti || 0) + 1;
+  enc.faccia = faccia ? faccia.id : null;
+  enc.phase = "esito";
+  enc.reward = res;
+  const names = enc.passers.map((id) => state.players.find((p) => p.id === id)?.name).filter(Boolean);
+  pushLog(`💀 Il Teschio ha deciso: hanno tenuto ${names.length ? names.join(", ") : "nessuno"}. ${fmtCoins(res.total)} monete personali distribuite${faccia ? `. Nuova faccia: ${faccia.nome}` : ""}.`);
+  sfx("trionfo");
+  refreshGrade();
+  saveState();
+  renderMap();
+}
+
+function closeTeschioShow() {
+  const v = voyage();
+  if (v.pending && v.pending.kind === "teschio") {
+    v.pending = null;
+    v.message = "Il Teschio Multicolore svanisce con una risata a eco. Tirate per proseguire.";
+  }
+  stopTeschioTicker();
+  saveState();
+  renderMap();
+}
+
+function renderTeschioFacce() {
+  const acc = $("#map-teschio-facce");
+  const body = $("#map-teschio-facce-body");
+  if (!acc || !body) return;
+  const owned = new Set(state.teschio.facce || []);
+  const tot = PIRATI.teschioFacce.length;
+  const statusEl = $("#map-teschio-facce-status");
+  if (statusEl) statusEl.textContent = `${owned.size} / ${tot} collezionate · ${state.teschio.showsFatti || 0} show fatti`;
+
+  const sig = `${owned.size}-${state.teschio.showsFatti}`;
+  if (acc.dataset.sig === sig) return;
+  acc.dataset.sig = sig;
+
+  const cards = PIRATI.teschioFacce.map((f) => {
+    if (!owned.has(f.id)) return `<div class="teschio-faccia-card is-locked"><span>💀</span><small>???</small></div>`;
+    return `<div class="teschio-faccia-card">
+      <img src="${f.image}" alt="${f.nome}" loading="lazy" onerror="this.closest('.teschio-faccia-card').classList.add('no-img'); this.remove();">
+      <small>${f.nome}</small>
+    </div>`;
+  }).join("");
+  body.innerHTML = `<p class="crostone-intro">Ogni Show del Teschio Multicolore completato sblocca una nuova faccia. Sono ${tot} in tutto: quante ne colleziona la ciurma prima della fine dell'anno?</p>
+    <div class="teschio-facce-grid">${cards}</div>`;
 }
 
 function renderNegozio() {
@@ -4633,6 +4868,7 @@ function render() {
   renderBestiario();
   renderMapParola();
   renderMapBelarda();
+  renderTeschioFacce();
   renderNegozio();
   renderLog();
   renderPrint();
@@ -5025,6 +5261,15 @@ function bindEvents() {
     if (event.target.closest("[data-bazar-start]")) startBazarSpree();
     if (event.target.closest("[data-spree-next]")) spreeNextPirate();
     if (event.target.closest("[data-spree-stop]")) endBazarSpree();
+    if (event.target.closest("[data-teschio-summon]")) summonTeschioShow();
+    if (event.target.closest("[data-teschio-start]")) startTeschioSfida();
+    if (event.target.closest("[data-teschio-stop]")) teschioToJudging();
+    const teschioBuffoBtn = event.target.closest("[data-teschio-buffo]");
+    if (teschioBuffoBtn) { event.stopPropagation(); setTeschioBuffo(teschioBuffoBtn.dataset.teschioBuffo); return; }
+    const teschioPasserBtn = event.target.closest("[data-teschio-passer]");
+    if (teschioPasserBtn) toggleTeschioPasser(teschioPasserBtn.dataset.teschioPasser);
+    if (event.target.closest("[data-teschio-finish]")) finishTeschioShow();
+    if (event.target.closest("[data-teschio-close]")) closeTeschioShow();
     const eventChoice = event.target.closest("[data-event-choice]");
     if (eventChoice) resolveEventChoice(Number(eventChoice.dataset.eventChoice));
     const playCardBtn = event.target.closest("[data-play-card]");

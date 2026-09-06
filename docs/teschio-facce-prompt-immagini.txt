@@ -1,0 +1,66 @@
+PROMPT PER LE IMMAGINI — LE FACCE DEL TESCHIO MULTICOLORE
+=======================================================
+
+File finali: assets/teschio/<id>.webp (quadrati 1:1, 1200x1200).
+Fallback: emoji 💀 se il file manca.
+
+STILE COMUNE (da anteporre a ogni prompt):
+"Product photography of a small toy figurine, a stylized cartoon skull,
+centered on a clean plain off-white background, soft studio lighting,
+glossy plastic look, playful and friendly (never scary or realistic),
+kid-friendly, no text, no logos, square 1:1 framing."
+
+1. sorpreso — «Il Teschio Sorpreso»
+   a cartoon skull painted in rainbow stripes with huge round surprised eyes and a small 'o' mouth, toy figurine on white
+
+2. linguaccia — «Il Teschio Linguaccia»
+   a rainbow-painted cartoon skull sticking out a long pink tongue, cheeky expression, toy figurine on white
+
+3. addormentato — «Il Teschio Addormentato»
+   a rainbow cartoon skull with closed eyes and a sleepy 'zzz', tiny nightcap, toy figurine on white
+
+4. furioso-buffo — «Il Teschio Furioso Buffo»
+   a rainbow cartoon skull with angry cartoon eyebrows but a goofy smile, steam from the ears, toy figurine on white
+
+5. occhiali — «Il Teschio con gli Occhiali»
+   a rainbow cartoon skull wearing oversized round glasses, wise look, toy figurine on white
+
+6. innamorato — «Il Teschio Innamorato»
+   a rainbow cartoon skull with heart-shaped eyes and a dreamy smile, tiny floating hearts, toy figurine on white
+
+7. ciclope — «Il Teschio Ciclope»
+   a rainbow cartoon skull with a single big eye in the middle, curious expression, toy figurine on white
+
+8. pois — «Il Teschio a Pois»
+   a cartoon skull covered in big colorful polka dots, cheerful grin, toy figurine on white
+
+9. fluo — «Il Teschio Fluo»
+   a cartoon skull glowing in neon green, pink and yellow, wide electric smile, toy figurine on white
+
+10. ghignante — «Il Teschio Ghignante»
+   a rainbow cartoon skull with an enormous toothy mischievous grin, one raised brow, toy figurine on white
+
+11. timido — «Il Teschio Timido»
+   a rainbow cartoon skull blushing, looking away shyly, tiny hands covering part of the face, toy figurine on white
+
+12. cantante — «Il Teschio Cantante»
+   a rainbow cartoon skull singing into a tiny microphone, eyes shut, music notes around, toy figurine on white
+
+13. corona — «Il Teschio con la Corona»
+   a rainbow cartoon skull wearing a small golden crown, regal but silly smile, toy figurine on white
+
+14. bagnato — «Il Teschio Bagnato»
+   a rainbow cartoon skull dripping with water, a small rain cloud above, grumpy-funny face, toy figurine on white
+
+15. fischione — «Il Teschio Fischione»
+   a rainbow cartoon skull whistling with pursed lips, one eye winking, sound lines, toy figurine on white
+
+16. perplesso — «Il Teschio Perplesso»
+   a rainbow cartoon skull with a crooked mouth and one eye bigger than the other, confused look, toy figurine on white
+
+17. baffuto — «Il Teschio Baffuto»
+   a rainbow cartoon skull with a huge curly fake moustache, proud expression, toy figurine on white
+
+18. esploso — «Il Teschio Esploso»
+   a rainbow cartoon skull with hair standing on end and spiral eyes, as if just startled, toy figurine on white
+

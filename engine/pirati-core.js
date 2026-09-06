@@ -40,6 +40,10 @@ window.PIRATI = (function () {
     domandonaQuestionById: new Map(),
     negozio: [],              // oggetti del Negozio delle Cose Inutili
     negozioById: new Map(),
+    teschioSfide: [],         // sfide dello Show del Teschio Multicolore
+    teschioSfidaById: new Map(),
+    teschioFacce: [],         // facce del Teschio da collezionare
+    teschioFacciaById: new Map(),
     map: null,               // { id, start, nodes:{}, legs:{}, routes:{} }
     gradeLadder: [
       { grade: 1, questsNeeded: 0, name: "Mozzi Coraggiosi" },
@@ -444,6 +448,39 @@ window.PIRATI = (function () {
     });
   }
 
+  /* ---------- Lo Show del Teschio Multicolore ------------------------- */
+
+  function registerTeschioSfide(list) {
+    if (!Array.isArray(list)) return warn("registerTeschioSfide: serve un array.");
+    const CAT = ["posa", "smorfia", "verso", "scioglilingua"];
+    list.forEach((s, index) => {
+      const where = `Teschio sfida #${index + 1}`;
+      if (!s || typeof s !== "object" || typeof s.id !== "string" || !s.id) return warn(`${where}: manca 'id'.`);
+      if (state.teschioSfidaById.has(s.id)) return warn(`Teschio: sfida duplicata "${s.id}".`);
+      if (!CAT.includes(s.categoria)) return warn(`${where}: 'categoria' deve essere posa/smorfia/verso/scioglilingua.`);
+      if (typeof s.sfida !== "string" || !s.sfida) return warn(`${where}: manca 'sfida'.`);
+      if (typeof s.annuncio !== "string" || !s.annuncio) return warn(`${where}: manca 'annuncio'.`);
+      if (!Number.isInteger(s.durata) || s.durata < 8 || s.durata > 30) return warn(`${where}: 'durata' deve essere fra 8 e 30 secondi.`);
+      if (!Number.isInteger(s.premio) || s.premio <= 0) return warn(`${where}: 'premio' deve essere un intero positivo.`);
+      const clean = { id: s.id, categoria: s.categoria, annuncio: s.annuncio, sfida: s.sfida, durata: s.durata, premio: s.premio };
+      state.teschioSfide.push(clean);
+      state.teschioSfidaById.set(clean.id, clean);
+    });
+  }
+
+  function registerTeschioFacce(list) {
+    if (!Array.isArray(list)) return warn("registerTeschioFacce: serve un array.");
+    list.forEach((f, index) => {
+      const where = `Teschio faccia #${index + 1}`;
+      if (!f || typeof f !== "object" || typeof f.id !== "string" || !f.id) return warn(`${where}: manca 'id'.`);
+      if (state.teschioFacciaById.has(f.id)) return warn(`Teschio: faccia duplicata "${f.id}".`);
+      if (typeof f.nome !== "string" || !f.nome) return warn(`${where}: manca 'nome'.`);
+      const clean = { id: f.id, nome: f.nome, art: f.art || "", image: window.PIRATI_ASSET(`teschio/${f.id}.webp`) };
+      state.teschioFacce.push(clean);
+      state.teschioFacciaById.set(clean.id, clean);
+    });
+  }
+
   /* ---------- bestiario: nemici e boss --------------------------------- */
 
   function registerEnemies(list) {
@@ -528,7 +565,7 @@ window.PIRATI = (function () {
 
   /* ---------- mappa dell'arcipelago ----------------------------------- */
 
-  const SPACE_TYPES = ["mare", "costa", "evento", "mostro", "assalto", "razzia", "tesoro", "quest", "sbarco", "porto", "domandona", "bazar"];
+  const SPACE_TYPES = ["mare", "costa", "evento", "mostro", "assalto", "razzia", "tesoro", "quest", "sbarco", "porto", "domandona", "bazar", "teschio"];
 
   function registerMap(map) {
     if (!map || typeof map !== "object") return warn("registerMap: mappa non valida.");
@@ -634,6 +671,7 @@ window.PIRATI = (function () {
       `Premi di Nonna Belarda: ${state.belardaLoot.length}`,
       `Domande della Nave Domandona: ${state.domandonaQuestions.length}`,
       `Oggetti del Negozio: ${state.negozio.length}`,
+      `Sfide del Teschio: ${state.teschioSfide.length} · Facce: ${state.teschioFacce.length}`,
       `Avvisi: ${state.problems.length}`
     ];
     console.log("%c[PIRATI] " + lines.join("  |  "), "font-weight:bold");
@@ -650,6 +688,8 @@ window.PIRATI = (function () {
     registerBelardaLoot,
     registerDomandonaQuestions,
     registerNegozio,
+    registerTeschioSfide,
+    registerTeschioFacce,
     registerEnemies,
     registerEvents,
     registerWords,
@@ -666,6 +706,10 @@ window.PIRATI = (function () {
     domandonaQuestion: (id) => state.domandonaQuestionById.get(id) || null,
     get negozio() { return state.negozio; },
     negozioItem: (id) => state.negozioById.get(id) || null,
+    get teschioSfide() { return state.teschioSfide; },
+    teschioSfida: (id) => state.teschioSfidaById.get(id) || null,
+    get teschioFacce() { return state.teschioFacce; },
+    teschioFaccia: (id) => state.teschioFacciaById.get(id) || null,
     get enemies() { return state.enemies; },
     get bosses() { return state.bosses; },
     get boss() { return state.bosses[0] || null; },

@@ -51,12 +51,14 @@ function appHarness(savedState) {
   runScript(context, "engine/belarda-core.js");
   runScript(context, "engine/domandona-core.js");
   runScript(context, "engine/negozio-core.js");
+  runScript(context, "engine/teschio-core.js");
   runScript(context, "catalog/premi.js");
   runScript(context, "catalog/saccheggi.js");
   runScript(context, "catalog/poteri.js");
   runScript(context, "catalog/belarda.js");
   runScript(context, "catalog/domandona.js");
   runScript(context, "catalog/negozio.js");
+  runScript(context, "catalog/teschio.js");
 
   const appSource = fs.readFileSync(path.join(root, "app.js"), "utf8")
     .replace(/\nbindEvents\(\);\r?\nrender\(\);\s*$/, `
