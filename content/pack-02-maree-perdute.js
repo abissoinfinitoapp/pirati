@@ -3107,6 +3107,446 @@ PIRATI.registerPack({
           close_button: "⛵ Torna alla rotta"
         }
       }
+    },
+
+    /* ---- SPIAGGIA DORATA ---------------------------------------- */
+    {
+      id: "tesoro-vuole-essere-regalato", island: "tesoro", order: 1,
+      title: "Il Tesoro che Vuole Essere Regalato", kind: "Tesoro impossibile",
+      difficulty: 6, minutes: 50,
+      readAloud: "Sulla Spiaggia Dorata c'è un tesoro enorme: bauli di monete, gemme, corone. Ma appena qualcuno ne prende un pezzo per tenerlo per sé, quello diventa pietra grigia. Il tesoro mantiene il suo valore solo se viene regalato.",
+      readKids: {
+        facile: [
+          "C'è un tesoro enorme sulla spiaggia.",
+          "Se lo tieni per te, diventa pietra.",
+          "Vale qualcosa solo se lo regali.",
+          "Bisogna capire come dividerlo."
+        ],
+        avanzato: [
+          "La Spiaggia Dorata nasconde un tesoro da favola.",
+          "Ma è un tesoro strano: se lo afferri per te, ti si sbriciola in mano come sabbia dura.",
+          "Resta oro vero solo nelle mani di chi lo riceve in dono.",
+          "Per portarlo via, la ciurma deve prima regalarlo."
+        ]
+      },
+      goal: "Capire la regola del tesoro e distribuirlo senza trasformarlo in pietra.",
+      beats: [
+        "Ogni tentativo di tenerlo per sé lo pietrifica.",
+        "Regalato bene, il tesoro cresce invece di diminuire.",
+        "Dal mucchio manca una campana che non fa suono, rubata dalla nave."
+      ],
+      choices: [
+        { label: "Regalarlo agli abitanti dell'isola", stat: "fortuna", target: 6, result: "Andate porta a porta a regalare quello che serve a ciascuno: il tesoro resta oro e la gente vi abbraccia." },
+        { label: "Usarlo per aiutare tutta la ciurma insieme", stat: "astuzia", target: 6, result: "Trovate un modo di trasformarlo in qualcosa che è di tutti e di nessuno: e non si pietrifica." }
+      ],
+      groupChallenge: "Ogni pirata sceglie una cosa del tesoro e la regala a un altro pirata dicendo perché quella è giusta per lui. Poi si controlla: è rimasta oro?",
+      rewards: [
+        { type: "loot", id: "pacchetto-che-non-finisce" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "tesoro-donato" },
+        { type: "power", id: "regalo-perfetto" }
+      ],
+      growth: "Chi fa il regalo più azzeccato a un compagno segna 1 crescita Fortuna.",
+      fail: "Un pirata cede alla tentazione e stringe una manciata di monete: diventano ciottoli e il tesoro si offende, Pericolo +1. Ma tra i ciottoli c'è il posto vuoto di una campana.",
+      escape: "Regalare TUTTO il tesoro al primo che passa e andarsene a mani vuote ma leggeri: prova di Fortuna 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Uno di voi, senza pensarci, infila una moneta d'oro in tasca. Un secondo dopo, in tasca c'è un sassolino grigio. Provate con una gemma: diventa un pezzo di ghiaia. Il tesoro brilla, intatto, ma non si lascia possedere.",
+              ask: "Perché un tesoro dovrebbe valere qualcosa solo se lo regali?",
+              hints: [
+                "Perché le cose belle contano di più quando le condividi.",
+                "Perché tenere tutto per sé rende soli, e la solitudine è grigia.",
+                "Perché un regalo lega due persone, un furto no.",
+                "Forse chi l'ha messo qui voleva insegnare qualcosa."
+              ],
+              rescue: "Un granchietto raccoglie una monetina, la porge a un altro granchio, e quella resta d'oro. Vi guarda come a dire «visto?».",
+              masterTip: "Chiedi ai bambini qual è un regalo che hanno fatto e che li ha resi contenti quanto chi l'ha ricevuto."
+            },
+            interaction: "Nessun tiro: si scopre la regola.",
+            outcome: {
+              title: "La regola è chiara",
+              text: "Avete capito: questo tesoro va donato, non preso. E la parte strana è che, regalato, sembra non finire mai. Ora dovete decidere a chi.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete distribuire il tesoro agli abitanti dell'isola, regalando a ognuno esattamente ciò che gli serve. Oppure potete usarlo per la ciurma, ma solo se trovate un modo per cui resti «di tutti» e di nessuno in particolare.",
+              ask: "Lo regaliamo agli abitanti, o lo usiamo per la ciurma tutta insieme?",
+              hints: [
+                "Regalare agli abitanti è sicuro: il tesoro resta oro nelle loro mani.",
+                "Usarlo per la ciurma funziona solo se non diventa 'roba mia'.",
+                "Si può fare metà e metà."
+              ],
+              rescue: "Il tesoro, quando parlate di regalarlo, brilla un po' di più."
+            },
+            choices: [
+              {
+                id: "abitanti",
+                label: "🎁 Lo regaliamo agli abitanti",
+                reaction_title: "La ciurma apre la stagione dei regali",
+                reaction: "Caricate carriole di tesoro e girate l'isola. A ognuno date la cosa giusta: una bussola a chi si perde, una coperta a chi ha freddo, un gioco a chi è triste. Nessun pezzo si pietrifica.",
+                next: "abitanti"
+              },
+              {
+                id: "ciurma",
+                label: "⚓ Lo usiamo per la ciurma",
+                reaction_title: "La ciurma cerca un modo condiviso",
+                reaction: "Vi mettete a ragionare: come si usa un tesoro per tutti senza che diventi di qualcuno? Forse trasformandolo in qualcosa che si può solo usare insieme.",
+                next: "ciurma"
+              }
+            ]
+          },
+          {
+            scene_id: "abitanti",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Siete a metà giro. Ma l'ultima casa è quella di un vecchio avaro che non vuole niente in regalo: «I regali obbligano», dice. «Poi devi ricambiare. Tienti il tuo oro». E vi chiude la porta in faccia.",
+              ask: "Come regalate qualcosa a qualcuno che è convinto che i regali siano una trappola?",
+              hints: [
+                "Regalargli qualcosa che non lo obbliga a niente: una risata, un aiuto.",
+                "Dirgli che questo regalo non aspetta niente in cambio.",
+                "Chiedergli cosa gli manca davvero, non cosa vuole.",
+                "Lasciargli il regalo sulla soglia e andarsene, senza fare pressione."
+              ],
+              rescue: "Da dietro la porta, il vecchio avaro chiede piano: «...e se non ho niente da darvi indietro?»",
+              masterTip: "Fai proporre a due bambini il regalo perfetto per uno che ha paura di ricevere."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 55, dice: 45 },
+              destiny_screen: {
+                title: "✦ Il Destino guarda l'ultimo regalo",
+                button: "Affidiamoci al Destino",
+                group_result: "Trovate il regalo che non pesa: il vecchio lo accetta con le lacrime agli occhi e vi offre un tè.",
+                dice_result: "Il vecchio resiste ancora: serve una prova di Fortuna perché il vostro gesto lo convinca."
+              },
+              dice: { stat: "fortuna", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ TUTTA L'ISOLA HA IL SUO DONO",
+                text: "Anche il vecchio avaro cede. L'isola intera ha ricevuto qualcosa, e il tesoro — regalato per intero — è ancora lì che brilla, come se donarlo l'avesse fatto crescere.",
+                audio: "win-event",
+                next: "campana-mancante"
+              },
+              fail_forward: {
+                title: "🪨 UNA MANCIATA DI CIOTTOLI",
+                text: "Deluso dal rifiuto del vecchio, un pirata stringe per ripicca un pugno di monete: si sbriciolano, e il tesoro si opacizza un po', Pericolo +1. Ma svuotando la tasca dai ciottoli notate, nel mucchio, uno spazio a forma di campana.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "campana-mancante"
+              }
+            }
+          },
+          {
+            scene_id: "ciurma",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Avete un'idea: fondere il tesoro in qualcosa che si può solo usare insieme — una campana per la nave, un faro per l'isola, un ponte. Una cosa che non ha senso possedere da soli. Ma bisogna farlo bene, o si pietrifica lo stesso.",
+              ask: "In cosa trasformate il tesoro perché resti 'di tutti e di nessuno'?",
+              hints: [
+                "Qualcosa che serve solo se ci sono più persone (un'altalena a due, un ponte).",
+                "Qualcosa che si dona ogni volta che lo usi (una fontana, un forno pubblico).",
+                "Qualcosa che appartiene al posto, non alle persone.",
+                "Qualcosa che la ciurma futura troverà e userà anche lei."
+              ],
+              rescue: "Il tesoro, mentre ne parlate, comincia a colare e a prendere una forma da solo: aspetta una vostra idea.",
+              masterTip: "Fai scegliere ai bambini l'oggetto comune e disegnatelo insieme."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ UN TESORO CHE NON È DI NESSUNO",
+                text: "Il tesoro si fonde e prende la forma che avete scelto: qualcosa di grande, che serve a tutti e che nessuno può mettersi in tasca. Resta oro splendente, e diventa parte dell'isola per sempre.",
+                audio: "win-event",
+                next: "campana-mancante"
+              },
+              fail_forward: {
+                title: "🗿 SI PIETRIFICA A META",
+                text: "L'oggetto viene su storto, un po' 'tuo' e un po' no, e metà si pietrifica: Pericolo +1. Ma nella metà d'oro rimasta si vede lo stampo di una campana che qui non c'è più.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "campana-mancante"
+              }
+            }
+          },
+          {
+            scene_id: "campana-mancante",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Nel tesoro c'è un vuoto a forma di campana. Un abitante ve lo spiega: «C'era una campana d'oro che non suonava. Muta. La usavamo per dire 'grazie' senza far rumore: la toccavi e chi te l'aveva regalata lo sentiva. È sparita quando è passata la nave silenziosa».",
+              ask: "Perché la nave si porterebbe via proprio una campana che non fa suono?",
+              hints: [
+                "Perché era un modo di dire grazie: una cosa che tiene unite le persone.",
+                "Una nave silenziosa e una campana muta: forse chi è a bordo cerca proprio le cose 'silenziose' che contano.",
+                "È lo stesso della nave delle ombre, dei nomi, delle risate, del vento.",
+                "Forse a chi è sulla nave non ha mai detto grazie nessuno."
+              ],
+              rescue: "Un abitante tocca il vuoto dove stava la campana e, per un attimo, tutti sentono un 'grazie' nel petto."
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio del vuoto",
+              text: "Nel posto della campana c'è inciso, minuscolo, il segno della nave. Adesso avete visto abbastanza: ombre, nomi, colori, risate, vento, e ora un modo di dire grazie. Qualcuno sta raccogliendo tutto ciò che rende una ciurma una ciurma.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "La Spiaggia Dorata resta dorata, ma adesso l'oro è sparso in mille mani invece che chiuso in un baule. Un abitante vi consegna un pacchetto con un fiocco: dentro c'è sempre il regalo giusto per la persona che avete davanti. Una volta.",
+              masterTip: "Chiudi con la domanda: qual è una cosa che diventa più preziosa quando la condividi?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "Il Tesoro che Vuole Essere Regalato",
+          final_read: "Il tesoro, regalato, non è finito: è cresciuto. Il Pacchetto che Non Finisce resta alla ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
+    },
+
+    {
+      id: "nave-cose-impossibili", island: "tesoro", order: 2,
+      title: "La Nave che Rubava le Cose Impossibili", kind: "Finale del ciclo",
+      difficulty: 7, minutes: 60,
+      readAloud: "Eccola. La nave dalle vele strane getta l'ancora davanti alla Spiaggia Dorata. Dalle sartie pendono ombre, colori, bottiglie di nomi e di risate, sacchi di vento, una campana muta: tutte le cose impossibili sparite durante il vostro viaggio. E in coperta, da solo, c'è un pirata giovane come voi.",
+      readKids: {
+        facile: [
+          "La nave misteriosa è arrivata.",
+          "Dalle vele pendono ombre, colori, risate, vento.",
+          "A bordo c'è un solo pirata, giovane.",
+          "È lui che ha preso tutto."
+        ],
+        avanzato: [
+          "La nave che avete inseguito per tutto il ciclo è qui, davanti a voi.",
+          "Le sue vele sono cariche di ombre, colori, nomi in bottiglia, risate, vento, una campana senza suono.",
+          "In coperta non c'è una ciurma: c'è un ragazzino pirata, solo.",
+          "Ha raccolto tutto questo perché sperava, mettendolo insieme, di costruirsi una ciurma."
+        ]
+      },
+      goal: "Salire sulla nave, capire perché tutto è stato raccolto, e decidere insieme cosa fare del pirata solitario.",
+      beats: [
+        "Il pirata non è cattivo: è rimasto solo e ha provato a costruirsi una ciurma con i pezzi degli altri.",
+        "Le cose impossibili in gabbia non funzionano: le ombre non seguono, le risate non ridono.",
+        "Dopo la vostra decisione, il Destino può mettere un ultimo ostacolo: la nave che si sfascia, le cose che scappano, una tempesta."
+      ],
+      choices: [
+        { label: "Invitarlo nella nostra ciurma", stat: "coraggio", target: 6, result: "Gli tendete la mano: «Non serve rubare una ciurma. Puoi entrare nella nostra»." },
+        { label: "Aiutarlo a costruirsi una ciurma sua", stat: "astuzia", target: 6, result: "Gli spiegate che una ciurma si fa un pezzo alla volta, con persone vere, e vi offrite di aiutarlo a cominciare." },
+        { label: "Chiedergli prima di restituire tutto", stat: "coraggio", target: 6, result: "Gli dite che qualsiasi cosa succeda dopo, la prima cosa giusta è ridare alle isole quello che è loro." },
+        { label: "Inventare insieme una soluzione diversa", stat: "fortuna", target: 6, result: "Non scegliete nessuna delle tre: proponete qualcosa che il pirata non si aspettava." }
+      ],
+      groupChallenge: "Rispondete tutti insieme alla domanda del pirata: che cosa rende davvero una ciurma una ciurma? Non le cose: cosa?",
+      rewards: [
+        { type: "loot", id: "bussola-oltre-i-confini" },
+        { type: "coins", amount: 250000 },
+        { type: "fame", amount: 3 },
+        { type: "trophy", id: "liberatore-cose-impossibili" },
+        { type: "power", id: "rotta-nuova" }
+      ],
+      growth: "Ogni pirata che partecipa a questa avventura segna 1 crescita nella caratteristica che preferisce.",
+      fail: "Nella confusione la nave si stacca dall'ancora con voi a bordo: Pericolo +1, ma è proprio salendo in coperta a controllare che parlate faccia a faccia col pirata.",
+      escape: "Non serve fuggire da questa: si può sempre proporre di parlarne un'altra volta, e la nave aspetterà.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Salite a bordo. È tutto in ordine, ma tristissimo. Le ombre appese alle vele non fanno il verso a nessuno. Le bottiglie di risate sono ferme. Il sacco del vento è sgonfio. La campana muta non dice grazie a niente. Il pirata vi guarda senza paura: «Vi aspettavo. Ho quasi finito la collezione».",
+              ask: "Cosa provate a vedere tutte le cose delle isole appese qui, spente?",
+              hints: [
+                "Che non servono a niente, staccate da dove stavano.",
+                "Che è un lavoro enorme fatto per un motivo sbagliato.",
+                "Un po' di rabbia, ma anche un po' di pena per chi le ha raccolte.",
+                "Voglia di rimettere tutto al suo posto."
+              ],
+              rescue: "Un'ombra, riconoscendo una di voi, prova a copiare un suo gesto — e non ci riesce, appesa com'è.",
+              masterTip: "Lascia che i bambini reagiscano liberamente: rabbia, tristezza, curiosità. Tutte vanno bene."
+            },
+            interaction: "Nessun tiro: si osserva la nave.",
+            outcome: {
+              title: "La collezione delle cose spente",
+              text: "Il pirata vede le vostre facce. «Lo so», dice piano. «Da qui sembrano cose morte. Ma se le avessi tutte, magari...» Non finisce la frase.",
+              audio: "click",
+              next: "storia-del-pirata"
+            }
+          },
+          {
+            scene_id: "storia-del-pirata",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Vi racconta. «La mia ciurma è finita. Uno alla volta se ne sono andati, o non sono più tornati. Sono rimasto io e la nave. Poi ho pensato: se metto insieme abbastanza pezzi di ciurme vere — le loro ombre, le loro risate, i loro nomi — forse ne viene fuori una anche per me».",
+              ask: "Perché una ciurma non si può costruire con i pezzi rubati alle altre?",
+              hints: [
+                "Perché una risata rubata non ride con te.",
+                "Perché quelle cose sono di qualcuno: prenderle lo lascia solo.",
+                "Perché una ciurma non è fatta di cose, ma di persone che scelgono di stare insieme.",
+                "Perché lui è ancora da solo, anche con tutta questa roba a bordo."
+              ],
+              rescue: "Il pirata prende in mano una bottiglia di risate, la scuote: non succede niente. La rimette giù.",
+              masterTip: "Chiedi ai bambini: cosa direbbero a un amico che si sente solo e sta facendo una cosa sbagliata per non esserlo più?"
+            },
+            interaction: "Nessun tiro: si ascolta la sua storia.",
+            outcome: {
+              title: "Un pirata solo, con una nave piena",
+              text: "«Adesso che siete qui», dice, «ditemi voi. Che cosa dovrei fare?» E aspetta. Non scappa, non minaccia. Aspetta la vostra risposta.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Sta a voi. Potete invitarlo nella vostra ciurma. Potete aiutarlo a costruirsene una tutta sua, da zero. Potete chiedergli di restituire ogni cosa prima di parlare di altro. O potete inventare una strada che lui non si aspetta.",
+              ask: "Cosa decide la ciurma di fare del pirata solitario?",
+              hints: [
+                "Invitarlo con voi: subito non è più solo, ma dovrà imparare a stare in gruppo.",
+                "Aiutarlo a farsi la sua ciurma: più lento, ma è davvero sua.",
+                "Prima la restituzione: la cosa giusta va fatta comunque.",
+                "Una quarta idea: sentite cosa vi viene."
+              ],
+              rescue: "Il pirata si stringe nelle spalle: «Qualsiasi cosa decidiate, va bene. Non ho più niente da perdere»."
+            },
+            choices: [
+              {
+                id: "invitare",
+                label: "🤝 Vieni nella nostra ciurma",
+                reaction_title: "La ciurma allarga il cerchio",
+                reaction: "Gli tendete la mano. «Non ti serve rubarne una. Entra nella nostra, se vuoi. Si comincia oggi». Il pirata guarda la mano come se non ne avesse mai vista una tesa così.",
+                next: "sua-risposta"
+              },
+              {
+                id: "aiutarlo",
+                label: "⚓ Ti aiutiamo a farti la tua ciurma",
+                reaction_title: "La ciurma fa da maestra",
+                reaction: "«Una ciurma si fa un pezzo alla volta», gli dite. «Con persone, non con cose. Ti aiutiamo a trovare la prima». Il pirata annuisce piano, come se ci avesse sempre pensato ma non ci avesse mai creduto.",
+                next: "sua-risposta"
+              },
+              {
+                id: "restituire",
+                label: "↩️ Prima restituisci tutto",
+                reaction_title: "La ciurma mette le cose in ordine",
+                reaction: "«Qualsiasi cosa succeda dopo», dite, «la prima è ridare alle isole quello che è loro». Il pirata abbassa lo sguardo e comincia, lui stesso, a slegare la prima ombra.",
+                next: "sua-risposta"
+              },
+              {
+                id: "inventare",
+                label: "💡 Abbiamo un'altra idea",
+                reaction_title: "La ciurma propone qualcosa di nuovo",
+                reaction: "Non scegliete nessuna delle tre. Gli proponete qualcosa che non aveva considerato — e dalla faccia del pirata capite che l'avete spiazzato per bene.",
+                next: "sua-risposta"
+              }
+            ]
+          },
+          {
+            scene_id: "sua-risposta",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Il pirata ascolta la vostra decisione fino in fondo. Poi fa una cosa: comincia a slegare le cose impossibili dalle vele, con le mani che tremano un po'. «Va bene», dice. «Aiutatemi. Da solo ci metto una vita».",
+              ask: "Come restituite ombre, nomi, colori, risate e vento alle isole giuste, tutti insieme?",
+              hints: [
+                "Ogni cosa sa da sola dove tornare: basta liberarla.",
+                "Le ombre corrono a casa, le risate volano, i nomi galleggiano.",
+                "La campana muta va riportata a mano, con delicatezza.",
+                "La Stella della Ciurma può fare da faro per orientarle."
+              ],
+              rescue: "La prima ombra liberata schizza via verso le rovine e, prima di sparire, saluta con la mano.",
+              masterTip: "Fai assegnare a ogni bambino una 'cosa impossibile' da riportare a casa, con un gesto."
+            },
+            interaction: "Nessun tiro: si libera tutto.",
+            outcome: {
+              title: "Le cose impossibili tornano libere",
+              text: "Una dopo l'altra, le cose lasciano la nave. Ombre verso le rovine, risate verso le cascate, colori verso la grotta, vento verso le scogliere, nomi verso le mangrovie. La nave si alleggerisce, e sembra respirare.",
+              audio: "star",
+              next: "ultimo-ostacolo"
+            }
+          },
+          {
+            scene_id: "ultimo-ostacolo",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Ma liberare tutto in una volta è tanto. La nave, senza il suo carico, imbarca acqua da una falla; il vento appena liberato torna a soffiare forte; le ultime ombre si aggrovigliano tra le sartie. Serve un ultimo sforzo di tutti.",
+              ask: "Come gestite l'ultimo momento: nave che fa acqua, vento che rinforza, cose che si accavallano?",
+              hints: [
+                "Dividersi i compiti: chi tappa la falla, chi guida il vento, chi districa le ombre.",
+                "Chiedere al pirata di aiutare: è ancora la sua nave, la conosce.",
+                "Usare la campana muta per dire 'grazie' a tutte le cose che se ne vanno.",
+                "Restare calmi e fare una cosa alla volta, tutti insieme."
+              ],
+              rescue: "Il pirata solitario prende il timone senza che glielo chiediate: «Questa parte la so fare».",
+              masterTip: "Il Destino qui decide solo la difficoltà dell'ultimo momento, non l'esito della vostra scelta morale."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 55, dice: 45 },
+              destiny_screen: {
+                title: "✦ Il Destino soffia un'ultima volta",
+                button: "Affidiamoci al Destino",
+                group_result: "Vi coordinate alla perfezione: falla tappata, vento calmato, ombre libere. La nave regge.",
+                dice_result: "Il mare si agita davvero: serve un'ultima prova di Coraggio di tutta la ciurma per tenere tutto insieme."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ TUTTO AL SUO POSTO",
+                text: "L'ultima cosa impossibile lascia la nave. Il mare si calma. La nave, vuota e leggera, galleggia tranquilla. E il pirata, per la prima volta, non è più circondato da cose spente: è circondato da voi.",
+                audio: "trionfo",
+                next: "finale"
+              },
+              fail_forward: {
+                title: "🌊 UN'ONDATA DI TROPPO",
+                text: "Un'onda vi butta tutti in coperta e la nave gira su sé stessa: Pericolo +1. Ma nel caos vi ritrovate tutti aggrappati allo stesso parapetto, pirata solitario compreso, e ridete. Le ultime cose se ne vanno mentre non guardate.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "finale"
+              }
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Le cose impossibili sono tornate alle isole: le ombre seguono di nuovo, i nomi sono in bocca a chi li porta, i colori brillano, si ride, il vento è gentile. E la Stella della Ciurma, in cielo, cambia luce: da dorata a un colore che non ha nome, e disegna sull'acqua una rotta che va oltre il bordo di tutte le mappe che conoscete.",
+              masterTip: "Chiudi con la domanda del pirata, adesso che ha una risposta: che cosa rende davvero una ciurma una ciurma?"
+            },
+            completion: {
+              action_label: "🌟 Concludi il Ciclo II"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🌟 CICLO II COMPLETATO",
+          subtitle: "La Rotta delle Maree Perdute",
+          final_read: "Le cose impossibili sono tornate a casa, e il pirata solitario non è più solo. La Stella della Ciurma indica una rotta nuova, oltre i confini conosciuti. Ciclo III: adesso questo mondo bisogna proteggerlo.",
+          close_button: "⛵ Oltre l'orizzonte"
+        }
+      }
     }
 
   ]

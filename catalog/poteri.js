@@ -252,6 +252,20 @@ PIRATI.registerPowers([
     play: { type: "skip", note: "afferrare al volo qualcosa che stava per andare perso" },
     art: "Tante mani protese che acchiappano al volo cappelli, aquiloni, un gatto e una piccola casa, mentre un vento colorato porta via tutto. Cielo di scogliere, gabbiani."
   },
+  {
+    id: "regalo-perfetto", name: "Il Regalo Perfetto", icon: "🎁",
+    category: "magia", grade: 3, cooldown: "quest",
+    effect: "Regala una cosa qualsiasi a qualcuno che ne ha bisogno: nella scena diventa esattamente la cosa che gli serviva.",
+    play: { type: "narrative", note: "un oggetto regalato a chi ne ha bisogno diventa ciò che gli serviva, per una scena" },
+    art: "Un pacchetto con un fiocco che si apre e da dentro esce una luce che prende la forma dell'oggetto giusto: una coperta, una bussola, un panino. Spiaggia dorata al tramonto."
+  },
+  {
+    id: "rotta-nuova", name: "La Rotta Nuova", icon: "🌟",
+    category: "carta", grade: 3, cooldown: "quest",
+    effect: "La ciurma dichiara di voler andare «oltre»: il Master apre una scena, un luogo o una possibilità che non erano previsti.",
+    play: { type: "narrative", note: "la ciurma apre una scena o un luogo non previsti dall'avventura" },
+    art: "La Stella della Ciurma che cambia colore e proietta sull'acqua nera una rotta luminosa che va oltre il bordo di una vecchia mappa arrotolata."
+  },
 
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).

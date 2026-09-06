@@ -49,7 +49,9 @@ PIRATI.registerRewards({
     { id: "bolla-di-risata",           name: "Bolla di Risata",            icon: "🫧", rarity: "comune", text: "Aperta, libera una risata contagiosa: per una scena tutti nei paraggi hanno voglia di ridere." },
     { id: "ciottolo-delle-scelte",     name: "Ciottolo delle Scelte",      icon: "🪨", rarity: "raro",   text: "Tenuto in mano da tutta la ciurma mentre si decide, aiuta a scegliere insieme senza litigare." },
     { id: "banderuola-sincera",        name: "Banderuola Sincera",         icon: "🧭", rarity: "comune", text: "Puntata verso chi sta parlando, si gira davvero verso di lui solo se dice la verità." },
-    { id: "rete-del-vento",            name: "Rete del Vento",             icon: "🪤", rarity: "raro",   text: "Lanciata in aria, ferma per un momento tutto quello che il vento sta portando via." }
+    { id: "rete-del-vento",            name: "Rete del Vento",             icon: "🪤", rarity: "raro",   text: "Lanciata in aria, ferma per un momento tutto quello che il vento sta portando via." },
+    { id: "pacchetto-che-non-finisce", name: "Pacchetto che Non Finisce",  icon: "🎁", rarity: "raro",   text: "Dentro c'è sempre il regalo giusto per la persona che hai davanti. Una volta." },
+    { id: "bussola-oltre-i-confini",   name: "Bussola Oltre i Confini",    icon: "🧭", rarity: "epico",  text: "Non punta al nord: punta alla prossima avventura che la ciurma non ha ancora vissuto." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */
@@ -86,7 +88,9 @@ PIRATI.registerRewards({
     { id: "ridai-le-risate",         name: "Ridai-Risate",            icon: "😄", text: "Hai ripescato dalla laguna la risata di ogni abitante delle Cascate." },
     { id: "strada-scelta-insieme",   name: "Strada Scelta Insieme",   icon: "🛤️", text: "Hai preso la Cascata delle Decisioni e ne hai accettato le conseguenze con la ciurma." },
     { id: "smonta-bugie",            name: "Smonta-Bugie",            icon: "🕵️", text: "Hai scoperto la regola del Vento che Dice Bugie e sei arrivato in cima." },
-    { id: "salva-cose-che-volano",   name: "Salva-Volanti",           icon: "🎈", text: "Hai deciso cosa salvare nel Paese dove Tutto Vola, e l'hai salvato." }
+    { id: "salva-cose-che-volano",   name: "Salva-Volanti",           icon: "🎈", text: "Hai deciso cosa salvare nel Paese dove Tutto Vola, e l'hai salvato." },
+    { id: "tesoro-donato",           name: "Tesoro Donato",           icon: "🎁", text: "Hai capito la regola del Tesoro che Vuole Essere Regalato e l'hai distribuito." },
+    { id: "liberatore-cose-impossibili", name: "Liberatore delle Cose Impossibili", icon: "🌟", text: "Hai liberato ombre, nomi, colori, risate e vento dalla nave misteriosa, e deciso cosa fare del pirata solitario." }
   ],
 
   /* --- TITOLI: onorificenze della ciurma (per usi futuri / Gradi) ------- */
