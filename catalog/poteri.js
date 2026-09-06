@@ -238,6 +238,20 @@ PIRATI.registerPowers([
     play: { type: "narrative", note: "la ciurma vede un pezzetto di ogni strada possibile prima di scegliere" },
     art: "Una cascata che si divide in tre corsi d'acqua luminosi, ognuno di un colore diverso, che spariscono in tre gallerie di roccia. Un ciottolo tondo galleggia al bivio."
   },
+  {
+    id: "domanda-trappola", name: "La Domanda Trappola", icon: "🕵️",
+    category: "carta", grade: 3, cooldown: "quest",
+    effect: "Fai a qualcuno che a volte mente una domanda a cui, comunque risponda, capisci la verità.",
+    play: { type: "narrative", note: "una domanda-trappola: comunque risponda, la ciurma capisce la verità" },
+    art: "Una banderuola a forma di volpe su un tetto ventoso, che punta decisa da una parte mentre il vento soffia dall'altra. Scogliere e nuvole veloci sullo sfondo."
+  },
+  {
+    id: "presa-al-volo", name: "La Presa al Volo", icon: "🎈",
+    category: "marchingegno", grade: 3, cooldown: "quest",
+    effect: "La ciurma afferra al volo qualcosa che stava per essere perso — un oggetto, una persona, un'occasione — senza bisogno di tirare.",
+    play: { type: "skip", note: "afferrare al volo qualcosa che stava per andare perso" },
+    art: "Tante mani protese che acchiappano al volo cappelli, aquiloni, un gatto e una piccola casa, mentre un vento colorato porta via tutto. Cielo di scogliere, gabbiani."
+  },
 
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).

@@ -47,7 +47,9 @@ PIRATI.registerRewards({
     { id: "boccetta-di-colore",        name: "Boccetta di Colore",         icon: "🎨", rarity: "comune", text: "Versata su qualcosa di grigio o spento, gli ridà un colore vivo per una scena." },
     { id: "coperta-presentazioni",     name: "Coperta delle Presentazioni", icon: "🛏️", rarity: "raro",   text: "Sotto questa coperta due che si temono possono parlarsi senza vedersi, finché non sono pronti." },
     { id: "bolla-di-risata",           name: "Bolla di Risata",            icon: "🫧", rarity: "comune", text: "Aperta, libera una risata contagiosa: per una scena tutti nei paraggi hanno voglia di ridere." },
-    { id: "ciottolo-delle-scelte",     name: "Ciottolo delle Scelte",      icon: "🪨", rarity: "raro",   text: "Tenuto in mano da tutta la ciurma mentre si decide, aiuta a scegliere insieme senza litigare." }
+    { id: "ciottolo-delle-scelte",     name: "Ciottolo delle Scelte",      icon: "🪨", rarity: "raro",   text: "Tenuto in mano da tutta la ciurma mentre si decide, aiuta a scegliere insieme senza litigare." },
+    { id: "banderuola-sincera",        name: "Banderuola Sincera",         icon: "🧭", rarity: "comune", text: "Puntata verso chi sta parlando, si gira davvero verso di lui solo se dice la verità." },
+    { id: "rete-del-vento",            name: "Rete del Vento",             icon: "🪤", rarity: "raro",   text: "Lanciata in aria, ferma per un momento tutto quello che il vento sta portando via." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */
@@ -82,7 +84,9 @@ PIRATI.registerRewards({
     { id: "libera-colori",           name: "Libera-Colori",           icon: "🌈", text: "Hai liberato i colori della Grotta della Luna e li hai messi d'accordo." },
     { id: "pace-tra-mostri",         name: "Pace tra Mostri",         icon: "🤝", text: "Hai fatto diventare amici un gigante e il mostro sotto il suo letto." },
     { id: "ridai-le-risate",         name: "Ridai-Risate",            icon: "😄", text: "Hai ripescato dalla laguna la risata di ogni abitante delle Cascate." },
-    { id: "strada-scelta-insieme",   name: "Strada Scelta Insieme",   icon: "🛤️", text: "Hai preso la Cascata delle Decisioni e ne hai accettato le conseguenze con la ciurma." }
+    { id: "strada-scelta-insieme",   name: "Strada Scelta Insieme",   icon: "🛤️", text: "Hai preso la Cascata delle Decisioni e ne hai accettato le conseguenze con la ciurma." },
+    { id: "smonta-bugie",            name: "Smonta-Bugie",            icon: "🕵️", text: "Hai scoperto la regola del Vento che Dice Bugie e sei arrivato in cima." },
+    { id: "salva-cose-che-volano",   name: "Salva-Volanti",           icon: "🎈", text: "Hai deciso cosa salvare nel Paese dove Tutto Vola, e l'hai salvato." }
   ],
 
   /* --- TITOLI: onorificenze della ciurma (per usi futuri / Gradi) ------- */
