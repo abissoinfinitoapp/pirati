@@ -435,6 +435,440 @@ PIRATI.registerPack({
           close_button: "⛵ Torna alla rotta"
         }
       }
+    },
+
+    /* ---- VULCANO RUGGENTE -------------------------------------------- */
+    {
+      id: "vulcano-ha-paura", island: "vulcano", order: 1,
+      title: "Il Vulcano ha Paura", kind: "Aiuto emotivo comico",
+      difficulty: 6, minutes: 55,
+      readAloud: "Il Vulcano Ruggente non ruggisce più. Ogni volta che sta per eruttare si trattiene, diventa rosso di vergogna e mormora: «Scusate, scusate, non volevo spaventarvi». Dentro, però, la pressione sale.",
+      readKids: {
+        facile: [
+          "Il vulcano non erutta più.",
+          "Ha paura di spaventare tutti.",
+          "Continua a chiedere scusa.",
+          "Ma dentro sta per scoppiare."
+        ],
+        avanzato: [
+          "Il Vulcano Ruggente è tutto tremante.",
+          "Ogni volta che sta per eruttare si ferma all'ultimo.",
+          "«Scusate», dice piano, «non volevo fare paura a nessuno».",
+          "Ma se non butta fuori un po' di fumo, prima o poi scoppia sul serio."
+        ]
+      },
+      goal: "Aiutare il vulcano a ritrovare il coraggio di ruggire senza diventare un pericolo.",
+      beats: [
+        "Il vulcano si scusa in continuazione e trattiene tutto.",
+        "Serve un modo di 'fare rumore' che non spaventi gli abitanti.",
+        "Il vulcano ricorda una nave che sembrava aspirare il rumore dalle montagne."
+      ],
+      choices: [
+        { label: "Incoraggiarlo con le parole", stat: "coraggio", target: 6, result: "Trovate le parole giuste e il vulcano si fida abbastanza da provare un piccolo sbuffo." },
+        { label: "Insegnargli un'eruzione buffa", stat: "astuzia", target: 6, result: "Gli fate provare eruzioni ridicole finché una funziona: rumore sì, paura no." }
+      ],
+      groupChallenge: "Inventate insieme il 'ruggito educato' del vulcano: che suono fa, cosa butta fuori al posto della lava, e come avvisa prima di partire.",
+      rewards: [
+        { type: "loot", id: "fischietto-coraggio" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "amico-del-vulcano" },
+        { type: "power", id: "boato-gentile" }
+      ],
+      growth: "Chi trova le parole per rassicurare il vulcano segna 1 crescita Coraggio.",
+      fail: "Il vulcano si spaventa di sé stesso e sbuffa una nuvola di cenere: Pericolo +1, ma la cenere disegna in aria la sagoma di una nave.",
+      escape: "Scendere dal cono seguendo un ruscello di acqua calda fino alla costa: prova di Fortuna 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Il vulcano vi vede arrivare e sussurra: «Oh no, ci sono anche i bambini. State indietro, potrei... potrei fare un rumore bruttissimo». Ma trema tutto, e dai fianchi escono nuvolette di vapore trattenuto.",
+              ask: "Come si rassicura un vulcano gigante che ha paura di essere sé stesso?",
+              hints: [
+                "Dirgli che un po' di rumore va benissimo.",
+                "Raccontargli una volta in cui voi avete avuto paura di fare qualcosa.",
+                "Fargli capire che forte e spaventoso non sono la stessa cosa.",
+                "Chiedergli cosa succederebbe di brutto, secondo lui."
+              ],
+              rescue: "Un sasso rotola giù dal cono, il vulcano fa un piccolo «hop!» di paura e poi si scusa anche col sasso.",
+              masterTip: "Chiedi ai bambini di una volta in cui avevano paura di fare una cosa (parlare in pubblico, tuffarsi) e l'hanno fatta lo stesso."
+            },
+            interaction: "Nessun tiro: si parla col vulcano.",
+            outcome: {
+              title: "Il vulcano si asciuga una lacrima di lava",
+              text: "Sentendovi parlare così, il vulcano fa un lungo respiro. «Va bene», dice. «Provo. Ma restate lì e ditemi se faccio troppa paura».",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Il vulcano è pronto a provare, ma non sa come. Potete dargli coraggio a parole, come si fa con un amico, oppure allenarlo: fargli provare tante piccole eruzioni finché ne trova una che va bene.",
+              ask: "Lo incoraggiamo e basta, o gli insegniamo un'eruzione tutta nuova?",
+              hints: [
+                "Le parole giuste bastano se il vulcano si fida di voi.",
+                "Allenarlo è più lungo, ma alla fine ha una mossa sicura.",
+                "Si può incoraggiare mentre si allena."
+              ],
+              rescue: "Il vulcano borbotta: «Contate voi. Al tre parto. Forse»."
+            },
+            choices: [
+              {
+                id: "incoraggiare",
+                label: "💪 Gli diamo coraggio",
+                reaction_title: "La ciurma fa il tifo per il vulcano",
+                reaction: "Vi mettete in cerchio ai piedi del cono e cominciate a incoraggiarlo, ognuno con parole sue. Il vulcano si scalda — nel senso buono.",
+                next: "incoraggiare"
+              },
+              {
+                id: "allenare",
+                label: "🎪 Gli insegniamo un'eruzione buffa",
+                reaction_title: "La ciurma apre una palestra per vulcani",
+                reaction: "Iniziate a proporre eruzioni assurde: di bolle, di coriandoli, di fischi. Il vulcano prova, sbaglia, riprova, e piano piano si diverte.",
+                next: "allenare"
+              }
+            ]
+          },
+          {
+            scene_id: "incoraggiare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Il vulcano gonfia i fianchi, arriva quasi al momento... e si ferma. «E se scappano tutti? E se poi nessuno mi vuole più vicino?» Adesso serve qualcosa di più di un semplice «dai che ce la fai».",
+              ask: "Cosa gli dite adesso, che lo convinca davvero che va bene ruggire?",
+              hints: [
+                "Che gli abitanti sono abituati e sanno che non è cattivo.",
+                "Che voi restate lì anche mentre erutta.",
+                "Che tenersi tutto dentro fa più male che buttarlo fuori.",
+                "Che un vulcano che non ruggisce non è più un vulcano."
+              ],
+              rescue: "Un abitante del villaggio, in fondo, alza un cartello: «FORZA VULCANO».",
+              masterTip: "Fai dire a due bambini la frase esatta che direbbero al vulcano in quel momento."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 55, dice: 45 },
+              destiny_screen: {
+                title: "✦ Il Destino misura il coraggio del vulcano",
+                button: "Affidiamoci al Destino",
+                group_result: "Le vostre parole arrivano dritte: il vulcano fa un respiro e si lascia andare.",
+                dice_result: "Al vulcano trema ancora la voce: serve una prova di Coraggio di tutta la ciurma per stargli vicino mentre parte."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ IL RUGGITO PIÙ GENTILE DEL MONDO",
+                text: "Il vulcano ruggisce: un boato caldo che fa vibrare i denti ma non fa paura, e sopra ci piovono petali di roccia leggera come neve. Il villaggio applaude.",
+                audio: "win-event",
+                next: "eco-della-nave"
+              },
+              fail_forward: {
+                title: "🌋 UNO SBUFFO DI TROPPO",
+                text: "Il vulcano parte prima del previsto e vi copre di cenere tiepida: Pericolo +1. Ma tossendo e ridendo notate una cosa: la cenere in aria prende sempre la stessa forma, quella di una nave.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "eco-della-nave"
+              }
+            }
+          },
+          {
+            scene_id: "allenare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Il vulcano ha provato l'eruzione di bolle (troppo bagnata), quella di fischi (troppo acuta) e quella di coriandoli (bella, ma finiscono subito). Ne manca una che sia sua davvero.",
+              ask: "Qual è l'eruzione perfetta per QUESTO vulcano? Fatela provare.",
+              hints: [
+                "Un boato che diventa una canzone verso la fine.",
+                "Fumo colorato che disegna qualcosa nel cielo.",
+                "Un rutto gigantesco e educatissimo, con tanto di «scusate».",
+                "Sassolini caldi che rimbalzano come popcorn."
+              ],
+              rescue: "Il vulcano fa un piccolo «pff» timido e vi guarda: era giusto?",
+              masterTip: "Fai scegliere ai bambini una delle eruzioni e mimatela insieme, suono compreso."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ L'ERUZIONE DELLA CASA",
+                text: "Alla decima prova ci siete: il vulcano trova la sua eruzione, quella che lo fa sentire forte e non cattivo. La ripete tre volte solo per la gioia di farla.",
+                audio: "win-event",
+                next: "eco-della-nave"
+              },
+              fail_forward: {
+                title: "🎇 PROVA GENERALE ANDATA STORTA",
+                text: "L'eruzione di prova va per traverso e spegne tutte le torce del sentiero: Pericolo +1. Al buio, però, vedete che il fumo del vulcano brilla, e disegna una nave.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "eco-della-nave"
+              }
+            }
+          },
+          {
+            scene_id: "eco-della-nave",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Adesso che il vulcano si fida, vi racconta una cosa. «Prima che mi venisse questa paura», dice, «è passata una nave. Silenziosa. E dopo che se n'è andata, il mio ruggito... non c'era più. Come se se lo fosse portato via nella stiva».",
+              ask: "Cosa vuol dire, secondo voi, che una nave si porta via il rumore di una montagna?",
+              hints: [
+                "È la stessa nave delle ombre e delle altre cose sparite.",
+                "Qualcuno raccoglie le cose che rendono speciali le isole.",
+                "Il vulcano non ha perso il ruggito: si è solo dimenticato di come si fa."
+              ],
+              rescue: "Il vulcano fa un boato piano, quasi un sospiro, e per un attimo l'eco disegna una vela.",
+              masterTip: "Chiedi: cosa collezionereste voi, se poteste mettere in un baule cose che non si comprano?"
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio del fumo",
+              text: "Il vulcano soffia un ultimo anello di fumo. Resta appeso in aria più del normale, e ha la forma inconfondibile di una nave con le vele gonfie di suoni.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il Vulcano Ruggente ruggisce di nuovo, ogni sera, alla sua ora. Il villaggio ci ha fatto l'abitudine e qualcuno ci mette persino la sveglia. Prima che andiate, il vulcano lascia rotolare fino ai vostri piedi un piccolo fischietto di ossidiana ancora caldo.",
+              masterTip: "Chiudi con la domanda: quando sei molto forte, come fai a non usare male la tua forza?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "Il Vulcano ha Paura",
+          final_read: "Il vulcano ruggisce di nuovo, gentile e puntuale. Il Fischietto del Coraggio è caldo nella mano della ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
+    },
+
+    {
+      id: "gara-giganti-minuscoli", island: "vulcano", order: 2,
+      title: "La Gara dei Giganti Minuscoli", kind: "Competizione assurda",
+      difficulty: 6, minutes: 50,
+      readAloud: "La famiglia del piccolo gigante organizza le sue Olimpiadi: la corsa più lenta, il salto più basso, l'urlo silenzioso. Vince chi fa PEGGIO. C'è un solo problema: un concorrente sta barando, cioè... fa troppo bene le cose fatte male.",
+      readKids: {
+        facile: [
+          "I giganti minuscoli fanno le gare al contrario.",
+          "Vince chi corre più piano.",
+          "Ma uno bara.",
+          "Bara facendo troppo bene le cose fatte male."
+        ],
+        avanzato: [
+          "I giganti minuscoli gareggiano a chi fa PEGGIO.",
+          "Corsa lentissima, salto bassissimo, urlo silenziosissimo.",
+          "Uno dei concorrenti però vince sempre, in ogni gara.",
+          "Nessuno può essere così bravo a fare tutto male: sta imbrogliando."
+        ]
+      },
+      goal: "Portare a termine le gare al contrario e decidere cosa fare di chi bara.",
+      beats: [
+        "Le gare assurde vanno provate davvero: è più difficile di quanto sembri.",
+        "Il baro ha un trucco: qualcosa che gli sussurra come vincere.",
+        "Il trucco è una medaglia che non viene dalle isole."
+      ],
+      choices: [
+        { label: "Smascherare il baro davanti a tutti", stat: "astuzia", target: 6, result: "Trovate la prova e la mostrate alla giuria: il baro non può più negare." },
+        { label: "Aiutarlo a confessare da solo", stat: "coraggio", target: 6, result: "Gli parlate in disparte finché non trova il coraggio di dirlo lui." }
+      ],
+      groupChallenge: "Inventate insieme una gara assurda nuova in cui barare è proprio impossibile: qual è la regola, come si vince, come si perde.",
+      rewards: [
+        { type: "loot", id: "medaglia-bel-gioco" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "giudice-gara-storta" },
+        { type: "power", id: "mossa-rallentatore" }
+      ],
+      growth: "Chi propone il modo più giusto di trattare il baro segna 1 crescita Coraggio.",
+      fail: "La gara finisce nel caos e la giuria vi squalifica per un giro: Pericolo +1, ma nella confusione recuperate la medaglia che bara.",
+      escape: "Uscire dal campo gara camminando all'indietro il più lentamente possibile, così sembra che stiate ancora gareggiando: prova di Fortuna 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "La giuria vi iscrive d'ufficio alla prima gara: la Corsa dei Cento Passi Lentissimi. Chi arriva ULTIMO vince. Al via, un concorrente — un gigante minuscolo con un cappello a punta — parte lentissimo, perfetto, come se qualcuno gli suggerisse ogni passo.",
+              ask: "Come si corre una gara in cui bisogna arrivare ultimi, ma senza fermarsi del tutto (fermarsi è squalifica)?",
+              hints: [
+                "Fare passi microscopici, contandoli a voce.",
+                "Muoversi come al rallentatore, un pezzo di corpo alla volta.",
+                "Guardare chi ti sta davanti e stare sempre un pochino più indietro.",
+                "Distrarsi apposta a guardare le nuvole."
+              ],
+              rescue: "Un giudice fischia: «Troppo veloci! Rallentare!» — e siete già i più lenti.",
+              masterTip: "Fate provare ai bambini a fare tre passi nel modo più lento possibile, contandoli."
+            },
+            interaction: "Nessun tiro: si prova la gara più assurda.",
+            outcome: {
+              title: "Ultimi, ma non abbastanza",
+              text: "Arrivate penultimi: bravi, ma il gigante col cappello a punta è arrivato ultimo di mezz'ora, senza il minimo sforzo. Troppo perfetto. La giuria non se ne accorge, ma voi sì.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Lo tenete d'occhio. A ogni gara vince, e ogni volta si tocca il cappello e china la testa come per ascoltare. Sotto il cappello c'è qualcosa che luccica. Potete smascherarlo davanti a tutti, o provare a parlargli in disparte.",
+              ask: "Lo smascheriamo davanti alla giuria, o proviamo ad aiutarlo a dirlo da solo?",
+              hints: [
+                "Smascherarlo è rapido e giusto, ma lui ci farà una figura terribile.",
+                "Aiutarlo a confessare è più lento, ma forse capisce davvero perché ha sbagliato.",
+                "Forse bara perché ha una paura, non perché è cattivo."
+              ],
+              rescue: "Il gigante col cappello vi vede guardarlo, arrossisce e si tocca di nuovo il cappello."
+            },
+            choices: [
+              {
+                id: "smascherare",
+                label: "🔎 Lo smascheriamo davanti a tutti",
+                reaction_title: "La ciurma raccoglie le prove",
+                reaction: "Cominciate a seguirlo da vicino, prendendo nota di ogni volta che si tocca il cappello. Vi serve una prova che la giuria non possa ignorare.",
+                next: "smascherare"
+              },
+              {
+                id: "confessare",
+                label: "🤝 Lo aiutiamo a confessare",
+                reaction_title: "La ciurma lo prende da parte",
+                reaction: "Aspettate che sia solo, dietro le tribune, e vi sedete vicino a lui senza accusarlo di niente. «Bella la gara, eh?» dite. Lui non risponde subito.",
+                next: "confessare"
+              }
+            ]
+          },
+          {
+            scene_id: "smascherare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Durante l'Urlo Silenzioso (vince chi urla più piano), lo vedete benissimo: si toglie il cappello un secondo per grattarsi, e sotto c'è una medaglia appesa a un filo, che gli parla all'orecchio con una vocina metallica.",
+              ask: "Come mostrate la medaglia alla giuria senza che lui la nasconda di nuovo prima?",
+              hints: [
+                "Chiedere una foto di gruppo proprio mentre lui non ha il cappello.",
+                "Far cadere il cappello 'per sbaglio' davanti ai giudici.",
+                "Registrare la vocina della medaglia e farla sentire a tutti.",
+                "Chiedere alla giuria di controllare i cappelli di TUTTI, così non si offende nessuno."
+              ],
+              rescue: "Un giudice starnutisce e il cappello del gigante vola via da solo per mezzo secondo.",
+              masterTip: "Fai scegliere ai bambini il modo di mostrare la prova e mimatelo."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ PROVA IN BELLA VISTA",
+                text: "La medaglia finisce sotto il naso della giuria, che la sente sussurrare «vai più piano, ecco, così» e resta a bocca aperta. Il gigante col cappello si mette a piangere: «Non volevo, è che... vince sempre lei per me».",
+                audio: "win-event",
+                next: "medaglia-che-sussurra"
+              },
+              fail_forward: {
+                title: "🎪 CACCIA AL CAPPELLO",
+                text: "Provate a strappargli il cappello e finisce in una rincorsa comica per tutto il campo: la giuria vi squalifica per un giro, Pericolo +1. Ma nella corsa il cappello vola via e la medaglia resta in mano vostra.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "medaglia-che-sussurra"
+              }
+            }
+          },
+          {
+            scene_id: "confessare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Seduto dietro le tribune, il gigante col cappello finalmente parla. «La mia famiglia vince sempre. Io no, mai, in niente. Poi ho trovato questa medaglia in mare e mi ha detto: adesso vinci tu. E vinco. Ma non è divertente per niente».",
+              ask: "Cosa gli dite per aiutarlo a fare la cosa giusta, senza fargli sentire che è una persona cattiva?",
+              hints: [
+                "Che perdere davanti alla sua famiglia non lo rende meno importante.",
+                "Che una vittoria che non ti sei guadagnato non riempie il vuoto.",
+                "Che confessare adesso è più coraggioso di qualsiasi gara.",
+                "Che potete stargli vicino mentre lo dice alla giuria."
+              ],
+              rescue: "Il gigante si toglie il cappello da solo e lo tiene in mano, guardandolo.",
+              masterTip: "Fai dire a un bambino la frase con cui convincerebbe qualcuno a confessare un piccolo imbroglio."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 60, dice: 40 },
+              destiny_screen: {
+                title: "✦ Il Destino aspetta la sua decisione",
+                button: "Affidiamoci al Destino",
+                group_result: "Le vostre parole gli danno la spinta: si alza e va dritto dalla giuria a dire tutto.",
+                dice_result: "All'ultimo si blocca: serve una prova di Coraggio della ciurma per accompagnarlo davanti a tutti."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LA CONFESSIONE PIÙ CORAGGIOSA",
+                text: "Il gigante col cappello va davanti alla giuria, posa la medaglia sul tavolo e dice tutto. La sua famiglia, invece di arrabbiarsi, gli fa il tifo per la prima volta. Perde la gara e vince qualcos'altro.",
+                audio: "win-event",
+                next: "medaglia-che-sussurra"
+              },
+              fail_forward: {
+                title: "😰 PAROLE CHE NON ESCONO",
+                text: "Davanti alla giuria si impappina e scappa via, e voi lo rincorrete: caos totale, squalifica di un giro, Pericolo +1. Ma la medaglia gli cade e la raccogliete voi, prima di lui.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "medaglia-che-sussurra"
+              }
+            }
+          },
+          {
+            scene_id: "medaglia-che-sussurra",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "La medaglia è nelle vostre mani. Non è d'oro: è di un metallo scuro che non avete mai visto sulle isole. Continua a sussurrare, ma adesso a voi: «Posso farti vincere. Basta che mi lasci salire a bordo. Come ho fatto con tutti gli altri».",
+              ask: "Cosa risponde la ciurma a una medaglia che promette di farvi vincere sempre?",
+              hints: [
+                "Che vincere così non conta niente.",
+                "Che «come ho fatto con tutti gli altri» vuol dire che gira di mano in mano lasciando solo tristezza.",
+                "Che viene dalla nave che raccoglie le cose delle isole.",
+                "Che la buttate in mare, o la tenete come prova."
+              ],
+              rescue: "La medaglia cambia voce e prova ad essere gentile: «Ma dai, solo una gara...».",
+              masterTip: "Chiedi: è più importante vincere, o essere fieri di come hai giocato?"
+            },
+            interaction: "Nessun tiro: la ciurma risponde alla medaglia.",
+            outcome: {
+              title: "L'indizio della medaglia",
+              text: "Qualunque cosa decidiate di farne, sul retro della medaglia c'è un'incisione minuscola: la stessa nave dalle vele piene, e sotto tre parole — «Presto sarai mia».",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Le Olimpiadi dei Giganti Minuscoli finiscono con una gara nuova, inventata da voi, in cui barare è impossibile. Vince chi ride di più mentre perde. Il gigante col cappello arriva primo, e stavolta se l'è guadagnato. Vi consegna una medaglia vera, di quelle che valgono perché te le danno gli amici.",
+              masterTip: "Chiudi con la domanda: cosa conta di più, vincere o essere fieri di come si è giocato?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "La Gara dei Giganti Minuscoli",
+          final_read: "Le gare al contrario tornano a essere divertenti e oneste. La Medaglia del Bel Gioco resta alla ciurma: quella vera.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
     }
 
   ]

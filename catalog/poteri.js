@@ -168,6 +168,20 @@ PIRATI.registerPowers([
     play: { type: "narrative", note: "la ciurma scrive l'esito di una scena; il Master decide se è sensato" },
     art: "Una pagina di quaderno vuota che si riempie da sola di parole dorate luminose mentre una penna d'oca scrive senza mano. Foglie d'albero incorniciano il foglio, luce calda."
   },
+  {
+    id: "boato-gentile", name: "Il Boato Gentile", icon: "🌋",
+    category: "magia", grade: 3, cooldown: "quest",
+    effect: "La ciurma emette insieme un boato che non spaventa nessuno ma libera un passaggio: apre una porta bloccata, sposta una piccola frana, zittisce un rumore fastidioso.",
+    play: { type: "skip", note: "un boato collettivo che libera un passaggio o zittisce un rumore" },
+    art: "Un piccolo vulcano cartoon che invece di lava soffia fuori una nuvola di coriandoli colorati e bolle. Bambini pirata coprono le orecchie ridendo. Cielo notturno stellato sopra un mare nero."
+  },
+  {
+    id: "mossa-rallentatore", name: "La Mossa al Rallentatore", icon: "🐌",
+    category: "marchingegno", grade: 3, cooldown: "quest",
+    effect: "Fai una cosa lentissima e perfetta: una prova di manualità o di precisione riesce senza tirare, ma ti prende tutta la scena.",
+    play: { type: "auto", note: "un gesto lento e impeccabile: una prova manuale riesce ma occupa tutta la scena" },
+    art: "Una lumaca con un elmetto da corsa che taglia un traguardo di lentezza, con coppa dorata. Sfondo di pendici vulcaniche al tramonto, spettatori minuscoli che applaudono al rallentatore."
+  },
 
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).

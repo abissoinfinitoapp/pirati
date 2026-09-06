@@ -37,7 +37,9 @@ PIRATI.registerRewards({
 
     /* --- Ciclo II · La Rotta delle Maree Perdute --- */
     { id: "frammento-ombra",           name: "Frammento d'Ombra",         icon: "🌑", rarity: "raro",   text: "Illuminato dalla Stella della Ciurma, punta verso la nave misteriosa." },
-    { id: "foglia-finale",             name: "Foglia del Finale",         icon: "🍂", rarity: "comune", text: "Sussurrata a un racconto, gli regala un finale a scelta della ciurma." }
+    { id: "foglia-finale",             name: "Foglia del Finale",         icon: "🍂", rarity: "comune", text: "Sussurrata a un racconto, gli regala un finale a scelta della ciurma." },
+    { id: "fischietto-coraggio",       name: "Fischietto del Coraggio",    icon: "🎺", rarity: "comune", text: "Soffiato piano, dà a chi ha paura la spinta per fare comunque la cosa giusta. Una volta." },
+    { id: "medaglia-bel-gioco",        name: "Medaglia del Bel Gioco",     icon: "🏅", rarity: "comune", text: "Chi la porta può ripetere una prova andata male per colpa di un imbroglio altrui." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */
@@ -62,7 +64,9 @@ PIRATI.registerRewards({
 
     /* --- Ciclo II · La Rotta delle Maree Perdute --- */
     { id: "luce-delle-ombre",        name: "Luce delle Ombre",        icon: "🕯️", text: "Hai riportato a casa le ombre della ciurma e sentito la voce sulla nave." },
-    { id: "voce-degli-alberi",       name: "Voce degli Alberi",       icon: "🌳", text: "Hai ridato un finale a ogni storia della Biblioteca degli Alberi." }
+    { id: "voce-degli-alberi",       name: "Voce degli Alberi",       icon: "🌳", text: "Hai ridato un finale a ogni storia della Biblioteca degli Alberi." },
+    { id: "amico-del-vulcano",       name: "Amico del Vulcano",       icon: "🌋", text: "Hai insegnato al Vulcano Ruggente a fare rumore senza fare paura." },
+    { id: "giudice-gara-storta",     name: "Giudice della Gara Storta", icon: "🐌", text: "Hai finito la gara dei giganti minuscoli e sistemato chi barava." }
   ],
 
   /* --- TITOLI: onorificenze della ciurma (per usi futuri / Gradi) ------- */
