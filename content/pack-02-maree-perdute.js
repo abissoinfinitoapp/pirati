@@ -869,6 +869,447 @@ PIRATI.registerPack({
           close_button: "⛵ Torna alla rotta"
         }
       }
+    },
+
+    /* ---- FORTE DI CORALLO ------------------------------------------- */
+    {
+      id: "processo-alla-ciurma", island: "corallo", order: 1,
+      title: "Il Processo alla Ciurma", kind: "Tribunale fantastico",
+      difficulty: 6, minutes: 55,
+      readAloud: "Le statue di corallo del forte ricordano tutto. Anche gli errori della ciurma. Un giorno smettono di sorridere, allungano un braccio di pietra e vi indicano una porta: «Tribunale del Corallo. La ciurma è convocata».",
+      readKids: {
+        facile: [
+          "Le statue di corallo ricordano tutto.",
+          "Anche gli sbagli della ciurma.",
+          "Vi portano davanti a un tribunale.",
+          "Dovete dire cosa avete imparato."
+        ],
+        avanzato: [
+          "Le statue del Forte di Corallo hanno una memoria lunghissima.",
+          "Si ricordano ogni scelta che avete fatto, comprese quelle sbagliate.",
+          "Vi convocano davanti al Tribunale del Corallo.",
+          "Non per punirvi: per sentire cosa quegli errori vi hanno insegnato."
+        ]
+      },
+      goal: "Mostrare al tribunale cosa la ciurma ha imparato, e decidere come dovrebbe rimediare un altro personaggio che ha sbagliato.",
+      beats: [
+        "Il tribunale non vuole scuse: vuole capire cosa è cambiato in voi.",
+        "Compare un testimone a sorpresa: qualcuno che la ciurma ha aiutato o deluso.",
+        "Una statua ricorda una figura incappucciata di passaggio."
+      ],
+      choices: [
+        { label: "Difendere una vecchia decisione", stat: "coraggio", target: 6, result: "Spiegate perché quella scelta, allora, aveva senso: il tribunale ascolta." },
+        { label: "Ammettere che si poteva fare meglio", stat: "coraggio", target: 6, result: "Dite ad alta voce cosa rifareste in modo diverso: ci vuole coraggio, e il tribunale lo nota." }
+      ],
+      groupChallenge: "Il tribunale vi chiede di giudicare un altro: un pirata che ha rotto qualcosa di un amico e non l'ha detto. Decidete insieme cosa dovrebbe fare per rimediare (non per essere punito).",
+      rewards: [
+        { type: "loot", id: "sigillo-del-perdono" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "ciurma-assolta" },
+        { type: "power", id: "seconda-possibilita" }
+      ],
+      growth: "Chi ammette per primo un proprio errore, davanti a tutti, segna 1 crescita Coraggio.",
+      fail: "Vi impuntate e il tribunale sospende l'udienza: Pericolo +1, ma nell'aula vuota trovate l'archivio delle statue.",
+      escape: "Chiedere un rinvio molto formale e uscire dalla porta laterale mentre le statue si consultano: prova di Astuzia 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "L'aula è fatta tutta di corallo. Tre statue enormi vi guardano dall'alto. La più vecchia parla con una voce che sembra il mare in una conchiglia: «Raccontateci un errore. Uno dei vostri. E cosa vi ha insegnato».",
+              ask: "Quale errore della ciurma vi ha insegnato qualcosa? Sceglietene uno da raccontare.",
+              hints: [
+                "Una volta in cui avete deciso di corsa e vi è andata male.",
+                "Una volta in cui non avete ascoltato qualcuno che aveva ragione.",
+                "Una promessa che poi è stato difficile mantenere.",
+                "Una volta in cui avete avuto paura e siete scappati."
+              ],
+              rescue: "Una statua si china appena e sussurra: «Anche noi, un tempo, abbiamo sbagliato. Le statue non nascono sagge».",
+              masterTip: "Va bene qualsiasi episodio, anche inventato al momento dai bambini: conta che ci sia un 'e poi ho capito che...'."
+            },
+            interaction: "Nessun tiro: si racconta.",
+            outcome: {
+              title: "Le statue prendono nota",
+              text: "Mentre parlate, sui muri di corallo si formano da sole delle parole, come appunti. Il tribunale annuisce piano. «Bene», dice la statua vecchia. «Adesso, come volete affrontare questo processo?»",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete difendere una decisione che avete preso e in cui credete ancora, spiegando bene perché. Oppure potete alzarvi e dire ad alta voce cosa, oggi, rifareste in modo diverso.",
+              ask: "Difendiamo quello che abbiamo fatto, o ammettiamo che potevamo fare meglio?",
+              hints: [
+                "Difendere non è fare i testardi: è saper spiegare le proprie ragioni.",
+                "Ammettere non è dire che siete stati cattivi: è dire cosa avete capito.",
+                "Tutte e due le cose, insieme, sono possibili."
+              ],
+              rescue: "Una statua batte un dito di pietra sul bracciolo, paziente: non c'è fretta."
+            },
+            choices: [
+              {
+                id: "difendere",
+                label: "🛡 Difendiamo la nostra scelta",
+                reaction_title: "La ciurma prende la parola",
+                reaction: "Vi alzate in piedi e cominciate a spiegare, con calma, perché allora quella decisione aveva senso, con quello che sapevate.",
+                next: "difendere"
+              },
+              {
+                id: "ammettere",
+                label: "🙌 Ammettiamo che potevamo fare meglio",
+                reaction_title: "La ciurma abbassa la guardia",
+                reaction: "Uno alla volta, dite cosa oggi fareste diversamente. Nell'aula di corallo cala un silenzio che non è imbarazzo: è rispetto.",
+                next: "ammettere"
+              }
+            ]
+          },
+          {
+            scene_id: "difendere",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Mentre difendete la vostra decisione, si apre la porta in fondo. Entra un testimone a sorpresa: qualcuno che quella scelta ha toccato da vicino — un abitante, un animale, un'isola intera che ha una voce. Vuole dire la sua.",
+              ask: "Come ascoltate un testimone che potrebbe non essere d'accordo con voi, senza interromperlo e senza offendervi?",
+              hints: [
+                "Lasciarlo parlare fino in fondo prima di rispondere.",
+                "Ringraziarlo per essere venuto, anche se dice cose scomode.",
+                "Trovare la parte vera in quello che dice.",
+                "Chiedergli cosa avrebbe voluto che faceste."
+              ],
+              rescue: "Il testimone si ferma a metà, insicuro: forse ha bisogno che qualcuno gli dica «continua, ti ascoltiamo».",
+              masterTip: "Interpreta tu il testimone con una lamentela ragionevole; guarda come i bambini reagiscono."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 60, dice: 40 },
+              destiny_screen: {
+                title: "✦ Il Destino pesa le vostre parole",
+                button: "Affidiamoci al Destino",
+                group_result: "Ascoltate il testimone davvero: le statue vedono che sapete difendervi senza chiudere le orecchie.",
+                dice_result: "Il testimone si accalora e serve una prova di Coraggio per restare calmi e rispondergli con gentilezza."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ DIFESA CON LE ORECCHIE APERTE",
+                text: "Il testimone finisce di parlare, voi rispondete senza scaldarvi, e alla fine vi stringete la mano. Le statue scrivono sul muro una parola sola: «ONESTI».",
+                audio: "win-event",
+                next: "figura-incappucciata"
+              },
+              fail_forward: {
+                title: "⚖️ UDIENZA SOSPESA",
+                text: "La discussione si accende, il tribunale batte il martelletto: udienza sospesa. Pericolo +1. Ma restati soli nell'aula, notate un archivio di corallo pieno di ricordi delle statue.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "figura-incappucciata"
+              }
+            }
+          },
+          {
+            scene_id: "ammettere",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Ammettere gli errori a voce alta è più difficile di quanto sembri. A metà, uno di voi si blocca: le parole non vogliono uscire. Le statue aspettano, senza fretta e senza giudizio.",
+              ask: "Come vi aiutate a dire una cosa vera che fa un po' vergognare?",
+              hints: [
+                "Dirla in due, così il peso è diviso.",
+                "Cominciare da «la prossima volta io...» invece che da «ho sbagliato».",
+                "Ricordarsi che il tribunale è lì per capire, non per punire.",
+                "Prendere un bel respiro tutti insieme prima di parlare."
+              ],
+              rescue: "Una statua allunga un dito di corallo e appoggia la punta sulla spalla di chi si è bloccato: pesa come una mano vera.",
+              masterTip: "Fai finire la frase «la prossima volta noi...» a tre bambini diversi."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 65, dice: 35 },
+              destiny_screen: {
+                title: "✦ Il Destino ascolta l'ammissione",
+                button: "Affidiamoci al Destino",
+                group_result: "Vi aiutate a vicenda e la frase esce, intera e sincera: le statue non chiedono altro.",
+                dice_result: "Serve un ultimo scatto di Coraggio della ciurma per dirla davanti a tutti senza cambiarla."
+              },
+              dice: { stat: "coraggio", target: 5 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ L'AMMISSIONE PIÙ CORAGGIOSA",
+                text: "Lo dite. Tutto. Senza sconti e senza scuse inutili. Le statue si guardano tra loro e sul muro compare: «CRESCIUTI».",
+                audio: "win-event",
+                next: "figura-incappucciata"
+              },
+              fail_forward: {
+                title: "🤐 PAROLE CHE RESTANO IN GOLA",
+                text: "Non riuscite a dirlo tutto, e il tribunale rimanda a domani: Pericolo +1. Nell'attesa, però, una statua vi lascia sfogliare il suo archivio di ricordi.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "figura-incappucciata"
+              }
+            }
+          },
+          {
+            scene_id: "figura-incappucciata",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Prima di emettere il verdetto, la statua più vecchia ricorda una cosa. «Poco tempo fa è passato di qui un giovane incappucciato. Non voleva rubare niente. Faceva solo domande strane: quali sono le cose più preziose che non si possono comprare con le monete? E prendeva appunti».",
+              ask: "Cosa collezionava, secondo voi, quel viaggiatore incappucciato?",
+              hints: [
+                "Le stesse cose sparite dalle altre isole: ombre, storie, ruggiti.",
+                "Cose che tengono insieme una ciurma: ricordi, risate, fiducia.",
+                "È lo stesso della nave che avete già incrociato.",
+                "Forse le raccoglieva perché a lui mancavano tutte."
+              ],
+              rescue: "Su un muro di corallo, da sola, si forma la sagoma di una nave con le vele piene di cose diverse.",
+              masterTip: "Chiedi: qual è una cosa preziosissima che avete e che non si può comprare?"
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio del corallo",
+              text: "La statua conclude: «Se n'è andato verso il mare aperto, su una nave dalle vele strane. E da allora, qui, qualcuno ricorda di aver dimenticato qualcosa». Sul muro resta incisa la nave.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il Tribunale del Corallo non vi condanna a niente. Vi consegna un Sigillo del Perdono e vi dice: «Portatelo a chi sbaglia. Serve a ricordare che dopo un errore si può sempre rimediare». Le statue tornano a sorridere.",
+              masterTip: "Chiudi con la domanda: cosa conta di più dopo un errore, chiedere scusa o rimediare?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "Il Processo alla Ciurma",
+          final_read: "Il tribunale vi assolve e vi affida il Sigillo del Perdono. Le statue di corallo sorridono di nuovo.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
+    },
+
+    {
+      id: "porta-dice-no", island: "corallo", order: 2,
+      title: "La Porta che Dice Sempre No", kind: "Enigma comico",
+      difficulty: 6, minutes: 50,
+      readAloud: "In fondo al forte c'è una porta di legno con una faccia intagliata. A qualunque cosa proviate — spingere, bussare, chiedere gentilmente — risponde con voce annoiata: «No». Sempre e solo: «No».",
+      readKids: {
+        facile: [
+          "C'è una porta con una faccia.",
+          "Qualunque cosa chiedi, dice: «No».",
+          "Sempre no.",
+          "Bisogna capire cosa vuole davvero."
+        ],
+        avanzato: [
+          "La porta in fondo al Forte di Corallo ha una bocca intagliata nel legno.",
+          "Provate a spingerla: «No». A bussare: «No». A dire «per favore»: «No».",
+          "Non è rotta e non è cattiva: dice no e basta.",
+          "Deve esserci un motivo, e una domanda giusta per farla aprire."
+        ]
+      },
+      goal: "Capire cosa vuole davvero la porta e attraversarla senza forzarla.",
+      beats: [
+        "Provare le idee normali non serve: la porta le rifiuta tutte.",
+        "La porta dice no perché è stanca di gente che entra per prendere qualcosa.",
+        "Dietro la porta c'è il simbolo della nave e una frase graffiata sul muro."
+      ],
+      choices: [
+        { label: "Provare idee sempre più assurde", stat: "astuzia", target: 6, result: "A furia di proposte strampalate ne trovate una a cui la porta non sa dire no." },
+        { label: "Chiederle perché dice sempre no", stat: "fortuna", target: 6, result: "Vi fermate ad ascoltarla e la porta, spiazzata, comincia a raccontare." }
+      ],
+      groupChallenge: "Inventate insieme tre domande a cui la risposta «no» in realtà è un «sì» (tipo: «Ti dà fastidio se ti lasciamo in pace?»).",
+      rewards: [
+        { type: "loot", id: "chiave-del-forse" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "passa-porte" },
+        { type: "power", id: "domanda-che-apre" }
+      ],
+      growth: "Chi trova la domanda che fa aprire la porta segna 1 crescita Astuzia.",
+      fail: "Insistete troppo e la porta si incastra del tutto: Pericolo +1, ma il legno si spacca in un punto e ci si vede attraverso.",
+      escape: "Rinunciare alla porta e passare da una finestrella laterale che nessuno aveva notato: prova di Fortuna 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "La faccia sulla porta vi guarda con gli occhi socchiusi. «Lasciate che indovini», dice. «Volete entrare. La risposta è no». Sbadiglia, con un cigolio.",
+              ask: "Cosa chiedereste a una porta che, qualunque cosa dite, risponde no?",
+              hints: [
+                "Chiederle se PREFERISCE restare chiusa.",
+                "Chiederle cosa è successo l'ultima volta che qualcuno è entrato.",
+                "Non chiederle di aprirsi, ma qualcosa a cui 'no' vi va bene.",
+                "Chiederle se possiamo restare a farle compagnia."
+              ],
+              rescue: "La porta borbotta da sola: «Tutti che vogliono entrare. Nessuno che chiede come sto».",
+              masterTip: "Fai provare ai bambini a fare una domanda a cui vorrebbero sentirsi rispondere di no."
+            },
+            interaction: "Nessun tiro: si parla con la porta.",
+            outcome: {
+              title: "La porta si insospettisce (in senso buono)",
+              text: "Nessuno vi ha mai fatto tante domande senza spingere. La porta socchiude un occhio in più. «Uhm», dice. «Allora, cosa avete in mente di preciso?»",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete tempestarla di idee sempre più assurde, finché una la coglie di sorpresa. Oppure potete smettere di provare ad aprirla e chiederle, semplicemente, perché dice sempre no.",
+              ask: "La bombardiamo di idee strampalate, o le chiediamo il motivo?",
+              hints: [
+                "Le idee assurde funzionano se siete abbastanza veloci e creativi.",
+                "Chiederle il motivo è più lento, ma scoprite cos'ha davvero questa porta.",
+                "Una porta che parla ha probabilmente qualcosa da raccontare."
+              ],
+              rescue: "La porta tamburella le dita di legno che non ha: «Allora? Non ho tutto il giorno. Anzi sì. Ma decidetevi»."
+            },
+            choices: [
+              {
+                id: "assurde",
+                label: "🤪 Idee sempre più assurde",
+                reaction_title: "La ciurma spara proposte a raffica",
+                reaction: "Cominciate: «Ci apri se camminiamo all'indietro?» «E se ci presentiamo per finta come un armadio?» La porta risponde no, no, no — ma sempre più incerta.",
+                next: "assurde"
+              },
+              {
+                id: "perche",
+                label: "❓ Le chiediamo perché dice no",
+                reaction_title: "La ciurma si siede ad ascoltare",
+                reaction: "Vi sedete sul pavimento di corallo, davanti alla porta, e chiedete piano: «Perché dici sempre no?» La faccia di legno resta zitta per un lungo momento.",
+                next: "perche"
+              }
+            ]
+          },
+          {
+            scene_id: "assurde",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "La porta sta reggendo bene: ha detto no a ventisette proposte assurde di fila. Ma si vede che è stanca. Ne manca una, quella giusta: una richiesta a cui il suo «no» automatico si trasformi in un sì.",
+              ask: "Qual è la domanda a cui la porta, dicendo «no», in realtà vi apre?",
+              hints: [
+                "«Ti dispiace se NON entriamo di corsa e stiamo attenti a tutto?»",
+                "«Hai qualcosa in contrario a lasciarci passare piano piano?»",
+                "«Ti secca se entriamo solo per guardare e non prendiamo niente?»",
+                "«Preferisci restare chiusa per sempre?» (a cui il no è un sì)."
+              ],
+              rescue: "La porta socchiude la bocca per dire no e ci mette più del solito: la battuta giusta la sta quasi disarmando.",
+              masterTip: "Fai formulare la domanda-trappola a due bambini; scegliete la più furba."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ NO CHE VUOL DIRE SÌ",
+                text: "Fate la domanda giusta. La porta apre la bocca, dice «No» come sempre... e si accorge troppo tardi che stavolta «no» significava «prego, accomodatevi». Si spalanca, offesissima con sé stessa.",
+                audio: "win-event",
+                next: "dietro-la-porta"
+              },
+              fail_forward: {
+                title: "🚪 PORTA INCASTRATA",
+                text: "A furia di scuoterla con le parole, la porta si impunta e si incastra nel telaio: Pericolo +1. Ma nell'incastrarsi il legno si crepa, e dalla fessura vedete cosa c'è dall'altra parte.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "dietro-la-porta"
+              }
+            }
+          },
+          {
+            scene_id: "perche",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "La porta finalmente parla. «L'ultima volta che ho lasciato entrare qualcuno», dice piano, «è uscito portandosi via una cosa che non gli apparteneva. Da allora dico no. È più semplice». Adesso serve la cosa giusta da dirle.",
+              ask: "Cosa dite a una porta che dice no perché ha paura che le rubino qualcosa?",
+              hints: [
+                "Che voi entrate solo per guardare, non per prendere.",
+                "Che potete lasciarle una cosa vostra in pegno mentre siete dentro.",
+                "Che le raccontate cosa c'è dentro quando uscite, così controlla.",
+                "Che dire no a tutti per colpa di uno non è giusto neanche per lei."
+              ],
+              rescue: "La porta si commuove un pochino: dal legno esce una gocciolina di resina come una lacrima.",
+              masterTip: "Fai dire a un bambino la promessa esatta che farebbe alla porta."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 60, dice: 40 },
+              destiny_screen: {
+                title: "✦ Il Destino ascolta la promessa",
+                button: "Affidiamoci al Destino",
+                group_result: "La porta vi crede: gira il chiavistello da sola, con un cigolio quasi contento.",
+                dice_result: "La porta è ancora diffidente: serve una prova di Fortuna perché si fidi di voi."
+              },
+              dice: { stat: "fortuna", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LA PORTA SI FIDA",
+                text: "«Va bene», dice la porta. «Ma se toccate qualcosa che non è vostro, lo saprò». E si apre, cigolando, per la prima volta da tanto tempo.",
+                audio: "win-event",
+                next: "dietro-la-porta"
+              },
+              fail_forward: {
+                title: "🔒 UN GIRO A VUOTO",
+                text: "La porta ci ripensa all'ultimo e resta chiusa: Pericolo +1. Ma vi lascia sbirciare da uno spiraglio: giusto abbastanza per leggere cosa c'è scritto sul muro dietro.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "dietro-la-porta"
+              }
+            }
+          },
+          {
+            scene_id: "dietro-la-porta",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Dietro la porta c'è una stanza vuota. Non un tesoro, non una trappola: vuota. Su una parete, però, qualcuno ha graffiato di recente un disegno — una nave con le vele piene — e sotto una frase: «QUI NON C'ERA NULLA DA PRENDERE».",
+              ask: "Perché qualcuno è entrato in una stanza vuota e ha lasciato quel messaggio?",
+              hints: [
+                "È lo stesso viaggiatore incappucciato che cerca cose speciali.",
+                "Era deluso: sperava di trovare qui una di quelle cose.",
+                "Voleva avvertire chi arriva dopo che qui non c'è niente.",
+                "La porta diceva no anche a lui: e lui è entrato lo stesso."
+              ],
+              rescue: "La porta, alle vostre spalle, mormora: «Ecco. Lui non ha chiesto. È entrato e basta»."
+            },
+            interaction: "Nessun tiro: si legge il messaggio.",
+            outcome: {
+              title: "L'indizio sulla parete",
+              text: "Passate un dito sui graffi: sono freschi. La nave disegnata è la stessa delle altre isole. Qualcuno la sta cercando anche lui — o ci è già stato sopra.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Uscite dalla stanza senza aver preso niente, e la porta lo nota. «Grazie», dice, quasi controvoglia. E vi lascia andare con un piccolo dono: una chiave che non apre niente di preciso, ma funziona con qualsiasi porta a cui saprete fare la domanda giusta.",
+              masterTip: "Chiudi con la domanda: quando qualcuno dice no, cosa possiamo fare invece di insistere?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "La Porta che Dice Sempre No",
+          final_read: "La porta impara a dire anche sì, alle persone giuste. La Chiave del Forse resta alla ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
     }
 
   ]

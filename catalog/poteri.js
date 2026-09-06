@@ -182,6 +182,20 @@ PIRATI.registerPowers([
     play: { type: "auto", note: "un gesto lento e impeccabile: una prova manuale riesce ma occupa tutta la scena" },
     art: "Una lumaca con un elmetto da corsa che taglia un traguardo di lentezza, con coppa dorata. Sfondo di pendici vulcaniche al tramonto, spettatori minuscoli che applaudono al rallentatore."
   },
+  {
+    id: "seconda-possibilita", name: "La Seconda Possibilità", icon: "⚖️",
+    category: "carta", grade: 3, cooldown: "quest",
+    effect: "Un pirata che ha appena fallito una prova la rifà subito: la prima volta era «solo una prova generale».",
+    play: { type: "narrative", note: "un pirata ripete immediatamente una prova appena fallita" },
+    art: "Una clessidra dorata rovesciata a metà caduta, la sabbia che risale invece di scendere. Sullo sfondo statue di corallo che annuiscono, mare nero e calmo."
+  },
+  {
+    id: "domanda-che-apre", name: "La Domanda che Apre", icon: "🗝️",
+    category: "magia", grade: 3, cooldown: "quest",
+    effect: "Fai a un ostacolo testardo — una porta, una guardia, una regola — una domanda a cui dire «no» significa «sì». Il Master decide se funziona.",
+    play: { type: "narrative", note: "una domanda a cui il «no» dell'ostacolo diventa un «sì»" },
+    art: "Una grande porta di legno intagliata con una bocca imbronciata al centro, socchiusa a lasciar passare una luce dorata. Una chiave che galleggia davanti come una lucciola."
+  },
 
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).
