@@ -2769,6 +2769,8 @@ body.magnifier-open { overflow: hidden; }
 .map-teschio-button.is-live { border-color: #d5a43e; background: rgba(243,199,111,.18); color: #ffe6ab; }
 .map-teschio-done { margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(180,85,201,.1); color: var(--sea-dark); font-size: 13px; font-weight: 700; }
 .teschio-annuncio { font-family: Georgia, serif; font-size: 16px !important; line-height: 1.5 !important; color: #7a3b8c; }
+.teschio-via { font-size: 18px !important; padding: 14px !important; background: #b455c9 !important; }
+.teschio-via:hover { background: #9c3fb0 !important; }
 .teschio-sfida { border-radius: 10px; padding: 9px 11px; background: rgba(180,85,201,.1); font-size: 15px !important; }
 .teschio-timer {
   font-size: 64px;

@@ -302,7 +302,7 @@ const TUTORIAL_STEPS = [
     icon: "💀",
     kicker: "Passo 10 · Lo Show del Teschio Multicolore",
     title: "20 secondi di follia tutti insieme",
-    text: "Ogni giorno, dalla Mappa (bottone «Chiama il Teschio» o casella dedicata), puoi far partire lo show. Il Teschio Multicolore pesca una sfida assurda e innocua — stare su una gamba sola, dito nel naso, uno scioglilingua da dire in coro — e parte un conto alla rovescia di 10-30 secondi. TUTTI i pirati la fanno insieme. Allo STOP tocchi tu ogni pirata: ha tenuto o è crollato. Chi tiene prende monete personali (soldi per il Negozio); a ogni show si sblocca una nuova «faccia del Teschio» da collezione. Chi crolla non perde niente — anzi, puoi dare mezzo premio al «crollo più buffo».",
+    text: "Ogni giorno, dalla Mappa (bottone «Show del Teschio» nella barra in alto o casella dedicata), puoi far partire lo show. Il Teschio pesca una sfida assurda e innocua — stare su una gamba sola, dito nel naso, uno scioglilingua in coro. Tu leggi l'annuncio, fai mettere tutti in posizione, e quando sei pronto premi VIA: parte il conto alla rovescia (fa un tic ogni secondo). TUTTI i pirati la fanno insieme. Allo STOP tocchi tu ogni pirata: ha tenuto o è crollato. Chi tiene prende monete personali (soldi per il Negozio); a ogni show si sblocca una «faccia del Teschio» da collezione. Chi crolla non perde niente — anzi, puoi dare mezzo premio al «crollo più buffo».",
     tip: "È la valvola di sfogo: dopo tanto stare seduti, 20 secondi di ciurma che fa la linguaccia rimettono tutti in carreggiata. Nessuna acrobazia, niente di ginnico."
   },
   {
@@ -2807,14 +2807,25 @@ function teschioEncounterMarkup(enc) {
     </div></div>`;
   }
 
-  if (enc.phase === "conto" && sfida) {
-    const left = Math.max(0, Math.ceil((enc.endsAt - Date.now()) / 1000));
+  if (enc.phase === "pronti" && sfida) {
     return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">
       ${tag}
       <p class="teschio-annuncio">“${sfida.annuncio}”</p>
       <p class="teschio-sfida"><strong>Cosa fanno tutti insieme:</strong> ${sfida.sfida}</p>
+      <p class="map-console-label">Leggi l'annuncio ad alta voce, fai mettere tutti in posizione, poi premi VIA: parte il timer di ${sfida.durata} secondi (fa tic ogni secondo).</p>
+      <button type="button" class="primary-button teschio-via" data-teschio-via>▶ VIA! parte il timer (${sfida.durata}s)</button>
+      <button type="button" class="link-button" data-teschio-reroll>🔄 un'altra sfida</button>
+      <button type="button" class="secondary-button" data-map-skip>Lascia perdere</button>
+    </div></div>`;
+  }
+
+  if (enc.phase === "conto" && sfida) {
+    const left = Math.max(0, Math.ceil(((enc.endsAt || Date.now()) - Date.now()) / 1000));
+    return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">
+      ${tag}
+      <p class="teschio-sfida"><strong>Tutti insieme:</strong> ${sfida.sfida}</p>
       <div class="teschio-timer" id="teschio-countdown">${left}</div>
-      <p class="map-console-label">Il Master conta ad alta voce. Allo STOP si giudica.</p>
+      <p class="map-console-label">Allo STOP il Master decide chi ha tenuto.</p>
       <button type="button" class="secondary-button" data-teschio-stop>STOP subito</button>
     </div></div>`;
   }
@@ -3361,13 +3372,39 @@ function startTeschioSfida() {
   const sfida = TESCHIO_CORE.pickSfida(PIRATI.teschioSfide, state.teschio.recentSfideIds);
   if (!sfida) { v.pending = null; v.message = "Il Teschio non ha sfide pronte oggi. Che strano."; saveState(); renderMap(); return; }
   enc.sfidaId = sfida.id;
+  enc.phase = "pronti"; // il timer parte solo quando lo aziona il Master
+  state.teschio.lastShowDay = state.day; // consumato: lo show del giorno è cominciato
+  state.teschio.recentSfideIds = state.teschio.recentSfideIds.concat(sfida.id).slice(-4);
+  sfx("star");
+  pushLog(`💀 Show del Teschio Multicolore: «${sfida.sfida}» (${sfida.durata} sec, li fa partire il Master).`);
+  saveState();
+  renderMap();
+}
+
+/* il Master può cambiare sfida prima di far partire il timer */
+function teschioReroll() {
+  const enc = voyage().pending;
+  if (!enc || enc.kind !== "teschio" || enc.phase !== "pronti") return;
+  const sfida = TESCHIO_CORE.pickSfida(PIRATI.teschioSfide, state.teschio.recentSfideIds);
+  if (!sfida) return;
+  enc.sfidaId = sfida.id;
+  state.teschio.recentSfideIds = state.teschio.recentSfideIds.concat(sfida.id).slice(-4);
+  sfx("click");
+  saveState();
+  renderMap();
+}
+
+/* il Master aziona il timer: da qui parte il conto alla rovescia */
+function teschioVia() {
+  const enc = voyage().pending;
+  if (!enc || enc.kind !== "teschio" || enc.phase !== "pronti") return;
+  const sfida = PIRATI.teschioSfida(enc.sfidaId);
+  if (!sfida) return;
   enc.phase = "conto";
   enc.endsAt = Date.now() + sfida.durata * 1000;
-  state.teschio.lastShowDay = state.day; // consumato: lo show del giorno è iniziato
-  state.teschio.recentSfideIds = state.teschio.recentSfideIds.concat(sfida.id).slice(-4);
+  enc._sec = null;
   startTeschioTicker();
   sfx("star");
-  pushLog(`💀 Show del Teschio Multicolore: «${sfida.sfida}» per ${sfida.durata} secondi!`);
   saveState();
   renderMap();
 }
@@ -3377,20 +3414,24 @@ function startTeschioTicker() {
   teschioTicker = setInterval(() => {
     const enc = voyage().pending;
     if (!enc || enc.kind !== "teschio" || enc.phase !== "conto") { stopTeschioTicker(); return; }
-    if (Date.now() >= enc.endsAt) { teschioToJudging(); return; }
+    if (Date.now() >= enc.endsAt) { enc._sec = 0; sfx("win-event"); teschioToJudging(); return; }
+    const left = Math.max(0, Math.ceil((enc.endsAt - Date.now()) / 1000));
+    if (left !== enc._sec) {          // ogni nuovo secondo: un tick tipo click dei pulsanti
+      enc._sec = left;
+      if (left > 0) sfx("click");
+    }
     const el = $("#teschio-countdown");
     if (el) {
-      const left = Math.max(0, Math.ceil((enc.endsAt - Date.now()) / 1000));
       el.textContent = left;
       el.classList.toggle("is-low", left <= 3);
     }
-  }, 300);
+  }, 150);
 }
 
 function teschioToJudging() {
   stopTeschioTicker();
   const enc = voyage().pending;
-  if (!enc || enc.kind !== "teschio") return;
+  if (!enc || enc.kind !== "teschio" || enc.phase !== "conto") return;
   enc.phase = "giudizio";
   enc.passers = activePlayers().map((p) => p.id); // parte "tutti hanno tenuto", il Master toglie i crollati
   sfx("campana");
@@ -5264,6 +5305,8 @@ function bindEvents() {
     if (event.target.closest("[data-spree-stop]")) endBazarSpree();
     if (event.target.closest("[data-teschio-summon]")) summonTeschioShow();
     if (event.target.closest("[data-teschio-start]")) startTeschioSfida();
+    if (event.target.closest("[data-teschio-reroll]")) teschioReroll();
+    if (event.target.closest("[data-teschio-via]")) teschioVia();
     if (event.target.closest("[data-teschio-stop]")) teschioToJudging();
     const teschioBuffoBtn = event.target.closest("[data-teschio-buffo]");
     if (teschioBuffoBtn) { event.stopPropagation(); setTeschioBuffo(teschioBuffoBtn.dataset.teschioBuffo); return; }
