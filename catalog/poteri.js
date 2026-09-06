@@ -196,6 +196,20 @@ PIRATI.registerPowers([
     play: { type: "narrative", note: "una domanda a cui il «no» dell'ostacolo diventa un «sì»" },
     art: "Una grande porta di legno intagliata con una bocca imbronciata al centro, socchiusa a lasciar passare una luce dorata. Una chiave che galleggia davanti come una lucciola."
   },
+  {
+    id: "nome-giusto", name: "Il Nome Giusto", icon: "🏷️",
+    category: "magia", grade: 3, cooldown: "quest",
+    effect: "Dai a una cosa o a una creatura un nome preciso: per una scena si comporta esattamente come quel nome dice.",
+    play: { type: "narrative", note: "un nome dato a qualcosa la fa comportare come dice il nome, per una scena" },
+    art: "Un cartellino di carta appeso a uno spago che si scrive da solo con inchiostro dorato, mentre attorno oggetti sfocati riprendono contorni netti. Sfondo di mangrovie nella nebbia."
+  },
+  {
+    id: "guarda-meglio", name: "Guarda Meglio", icon: "👁️",
+    category: "carta", grade: 3, cooldown: "quest",
+    effect: "La ciurma osserva con calma una minaccia: il Master rivela un dettaglio che la rende affrontabile senza bisogno di tirare.",
+    play: { type: "narrative", note: "il Master svela il dettaglio che disinnesca una minaccia" },
+    art: "Una grande lente di vetro tenuta a due mani, e dentro il riflesso di un mostro nero che si scopre essere solo un mucchio di foglie e ombre. Luce lunare fredda."
+  },
 
   /* --- CARTE LEGGENDARIE ---------------------------------------------
      Non si pescano dalle quest. Si conquistano con un'impresa (campo howTo).

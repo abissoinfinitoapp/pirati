@@ -41,7 +41,9 @@ PIRATI.registerRewards({
     { id: "fischietto-coraggio",       name: "Fischietto del Coraggio",    icon: "🎺", rarity: "comune", text: "Soffiato piano, dà a chi ha paura la spinta per fare comunque la cosa giusta. Una volta." },
     { id: "medaglia-bel-gioco",        name: "Medaglia del Bel Gioco",     icon: "🏅", rarity: "comune", text: "Chi la porta può ripetere una prova andata male per colpa di un imbroglio altrui." },
     { id: "sigillo-del-perdono",       name: "Sigillo del Perdono",        icon: "📜", rarity: "comune", text: "Mostrato a chi ha sbagliato, gli apre una via per rimediare invece di una punizione." },
-    { id: "chiave-del-forse",          name: "Chiave del Forse",           icon: "🗝️", rarity: "raro",   text: "Apre una porta che ha detto no, se le fai la domanda giusta. Una volta." }
+    { id: "chiave-del-forse",          name: "Chiave del Forse",           icon: "🗝️", rarity: "raro",   text: "Apre una porta che ha detto no, se le fai la domanda giusta. Una volta." },
+    { id: "taccuino-dei-nomi",         name: "Taccuino dei Nomi",          icon: "📓", rarity: "comune", text: "Ci scrivi il nome di qualcosa che l'ha perso: per un giorno quel nome torna vero." },
+    { id: "lente-della-calma",         name: "Lente della Calma",          icon: "🔍", rarity: "raro",   text: "Guardata attraverso, una cosa spaventosa mostra com'è davvero, senza la paura addosso." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */
@@ -70,7 +72,9 @@ PIRATI.registerRewards({
     { id: "amico-del-vulcano",       name: "Amico del Vulcano",       icon: "🌋", text: "Hai insegnato al Vulcano Ruggente a fare rumore senza fare paura." },
     { id: "giudice-gara-storta",     name: "Giudice della Gara Storta", icon: "🐌", text: "Hai finito la gara dei giganti minuscoli e sistemato chi barava." },
     { id: "ciurma-assolta",          name: "Ciurma Assolta",          icon: "⚖️", text: "Hai mostrato al Tribunale del Corallo cosa la ciurma ha imparato dai suoi errori." },
-    { id: "passa-porte",             name: "Passa-Porte",             icon: "🚪", text: "Hai attraversato la Porta che Dice Sempre No senza forzarla." }
+    { id: "passa-porte",             name: "Passa-Porte",             icon: "🚪", text: "Hai attraversato la Porta che Dice Sempre No senza forzarla." },
+    { id: "ridai-i-nomi",            name: "Ridai-Nomi",              icon: "🏷️", text: "Hai restituito il suo nome a ogni cosa del villaggio che li aveva persi." },
+    { id: "domatore-di-paure",       name: "Domatore di Paure",       icon: "👁️", text: "Hai guardato in faccia la Bestia che Nessuno aveva Visto." }
   ],
 
   /* --- TITOLI: onorificenze della ciurma (per usi futuri / Gradi) ------- */

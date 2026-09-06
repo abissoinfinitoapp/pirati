@@ -1310,6 +1310,439 @@ PIRATI.registerPack({
           close_button: "⛵ Torna alla rotta"
         }
       }
+    },
+
+    /* ---- MANGROVIE SUSSURRANTI ------------------------------------- */
+    {
+      id: "villaggio-senza-nomi", island: "palude", order: 1,
+      title: "Il Villaggio che ha Dimenticato i Nomi", kind: "Mistero linguistico",
+      difficulty: 6, minutes: 55,
+      readAloud: "Nel villaggio delle mangrovie tutti sanno chi sono, ma nessuno ricorda come si chiama. «Io sono... quello che fa il pane», dice il fornaio. Anche gli oggetti hanno perso il nome: la forchetta è «la cosa a punte», il mare è «il grande bagnato».",
+      readKids: {
+        facile: [
+          "Nel villaggio nessuno ricorda il proprio nome.",
+          "Neanche le cose hanno più un nome.",
+          "La forchetta è «la cosa a punte».",
+          "Bisogna ritrovare i nomi."
+        ],
+        avanzato: [
+          "Gli abitanti del villaggio ricordano tutto di sé: cosa fanno, chi amano, cosa sanno cucinare.",
+          "Solo il nome, no. Quello è sparito.",
+          "E anche gli oggetti l'hanno perso: la forchetta è «la cosa a punte».",
+          "«Buongiorno», si salutano, «tu... come-ti-chiami». Vogliono indietro i loro nomi."
+        ]
+      },
+      goal: "Restituire i nomi al villaggio e trovare chi li ha raccolti.",
+      beats: [
+        "Senza nomi il villaggio funziona male: gli ordini si confondono, gli amici si perdono di vista.",
+        "Le parole-nome scappano ancora, come pesciolini: si può seguirle.",
+        "I nomi rubati sono chiusi in bottiglie col simbolo della nave."
+      ],
+      choices: [
+        { label: "Inventare nomi temporanei per tutti", stat: "astuzia", target: 6, result: "Trovate nomi provvisori così buffi e azzeccati che il villaggio ricomincia a funzionare." },
+        { label: "Seguire le parole-nome che scappano", stat: "fortuna", target: 6, result: "Inseguite le parole scivolose fin dove qualcuno le sta raccogliendo." }
+      ],
+      groupChallenge: "Ogni pirata inventa un nome nuovo per un oggetto comune (una scopa, un cucchiaio, una benda) e uno per sé come pirata. Il villaggio vota il preferito.",
+      rewards: [
+        { type: "loot", id: "taccuino-dei-nomi" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "ridai-i-nomi" },
+        { type: "power", id: "nome-giusto" }
+      ],
+      growth: "Chi inventa il nome che il villaggio sceglie come preferito segna 1 crescita Astuzia.",
+      fail: "Un nome sbagliato fa arrabbiare un abitante permaloso: Pericolo +1, ma seguendolo mentre borbotta arrivate alla riva delle bottiglie.",
+      escape: "Farsi dare un nome falso dagli abitanti e uscire dal villaggio fingendo di essere «quelli che sanno la strada»: prova di Astuzia 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Al mercato è il caos gentile: «Dammi due di quelli!» «Quelli quali?» «Quelli lì, i tondi gialli che fanno crunch!» Nessuno riesce a dire «mele», perché la parola «mela» è volata via stamattina.",
+              ask: "Come chiamereste una forchetta, se la parola «forchetta» non esistesse più?",
+              hints: [
+                "Descrivendo cosa fa: «l'infilza-bocconi».",
+                "Con un suono che ricorda l'oggetto.",
+                "Con un nome buffo e facile da ricordare.",
+                "Con il nome di chi la usa di più."
+              ],
+              rescue: "Un bambino del villaggio vi porge un cucchiaio e vi guarda speranzoso: «Tu sai come si chiama?»",
+              masterTip: "Fai battezzare a ogni bambino un oggetto della classe con un nome inventato: vince il più chiaro."
+            },
+            interaction: "Nessun tiro: si inventano nomi.",
+            outcome: {
+              title: "Il mercato ricomincia a girare",
+              text: "Con i vostri nomi provvisori, il mercato riprende: «Due infilza-bocconi e un pane-morbido!» Funziona. Ma è una toppa, non una soluzione. I nomi veri sono da qualche parte.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete restare e dare al villaggio un set completo di nomi nuovi, così ricomincia a vivere. Oppure potete inseguire le parole-nome che ancora scappano: guizzano tra le radici come pesci d'argento.",
+              ask: "Restiamo a inventare i nomi, o inseguiamo quelli veri che scappano?",
+              hints: [
+                "I nomi nuovi risolvono adesso, ma i nomi veri hanno i ricordi attaccati.",
+                "Le parole scappano verso il mare: chi le sta chiamando è da quella parte.",
+                "Si può fare in due gruppi."
+              ],
+              rescue: "Una parola-nome vi passa tra i piedi, si ferma un attimo a guardarvi, e riparte."
+            },
+            choices: [
+              {
+                id: "inventare",
+                label: "✏️ Diamo al villaggio nomi nuovi",
+                reaction_title: "La ciurma apre un ufficio dei nomi",
+                reaction: "Mettete un banchetto in piazza e cominciate a battezzare tutto e tutti. Si forma la fila. Ognuno vuole un nome che gli assomigli.",
+                next: "inventare"
+              },
+              {
+                id: "inseguire",
+                label: "🏃 Inseguiamo le parole che scappano",
+                reaction_title: "La ciurma parte a caccia di parole",
+                reaction: "Vi lanciate dietro alle parole-nome tra le radici delle mangrovie. Sono veloci e scivolose, e vanno tutte nella stessa direzione: verso la riva.",
+                next: "inseguire"
+              }
+            ]
+          },
+          {
+            scene_id: "inventare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "La fila è lunga. Ognuno ha una richiesta: «Un nome che faccia ridere», «Un nome serio, sono un capo», «Un nome uguale a quello di mia sorella, così non lo scordo». Serve dare a tutti un nome giusto, non a caso.",
+              ask: "Come si trova il nome giusto per una persona che non ricordi come si chiama?",
+              hints: [
+                "Chiedendole tre cose che le piacciono e costruendo il nome da lì.",
+                "Guardando cosa fa meglio di tutti.",
+                "Ascoltando come la chiamano gli amici quando non ci pensano.",
+                "Facendole scegliere tra due nomi che le proponete."
+              ],
+              rescue: "Il fornaio si illumina: «Chiamatemi come l'odore del pane appena sfornato!»",
+              masterTip: "Assegna un 'abitante' a tre bambini e falli trovare il nome adatto in un minuto."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ IL VILLAGGIO HA DI NUOVO I NOMI",
+                text: "A sera ogni abitante e ogni oggetto ha un nome. Non quelli di prima — ma nomi scelti bene, che raccontano qualcosa. Il villaggio se li ripete a voce alta per non scordarli più.",
+                audio: "win-event",
+                next: "riva-delle-bottiglie"
+              },
+              fail_forward: {
+                title: "🏷️ NOME SBAGLIATO",
+                text: "Date a un abitante permaloso un nome che non gli piace e se ne va offesissimo: Pericolo +1. Ma lo seguite mentre borbotta, e vi porta dritti alla riva dove qualcuno raccoglie i nomi.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "riva-delle-bottiglie"
+              }
+            }
+          },
+          {
+            scene_id: "inseguire",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Le parole-nome vi portano fino a una riva nascosta tra le mangrovie. Lì, decine di bottiglie galleggiano legate a una corda. Dentro ogni bottiglia, una parola che si agita: sono i nomi del villaggio.",
+              ask: "Come recuperate le bottiglie senza far scappare di nuovo i nomi e senza cadere nel fango?",
+              hints: [
+                "Tirare piano la corda tutti insieme, senza strappi.",
+                "Passarsi le bottiglie in catena, di mano in mano.",
+                "Tappare bene ogni bottiglia appena la prendete.",
+                "Uno tiene la corda, gli altri raccolgono."
+              ],
+              rescue: "Una bottiglia si stappa da sola e la parola «nonna» vola via: la riprendete al volo per un pelo.",
+              masterTip: "Fate mimare la catena umana per passarsi le bottiglie."
+            },
+            resolution: {
+              policy: "dice",
+              dice: { stat: "fortuna", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ NOMI IN SALVO",
+                text: "Bottiglia dopo bottiglia, tirate su tutti i nomi. Sono lì che frizzano, impazienti di tornare a casa. Sulla corda che li teneva c'è un'etichetta con un disegno.",
+                audio: "win-event",
+                next: "riva-delle-bottiglie"
+              },
+              fail_forward: {
+                title: "🌊 BOTTIGLIE ALLA DERIVA",
+                text: "La corda si spezza e metà bottiglie partono con la corrente: Pericolo +1. Le rincorrete lungo la riva e, recuperandole, leggete cosa c'è scritto sull'etichetta della corda.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "riva-delle-bottiglie"
+              }
+            }
+          },
+          {
+            scene_id: "riva-delle-bottiglie",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Sull'etichetta della corda, o sul fondo di una bottiglia, c'è sempre lo stesso segno: una nave con le vele piene di parole. E una nota, scritta piccola: «I nomi sono la prima cosa che una ciurma si scambia. Ne raccolgo tanti. Poi capirò quale mettermi».",
+              ask: "Perché qualcuno raccoglie i nomi di un intero villaggio?",
+              hints: [
+                "È lo stesso della nave: raccoglie le cose che rendono speciale stare insieme.",
+                "Forse non ha un nome suo, o non gli piace.",
+                "Un nome dato dagli altri vuol dire che qualcuno ti ha scelto.",
+                "Sta cercando di costruirsi un posto dove sentirsi qualcuno."
+              ],
+              rescue: "Una parola-nome nella bottiglia si mette a brillare quando le passate accanto la Stella della Ciurma."
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio nella bottiglia",
+              text: "Rimettete le bottiglie nella corrente giusta, verso il villaggio. Ma tenete l'etichetta: la nave disegnata sopra è la stessa che avete già incrociato. Qualcuno colleziona nomi come voi collezionate ricordi.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "I nomi tornano al villaggio come un'onda. «Marisol!» «Beto!» «Nonna Quila!» Ci sono abbracci e qualche pianto. Vi regalano un taccuino di corteccia: ci si scrive il nome di qualcosa che l'ha perso, e per un giorno quel nome torna vero.",
+              masterTip: "Chiudi con la domanda: se potessi sceglierti un nome nuovo da pirata, quale sarebbe e perché?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "Il Villaggio che ha Dimenticato i Nomi",
+          final_read: "Il villaggio si riprende i suoi nomi. Il Taccuino dei Nomi resta alla ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
+    },
+
+    {
+      id: "bestia-nessuno-ha-visto", island: "palude", order: 2,
+      title: "La Bestia che Nessuno ha Visto", kind: "Creazione collettiva",
+      difficulty: 7, minutes: 55,
+      readAloud: "Il villaggio ha una paura enorme di una bestia. Nessuno l'ha mai vista, ma tutti la descrivono — e ognuno in modo diverso. E la cosa strana è che, più la descrivono, più le impronte nel fango diventano vere.",
+      readKids: {
+        facile: [
+          "Tutti hanno paura di una bestia.",
+          "Nessuno l'ha vista davvero.",
+          "Ognuno la descrive in modo diverso.",
+          "E più ne parlano, più diventa vera."
+        ],
+        avanzato: [
+          "Nel villaggio si parla solo della Bestia.",
+          "Uno dice che ha sei zampe, un altro che vola, un altro che è fatta di fango.",
+          "Nessuno l'ha vista: la conoscono solo per sentito dire.",
+          "Ma nel fango sono comparse impronte, e ogni giorno assomigliano di più a quello che la gente racconta."
+        ]
+      },
+      goal: "Capire cosa sia davvero la bestia e impedire che la paura la renda sempre più spaventosa.",
+      beats: [
+        "Ogni descrizione della bestia è diversa e le sta dando forma.",
+        "Se la ciurma sceglie insieme com'è la bestia, quella forma diventa quella definitiva.",
+        "La bestia è comparsa nei sogni degli abitanti dopo il passaggio della nave."
+      ],
+      choices: [
+        { label: "Raccogliere tutte le descrizioni", stat: "astuzia", target: 6, result: "Mettete insieme i racconti e vi accorgete che non combaciano: la bestia è fatta di paura, non di carne." },
+        { label: "Inventarle una versione meno paurosa", stat: "coraggio", target: 6, result: "Raccontate voi com'è la bestia — buffa, non terribile — e la voce si sparge prima dell'altra." }
+      ],
+      groupChallenge: "Inventate insieme la Bestia definitiva: quante zampe, che rumore fa, la cosa più buffa che ha, e di cosa ha paura LEI.",
+      rewards: [
+        { type: "loot", id: "lente-della-calma" },
+        { type: "coins", amount: 250000 },
+        { type: "trophy", id: "domatore-di-paure" },
+        { type: "power", id: "guarda-meglio" }
+      ],
+      growth: "Chi propone la caratteristica buffa che entra nella Bestia definitiva segna 1 crescita Coraggio.",
+      fail: "Una descrizione spaventosa prende il sopravvento e la bestia diventa enorme per un attimo: Pericolo +1, ma nella corsa vedete che è fatta di fango e foglie.",
+      escape: "Camminare all'indietro raccontando ad alta voce una versione ridicola della bestia, così le impronte davanti a voi si fanno buffe: prova di Coraggio 6.",
+
+      storyFlow: {
+        start: "arrivo",
+        progression: [
+          {
+            scene_id: "arrivo",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Vi mostrano un'impronta nel fango. È grande, ma i bordi cambiano mentre la guardate: adesso ha artigli, adesso è tonda, adesso ci spunta un sesto dito. Cambia a seconda di chi la sta guardando e a cosa sta pensando.",
+              ask: "Se doveste immaginare questa bestia, come sarebbe? Ognuno dica una cosa.",
+              hints: [
+                "Quante zampe? Di che colore?",
+                "Fa un rumore? Quale?",
+                "Ha qualcosa di buffo?",
+                "È grande come una casa o come un gatto?"
+              ],
+              rescue: "L'impronta, sentendovi parlare senza urlare, per un secondo diventa una zampetta piccola e goffa.",
+              masterTip: "Raccogli 4-5 dettagli dai bambini senza scartarne nessuno: sono il materiale della bestia."
+            },
+            interaction: "Nessun tiro: si immagina la bestia.",
+            outcome: {
+              title: "L'impronta ascolta",
+              text: "Ogni cosa che dite, l'impronta la prova: cresce, si restringe, mette e toglie corna. Capite una cosa importante: questa bestia non esiste ancora davvero. La state facendo voi, con le parole.",
+              audio: "click",
+              next: "bivio"
+            }
+          },
+          {
+            scene_id: "bivio",
+            phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
+            scene: {
+              read: "Potete girare il villaggio e raccogliere tutte le descrizioni della bestia, per capire cosa c'è davvero sotto. Oppure potete mettervi voi a raccontare una versione della bestia — buffa, gentile — e farla girare prima che vinca quella spaventosa.",
+              ask: "Raccogliamo le descrizioni degli altri, o ne inventiamo una nostra più tranquilla?",
+              hints: [
+                "Raccogliere aiuta a capire; ma intanto la paura corre.",
+                "Inventare una versione buffa è veloce, ma va raccontata bene per convincere.",
+                "Si può raccogliere le descrizioni e poi montarle in una versione simpatica."
+              ],
+              rescue: "Un vecchio del villaggio si avvicina: «Io la bestia me la sogno ogni notte. Volete che ve la racconti?»"
+            },
+            choices: [
+              {
+                id: "raccogliere",
+                label: "🗒 Raccogliamo tutte le descrizioni",
+                reaction_title: "La ciurma fa il giro delle voci",
+                reaction: "Andate porta a porta a chiedere: «Com'è la bestia, secondo te?» Nessuna risposta è uguale a un'altra. Riempite un foglio di zampe, corna, rumori.",
+                next: "raccogliere"
+              },
+              {
+                id: "inventare",
+                label: "🎭 Inventiamo noi una versione buffa",
+                reaction_title: "La ciurma racconta la sua bestia",
+                reaction: "Vi mettete al centro della piazza e cominciate: «La bestia? Ah, quella. Ha sei zampe ma con sei scarpe diverse, e starnutisce ogni volta che qualcuno ride». La gente si ferma ad ascoltare.",
+                next: "inventare"
+              }
+            ]
+          },
+          {
+            scene_id: "raccogliere",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "Avete venti descrizioni e nessuna combacia. Chi dice che vola, chi che scava. Chi dice grande come una nave, chi come una scarpa. Adesso dovete mostrare al villaggio cosa vuol dire questo: che la bestia è fatta di paura, non di verità.",
+              ask: "Come spiegate a un villaggio spaventato che la loro bestia non ha una forma vera?",
+              hints: [
+                "Mettendo tutte le descrizioni una accanto all'altra, così vedono che si contraddicono.",
+                "Chiedendo a due persone di disegnarla insieme e ridere di quanto vengono diverse.",
+                "Facendo notare che nessuno l'ha vista, solo sentita nominare.",
+                "Raccontando una volta in cui anche voi avevate paura di una cosa che poi non esisteva."
+              ],
+              rescue: "Due abitanti disegnano la bestia sullo stesso foglio e vengono fuori due mostri opposti: ridono, nonostante tutto.",
+              masterTip: "Fai elencare ai bambini tre descrizioni che si contraddicono a vicenda."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 55, dice: 45 },
+              destiny_screen: {
+                title: "✦ Il Destino soffia sulla paura",
+                button: "Affidiamoci al Destino",
+                group_result: "Il villaggio guarda le venti descrizioni tutte insieme e comincia a ridere: la paura si sgonfia.",
+                dice_result: "Un abitante non si convince e alza la voce: serve una prova di Astuzia per tenere il ragionamento chiaro davanti a tutti."
+              },
+              dice: { stat: "astuzia", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LA BESTIA SI SGONFIA",
+                text: "Vedendo le sue mille forme contraddittorie appese al muro, il villaggio capisce. Le impronte nel fango si fanno piccole, poi buffe, poi sono solo quelle di un animaletto spaventato quanto loro.",
+                audio: "win-event",
+                next: "sogno-della-nave"
+              },
+              fail_forward: {
+                title: "🐾 UN ULTIMO SPAVENTO",
+                text: "Una descrizione particolarmente terribile prende piede e per un attimo la bestia si fa gigantesca: Pericolo +1. Ma correndo le passate accanto e la vedete bene: è tutta fango e foglie appiccicate.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "sogno-della-nave"
+              }
+            }
+          },
+          {
+            scene_id: "inventare",
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
+            scene: {
+              read: "La vostra bestia buffa sta piacendo. Ma quella spaventosa è ancora in giro, e ogni tanto qualcuno la nomina e le impronte si fanno di nuovo grosse. Dovete far vincere la vostra versione, quella che si può guardare senza tremare.",
+              ask: "Come rendete la vostra bestia buffa più forte di quella spaventosa, nella testa della gente?",
+              hints: [
+                "Darle un nome tenero, così è difficile averne paura.",
+                "Farla comparire in una storia dove aiuta qualcuno.",
+                "Far ripetere ai bambini del villaggio la descrizione buffa, come una filastrocca.",
+                "Dire di cosa ha paura LEI, così sembra meno terribile."
+              ],
+              rescue: "Un bambino del villaggio ripete a memoria la vostra descrizione buffa, con le zampe e lo starnuto: gli altri ridono.",
+              masterTip: "Fai inventare ai bambini il nome tenero della bestia e la sua paura."
+            },
+            resolution: {
+              policy: "destiny_group_or_dice",
+              destiny: { group: 60, dice: 40 },
+              destiny_screen: {
+                title: "✦ Il Destino sceglie quale bestia resta",
+                button: "Affidiamoci al Destino",
+                group_result: "La vostra versione buffa si sparge come una canzone: la bestia diventa quella, e nessuno ha più paura.",
+                dice_result: "La vecchia paura resiste: serve un'ultima prova di Coraggio per raccontare la vostra bestia forte e chiara davanti a tutti."
+              },
+              dice: { stat: "coraggio", target: 6 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LA BESTIA BUFFA HA VINTO",
+                text: "Il villaggio adotta la vostra versione. La bestia adesso ha un nome tenero, sei scarpe spaiate e lo starnuto da ridere. Quando compare per davvero, è esattamente così — e tutti le vogliono bene.",
+                audio: "win-event",
+                next: "sogno-della-nave"
+              },
+              fail_forward: {
+                title: "😱 LA PAURA RIALZA LA TESTA",
+                text: "Per un attimo la versione spaventosa torna gigante e vi fa correre tutti: Pericolo +1. Ma nella fuga la sfiorate e sentite che è morbida, fatta di fango e paura, niente di più.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "sogno-della-nave"
+              }
+            }
+          },
+          {
+            scene_id: "sogno-della-nave",
+            phase_flow: ["SCENE", "OUTCOME"],
+            scene: {
+              read: "Il vecchio che sogna la bestia ogni notte vi racconta una cosa. «Ha cominciato dopo che è passata una nave. Silenziosa. Da quella notte tutti sognano la stessa ombra che chiede: di cosa avete paura? E la mattina, nel fango, ci sono le impronte».",
+              ask: "Cosa c'entra la nave con una bestia fatta di paura?",
+              hints: [
+                "La nave raccoglie cose delle isole: forse anche i sogni, o le paure.",
+                "Chi è sulla nave vuole sapere cosa spaventa la gente.",
+                "Forse la 'bestia' è quello che resta quando qualcuno ti porta via il coraggio.",
+                "È lo stesso che ha preso le ombre, i nomi, il ruggito del vulcano."
+              ],
+              rescue: "Nel fango, un'impronta si forma da sola e ha la forma di una prua."
+            },
+            interaction: "Nessun tiro: è il momento dell'indizio.",
+            outcome: {
+              title: "L'indizio nel fango",
+              text: "Guardate a lungo l'ultima impronta. Non è di una zampa: è di una chiglia. La nave è passata di qui, ha chiesto a tutti di cosa avevano paura, e ha lasciato che quella paura camminasse da sola.",
+              audio: "star",
+              next: "finale"
+            }
+          },
+          {
+            scene_id: "finale",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "La bestia, adesso che ha una forma sola e un nome gentile, si fa vedere davvero: è piccola, impacciata, e ha più paura lei di voi. Il villaggio le porta da mangiare. Un abitante vi regala una lente di vetro liscio: chi ci guarda attraverso vede le cose spaventose come sono, senza la paura addosso.",
+              masterTip: "Chiudi con la domanda: una cosa fa meno paura quando la conosci?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi l'avventura"
+            }
+          }
+        ],
+        reward_screen: {
+          headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
+          subtitle: "La Bestia che Nessuno ha Visto",
+          final_read: "La Bestia diventa piccola, buffa e amica del villaggio. La Lente della Calma resta alla ciurma.",
+          close_button: "⛵ Torna alla rotta"
+        }
+      }
     }
 
   ]
