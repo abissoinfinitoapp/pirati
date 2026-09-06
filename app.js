@@ -2686,14 +2686,15 @@ function renderMap() {
   // Show del Teschio Multicolore: bottone del Master nella barra in alto, 1 al giorno
   const teschioTopbar = $("#map-teschio-topbar");
   if (teschioTopbar) {
-    const facce = `${state.teschio.facce.length}/${PIRATI.teschioFacce.length}`;
-    const showing = v.pending && v.pending.kind === "teschio";
-    const canSummon = !v.pending && TESCHIO_CORE.dayAvailable(state.teschio, state.day) && activePlayers().length > 0;
-    teschioTopbar.innerHTML = showing
-      ? `<div class="map-teschio-button is-live"><span>💀 SHOW IN CORSO</span><strong>${facce} facce</strong></div>`
-      : canSummon
-        ? `<button type="button" class="map-teschio-button" data-teschio-summon><span>💀 Show del Teschio</span><strong>chiama · ${facce}</strong></button>`
-        : `<div class="map-teschio-button is-done" title="Lo show del Teschio è già andato in scena oggi"><span>💀 Show del Teschio</span><strong>fatto oggi · ${facce}</strong></div>`;
+    const facce = `${(state.teschio && state.teschio.facce ? state.teschio.facce.length : 0)}/${PIRATI.teschioFacce.length}`;
+    let state2, note;
+    if (v.pending && v.pending.kind === "teschio") { state2 = "is-live"; note = "show in corso"; }
+    else if (!activePlayers().length) { state2 = "is-done"; note = "serve un pirata in gioco"; }
+    else if (!TESCHIO_CORE.dayAvailable(state.teschio, state.day)) { state2 = "is-done"; note = "fatto oggi · chiudi la giornata"; }
+    else { state2 = "ok"; note = `chiama · ${facce}`; }
+    teschioTopbar.innerHTML = state2 === "ok"
+      ? `<button type="button" class="map-teschio-button" data-teschio-summon><span>💀 Show del Teschio</span><strong>${note}</strong></button>`
+      : `<div class="map-teschio-button ${state2}"><span>💀 Show del Teschio</span><strong>${note}</strong></div>`;
   }
 }
 
