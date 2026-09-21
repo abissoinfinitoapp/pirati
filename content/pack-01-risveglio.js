@@ -77,18 +77,17 @@ PIRATI.registerPack({
             scene: {
               read: "Le porte del tempio tremano e — ECCIÙ! — una nuvola di polvere resta sospesa nell'aria. Piano piano prende la forma di una freccia che punta verso l'interno.",
               ask: "Secondo voi, perché un tempio grande e antico si mette a starnutire?",
-              hints: [
-                "Forse qualcuno, da dentro, gli fa il solletico.",
-                "Forse è pieno di polvere e pepe di mille anni.",
-                "Forse è allergico a qualcosa arrivato da poco... a noi?"
+              askOptions: [
+                { id: "solletico", label: "😮 Ha il solletico da dentro", reply: "«Qualcuno lo sta solleticando!» esclama un pirata. Il tempio scuote i muri come per confermarlo." },
+                { id: "polvere", label: "🌫️ È pieno di polvere di mille anni", reply: "«Mille anni di polvere nel naso di pietra» dice un altro. In effetti la nuvola non sembra finire mai." },
+                { id: "allergico", label: "🤧 È allergico a noi", reply: "«E se fossimo allergici NOI a lui?» ridacchia qualcuno. Il tempio starnutisce ancora più forte, quasi per rispondere." }
               ],
-              rescue: "Da una crepa esce un fischio sottile: «Aaa... aaa...». Sta per rifarlo. Cosa gli è entrato nel naso?",
               masterTip: "Fai il rumore dello starnuto che monta e trattienilo: i bambini si sbrigano a rispondere."
             },
-            interaction: "Nessun tiro. Lascia parlare i bambini.",
+            interaction: "Nessun tiro. Lascia scegliere i bambini.",
             outcome: {
               title: "Il tempio vi ha sentiti",
-              text: "Qualunque teoria abbiano proposto, il tempio risponde con un altro ECCIÙ! La freccia di polvere punta verso l'atrio.",
+              text: "Qualunque teoria abbiano scelto, il tempio risponde con un altro ECCIÙ! La freccia di polvere punta verso l'atrio.",
               audio: "click",
               next: "tre-nasi"
             }
@@ -98,13 +97,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Nell'atrio ci sono tre statue enormi con tre nasi diversi: uno all'insù, uno schiacciato, uno lungo lungo. Sotto ognuna, una galleria buia.",
-              ask: "Come facciamo a capire quale strada affrontare senza andare alla cieca?",
-              hints: [
-                "Guardare quale naso è pulito e quale pieno di ragnatele.",
-                "Sentire da quale galleria arriva aria fresca.",
-                "Ascoltare da quale arriva l'eco degli starnuti."
-              ],
-              rescue: "Una lucciola si posa sul naso schiacciato e starnutisce pure lei. Poi vola su quello all'insù e lì sta tranquilla."
+              ask: "Come facciamo a capire quale strada affrontare senza andare alla cieca?"
             },
             choices: [
               {
@@ -137,12 +130,11 @@ PIRATI.registerPack({
             scene: {
               read: "Per calmare un tempio che starnutisce serve un rimedio. Non uno qualsiasi: un rimedio inventato bene.",
               ask: "Che medicina preparate? Serve un ingrediente, un modo per darla al tempio e una parola magica.",
-              hints: [
-                "Foglie che fanno il solletico al contrario.",
-                "Acqua di mare con polvere di conchiglia.",
-                "Miele di palma sulle colonne e una ninna nanna."
+              askOptions: [
+                { id: "foglie", label: "🍃 Foglie che fanno il solletico al contrario", reply: "Le foglie sfiorano le colonne piano piano: invece di far ridere, calmano. «Ssh, va tutto bene» sussurrate insieme." },
+                { id: "acqua", label: "🌊 Acqua di mare e polvere di conchiglia", reply: "L'acqua salata scivola lungo le crepe, la polvere di conchiglia brilla come tante stelline. Il tempio trattiene il fiato." },
+                { id: "miele", label: "🍯 Miele di palma e una ninna nanna", reply: "Spalmate il miele dorato sulle colonne e intonate una ninna nanna stonata ma piena di cuore." }
               ],
-              rescue: "La crepa nel muro sussurra: «Qualcosa di fresco... qualcosa di salato... e ditelo con dolcezza».",
               masterTip: "Fatti dare ingrediente, metodo e parola magica da tre bambini diversi."
             },
             resolution: {
@@ -179,12 +171,11 @@ PIRATI.registerPack({
             scene: {
               read: "Vi mettete in fila e aspettate. ECCIÙ! — si illumina la galleria di destra. Cinque passi. ECCIÙ! — a sinistra. Il tempio vi guida... o vi prende in giro?",
               ask: "Qual è il piano per non perdervi, seguendo una luce che dura mezzo secondo?",
-              hints: [
-                "Uno conta i passi ad alta voce e gli altri si tengono per mano.",
-                "Lasciare un sassolino a ogni svolta.",
-                "Muoversi solo durante lo starnuto."
-              ],
-              rescue: "Un ECCIÙ fortissimo mostra in fondo una stanza con una piuma che galleggia a mezz'aria."
+              askOptions: [
+                { id: "contare", label: "🔢 Contare i passi ad alta voce", reply: "«Uno, due, tre...» — vi tenete per mano e contate insieme, così nessuno resta indietro." },
+                { id: "sassolino", label: "🪨 Un sassolino a ogni svolta", reply: "Ogni volta che il corridoio gira, lasciate cadere un sassolino: la strada del ritorno resta segnata." },
+                { id: "scattare", label: "🏃 Muoversi solo durante lo starnuto", reply: "Fermi, fermi... ECCIÙ! — scattate tutti insieme, poi vi bloccate di nuovo ad aspettare il prossimo." }
+              ]
             },
             resolution: {
               policy: "destiny",
@@ -219,12 +210,11 @@ PIRATI.registerPack({
             scene: {
               read: "Sotto le statue ci sono tre frasi: «Il primo respira e non parla», «Il secondo parla e non respira», «Il terzo fa tutt'e due, ma solo se lo saluti».",
               ask: "Cosa vogliono dire? Quale naso è quello giusto, e perché?",
-              hints: [
-                "Respira e non parla: c'è aria ma niente eco.",
-                "Parla e non respira: torna l'eco ma non l'aria.",
-                "Tutt'e due se lo saluti: bisogna dire qualcosa alla statua."
-              ],
-              rescue: "La lucciola si posa sul terzo naso e aspetta, come se volesse sentirsi dire «buongiorno»."
+              askOptions: [
+                { id: "primo", label: "😤 Il primo: respira ma non parla", reply: "«C'è aria ma niente eco» — provate ad ascoltarlo, ma resta silenzioso." },
+                { id: "secondo", label: "🗣️ Il secondo: parla ma non respira", reply: "Un'eco vi risponde, ma non sentite aria muoversi: non è ancora quello giusto." },
+                { id: "terzo", label: "👋 Il terzo: fa tutt'e due, se lo saluti", reply: "«Buongiorno, naso lungo!» — e per un istante vi sembra che qualcosa, dentro la statua, vi ascolti davvero." }
+              ]
             },
             resolution: {
               policy: "group",
@@ -249,27 +239,37 @@ PIRATI.registerPack({
           },
           {
             scene_id: "piuma",
-            phase_flow: ["SCENE", "OUTCOME"],
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
             scene: {
-              read: "Al centro galleggia la Piuma della Verità: fa starnutire chiunque dica una bugia. Per prenderla, passate davanti uno alla volta e dite una cosa vera su di voi.",
-              ask: "Chi va per primo? E che verità dite: una piccola paura, una cosa che vi piace, un errore che avete fatto?",
-              hints: [
-                "Ho avuto paura sul ponte dei pappagalli.",
-                "Una volta ho mangiato la merenda di mio fratello.",
-                "Non so ancora fare il nodo del marinaio."
+              read: "Al centro galleggia la Piuma della Verità: fa starnutire chiunque dica una bugia. Per prenderla, passate davanti uno alla volta e dite ad alta voce una cosa vera su di voi — ci vuole coraggio.",
+              ask: "Chi va per primo? E che verità dite, per convincere la Piuma che siete sinceri?",
+              askOptions: [
+                { id: "paura", label: "😨 Una piccola paura", reply: "«Ho avuto paura sul ponte dei pappagalli» dice qualcuno a bassa voce. La piuma trema appena." },
+                { id: "marachella", label: "🍪 Una marachella", reply: "«Una volta ho mangiato la merenda di mio fratello» confessa un altro, un po' rosso in viso." },
+                { id: "difetto", label: "🪢 Una cosa che non sapete fare", reply: "«Non so ancora fare il nodo del marinaio» ammette l'ultimo. La piuma fluttua, in ascolto." }
               ],
-              rescue: "La piuma si gira curiosa verso il più silenzioso della ciurma. Tocca a lui.",
-              masterTip: "Vai per primo tu con una verità piccola e buffa."
+              masterTip: "Vai per primo tu con una verità piccola e buffa: la Piuma è severa, non chiede però che sia perfetta."
             },
             resolution: {
-              policy: "narrative",
-              rule: "Nessun dado. La creatività/sincerità non viene giudicata dal sistema."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "coraggio", target: 5 },
+              cards: "Mostrare carte/poteri giocabili prima del tiro se disponibili."
             },
-            outcome: {
-              title: "✨ LA PIUMA VI SCEGLIE",
-              text: "La piuma si posa nella mano dell'ultimo che ha parlato e indica una nicchia nel muro.",
-              audio: "star",
-              next: "finale"
+            outcomes: {
+              success: {
+                title: "✨ LA PIUMA VI CREDE",
+                text: "Le vostre verità erano vere fino in fondo: la piuma si posa nella mano dell'ultimo che ha parlato e indica una nicchia nel muro.",
+                audio: "win-event",
+                next: "finale"
+              },
+              fail_forward: {
+                title: "😳 LA PIUMA ESITA",
+                text: "Le parole escono un po' impastate, un po' timide: la piuma non si convince del tutto e resta indecisa a mezz'aria. Il muro dietro di lei si apre comunque, ma solo di uno spiraglio.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "finale-dubbio"
+              }
             }
           },
           {
@@ -282,13 +282,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Attraverso lo spiraglio raggiungete comunque la Tavoletta del Primo Vento, ma è più fredda del previsto, come se il tempio non fosse del tutto convinto di lasciarvela andare. Fa un ultimo, breve «etcì» — non proprio un saluto, più un «va bene, andate pure».",
+              masterTip: "Chiedi: la prossima volta, quale verità vorrebbero dire più forte?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Il Tempio che Starnutisce",
           final_read: "Il tempio fa un ultimo minuscolo «etcì». La Tavoletta del Primo Vento brilla tra le mani della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ IL TEMPIO VI LASCIA ANDARE",
+          fail_subtitle: "Il Tempio che Starnutisce — un finale diverso",
+          fail_final_read: "La Tavoletta del Primo Vento è vostra, ma il tempio resta un po' in dubbio su di voi. Va bene così: ci riproverete la prossima volta."
         }
       }
     },
@@ -340,12 +354,11 @@ PIRATI.registerPack({
             scene: {
               read: "Il burrone è profondo e il ponte non c'è più: centinaia di pappagalli hanno portato via ogni asse. Il Re Pappagallo gonfia il petto: «Pedaggio! Voglio una parola NUOVA. Una parola che nessuno ha mai detto!»",
               ask: "Come si inventa una parola che non esiste ancora?",
-              hints: [
-                "Attaccare insieme due parole che di solito non stanno vicine.",
-                "Partire da un suono buffo che vi piace e allungarlo.",
-                "Prendere il verso di un animale e farne una parola."
+              askOptions: [
+                { id: "unire", label: "🔗 Uniamo due parole che non stanno mai insieme", reply: "«Scarpa-tuono!» propone qualcuno ridendo. Il Re Pappagallo inclina la testa, curioso." },
+                { id: "suono", label: "🎵 Partiamo da un suono buffo e lo allunghiamo", reply: "«Bzzzlurp... bzzzlurpiglione!» Lo stormo scoppia in uno svolazzo di risate." },
+                { id: "verso", label: "🐦 Prendiamo il verso di un animale", reply: "Qualcuno imita un grugnito e lo trasforma in parola: «Grugnolino!». Un pappagallo lo ripete subito." }
               ],
-              rescue: "Il Re Pappagallo batte le ali: «Nuova nuova NUOVA! Non una parola vecchia travestita!»",
               masterTip: "Ripeti «nuovaaa» come un pappagallo impaziente finché non parte la prima idea."
             },
             interaction: "Nessun tiro: lascia inventare i bambini.",
@@ -361,13 +374,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Il Re Pappagallo indica due strade: «O mi regalate una parola con dentro una storia... oppure vi riprendete da soli l'ultima asse. Ce l'ha una scimmia molto dispettosa.»",
-              ask: "Cosa scegliamo: la parola-storia o l'inseguimento alla scimmia?",
-              hints: [
-                "Con la parola nessuno rischia il burrone.",
-                "L'inseguimento è più veloce, ma la scimmia è furba.",
-                "Si può anche cominciare con una e passare all'altra."
-              ],
-              rescue: "Una piuma verde plana giù e vi si posa in mano, come un invito a scegliere."
+              ask: "Cosa scegliamo: la parola-storia o l'inseguimento alla scimmia?"
             },
             choices: [
               {
@@ -392,23 +399,16 @@ PIRATI.registerPack({
             scene: {
               read: "Il Re Pappagallo si accomoda su un ramo e apre le orecchie sotto le piume. «Sentiamo questa parola. E niente trucchi.»",
               ask: "Qual è la parola? Cosa vuol dire? Usatela in una frase da pirati.",
-              hints: [
-                "Deve significare qualcosa che a un pirata serve davvero.",
-                "Meglio se fa un po' ridere a dirla.",
-                "La frase può raccontare una piccola avventura."
+              askOptions: [
+                { id: "utile", label: "⚓ Qualcosa che serve davvero a un pirata", reply: "«Sacca-vento: la tasca segreta dove tieni il coraggio quando il mare fa paura» — il Re Pappagallo si ferma ad ascoltare." },
+                { id: "buffa", label: "😂 Una parola che fa ridere solo a dirla", reply: "«Ciuffapallo!» — la ciurma non riesce più a dirla senza ridere, e nemmeno i pappagalli." },
+                { id: "racconto", label: "📖 Una parola dentro una piccola storia", reply: "«Era una notte di sfuffolino, quando il mare...» — la frase prende forma pezzo per pezzo." }
               ],
-              rescue: "Il Re Pappagallo suggerisce: «Una parola per quella cosa che senti nella pancia prima di saltare...»",
               masterTip: "Fatti dire parola, significato e frase da tre bambini diversi."
             },
             resolution: {
-              policy: "destiny_group_or_dice",
-              destiny: { group: 65, dice: 35 },
-              destiny_screen: {
-                title: "✦ Il Re Pappagallo ci pensa su",
-                button: "Affidiamoci al Destino",
-                group_result: "La parola gli piace così tanto che la ripete subito: accettata, senza prove.",
-                dice_result: "Lo stormo mormora indeciso: serve convincerli con l'Astuzia."
-              },
+              policy: "dice",
+              critical: true,
               dice: { stat: "astuzia", target: 6 }
             },
             outcomes: {
@@ -420,10 +420,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🌀 CHE CONFUSIONE!",
-                text: "Metà stormo grida la parola giusta, metà ne inventa una sbagliata: Pericolo +1. Nel caos rimettono comunque metà del ponte — si passa in fila indiana.",
+                text: "Metà stormo grida la parola giusta, metà ne inventa una sbagliata: Pericolo +1. Nel caos, il ponte torna solo a metà: si passerà con più attenzione.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -433,15 +433,15 @@ PIRATI.registerPack({
             scene: {
               read: "La scimmia si ferma a metà liana, stringe l'asse e vi fa una linguaccia. Sotto di lei, solo burrone.",
               ask: "Come la convincete a lasciare l'asse, senza spaventarla e senza rischiare la caduta?",
-              hints: [
-                "Offrirle qualcosa di più luccicante dell'asse.",
-                "Farla ridere così tanto che la molla.",
-                "Due la aspettano ai lati, uno la avvicina piano."
-              ],
-              rescue: "La scimmia sbadiglia: si sta annoiando. Se non fate qualcosa di divertente, se ne va con l'asse."
+              askOptions: [
+                { id: "luccicante", label: "✨ Le offriamo qualcosa di più luccicante", reply: "Una conchiglia iridescente cattura subito il suo sguardo: comincia a dondolarsi, incuriosita." },
+                { id: "ridere", label: "😆 La facciamo ridere fino a farla mollare", reply: "Qualcuno fa la faccia più buffa della ciurma: la scimmia si scompiscia e quasi perde l'equilibrio." },
+                { id: "circondare", label: "🤝 Due la aspettano ai lati, uno si avvicina piano", reply: "Vi disponete piano piano, senza far rumore, stringendo il cerchio attorno a lei." }
+              ]
             },
             resolution: {
               policy: "dice",
+              critical: true,
               dice: { stat: "coraggio", target: 6 }
             },
             outcomes: {
@@ -453,10 +453,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🙊 L'ASSE VOLA VIA",
-                text: "La scimmia lancia l'asse dall'altra parte del burrone: Pericolo +1. Tocca fare il giro lungo, ma alla fine la recuperate.",
+                text: "La scimmia lancia l'asse dall'altra parte del burrone: Pericolo +1. Fate il giro lungo e recuperate quel che potete, ma qualcosa resta indietro nella corsa.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -470,13 +470,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il ponte è tornato, ma non è più solido come prima: qualche asse è storta, qualche corda tirata male. Lo stormo grida la vostra parola lo stesso, un po' distratto — già litiga per un frutto caduto. Passate comunque, con attenzione.",
+              masterTip: "Chiedi: la prossima volta, quale parola vorrebbero provare a inventare?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Il Ponte dei Pappagalli",
           final_read: "Lo stormo vi accompagna oltre il burrone gridando la vostra parola nuova. Il Richiamo dello Stormo è vostro.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ IL PONTE REGGE, A MODO SUO",
+          fail_subtitle: "Il Ponte dei Pappagalli — un finale diverso",
+          fail_final_read: "Il ponte è di nuovo in piedi, un po' storto. Lo stormo canta la vostra parola lo stesso: non era perfetta, ma è bastata."
         }
       }
     },
@@ -530,12 +544,11 @@ PIRATI.registerPack({
             scene: {
               read: "Il cratere gorgoglia piano, come una minestra sul fuoco. Un piccolo gigante ci tuffa un mestolo enorme, assaggia, storce il naso: «Manca qualcosa! Portatemi l'ingrediente giusto o questa zuppa trabocca!»",
               ask: "Che sapore dovrebbe avere una zuppa di lava per essere calma e buona?",
-              hints: [
-                "Qualcosa di fresco che spegne senza spegnere del tutto.",
-                "Qualcosa di dolce che la fa addormentare.",
-                "Qualcosa di frizzante che la fa ridere invece di ribollire."
+              askOptions: [
+                { id: "fresco", label: "❄️ Qualcosa di fresco, che calma senza spegnere", reply: "«Un ghiacciolo di nuvola!» — il gigante ci pensa su, il mestolo fermo a mezz'aria." },
+                { id: "dolce", label: "🍯 Qualcosa di dolce, che la fa addormentare", reply: "«Miele di stelle cadenti» propone qualcuno. Il gigante si lecca i baffi, tentato." },
+                { id: "frizzante", label: "🫧 Qualcosa di frizzante, che la fa ridere", reply: "«Bollicine che fanno il solletico!» Il gigante scoppia a ridere e per un attimo il cratere ride con lui." }
               ],
-              rescue: "Il gigante batte il mestolo sul bordo: «Su, su! Ho fame e il vulcano pure!»",
               masterTip: "Fai la faccia schifata del gigante che assaggia: parte subito la gara di idee."
             },
             interaction: "Nessun tiro: si inventa il sapore.",
@@ -551,13 +564,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "I tre sentieri fumano. Il gigante vi guarda: «Potete studiare la ricetta esatta, oppure fidarvi del naso e assaggiare mentre raccogliete. Come preferite fare?»",
-              ask: "Andiamo con la ricetta precisa o con l'assaggio coraggioso?",
-              hints: [
-                "La ricetta è più sicura ma serve ragionare bene.",
-                "L'assaggio è veloce ma qualche goccia scotta.",
-                "Chi ha buon naso può guidare gli altri."
-              ],
-              rescue: "Una bolla di lava sale, si gonfia e fa PLOP: dentro c'è il profumo di uno degli ingredienti."
+              ask: "Andiamo con la ricetta precisa o con l'assaggio coraggioso?"
             },
             choices: [
               {
@@ -582,12 +589,11 @@ PIRATI.registerPack({
             scene: {
               read: "Le foglie-ricetta sono scritte al contrario e macchiate di cenere. Ogni ingrediente ha un disegno e un numero mezzo cancellato.",
               ask: "Quali tre ingredienti fantastici calmano un vulcano senza spegnerlo? E in che ordine vanno aggiunti?",
-              hints: [
-                "Prima quello che raffredda, poi quello che addolcisce.",
-                "L'ultimo deve legare gli altri due.",
-                "Provate a raccontare la ricetta come una piccola storia."
+              askOptions: [
+                { id: "ordine-classico", label: "❄️🍯 Prima il fresco, poi il dolce", reply: "«Prima si raffredda, poi si addolcisce» spiegate al gigante, che annuisce serio come uno chef." },
+                { id: "legante", label: "🔗 L'ultimo lega gli altri due insieme", reply: "«E per finire, qualcosa che li tenga uniti» — il gigante controlla le foglie-ricetta, sorpreso che coincida." },
+                { id: "storia", label: "📖 La raccontiamo come una storia", reply: "«C'era una volta un vulcano che aveva freddo...» — il gigante si ferma ad ascoltare, incantato." }
               ],
-              rescue: "Il gigante sbircia da sopra la spalla: «Il fresco per primo, sempre. Sennò salta tutto.»",
               masterTip: "Fatti dire i tre ingredienti e il perché stanno bene insieme."
             },
             resolution: {
@@ -623,12 +629,11 @@ PIRATI.registerPack({
             scene: {
               read: "Raccogliete di corsa: una goccia di rugiada-di-fuoco, un fiore che sa di menta calda, una scintilla dolce. L'ultimo boccone però brilla arancione e sembra scottare.",
               ask: "Chi lo assaggia? E come lo fate senza bruciarvi la lingua?",
-              hints: [
-                "Soffiarci sopra tutti insieme prima.",
-                "Toccarlo appena con la punta della lingua.",
-                "Farlo raffreddare su una foglia larga."
-              ],
-              rescue: "Il gigante ride: «È caldo ma non brucia, se ci credi davvero. Coraggio!»"
+              askOptions: [
+                { id: "soffiare", label: "💨 Ci soffiamo sopra tutti insieme", reply: "Un coro di soffi fa tremolare la goccia dorata, che si intiepidisce appena." },
+                { id: "punta", label: "👅 Solo la punta della lingua, per prova", reply: "Un pirata coraggioso assaggia appena appena, gli occhi stretti, pronto a scappare." },
+                { id: "foglia", label: "🍃 La facciamo raffreddare su una foglia larga", reply: "Posate la goccia su una foglia enorme e aspettate, impazienti, che smetta di fumare." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -656,16 +661,17 @@ PIRATI.registerPack({
             scene: {
               read: "Manca l'ultimo gesto: l'ingrediente finale va aggiunto da tutti nello stesso identico momento, o non lega.",
               ask: "Qual è il vostro segnale per farlo tutti insieme al momento giusto?",
-              hints: [
-                "Un «uno, due, tre» gridato da chi ha la voce più forte.",
-                "Un battito di mani che parte lento e accelera.",
-                "Guardarsi negli occhi e contare col respiro."
+              askOptions: [
+                { id: "conto", label: "🗣️ Un «uno, due, tre» gridato forte", reply: "Chi ha la voce più potente si prepara: «UNO... DUE...»" },
+                { id: "battito", label: "👏 Un battito di mani che accelera", reply: "Le mani cominciano a battere piano, poi sempre più veloce, come un cuore che si emoziona." },
+                { id: "respiro", label: "👀 Ci guardiamo negli occhi e respiriamo insieme", reply: "Vi mettete in cerchio, mano nella mano, e respirate tutti alla stessa velocità." }
               ],
-              rescue: "Il gigante alza il mestolo come un direttore d'orchestra e aspetta il vostro via."
+              masterTip: "Il momento del \"tre!\" è il vero cuore della scena: lascialo montare."
             },
             resolution: {
-              policy: "group",
-              group: "Decidete il segnale e provatelo una volta a vuoto: tutti devono partire nello stesso istante."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "coraggio", target: 5 }
             },
             outcomes: {
               success: {
@@ -676,10 +682,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🌋 QUASI IN TEMPO",
-                text: "Qualcuno parte un attimo dopo: il vulcano fa un ultimo brontolìo, Pericolo +1. Ma il gigante ci mette una pezza col mestolo e la zuppa si calma.",
+                text: "Qualcuno parte un attimo dopo: il vulcano fa un ultimo brontolìo, Pericolo +1. La zuppa si calma solo a metà — resta un ribollio leggero, ma niente di pericoloso.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -693,13 +699,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il gigante assaggia un'ultima volta e storce appena il naso. «Non è perfetta... ma va bene lo stesso.» Vi porge comunque una pietra, più fredda del previsto: pulsa piano, come se dormisse a metà.",
+              masterTip: "Chiedi: la prossima volta, come vi allenereste a essere più sincroni?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "La Zuppa del Vulcano",
           final_read: "Il vulcano gorgoglia piano e felice. La Pietra Tiepida batte nel palmo della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ IL VULCANO SI ACCONTENTA",
+          fail_subtitle: "La Zuppa del Vulcano — un finale diverso",
+          fail_final_read: "Il vulcano smette di ribollire, ma resta un po' agitato. La pietra che vi porge il gigante è più fredda del solito: funziona lo stesso."
         }
       }
     },
@@ -751,12 +771,11 @@ PIRATI.registerPack({
             scene: {
               read: "Una salamandra tutta luce corre in cerchio, agitatissima: ha nascosto il suo uovo e non ricorda più dove. In lontananza il guscio ha cominciato a cantare, e più passa il tempo più il canto diventa forte.",
               ask: "Cosa può aiutare la salamandra a ricordarsi dove ha nascosto l'uovo?",
-              hints: [
-                "Rifare insieme la strada che ha fatto poco fa.",
-                "Cercare dove il terreno è ancora caldo.",
-                "Seguire il canto dell'uovo, che si sente sempre di più."
+              askOptions: [
+                { id: "ripercorrere", label: "👣 Rifacciamo insieme la sua strada", reply: "La salamandra chiude gli occhi e prova a ricordare i suoi passi, un piede tremante dopo l'altro." },
+                { id: "caldo", label: "🔥 Cerchiamo dove il terreno è ancora caldo", reply: "Toccate il suolo qua e là: «Questo punto scotta ancora!» esclama qualcuno." },
+                { id: "canto", label: "🎶 Seguiamo il canto, che si sente sempre di più", reply: "Vi fermate zitti zitti: in lontananza, una nota dolce sale e scende." }
               ],
-              rescue: "La salamandra si ferma davanti a voi e vi guarda con gli occhi lucidi: «Aiutatemi... il sole sta scendendo.»",
               masterTip: "Parla veloce e affannato come la salamandra: trasmette la fretta ai bambini."
             },
             interaction: "Nessun tiro: si cerca insieme un modo per ricordare.",
@@ -772,13 +791,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Le tre rocce calde nascondono indizi, ma alcuni sono scherzi. E il canto dell'uovo cambia nota: più limpido verso una direzione, stonato verso le altre.",
-              ask: "Ci fidiamo dell'orecchio e seguiamo il canto, o costruiamo un passaggio sicuro sopra la lava lenta?",
-              hints: [
-                "Il canto è veloce ma la lava lenta taglia la strada.",
-                "Un ponte richiede tempo, e il sole scende.",
-                "Chi ha orecchio fino può guidare gli altri."
-              ],
-              rescue: "L'uovo fa un acuto: per un secondo tutti sentite chiarissimo da che parte arriva."
+              ask: "Ci fidiamo dell'orecchio e seguiamo il canto, o costruiamo un passaggio sicuro sopra la lava lenta?"
             },
             choices: [
               {
@@ -803,12 +816,11 @@ PIRATI.registerPack({
             scene: {
               read: "Il canto rimbalza tra le rocce e si sdoppia: due note simili, una vera e una eco. Sbagliare vuol dire tornare indietro e perdere minuti preziosi.",
               ask: "Come fate a distinguere il canto vero dalla sua eco?",
-              hints: [
-                "L'eco arriva un pelo dopo e più debole.",
-                "Coprirsi un orecchio per volta e confrontare.",
-                "Muoversi di pochi passi e sentire quale nota cresce."
-              ],
-              rescue: "La salamandra fischia la nota giusta: adesso sapete che suono cercare."
+              askOptions: [
+                { id: "ritardo", label: "⏱️ L'eco arriva un attimo dopo, più debole", reply: "Contate in silenzio tra una nota e l'altra: una arriva sempre un filo in ritardo." },
+                { id: "orecchio", label: "👂 Ci copriamo un orecchio per volta", reply: "A turno vi tappate un orecchio: «Da questo lato sento meglio!»" },
+                { id: "muoversi", label: "🚶 Facciamo pochi passi e sentiamo quale nota cresce", reply: "Vi spostate piano: una nota si fa più forte, l'altra sparisce quasi del tutto." }
+              ]
             },
             resolution: {
               policy: "destiny",
@@ -842,12 +854,11 @@ PIRATI.registerPack({
             scene: {
               read: "La lava lenta avanza come miele rovente. Avete gusci, rami e una corda: il passaggio deve reggere tutti, uno dopo l'altro.",
               ask: "Come lo costruite perché non ceda e non prenda fuoco?",
-              hints: [
-                "Gusci minerali sotto: non bruciano.",
-                "Passare uno per volta, gli altri tengono la corda.",
-                "Provarlo prima con qualcosa di pesante."
-              ],
-              rescue: "Un guscio galleggia sulla lava senza scaldarsi: ecco il materiale giusto."
+              askOptions: [
+                { id: "gusci", label: "🐚 Gusci minerali come base, non bruciano", reply: "Incastrate i gusci più larghi uno accanto all'altro: sembrano tenere bene." },
+                { id: "corda", label: "🪢 Uno alla volta, gli altri tengono la corda", reply: "Vi mettete in fila, la corda tesa tra le mani, pronti a fare da appoggio." },
+                { id: "prova-peso", label: "🪨 Lo proviamo prima con qualcosa di pesante", reply: "Lanciate sopra una roccia grossa: il passaggio scricchiola ma regge." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -875,16 +886,17 @@ PIRATI.registerPack({
             scene: {
               read: "L'uovo è trovato, ma la salamandra tremola: ha paura di dimenticarsi di nuovo. Vuole un modo per ricordare, per sempre.",
               ask: "Costruite per lei una catena di tre indizi che la porti sempre all'uovo.",
-              hints: [
-                "Un indizio per la vista, uno per l'udito, uno per il tatto.",
-                "Ogni indizio deve puntare al successivo.",
-                "Devono essere cose che non cambiano col tempo."
+              askOptions: [
+                { id: "sensi", label: "👁️👂✋ Un indizio per vista, udito e tatto", reply: "«Guarda la roccia a cuore, ascolta il vento tra le canne, tocca la pietra tiepida» — la salamandra ripete piano, concentrata." },
+                { id: "catena", label: "🔗 Ogni indizio punta al successivo", reply: "Costruite la catena come una filastrocca: il primo indizio nasconde dove trovare il secondo." },
+                { id: "permanenti", label: "⏳ Solo cose che non cambiano col tempo", reply: "Scegliete solo pietre e forme del terreno: nulla che una pioggia o un vento possano spostare." }
               ],
-              rescue: "La salamandra propone: «La prima cosa potrebbe essere quella roccia a forma di cuore...»"
+              masterTip: "Fatti costruire la catena a voce alta, un indizio per bambino."
             },
             resolution: {
-              policy: "group",
-              group: "Inventate i tre indizi in fila: ognuno deve condurre a quello dopo, fino all'uovo."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "astuzia", target: 5 }
             },
             outcomes: {
               success: {
@@ -895,10 +907,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🌫 UN INDIZIO CONFUSO",
-                text: "Un indizio è troppo vago e la salamandra si imbroglia: Pericolo +1. Lo sistemate insieme, più semplice, e alla fine funziona.",
+                text: "Un indizio resta troppo vago e la salamandra si imbroglia lo stesso: Pericolo +1. La catena regge solo a metà: qualche volta la seguirà, qualche volta no.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -912,13 +924,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il guscio smette di cantare, ma la salamandra resta un po' agitata: ripete la catena di indizi a bassa voce, incerta. Vi stacca comunque una scaglia, più opaca del solito, e ve la mette in mano.",
+              masterTip: "Chiedi: quale indizio della catena renderebbero più semplice, la prossima volta?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "La Salamandra Smemorata",
           final_read: "Il guscio fa le fusa e la salamandra veglia sul nido. La Scaglia Lucente brilla nella mano della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ LA SALAMANDRA FA DEL SUO MEGLIO",
+          fail_subtitle: "La Salamandra Smemorata — un finale diverso",
+          fail_final_read: "Il guscio smette di cantare, ma la salamandra resta un po' distratta. Vi affida comunque una scaglia, più opaca del solito: un grazie sincero, anche se incompleto."
         }
       }
     },
@@ -972,12 +998,11 @@ PIRATI.registerPack({
             scene: {
               read: "Le grandi statue del forte spalancano gli occhi di pietra. Non hanno spade: tendono verso di voi tre conchiglie, e da ognuna esce una voce diversa. «Quale di queste dice la verità?» chiedono i guardiani.",
               ask: "Come si fa a capire quale voce dice la verità, senza conoscerla?",
-              hints: [
-                "Chi dice la verità di solito non esagera.",
-                "Chi mente spesso si dimentica un pezzo della storia.",
-                "Confrontare le tre versioni e vedere dove non combaciano."
+              askOptions: [
+                { id: "non-esagera", label: "🎯 Chi dice il vero di solito non esagera", reply: "«La voce più semplice è spesso quella giusta» pensa ad alta voce qualcuno." },
+                { id: "dimentica", label: "🕳️ Chi mente si dimentica un pezzo", reply: "«Attenti ai buchi nella storia!» — un guardiano sembra quasi annuire." },
+                { id: "confronto", label: "🔍 Confrontiamo le tre versioni", reply: "«Mettiamole a confronto, una per una» decidete, pronti a fare i detective." }
               ],
-              rescue: "Una conchiglia ripete la sua storia... ma stavolta cambia un dettaglio. Interessante.",
               masterTip: "Fai tre vocine diverse per le tre conchiglie: una sicura, una pomposa, una insicura."
             },
             interaction: "Nessun tiro: si ragiona insieme.",
@@ -993,13 +1018,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Le tre voci raccontano la stessa storia in tre modi. Una sembra troppo bella, una salta un passaggio, una è semplice e precisa.",
-              ask: "Confrontiamo per bene i tre racconti, o ci fidiamo dell'istinto e del suono del mare dentro le conchiglie?",
-              hints: [
-                "Il confronto è sicuro ma richiede pazienza.",
-                "L'istinto è veloce: la conchiglia giusta 'suona' diversa.",
-                "Si può ascoltare col cuore e poi controllare con la testa."
-              ],
-              rescue: "Un guardiano inclina la testa di pietra, curioso di sapere come farete."
+              ask: "Confrontiamo per bene i tre racconti, o ci fidiamo dell'istinto e del suono del mare dentro le conchiglie?"
             },
             choices: [
               {
@@ -1024,12 +1043,11 @@ PIRATI.registerPack({
             scene: {
               read: "Sul pavimento disegnate tre colonne, una per racconto. Ogni volta che un dettaglio cambia, ci mettete un sassolino.",
               ask: "Quali frasi non combaciano? E quale racconto resta in piedi senza buchi e senza esagerazioni?",
-              hints: [
-                "La versione vera è quella che regge se la racconti al contrario.",
-                "L'esagerazione aggiunge cose che non servono.",
-                "L'incompleta lascia un 'e poi?' senza risposta."
+              askOptions: [
+                { id: "al-contrario", label: "🔄 Proviamo a raccontarla al contrario", reply: "Una storia, ripetuta all'indietro, comincia a scricchiolare qua e là." },
+                { id: "esagerazione", label: "🎈 Cerchiamo cosa è stato aggiunto di troppo", reply: "«Un drago dorato? Non c'era scritto da nessuna parte prima» nota qualcuno, sospettoso." },
+                { id: "buco", label: "❓ Cerchiamo il punto dove manca un pezzo", reply: "«E poi? E poi cosa?» — un racconto si interrompe proprio lì, senza finale." }
               ],
-              rescue: "Un guardiano suggerisce: «Una di queste storie ha un tesoro che non è mai esistito...»",
               masterTip: "Fatti dire da tre bambini quale racconto scartano e perché."
             },
             resolution: {
@@ -1065,12 +1083,11 @@ PIRATI.registerPack({
             scene: {
               read: "Le tre conchiglie all'orecchio danno tre mari diversi: uno calmo, uno in tempesta, uno che sembra... trattenere il fiato.",
               ask: "Quale suono vi dà la sensazione della verità? E chi lo ascolta per primo?",
-              hints: [
-                "Il mare vero di solito è quello più calmo e regolare.",
-                "Chiudere gli occhi aiuta a sentire meglio.",
-                "Fidarsi della prima sensazione, prima di ripensarci troppo."
-              ],
-              rescue: "Una conchiglia, se la scuoti piano, fa un rumore di sabbia finta."
+              askOptions: [
+                { id: "calmo", label: "🌊 Il mare più calmo e regolare", reply: "Un pirata resta immobile ad ascoltare: «Questo... respira piano, come quando dici la verità»." },
+                { id: "occhi-chiusi", label: "😌 Chiudiamo gli occhi per sentire meglio", reply: "Tutti chiudono gli occhi in cerchio, in silenzio, mentre la conchiglia gira di mano in mano." },
+                { id: "istinto-primo", label: "⚡ Ci fidiamo della prima sensazione", reply: "«Questa!» dice subito qualcuno, senza nemmeno pensarci — e nessuno la contraddice." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -1098,16 +1115,17 @@ PIRATI.registerPack({
             scene: {
               read: "Oltre la porta, un ultimo guardiano. «Il forte si apre davvero solo se due di voi si fidano dello stesso compagno. Ditemi di chi, e perché.»",
               ask: "Due pirati scelgono lo stesso compagno di cui fidarsi: chi è, e cosa ha fatto per meritarselo?",
-              hints: [
-                "Qualcuno che oggi ha aiutato senza farsi vedere.",
-                "Qualcuno che ha ammesso un errore.",
-                "Qualcuno che ha tenuto la calma quando gli altri no."
+              askOptions: [
+                { id: "aiuto-silenzioso", label: "🤫 Chi ha aiutato senza farsi vedere", reply: "Due pirati si guardano e sorridono: sanno benissimo di chi si tratta." },
+                { id: "errore-ammesso", label: "🙋 Chi ha ammesso un errore", reply: "«Ha detto subito \"ho sbagliato io\", senza scuse» ricordano insieme." },
+                { id: "calma", label: "🧘 Chi ha tenuto la calma quando gli altri no", reply: "«Mentre tutti gridavano, lui è rimasto tranquillo» concordano." }
               ],
-              rescue: "Il guardiano aspetta paziente: «Non serve un eroe. Serve qualcuno di cui vi fidate davvero.»"
+              masterTip: "Lascia che siano davvero due bambini a dire lo stesso nome, senza suggerirlo tu."
             },
             resolution: {
-              policy: "group",
-              group: "Due pirati dicono ad alta voce lo stesso nome e raccontano un momento in cui quel compagno si è meritato la fiducia."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "fortuna", target: 5 }
             },
             outcomes: {
               success: {
@@ -1118,10 +1136,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🤔 QUASI D'ACCORDO",
-                text: "I due scelgono compagni diversi: il guardiano socchiude un occhio, Pericolo +1. Poi però vi guarda litigare-scherzando e decide che una ciurma così può entrare lo stesso.",
+                text: "I due scelgono compagni diversi, o il guardiano non si convince fino in fondo: socchiude un occhio, Pericolo +1. Vi lascia entrare lo stesso, da un varco più stretto.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -1135,13 +1153,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Dentro il forte, su un cuscino di alghe, c'è comunque la Conchiglia Veritiera — ma è più silenziosa del previsto, come se non si fidasse fino in fondo. I guardiani tornano di pietra, un po' più seri del solito.",
+              masterTip: "Chiedi: la prossima volta, di chi si fiderebbero e perché?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "I Guardiani di Corallo",
           final_read: "I guardiani chiudono gli occhi di pietra. La Conchiglia Veritiera fischia piano tra le mani della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ I GUARDIANI VI LASCIANO PASSARE",
+          fail_subtitle: "I Guardiani di Corallo — un finale diverso",
+          fail_final_read: "I guardiani tornano di pietra, non del tutto convinti. La Conchiglia Veritiera che vi lasciano è più silenziosa del solito, ma è comunque vostra."
         }
       }
     },
@@ -1193,12 +1225,11 @@ PIRATI.registerPack({
             scene: {
               read: "Il pavimento del forte respira su e giù come il mare. In un angolo un'orchestra di granchi suona senza fermarsi mai. «Solo chi balla a tempo raggiunge la torre!» gridano. In cima c'è una campana d'argento che aspetta.",
               ask: "Come si fa ad attraversare un pavimento che si alza e si abbassa a tempo di musica?",
-              hints: [
-                "Muoversi solo quando il pavimento è in alto.",
-                "Contare il ritmo ad alta voce tutti insieme.",
-                "Tenersi per mano e partire nello stesso momento."
+              askOptions: [
+                { id: "in-alto", label: "⬆️ Muoversi solo quando il pavimento è in alto", reply: "Aspettate il momento giusto e scattate proprio mentre il pavimento sale." },
+                { id: "contare", label: "🗣️ Contiamo il ritmo tutti insieme, a voce alta", reply: "«Uno, due, tre!» gridate in coro, seguendo i granchi." },
+                { id: "mani", label: "🤝 Ci teniamo per mano e partiamo insieme", reply: "Vi mettete in fila, mano nella mano, pronti a muovervi come un solo corpo." }
               ],
-              rescue: "Un granchio batte le chele: UNO, due, tre — UNO, due, tre. Il ritmo è quello.",
               masterTip: "Batti il tempo sul tavolo mentre parli: i bambini si sincronizzano da soli."
             },
             interaction: "Nessun tiro: si trova il ritmo insieme.",
@@ -1214,13 +1245,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Le piattaforme salgono e scendono in una sequenza precisa. Potete imparare a memoria l'ordine, oppure lanciarvi a tempo di musica e fidarvi del corpo.",
-              ask: "Studiamo la sequenza a mente fredda, o balliamo senza paura?",
-              hints: [
-                "A memoria è sicuro, ma serve concentrazione.",
-                "Ballare è divertente e veloce, ma se sbagli finisci in acqua.",
-                "Uno può contare per tutti mentre gli altri ballano."
-              ],
-              rescue: "Un'onda arriva all'improvviso e alza tutte le piattaforme di colpo: bisogna decidere in fretta."
+              ask: "Studiamo la sequenza a mente fredda, o balliamo senza paura?"
             },
             choices: [
               {
@@ -1245,12 +1270,11 @@ PIRATI.registerPack({
             scene: {
               read: "La sequenza è lunga e i granchi ogni tanto cambiano una nota per confondervi. Sbagliare un passo sposta un ponte in una direzione buffa.",
               ask: "Chi tiene il conto per tutti? E come fate a non perdere il ritmo se i granchi barano?",
-              hints: [
-                "Un pirata conta a voce alta e non si ferma mai.",
-                "Guardare i piedi del compagno davanti.",
-                "Se un granchio cambia nota, aspettare un battito e ripartire."
-              ],
-              rescue: "Il granchio direttore vi strizza l'occhio: quando bara, muove le antenne un attimo prima."
+              askOptions: [
+                { id: "conta-voce", label: "🗣️ Uno conta a voce alta senza fermarsi mai", reply: "Un pirata si fa avanti e scandisce il tempo, senza perdere un colpo." },
+                { id: "guardare-piedi", label: "👣 Guardiamo i piedi di chi ci sta davanti", reply: "Vi mettete in fila indiana, gli occhi puntati sui talloni di chi guida." },
+                { id: "aspettare-battito", label: "⏸️ Se barano, aspettiamo un battito e ripartiamo", reply: "Quando un granchio cambia nota, vi fermate un attimo tutti insieme, poi ripartite in sincrono." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -1278,12 +1302,11 @@ PIRATI.registerPack({
             scene: {
               read: "Ballando ci si arriva, ma a metà salone l'acqua sale all'improvviso e le piattaforme diventano scivolose.",
               ask: "Come tenete il gruppo unito quando il pavimento scivola e l'acqua sale?",
-              hints: [
-                "Non lasciarsi mai la mano.",
-                "Rallentare il ritmo invece di accelerare per la paura.",
-                "Chi scivola si fa tirare su dagli altri senza fermarsi."
-              ],
-              rescue: "I granchi, vedendovi in difficoltà, rallentano la musica per aiutarvi."
+              askOptions: [
+                { id: "mai-lasciare", label: "🤝 Non ci lasciamo mai la mano", reply: "Stringete forte le mani dei vicini, anche quando il pavimento vi fa vacillare." },
+                { id: "rallentare", label: "🐢 Rallentiamo invece di accelerare", reply: "Invece di correre per la paura, rallentate il passo e respirate insieme." },
+                { id: "tirare-su", label: "⬆️ Chi scivola viene tirato su dagli altri", reply: "Appena qualcuno vacilla, due mani lo afferrano al volo, senza fermare il ballo." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -1311,16 +1334,17 @@ PIRATI.registerPack({
             scene: {
               read: "La campana d'argento è in cima alla torre. I granchi spiegano: si suona solo con un passo di danza inventato dalla ciurma, fatto tutti insieme.",
               ask: "Inventate un ritmo di quattro gesti che tutti sappiate ripetere nello stesso ordine.",
-              hints: [
-                "Battito di mani, pestata di piede, giro, salto.",
-                "Gesti facili, così nessuno resta indietro.",
-                "Provarlo lento una volta, poi a tempo."
+              askOptions: [
+                { id: "classico", label: "👏🦶🔄🦘 Battito, pestata, giro, salto", reply: "Provate la sequenza classica: batti, pesta, gira, salta — semplice e diretta." },
+                { id: "facili", label: "😊 Gesti facili, così nessuno resta indietro", reply: "Scegliete quattro mosse semplicissime, pensando anche al pirata più piccolo." },
+                { id: "lento-poi-tempo", label: "🐌➡️⚡ Prima lento, poi a tempo", reply: "Provate tutto al rallentatore una volta, poi accelerate insieme fino al ritmo giusto." }
               ],
-              rescue: "Il granchio direttore propone il primo gesto: un battito di chela in alto. Tocca a voi gli altri tre."
+              masterTip: "Il momento più bello è quando tutti fanno il gesto sbagliato insieme: lascialo succedere."
             },
             resolution: {
-              policy: "group",
-              group: "Decidete i quattro gesti in ordine e provateli una volta lenti: tutti devono farli uguali."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "fortuna", target: 5 }
             },
             outcomes: {
               success: {
@@ -1331,10 +1355,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🔔 QUASI A TEMPO",
-                text: "Un gesto va storto e la campana fa un DONG stonato: Pericolo +1. Ci riprovate più piano e stavolta suona come si deve.",
+                text: "Un gesto va storto e la campana fa un DONG stonato: Pericolo +1. Suona comunque, ma con un rintocco strano, come se non fosse del tutto convinta.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -1348,13 +1372,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il pavimento smette di respirare, ma la campana resta con un rintocco strano nell'aria, come se non fosse del tutto convinta del vostro ballo. I granchi vi consegnano comunque una campanella di marea, un po' opaca.",
+              masterTip: "Chiedi: la prossima volta, quale gesto vorrebbero migliorare?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Il Ballo delle Maree",
           final_read: "La campana d'argento tace e il pavimento resta fermo. La Campanella di Marea tintinna nella mano della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ LA CAMPANA SUONA COMUNQUE",
+          fail_subtitle: "Il Ballo delle Maree — un finale diverso",
+          fail_final_read: "La campana suona con un rintocco un po' storto, ma suona. I granchi vi porgono comunque una campanella, più opaca del solito."
         }
       }
     },
@@ -1408,12 +1446,11 @@ PIRATI.registerPack({
             scene: {
               read: "Nella nebbia le radici sussurrano i nomi di tutta la ciurma, ma ogni voce sembra venire da una direzione diversa. Alcune vogliono aiutarvi, altre confondervi. Una sola strada porta davvero alla casa sull'albero della Custode.",
               ask: "Come facciamo a non perderci e a non farci separare da voci che ci imitano?",
-              hints: [
-                "Restare attaccati e non seguire mai una voce da soli.",
-                "Rispondere solo con una parola che abbiamo deciso prima.",
-                "Le radici gentili non hanno fretta; quelle bugiarde sì."
+              askOptions: [
+                { id: "restare-attaccati", label: "🤝 Restiamo attaccati, mai da soli", reply: "Vi stringete in gruppo, spalla contro spalla, decisi a non separarvi." },
+                { id: "parola-decisa", label: "🔑 Rispondiamo solo con una parola decisa prima", reply: "«Se non sa la parola, non è uno di noi» concordate sottovoce." },
+                { id: "fretta", label: "🐌 Le voci gentili non hanno fretta, quelle false sì", reply: "«Attenti a chi vi mette fretta» sussurra qualcuno, guardingo." }
               ],
-              rescue: "Una voce imita perfettamente un compagno e dice: «Di qua! Presto!». Ma il compagno vero è accanto a voi, in silenzio.",
               masterTip: "Sussurra i nomi dei bambini da direzioni diverse: senti quanto è facile confondersi."
             },
             interaction: "Nessun tiro: si decide come restare uniti.",
@@ -1430,12 +1467,11 @@ PIRATI.registerPack({
             scene: {
               read: "Prima di muovervi, vi fermate in cerchio. Serve un modo per essere sicuri, sempre, di parlare col compagno vero e non con un'eco.",
               ask: "Scegliete una parola d'ordine, un gesto e un suono per riconoscervi nella nebbia.",
-              hints: [
-                "Una parola strana che una radice non indovinerebbe mai.",
-                "Un gesto veloce, tipo toccarsi il gomito.",
-                "Un suono corto: un fischio, uno schiocco di dita."
-              ],
-              rescue: "La Custode, da lontano, vi manda un indizio: «Le mie radici non sanno battere le mani.»"
+              askOptions: [
+                { id: "parola-strana", label: "🗝️ Una parola strana e improbabile", reply: "«Ananas-tuono» decidete. Nessuna radice indovinerebbe mai una parola così assurda." },
+                { id: "gesto", label: "👉 Un gesto veloce, tipo toccarsi il gomito", reply: "Vi allenate a toccarvi il gomito due volte, veloci: un gesto che solo voi conoscete." },
+                { id: "suono", label: "🎵 Un suono corto: un fischio o uno schiocco", reply: "Provate un fischio breve, tutti uguale, finché non vi viene naturale." }
+              ]
             },
             resolution: {
               policy: "group",
@@ -1462,13 +1498,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Davanti a voi tre sentieri di radici. Le voci indicano tutte una direzione diversa e sono molto convincenti.",
-              ask: "Ci segniamo la strada con simboli, o seguiamo la voce più gentile della palude?",
-              hints: [
-                "Segnare la strada permette di tornare indietro senza panico.",
-                "La voce gentile aiuta chi risponde con cortesia.",
-                "Si può fare un pezzo con un metodo e un pezzo con l'altro."
-              ],
-              rescue: "Una radice si abbassa e vi lascia passare, senza dire niente. Forse è quella giusta."
+              ask: "Ci segniamo la strada con simboli, o seguiamo la voce più gentile della palude?"
             },
             choices: [
               {
@@ -1493,12 +1523,11 @@ PIRATI.registerPack({
             scene: {
               read: "I nodi tengono, ma la nebbia sposta i suoni e a volte una freccia sembra puntare in due direzioni insieme.",
               ask: "Come tenete dritta la rotta quando anche i vostri segni sembrano confondersi?",
-              hints: [
-                "Contare i passi tra un nodo e l'altro.",
-                "Un pirata resta indietro a controllare l'ultimo segno.",
-                "Fidarsi dei nodi, non delle voci."
-              ],
-              rescue: "Tornando su un nodo già fatto, ritrovate subito la calma e la direzione."
+              askOptions: [
+                { id: "contare-passi", label: "🔢 Contiamo i passi tra un nodo e l'altro", reply: "Un pirata conta ad alta voce, così sapete sempre quanto manca al prossimo segno." },
+                { id: "controllo", label: "👀 Uno resta indietro a controllare l'ultimo segno", reply: "Qualcuno si volta spesso a controllare che il nodo sia ancora lì, ben visibile." },
+                { id: "fidarsi-nodi", label: "🪢 Ci fidiamo dei nodi, non delle voci", reply: "«I nodi non mentono» ripetete come un mantra, ignorando i sussurri." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -1526,12 +1555,11 @@ PIRATI.registerPack({
             scene: {
               read: "Rispondere con gentilezza funziona: molte radici si abbassano al vostro passaggio. Ma una voce dolcissima vi propone una scorciatoia che scende verso l'acqua nera.",
               ask: "La scorciatoia è un regalo o una trappola? Come lo capite?",
-              hints: [
-                "Una vera gentilezza non ti porta mai verso il buio.",
-                "Chiedere alla voce di venire con voi: se rifiuta, sospetto.",
-                "Usare il segnale: la voce gentile vera lo conosce."
-              ],
-              rescue: "Provate il vostro fischio: la voce dolce non sa rispondere allo stesso modo."
+              askOptions: [
+                { id: "mai-buio", label: "🌑 La vera gentilezza non porta mai verso il buio", reply: "«Perché verso l'acqua nera, se è un regalo?» chiede qualcuno, sospettoso." },
+                { id: "invito", label: "🚶 Chiediamo alla voce di venire con noi", reply: "«Vieni con noi allora!» proponete. Un lungo silenzio risponde." },
+                { id: "segnale-test", label: "🔔 Proviamo il nostro segnale su di lei", reply: "Fischiate il vostro segnale segreto: la voce dolce resta muta, senza saper rispondere." }
+              ]
             },
             resolution: {
               policy: "destiny",
@@ -1561,24 +1589,36 @@ PIRATI.registerPack({
           },
           {
             scene_id: "custode",
-            phase_flow: ["SCENE", "OUTCOME"],
+            phase_flow: ["SCENE", "RESOLUTION", "OUTCOME"],
             scene: {
               read: "La Custode vi accoglie sulla sua casa fra i rami. Vi guarda uno per uno. «La nebbia divide quasi tutti. Voi siete arrivati interi. Perché siete rimasti uniti?»",
               ask: "Rispondete alla Custode: cosa vi ha tenuti insieme là dentro?",
-              hints: [
-                "Il segnale che avete inventato.",
-                "Non aver mai seguito una voce da soli.",
-                "Essersi fidati dei compagni più che delle voci."
+              askOptions: [
+                { id: "segnale-risposta", label: "🔔 Il segnale che abbiamo inventato", reply: "«Il nostro fischio ci ha tenuti insieme» rispondete, e la Custode annuisce lentamente." },
+                { id: "mai-soli", label: "🚫 Non abbiamo mai seguito una voce da soli", reply: "«Restavamo sempre in due, almeno» spiegate. La Custode sembra approvare." },
+                { id: "fidarsi", label: "❤️ Ci siamo fidati dei compagni più che delle voci", reply: "«Le voci finte sembravano vere, ma i nostri amici lo erano davvero» dite. La Custode sorride appena." }
               ],
-              rescue: "La Custode sorride: «Non c'è una risposta sbagliata. Ditemi la vostra.»",
               masterTip: "Lascia rispondere due o tre bambini, poi vai avanti."
             },
-            interaction: "Nessun tiro: è un momento di parole.",
-            outcome: {
-              title: "La Custode annuisce",
-              text: "«Buona risposta» dice. E dal tronco fa spuntare un piccolo seme che gira sempre verso casa.",
-              audio: "star",
-              next: "finale"
+            resolution: {
+              policy: "dice",
+              critical: true,
+              dice: { stat: "fortuna", target: 5 }
+            },
+            outcomes: {
+              success: {
+                title: "✨ LA CUSTODE ANNUISCE",
+                text: "«Buona risposta» dice. E dal tronco fa spuntare un piccolo seme che gira sempre verso casa.",
+                audio: "star",
+                next: "finale"
+              },
+              fail_forward: {
+                title: "🌫 LA CUSTODE RESTA PENSIEROSA",
+                text: "La risposta non la convince del tutto: resta in silenzio un lungo momento, Pericolo +1. Poi vi porge comunque un piccolo seme, ma più spento del solito.",
+                effects: ["Pericolo +1"],
+                audio: "fallimento",
+                next: "finale-dubbio"
+              }
             }
           },
           {
@@ -1591,13 +1631,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "La nebbia si dirada solo in parte intorno alla casa sull'albero. La Custode vi mette comunque in mano un seme, più spento del solito: gira verso casa, ma più piano, come se esitasse anche lui.",
+              masterTip: "Chiedi: la prossima volta, cosa direbbero alla Custode per convincerla di più?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Le Radici Sussurranti",
           final_read: "La nebbia si apre e le radici tacciono. Il Seme-Bussola gira piano verso casa nella mano della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ LA CUSTODE VI LASCIA ANDARE",
+          fail_subtitle: "Le Radici Sussurranti — un finale diverso",
+          fail_final_read: "La nebbia si apre solo in parte. Il seme che vi affida la Custode è più spento del solito, ma gira ancora verso casa."
         }
       }
     },
@@ -1649,12 +1703,11 @@ PIRATI.registerPack({
             scene: {
               read: "La casa sulle palafitte si scrolla, tira fuori quattro zampe di legno e parte a passo svelto in mezzo alla palude. Da una finestra una nonna pirata sventola le braccia: «Fermatemi! Sono partita senza montare il freno!»",
               ask: "Come si ferma una casa che cammina, senza romperla e senza farsi calpestare?",
-              hints: [
-                "Rallentarla un pezzo alla volta, non tutta in una volta.",
-                "Farle inciampare in qualcosa di morbido.",
-                "Salirci sopra e cercare un modo dall'interno."
+              askOptions: [
+                { id: "a-pezzi", label: "🐢 Rallentiamola un pezzo alla volta", reply: "«Non tutto insieme, un passo alla volta» decidete, osservando le zampe di legno." },
+                { id: "morbido", label: "🍃 La facciamo inciampare in qualcosa di morbido", reply: "«Un mucchio di foglie davanti a una zampa!» propone qualcuno." },
+                { id: "dall-interno", label: "🏠 Saliamo a bordo e cerchiamo dall'interno", reply: "«Deve esserci un freno da qualche parte dentro» pensate, guardando le finestre che ballonzolano." }
               ],
-              rescue: "La casa fa un passo in una pozza e scivola: per un attimo va più piano. Ecco un'idea.",
               masterTip: "Cammina sul posto a passo pesante mentre parli: la casa 'traballa' anche a voce."
             },
             interaction: "Nessun tiro: si cerca un modo per rallentarla.",
@@ -1670,13 +1723,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Tre sentieri corrono a fianco della casa. Potete provare a salirci a bordo aggrappandovi alle liane, oppure restare a terra e costruirle un freno al volo.",
-              ask: "Saltiamo a bordo, o costruiamo un freno da qui?",
-              hints: [
-                "A bordo si agisce dall'interno, ma bisogna saltare.",
-                "Il freno da terra è più sicuro, ma serve inventarlo bene.",
-                "Un gruppo sale, un gruppo costruisce."
-              ],
-              rescue: "Una liana lunga penzola proprio davanti al portico della casa in corsa."
+              ask: "Saltiamo a bordo, o costruiamo un freno da qui?"
             },
             choices: [
               {
@@ -1701,12 +1748,11 @@ PIRATI.registerPack({
             scene: {
               read: "Il portico ondeggia come una barca in tempesta. Dentro, la nonna vi indica una leva enorme: «Il freno va lì! Ma tenetevi forte, questa vecchia salta i fossi!»",
               ask: "Come attraversate il portico che sbatte per arrivare alla leva del freno?",
-              hints: [
-                "Muoversi solo quando la casa ha entrambi i piedi a terra.",
-                "Farsi una catena, mano nella mano.",
-                "Il più leggero va avanti, gli altri fanno da ancora."
-              ],
-              rescue: "La nonna lancia una corda dall'interno: agganciatela e tiratevi su a turno."
+              askOptions: [
+                { id: "piedi-a-terra", label: "👣 Muoversi solo con entrambi i piedi a terra", reply: "Aspettate il momento in cui la casa tocca terra con due zampe insieme, poi scattate." },
+                { id: "catena", label: "⛓️ Facciamo una catena, mano nella mano", reply: "Vi allacciate le mani in fila, avanzando come un unico corpo tremolante." },
+                { id: "leggero-avanti", label: "🪶 Il più leggero va avanti, gli altri fanno da ancora", reply: "Il pirata più agile scatta in avanti, mentre gli altri lo tengono saldo da dietro." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -1734,12 +1780,11 @@ PIRATI.registerPack({
             scene: {
               read: "Correte di fianco alla casa con le braccia piene di roba. Il freno va inventato adesso, con quel poco che avete: corde, foglie giganti, un tronco.",
               ask: "Che freno costruite con tre oggetti della palude? E chi fa cosa?",
-              hints: [
-                "Le foglie giganti come paracadute legato dietro.",
-                "Il tronco tra le zampe per farla inciampare piano.",
-                "Le corde per legare due zampe e accorciarle il passo."
+              askOptions: [
+                { id: "paracadute", label: "🍃 Foglie giganti come paracadute dietro", reply: "Legate le foglie più larghe alla schiena della casa: sventolano come una vela al contrario." },
+                { id: "tronco", label: "🪵 Un tronco tra le zampe, per farla inciampare piano", reply: "Incastrate un tronco robusto proprio nel punto giusto, con cautela." },
+                { id: "corde-zampe", label: "🪢 Corde per legare due zampe e accorciare il passo", reply: "Annodate le corde tra due zampe di legno, stringendo il passo della casa." }
               ],
-              rescue: "La nonna urla dalla finestra: «Le foglie! Legatele dietro, fanno da vela al contrario!»",
               masterTip: "Fatti dire da tre bambini i tre oggetti e il compito di ognuno."
             },
             resolution: {
@@ -1775,16 +1820,17 @@ PIRATI.registerPack({
             scene: {
               read: "La casa è quasi ferma, ma il freno vero — quello di legno, dentro — funziona solo se lo tirano tutti nello stesso identico momento. La riva è vicina.",
               ask: "Qual è il vostro segnale per tirare il freno tutti insieme all'ultimo secondo?",
-              hints: [
-                "Un «adesso!» gridato dalla nonna.",
-                "Contare i passi della casa: al quarto, tutti.",
-                "Guardarsi e tirare al respiro."
+              askOptions: [
+                { id: "adesso", label: "📣 Un «adesso!» gridato dalla nonna", reply: "La nonna si prepara a gridare, la mano già sulla leva." },
+                { id: "contare-passi", label: "🔢 Contiamo i passi: al quarto, tutti insieme", reply: "«Uno... due... tre... QUATTRO!» — contate i passi della casa in coro." },
+                { id: "respiro", label: "👀 Ci guardiamo e tiriamo al respiro", reply: "Vi scambiate un'occhiata, tutti pronti, e aspettate il momento giusto insieme." }
               ],
-              rescue: "La nonna alza una mano: «Al mio via. Uno... due...»"
+              masterTip: "Fai crescere la tensione: la riva si avvicina, il tempo stringe."
             },
             resolution: {
-              policy: "group",
-              group: "Decidete il segnale e provate a tirare una volta a vuoto: tutte le mani insieme."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "coraggio", target: 5 }
             },
             outcomes: {
               success: {
@@ -1795,10 +1841,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🌊 UN PIEDE IN ACQUA",
-                text: "Qualcuno tira in ritardo: la casa mette una zampa nel mare, Pericolo +1. Diventa una buffa barca a quattro zampe — ma la nonna sa già come governarla.",
+                text: "Qualcuno tira in ritardo: la casa mette una zampa in acqua, Pericolo +1. Diventa una specie di barca a zampe — funziona, ma non è più la stessa casa di prima.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -1812,13 +1858,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "La nonna scende dal portico, un po' scossa, e monta il freno vero. «Be', ora sono anche un pochino una barca» ride, guardando la zampa bagnata. Vi regala comunque una palafitta pieghevole, con un angolo un po' storto.",
+              masterTip: "Chiedi: la prossima volta, chi darebbe il segnale per tirare il freno?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "La Casa che Cammina",
           final_read: "La casa si siede sulle quattro zampe e la nonna monta il freno. La Palafitta Pieghevole sta comoda nella tasca della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ LA CASA SI FERMA, QUASI",
+          fail_subtitle: "La Casa che Cammina — un finale diverso",
+          fail_final_read: "La casa si ferma con una zampa già in acqua. La nonna ride e vi regala comunque una palafitta pieghevole, un po' storta."
         }
       }
     },
@@ -1872,12 +1932,11 @@ PIRATI.registerPack({
             scene: {
               read: "Provate a gridare, ma nella grotta nessun suono torna indietro. Sugli scaffali decine di barattoli brillano: dentro ogni barattolo è chiusa un'eco — una voce, una risata, un tonfo. Una creatura fatta d'ombra le ha rubate tutte.",
               ask: "Perché un'ombra dovrebbe rubare le eco? E cosa potrebbe convincerla a ridarle indietro?",
-              hints: [
-                "Forse è sola e le eco le fanno compagnia.",
-                "Forse colleziona suoni come noi le conchiglie.",
-                "Forse le darebbe indietro per un suono che non ha mai sentito."
+              askOptions: [
+                { id: "sola", label: "😔 Forse è sola e le eco le fanno compagnia", reply: "«Magari ha solo bisogno di voci intorno» pensate, osservando l'ombra silenziosa." },
+                { id: "colleziona", label: "🗃️ Forse colleziona suoni come noi le conchiglie", reply: "«Un collezionista di rumori!» esclama qualcuno, quasi ammirato." },
+                { id: "suono-nuovo", label: "🎁 Forse le basterebbe un suono mai sentito", reply: "«Se le regalassimo qualcosa di nuovo...» propone qualcuno, pensieroso." }
               ],
-              rescue: "L'ombra apre un barattolo per un secondo: ne esce la risata di un bambino. Poi lo richiude, gelosa.",
               masterTip: "Parla piano e ovattato, come se la grotta si mangiasse le tue parole."
             },
             interaction: "Nessun tiro: si ragiona sull'ombra.",
@@ -1893,13 +1952,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Il pavimento è disseminato di pietre musicali: se le calpesti suonano, e potrebbero svegliare il grande cristallo addormentato in fondo. L'ombra, intanto, si è avvicinata incuriosita.",
-              ask: "Ci muoviamo in silenzio tra le pietre, o proviamo subito a stupire l'ombra con un suono nuovo?",
-              hints: [
-                "Il silenzio è sicuro ma serve muoversi pianissimo.",
-                "Stupire l'ombra è veloce, ma un suono va inventato bene.",
-                "Si può fare silenzio fino a lei e poi parlarle."
-              ],
-              rescue: "L'ombra si ferma e allunga una mano d'ombra verso di voi, curiosa: forse basta poco per conquistarla."
+              ask: "Ci muoviamo in silenzio tra le pietre, o proviamo subito a stupire l'ombra con un suono nuovo?"
             },
             choices: [
               {
@@ -1924,12 +1977,11 @@ PIRATI.registerPack({
             scene: {
               read: "Le pietre musicali sono ovunque e in penombra si vedono male. Per un tratto potete comunicare solo a gesti: chi guida indica dove mettere i piedi.",
               ask: "Come vi date gli ordini senza fare un solo rumore?",
-              hints: [
-                "Un gesto per «fermi», uno per «di qua», uno per «piano».",
-                "Il primo della fila decide, gli altri copiano esatto.",
-                "Guardare sempre i piedi di chi ti precede."
-              ],
-              rescue: "L'ombra, per aiutarvi, illumina appena le pietre sicure con un filo di luce."
+              askOptions: [
+                { id: "gesti-base", label: "✋ Tre gesti: fermi, di qua, piano", reply: "Inventate tre segnali muti e li provate in silenzio, un dito alla volta." },
+                { id: "capofila", label: "🥇 Il primo decide, gli altri copiano", reply: "Un pirata si mette in testa alla fila: gli altri seguono ogni suo movimento, identico." },
+                { id: "guardare-piedi", label: "👣 Guardiamo sempre i piedi di chi precede", reply: "Vi mettete in fila strettissima, gli occhi fissi sui talloni davanti a voi." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -1957,12 +2009,11 @@ PIRATI.registerPack({
             scene: {
               read: "L'ombra si china verso di voi, in attesa. Ha sentito milioni di suoni: risate, tuoni, campane, starnuti. Serve qualcosa che non abbia mai sentito.",
               ask: "Qual è il suono nuovo? Combinate voce, mani e un oggetto che avete sul tavolo.",
-              hints: [
-                "Un verso della bocca + un battito ritmato + un oggetto strofinato.",
-                "Meglio se cambia mentre lo fai.",
-                "Fatelo tutti insieme così è più grosso."
-              ],
-              rescue: "L'ombra propone il primo pezzo: soffia piano tra le dita. Aggiungete voi il resto."
+              askOptions: [
+                { id: "combinazione", label: "🎶 Verso + battito + oggetto strofinato", reply: "Mescolate un fischio, un battito di mani e lo sfregamento di una tasca: nasce qualcosa di strano e nuovo." },
+                { id: "cambia", label: "🔄 Un suono che cambia mentre lo fate", reply: "Cominciate piano e lo fate crescere, cambiare, quasi trasformarsi in volo." },
+                { id: "tutti-insieme", label: "👥 Lo facciamo tutti insieme, più grosso", reply: "Vi mettete in cerchio e producete il suono in coro, così risuona più forte." }
+              ]
             },
             resolution: {
               policy: "destiny",
@@ -1996,16 +2047,17 @@ PIRATI.registerPack({
             scene: {
               read: "Le eco sono quasi tutte libere, ma l'ombra ne stringe ancora una: la sua preferita, la prima che ha rubato. Non vuole restare di nuovo in silenzio.",
               ask: "Cosa le lasciate in cambio, così non si sente più sola?",
-              hints: [
-                "Insegnarle il vostro suono nuovo, così ce l'ha per sempre.",
-                "Registrare una vostra frase in un barattolo vuoto per lei.",
-                "Promettere di tornare a farle sentire suoni nuovi."
+              askOptions: [
+                { id: "insegnare-suono", label: "🎵 Le insegniamo il nostro suono nuovo", reply: "Ripetete il suono lentamente, finché l'ombra non riesce a rifarlo da sola." },
+                { id: "frase-barattolo", label: "🗣️ Registriamo una frase per lei in un barattolo", reply: "Uno di voi parla piano dentro il barattolo vuoto: «Non sei sola» — e lo richiude con cura." },
+                { id: "promessa", label: "🤝 Promettiamo di tornare con nuovi suoni", reply: "«Torneremo a trovarti» promettete, e l'ombra sembra tendere l'orecchio a quella promessa." }
               ],
-              rescue: "L'ombra indica un barattolo vuoto: aspetta che ci mettiate qualcosa di vostro."
+              masterTip: "Lascia che il dono venga davvero da un'idea dei bambini, non suggerirlo tu."
             },
             resolution: {
-              policy: "group",
-              group: "Decidete insieme cosa regalare all'ombra e mettetelo davvero in un barattolo (una frase, un suono, una promessa)."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "fortuna", target: 5 }
             },
             outcomes: {
               success: {
@@ -2016,10 +2068,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🌑 UN PO' TRISTE",
-                text: "Il regalo non la convince del tutto e trattiene l'ultima eco: Pericolo +1. Ci pensa su, poi ve la lancia comunque — «tornate a trovarmi».",
+                text: "Il regalo non la convince fino in fondo e trattiene un po' l'ultima eco: Pericolo +1. Ve la restituisce comunque, ma piano, quasi sottovoce.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -2033,13 +2085,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Gridate «CIAO!» e la parola torna indietro, ma più flebile del previsto — l'ombra non si è ancora convinta fino in fondo. Vi lascia comunque un barattolo, un po' opaco, con dentro un rumore utile.",
+              masterTip: "Chiedi: la prossima volta, cosa regalerebbero all'ombra per conquistarla del tutto?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "L'Eco Rubata",
           final_read: "La grotta ripete ogni parola, felice. Il Barattolo dell'Eco aspetta un rumore utile nella mano della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ L'OMBRA VI LASCIA ANDARE",
+          fail_subtitle: "L'Eco Rubata — un finale diverso",
+          fail_final_read: "Le vostre grida tornano indietro, più flebili del previsto. L'ombra vi lascia comunque un barattolo, un po' opaco, come ricordo."
         }
       }
     },
@@ -2091,12 +2157,11 @@ PIRATI.registerPack({
             scene: {
               read: "Migliaia di lucciole azzurre riempiono la grotta e dove passano i sassolini si staccano da terra e galleggiano. In alto, appiccicata al soffitto, c'è una pozionista: «Portatemi gli ingredienti giusti e vi insegno a volare!»",
               ask: "Se le lucciole fanno volare i sassi, come possiamo usarle per far scendere lei e far salire noi?",
-              hints: [
-                "Raccogliere la luce delle lucciole in qualcosa.",
-                "Servono colori diversi per salire e per scendere.",
-                "Provare prima con un sasso, non con una persona."
+              askOptions: [
+                { id: "raccogliere", label: "🫙 Raccogliamo la luce delle lucciole in qualcosa", reply: "«Servono delle fiale!» decidete, guardando lo sciame azzurro intorno a voi." },
+                { id: "colori-diversi", label: "🎨 Servono colori diversi per salire e scendere", reply: "«Non può essere un solo colore» ragionate, osservando le sfumature della grotta." },
+                { id: "prova-sasso", label: "🪨 Proviamo prima con un sasso", reply: "«Meglio testarlo su qualcosa che non siamo noi» propone qualcuno, prudente." }
               ],
-              rescue: "Un sassolino le sfiora la mano e lei lo spinge giù: «Vedete? Il blu scuro fa scendere. Servono anche gli altri.»",
               masterTip: "Fai svolazzare le mani come lucciole mentre parli: l'idea del volo entra subito."
             },
             interaction: "Nessun tiro: si pensa alla ricetta.",
@@ -2113,12 +2178,11 @@ PIRATI.registerPack({
             scene: {
               read: "In tre zone della grotta le lucciole brillano di colori diversi: una luce chiara, una calda, una blu profondo. Ognuna spinge in un modo.",
               ask: "Decidete la ricetta di tre colori: quale fa salire, quale tiene fermi in aria, quale fa scendere?",
-              hints: [
-                "La luce chiara è leggera: probabile che tiri su.",
-                "Quella calda potrebbe tenerti sospeso, tiepido e fermo.",
-                "Il blu profondo è pesante: fa scendere piano."
-              ],
-              rescue: "La pozionista vi lancia tre fiale vuote: «Provate! Se sbagliate, al massimo fate un salto.»"
+              askOptions: [
+                { id: "chiara-su", label: "☀️ La luce chiara fa salire", reply: "«È la più leggera, deve tirare su» decidete, versando la prima fiala." },
+                { id: "calda-ferma", label: "🔥 Quella calda tiene fermi a mezz'aria", reply: "«Tiepida e stabile, perfetta per restare sospesi» concordate." },
+                { id: "blu-scende", label: "🌊 Il blu profondo fa scendere", reply: "«Pesante come l'acqua profonda, tira giù piano» spiegate alla pozionista." }
+              ]
             },
             resolution: {
               policy: "destiny_group_or_dice",
@@ -2152,13 +2216,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Le pozioni sono pronte. Ora bisogna usarle davvero: prima per far scendere la pozionista, poi per portare tutta la ciurma giù sana e salva.",
-              ask: "Chi guida il primo volo di prova, e con quale pozione?",
-              hints: [
-                "Il primo si lega una corda in vita, gli altri la tengono.",
-                "Meglio provare l'altezza voluta con poche gocce.",
-                "Chi ha meno paura fa da apripista, gli altri lo seguono."
-              ],
-              rescue: "Le lucciole si dispongono in una scala di luce che sale fino al soffitto."
+              ask: "Chi guida il primo volo di prova, e con quale pozione?"
             },
             choices: [
               {
@@ -2183,15 +2241,15 @@ PIRATI.registerPack({
             scene: {
               read: "Goccia dopo goccia, salite piano verso la pozionista. Ma più siete in alto, più le lucciole vi girano intorno e confondono le dosi.",
               ask: "Come tenete la calma e il conto delle gocce a dieci metri da terra?",
-              hints: [
-                "Uno solo tiene le fiale e conta, gli altri si fidano.",
-                "Fermarsi a mezz'aria con la pozione di sospensione se ci si spaventa.",
-                "Scendere di una goccia se si sale troppo in fretta."
-              ],
-              rescue: "La pozionista allunga un bastone: «Aggrappatevi qui e prendete fiato, poi finiamo insieme.»"
+              askOptions: [
+                { id: "uno-conta", label: "🧮 Uno solo tiene le fiale e conta per tutti", reply: "Un pirata si assume la responsabilità delle gocce, mentre gli altri si fidano e respirano piano." },
+                { id: "sospensione", label: "⏸️ Ci fermiamo con la pozione di sospensione se serve", reply: "Al primo capogiro, qualcuno beve una goccia di quella calda e resta fermo a mezz'aria, tranquillo." },
+                { id: "scendere-goccia", label: "⬇️ Scendiamo di una goccia se saliamo troppo in fretta", reply: "Appena la salita accelera troppo, aggiungete una goccia di blu per rallentare." }
+              ]
             },
             resolution: {
               policy: "dice",
+              critical: true,
               dice: { stat: "astuzia", target: 6 }
             },
             outcomes: {
@@ -2203,10 +2261,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🍃 ATTERRAGGIO A SORPRESA",
-                text: "Una dose sbagliata vi fa planare lontano: atterrate su un sentiero completamente diverso, Pericolo +1. La pozionista però è con voi e conosce la scorciatoia per tornare.",
+                text: "Una dose sbagliata vi fa planare lontano: Pericolo +1. Atterrate su un sentiero diverso da quello voluto — la pozionista è con voi, ma stavolta la scorciatoia non basta a rimettere tutto a posto.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -2216,15 +2274,15 @@ PIRATI.registerPack({
             scene: {
               read: "Il primo volontario è già a mezz'aria, la corda tesa. Sotto, la ciurma tiene forte; sopra, la pozionista aspetta con le braccia aperte.",
               ask: "Come segue tutta la cordata il primo, senza che nessuno resti indietro o vada troppo su?",
-              hints: [
-                "Bere tutti la stessa dose nello stesso momento.",
-                "Guardare sempre il compagno sotto e quello sopra.",
-                "Chi sale troppo beve una goccia di blu per riabbassarsi."
-              ],
-              rescue: "Le lucciole azzurre si mettono a fare da corrimano luminoso lungo tutta la salita."
+              askOptions: [
+                { id: "stessa-dose", label: "🥤 Beviamo tutti la stessa dose insieme", reply: "Contate «uno, due, tre» e bevete tutti nello stesso istante, per salire alla pari." },
+                { id: "guardare-vicini", label: "👀 Guardiamo sempre chi sta sopra e sotto di noi", reply: "Ognuno tiene d'occhio i due compagni più vicini, pronto ad avvisare se qualcosa non va." },
+                { id: "correzione-blu", label: "🔵 Chi sale troppo beve una goccia di blu", reply: "Chi si stacca troppo dal gruppo sorseggia una goccia di blu per riallinearsi." }
+              ]
             },
             resolution: {
               policy: "dice",
+              critical: true,
               dice: { stat: "coraggio", target: 6 }
             },
             outcomes: {
@@ -2236,10 +2294,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🎈 UNO VOLA TROPPO",
-                text: "Un pirata sale più del previsto e trascina un po' gli altri: qualche spavento, Pericolo +1. La pozionista lo acchiappa per un piede e vi rimette tutti in fila.",
+                text: "Un pirata sale più del previsto e trascina un po' gli altri: qualche spavento, Pericolo +1. La pozionista li acchiappa al volo, ma l'atterraggio resta un po' scomposto.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -2253,13 +2311,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Piedi a terra, ma non proprio dove speravate. La pozionista, un po' scarmigliata anche lei, vi riempie comunque una fiala di pozione di volo — meno potente del previsto, ma funzionante.",
+              masterTip: "Chiedi: la prossima volta, quale dose vorrebbero dosare meglio?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Le Lucciole che Fanno Volare",
           final_read: "Le lucciole azzurre tornano a sollevare sassolini. La Pozione di Volo riposa nella sacca della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ ATTERRAGGIO UN PO' STORTO",
+          fail_subtitle: "Le Lucciole che Fanno Volare — un finale diverso",
+          fail_final_read: "L'atterraggio è un po' scomposto, ma tutti sono a terra sani e salvi. La pozionista vi affida comunque una fiala, meno potente del previsto."
         }
       }
     },
@@ -2313,12 +2385,11 @@ PIRATI.registerPack({
             scene: {
               read: "Sotto la cascata dorme una sirena grande come una collina. Ogni volta che sbadiglia, tira dentro tutta l'acqua e per qualche secondo i pesci restano sospesi a mezz'aria, sorpresi. Poi l'acqua torna, e lei sbadiglia di nuovo.",
               ask: "Come si sveglia una sirena gigante con gentilezza, senza spaventarla?",
-              hints: [
-                "Cantarle qualcosa di dolce, magari al contrario.",
-                "Raccontarle una storia bella da sentire nel sonno.",
-                "Aspettare tra uno sbadiglio e l'altro per avvicinarsi."
+              askOptions: [
+                { id: "canto-contrario", label: "🎵 Le cantiamo qualcosa di dolce, al contrario", reply: "Provate a cantare una ninna nanna alla rovescia: suona buffa, ma dolce." },
+                { id: "storia", label: "📖 Le raccontiamo una storia bella", reply: "Cominciate a sussurrare una storia, piano piano, come si fa con chi dorme." },
+                { id: "aspettare", label: "⏳ Aspettiamo tra uno sbadiglio e l'altro", reply: "Vi avvicinate un passo alla volta, solo nei momenti di calma tra uno sbadiglio e l'altro." }
               ],
-              rescue: "La sirena mormora nel sonno una parola: «...ancora...». Sta sognando qualcosa. Forse potete continuarlo voi.",
               masterTip: "Sbadiglia piano mentre parli (fai finta): è contagioso, i bambini si calmano."
             },
             interaction: "Nessun tiro: si cerca il modo gentile.",
@@ -2334,13 +2405,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Tre pesci parlanti, rimasti a bocca aperta a mezz'aria, vi danno tre consigli completamente diversi e tutti sicurissimi.",
-              ask: "Le raccontiamo un sogno bello, o intanto rimettiamo in acqua i pesci prima del prossimo sbadiglio?",
-              hints: [
-                "Il sogno la sveglia dolce, ma va inventato bene.",
-                "Salvare i pesci è urgente: lo sbadiglio arriva presto.",
-                "Un gruppo racconta, un gruppo salva i pesci."
-              ],
-              rescue: "Uno sbadiglio comincia a montare: l'acqua trema. Bisogna decidere adesso."
+              ask: "Le raccontiamo un sogno bello, o intanto rimettiamo in acqua i pesci prima del prossimo sbadiglio?"
             },
             choices: [
               {
@@ -2365,23 +2430,16 @@ PIRATI.registerPack({
             scene: {
               read: "La sirena ascolta con gli occhi chiusi. Un sogno per svegliarla deve avere qualcosa di suo: un posto, un amico, e una sorpresa che la faccia sorridere davvero.",
               ask: "Inventate il sogno: un luogo, un animale e una sorpresa che svegli la sirena facendola sorridere.",
-              hints: [
-                "Un posto morbido: una spiaggia di piume, una grotta di conchiglie.",
-                "Un animale piccolo e buffo che le fa il solletico.",
-                "La sorpresa: qualcosa che non si aspetta, tipo la cascata che canta."
+              askOptions: [
+                { id: "posto-morbido", label: "🪶 Un posto morbido, come una spiaggia di piume", reply: "«C'era una spiaggia fatta tutta di piume soffici...» comincia il racconto." },
+                { id: "animale-buffo", label: "🐭 Un animale piccolo e buffo che le fa il solletico", reply: "«...e un topolino con i baffi lunghissimi le faceva il solletico sul naso...»" },
+                { id: "sorpresa", label: "🎉 Una sorpresa che non si aspetta", reply: "«...e all'improvviso, la cascata si mise a cantare!» — la sorpresa arriva al momento giusto." }
               ],
-              rescue: "La sirena sussurra: «...e poi... e poi cosa?» — vuole sapere come va a finire.",
               masterTip: "Fatti dire luogo, animale e sorpresa da tre bambini diversi e legali in una frase."
             },
             resolution: {
-              policy: "destiny_group_or_dice",
-              destiny: { group: 70, dice: 30 },
-              destiny_screen: {
-                title: "✦ Il Destino ascolta il vostro sogno",
-                button: "Affidiamoci al Destino",
-                group_result: "Il sogno è così bello che la sirena apre un occhio e sorride: sveglia, senza prove.",
-                dice_result: "La sirena si agita nel sonno: serve una prova di Fortuna per portare il sogno fino in fondo."
-              },
+              policy: "dice",
+              critical: true,
               dice: { stat: "fortuna", target: 5 }
             },
             outcomes: {
@@ -2393,10 +2451,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "😴 SI GIRA NEL SONNO",
-                text: "Il sogno si perde a metà e la sirena si rigira: con la coda apre per sbaglio un passaggio dietro la cascata, Pericolo +1. Ma quel movimento fa ripartire l'acqua lo stesso.",
+                text: "Il sogno si perde a metà e la sirena si rigira nel sonno: Pericolo +1. Con la coda apre un passaggio dietro la cascata, ma resta addormentata — non proprio come speravate.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -2406,15 +2464,15 @@ PIRATI.registerPack({
             scene: {
               read: "I pesci galleggiano a mezz'aria per pochi secondi ogni volta. Bisogna essere veloci e delicati: un pesce lasciato cadere si fa male.",
               ask: "Come organizzate la catena umana per rimettere in acqua più pesci possibile, prima dello sbadiglio?",
-              hints: [
-                "Una fila dalle pozze secche all'acqua, pesce per pesce.",
-                "Il più veloce corre, gli altri passano.",
-                "Contare gli sbadigli per sapere quanto tempo resta."
-              ],
-              rescue: "I pesci parlanti, per aiutarvi, indicano quali sono i più leggeri da spostare per primi."
+              askOptions: [
+                { id: "fila", label: "🐟 Una fila dalle pozze all'acqua, pesce per pesce", reply: "Vi disponete in fila e passate i pesci di mano in mano, veloci." },
+                { id: "veloce-corre", label: "🏃 Il più veloce corre, gli altri passano i pesci", reply: "Il pirata più veloce fa la spola, mentre gli altri preparano i pesci pronti da consegnare." },
+                { id: "contare-sbadigli", label: "🔢 Contiamo gli sbadigli per sapere quanto tempo resta", reply: "Uno tiene il conto ad alta voce: «Prossimo sbadiglio tra... tre... due...»" }
+              ]
             },
             resolution: {
               policy: "dice",
+              critical: true,
               dice: { stat: "coraggio", target: 5 }
             },
             outcomes: {
@@ -2426,10 +2484,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🐠 QUALCUNO SCIVOLA",
-                text: "Un pesce vi sguscia di mano e finisce in una pozza sbagliata: qualche corsa in più, Pericolo +1. Alla fine però sono tutti salvi e la sirena si sveglia per il baccano allegro.",
+                text: "Un pesce vi sguscia di mano e finisce in una pozza sbagliata: qualche corsa in più, Pericolo +1. Salvate quasi tutti i pesci, ma la sirena resta addormentata, indifferente al trambusto.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -2443,13 +2501,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "La cascata riparte, un po' a singhiozzo, ma la sirena resta addormentata — non vi ha sentiti fino in fondo. Prima di sprofondare di nuovo nel sonno, soffia comunque in acqua una perla, più opaca del solito.",
+              masterTip: "Chiedi: la prossima volta, come proverebbero a svegliarla del tutto?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "La Sirena Sbadigliona",
           final_read: "La cascata torna a scrosciare e la sirena riprende il suo sonno sorridente. La Perla del Respiro luccica nella mano della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ LA CASCATA RIPARTE COMUNQUE",
+          fail_subtitle: "La Sirena Sbadigliona — un finale diverso",
+          fail_final_read: "La cascata torna a scorrere, ma la sirena resta addormentata. Vi lascia comunque una perla, più opaca del solito, prima di riaddormentarsi."
         }
       }
     },
@@ -2501,12 +2573,11 @@ PIRATI.registerPack({
             scene: {
               read: "Qualcosa non torna: il fiume scorre verso l'alto, non verso il mare. L'acqua risale la montagna trascinando con sé barche capovolte, banchi di pesci e rami. In mezzo alla corrente c'è anche una capra, aggrappata a un tronco.",
               ask: "Cosa può aver messo un fiume al contrario? E come si torna a farlo scendere?",
-              hints: [
-                "Qualcuno ha girato qualcosa, in cima alla montagna.",
-                "Se sale l'acqua, forse c'è una pompa gigante o una ruota.",
-                "La capra sembra sapere qualcosa: viene da lassù."
+              askOptions: [
+                { id: "girato", label: "🔧 Qualcuno ha girato qualcosa in cima alla montagna", reply: "«Deve esserci un meccanismo lassù» ipotizzate, guardando in alto." },
+                { id: "pompa", label: "⚙️ Forse c'è una pompa gigante o una ruota", reply: "«Una ruota che spinge l'acqua all'insù» pensate, osservando la corrente impazzita." },
+                { id: "capra-sa", label: "🐐 La capra sembra sapere qualcosa", reply: "«Viene da lassù, forse ha visto tutto» notate, seguendo la capra con lo sguardo." }
               ],
-              rescue: "La capra vi urla contro qualcosa mentre passa, ma è tutto in rima e non si capisce niente.",
               masterTip: "Racconta il fiume che sale con la voce che 'sale' anche lei, di tono."
             },
             interaction: "Nessun tiro: si indaga sul mistero.",
@@ -2522,13 +2593,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Per risalire serve una piccola zattera sulla corrente verticale. In cima ci sono tre ruote di pietra: una gira la direzione, una la velocità, una l'altezza.",
-              ask: "Ci concentriamo sul guidare la zattera senza ribaltarci, o sul capire l'ordine delle tre ruote?",
-              hints: [
-                "Guidare richiede equilibrio e sangue freddo.",
-                "Le ruote sono un enigma: serve testa.",
-                "Un gruppo tiene la zattera, un gruppo studia le ruote."
-              ],
-              rescue: "La capra passa di nuovo e stavolta la sentite chiaramente: «...prima il verso, poi il resto!»"
+              ask: "Ci concentriamo sul guidare la zattera senza ribaltarci, o sul capire l'ordine delle tre ruote?"
             },
             choices: [
               {
@@ -2553,12 +2618,11 @@ PIRATI.registerPack({
             scene: {
               read: "La corrente verticale è liscia come vetro e ogni movimento brusco fa sbandare la zattera. Sotto di voi, tanto vuoto.",
               ask: "Come tenete la zattera dritta risalendo una cascata al contrario?",
-              hints: [
-                "Muoversi tutti insieme, mai da soli.",
-                "Guardare in alto, verso dove si va, non giù.",
-                "Chi ha il remo lo usa piano, come un timone."
-              ],
-              rescue: "La capra vi lancia una fune dalla sponda: agganciatela e fatevi tirare nei tratti peggiori."
+              askOptions: [
+                { id: "insieme", label: "🤝 Ci muoviamo tutti insieme, mai da soli", reply: "Vi spostate in sincrono, un passo alla volta, senza mai lasciare il centro della zattera." },
+                { id: "guardare-alto", label: "👆 Guardiamo in alto, verso dove andiamo", reply: "Tenete lo sguardo fisso sulla cima, ignorando il vuoto sotto di voi." },
+                { id: "remo-piano", label: "🚣 Il remo si usa piano, come un timone", reply: "Chi tiene il remo lo muove con calma, piccoli aggiustamenti invece di colpi bruschi." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -2586,12 +2650,11 @@ PIRATI.registerPack({
             scene: {
               read: "Le tre ruote sono coperte di simboli. Girarle nell'ordine sbagliato fa impennare il fiume ancora di più.",
               ask: "In che ordine girate direzione, velocità e altezza per rimettere il fiume verso il mare?",
-              hints: [
-                "Prima decidi DOVE va (direzione), poi il resto.",
-                "L'altezza per ultima, quando il verso è giusto.",
-                "La velocità piano, o l'acqua torna a impazzire."
+              askOptions: [
+                { id: "direzione-prima", label: "🧭 Prima la direzione, poi il resto", reply: "«Prima decidiamo dove deve andare» spiegate, girando la prima ruota." },
+                { id: "altezza-ultima", label: "📏 L'altezza per ultima", reply: "«L'altezza si sistema solo alla fine, quando il verso è giusto» ragionate." },
+                { id: "velocita-piano", label: "🐢 La velocità va girata piano", reply: "«Piano, piano, o l'acqua impazzisce di nuovo» avvisate, girando con cautela." }
               ],
-              rescue: "La capra bela: «Il verso per primo, l'ho detto! Poi piano piano.»",
               masterTip: "Fatti dire l'ordine dai bambini e il perché di ogni passaggio."
             },
             resolution: {
@@ -2620,16 +2683,17 @@ PIRATI.registerPack({
             scene: {
               read: "La capra si è calmata e adesso vi guarda seria. «Conosco il blocco che teneva il fiume al contrario. Ve lo dico. Ma solo se me lo chiedete... in rima.»",
               ask: "Inventate una domanda in rima per la capra, e una risposta che dica come togliere l'ultimo blocco.",
-              hints: [
-                "Rime facili: -ella, -are, -etto.",
-                "La domanda può chiedere «cosa tiene il fiume all'insù?»",
-                "La risposta può essere un gesto, non solo parole."
+              askOptions: [
+                { id: "rime-facili", label: "🎵 Rime facili: -ella, -are, -etto", reply: "«Capretta bella, dove sta la cosa che il fiume ribalta?» tentate, con rime semplici." },
+                { id: "domanda-diretta", label: "❓ Chiediamo: cosa tiene il fiume all'insù?", reply: "«Cosa tiene il fiume all'insù, capra che sai tutto tu?» chiedete, dritti al punto." },
+                { id: "gesto", label: "👉 Rispondiamo anche con un gesto", reply: "Oltre alle parole, indicate il punto esatto dove pensate sia il blocco, sperando di indovinare." }
               ],
-              rescue: "La capra suggerisce l'ultima parola: «...cade / la cascata». Trovate voi il resto."
+              masterTip: "Non serve una rima perfetta: basta che faccia ridere anche solo un po'."
             },
             resolution: {
-              policy: "group",
-              group: "Componete la filastrocca: una domanda in rima per la capra e la risposta che libera il fiume."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "astuzia", target: 5 }
             },
             outcomes: {
               success: {
@@ -2640,10 +2704,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🐐 RIMA ZOPPA",
-                text: "La rima non sta in piedi e la capra fa la difficile: Pericolo +1. Poi però sbuffa, ve la corregge lei e vi indica il tappo da togliere.",
+                text: "La rima non sta in piedi e la capra fa la difficile: Pericolo +1. Vi indica solo a metà dove si trova il tappo — il resto dovrete scoprirlo un'altra volta.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -2657,13 +2721,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il fiume torna a scendere, ma più lento e incerto del previsto: il tappo non è stato tolto del tutto. Dall'acqua raccogliete comunque una bottiglia, con dentro solo un filo di corrente.",
+              masterTip: "Chiedi: la prossima volta, che rima proverebbero per convincere la capra?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Il Fiume al Contrario",
           final_read: "Il fiume torna a scendere verso il mare. La Bottiglia della Corrente gorgoglia piano nella sacca della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ IL FIUME SCENDE, UN PO' PIANO",
+          fail_subtitle: "Il Fiume al Contrario — un finale diverso",
+          fail_final_read: "Il fiume torna a scendere, ma più lento del previsto. Nella bottiglia che raccogliete resta solo un filo di corrente."
         }
       }
     },
@@ -2717,12 +2795,11 @@ PIRATI.registerPack({
             scene: {
               read: "In cima alla scogliera un mulino gigante macina le nuvole: da quella farina nasce tutto il vento dell'isola. Ma una pala si è staccata e il mulino gira storto. Sopra le vostre teste una tempesta prende la forma di un coniglio enorme.",
               ask: "Come si ripara un mulino gigante senza far arrabbiare ancora di più la tempesta?",
-              hints: [
-                "Recuperare prima la pala che manca.",
-                "Muoversi piano: i movimenti bruschi agitano il coniglio-tempesta.",
-                "Rallentare il mulino prima di toccarlo."
+              askOptions: [
+                { id: "pala-prima", label: "🔩 Recuperiamo prima la pala mancante", reply: "«Senza quella pala non si ripara niente» concordate, guardando dove galleggia." },
+                { id: "piano", label: "🤫 Ci muoviamo piano, senza agitare il coniglio", reply: "«Calma, niente scatti bruschi» sussurrate, mentre il coniglio-tempesta vi osserva." },
+                { id: "rallentare", label: "🐢 Rallentiamo il mulino prima di toccarlo", reply: "«Fermiamolo un po', prima di metterci le mani» proponete, guardando le pale sferragliare." }
               ],
-              rescue: "Il coniglio-tempesta batte una zampa di nuvola e un tuono fa tremare la scogliera. Ha fretta.",
               masterTip: "Fai la voce del vento che fischia forte quando nomini il coniglio-tempesta."
             },
             interaction: "Nessun tiro: si pianifica la riparazione.",
@@ -2738,13 +2815,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "La pala staccata galleggia sospesa tra due correnti d'aria, poco lontano. Il mulino, intanto, macina a vuoto e sferraglia.",
-              ask: "Andiamo a recuperare la pala volando tra le correnti, o ci concentriamo prima sugli ingranaggi del mulino?",
-              hints: [
-                "La pala è lontana e in mezzo al vento: serve coraggio.",
-                "Gli ingranaggi sono un lavoro di precisione.",
-                "Un gruppo va alla pala, un gruppo prepara il mulino."
-              ],
-              rescue: "Un aquilone abbandonato sbatte contro una roccia: potrebbe servire per arrivare alla pala."
+              ask: "Andiamo a recuperare la pala volando tra le correnti, o ci concentriamo prima sugli ingranaggi del mulino?"
             },
             choices: [
               {
@@ -2769,12 +2840,11 @@ PIRATI.registerPack({
             scene: {
               read: "La pala fluttua nel punto in cui due venti si scontrano. Sbagliare la presa vuol dire farsi portare via.",
               ask: "Come afferrate la pala tenendo tutti al sicuro, in mezzo a due correnti che tirano da parti opposte?",
-              hints: [
-                "Legarsi tutti alla stessa corda, come alpinisti.",
-                "Chi è più leggero va avanti, gli altri fanno da peso.",
-                "Prendere la pala nel momento di calma tra una raffica e l'altra."
-              ],
-              rescue: "Il coniglio-tempesta starnutisce e per un attimo il vento si ferma del tutto: è il momento."
+              askOptions: [
+                { id: "corda-unica", label: "🪢 Ci leghiamo tutti alla stessa corda", reply: "Vi assicurate l'uno all'altro come una vera cordata di montagna, pronti a resistere insieme." },
+                { id: "leggero-avanti", label: "🪶 Il più leggero va avanti, gli altri fanno peso", reply: "Il pirata più agile si spinge in avanti, ancorato saldamente dagli altri dietro." },
+                { id: "momento-calma", label: "⏸️ Aspettiamo un momento di calma tra le raffiche", reply: "Restate immobili, contando i secondi tra una folata e l'altra, pronti a scattare." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -2802,12 +2872,11 @@ PIRATI.registerPack({
             scene: {
               read: "Dentro il mulino, decine di ruote dentate girano fuori tempo. Toccare quella sbagliata potrebbe accelerare tutto e ingrandire il coniglio-tempesta.",
               ask: "Come capite quali ingranaggi rimettere in fase, e in che ordine?",
-              hints: [
-                "Seguire quello grande: da lì partono gli altri.",
-                "Fermare una ruota per volta, con un bastone tra i denti.",
-                "Ascoltare: quando girano bene fanno un ritmo regolare."
-              ],
-              rescue: "Un vecchio disegno inchiodato al muro mostra come dovrebbero incastrarsi le ruote."
+              askOptions: [
+                { id: "ruota-grande", label: "⚙️ Seguiamo la ruota grande, da cui partono le altre", reply: "«Tutto parte da quella grande al centro» osservate, tracciando il movimento con un dito." },
+                { id: "bastone", label: "🪵 Fermiamo una ruota alla volta con un bastone", reply: "Incastrate un bastone tra i denti di una ruota, bloccandola con cautela." },
+                { id: "ascoltare", label: "👂 Ascoltiamo il ritmo: quando è regolare, va bene", reply: "Chiudete gli occhi e ascoltate: un tic-tic regolare vi dice quando una ruota è a posto." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -2835,16 +2904,17 @@ PIRATI.registerPack({
             scene: {
               read: "Ultimo passo: rimontare la pala e riavviare il mulino alla velocità giusta. Va fatto in tre cose nello stesso momento — chi rimette la pala, chi tiene le corde, chi gira la leva.",
               ask: "Dividete i tre compiti fra i pirati: chi rimette la pala, chi tiene le corde, chi riavvia il mulino? E qual è il segnale per farlo insieme?",
-              hints: [
-                "Il gruppo più forte alle corde.",
-                "Il più preciso alla pala.",
-                "Un «via!» gridato da chi vede tutti e tre i gruppi."
+              askOptions: [
+                { id: "forti-corde", label: "💪 I più forti tengono le corde", reply: "Assegnate i pirati più robusti alle corde, pronti a reggere lo strappo." },
+                { id: "preciso-pala", label: "🎯 Il più preciso monta la pala", reply: "Chi ha mani più ferme si occupa di incastrare la pala al punto giusto." },
+                { id: "via-gridato", label: "📣 Un «via!» gridato da chi vede tutti", reply: "Uno si posiziona al centro, da dove vede tutti e tre i gruppi, pronto a dare il segnale." }
               ],
-              rescue: "Il coniglio-tempesta si accovaccia, pronto a saltare: dovete muovervi adesso, tutti assieme."
+              masterTip: "Fai crescere la tensione: il coniglio-tempesta si accovaccia, pronto a saltare."
             },
             resolution: {
-              policy: "group",
-              group: "Assegnate i tre compiti e decidete il segnale unico per eseguirli nello stesso istante."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "coraggio", target: 5 }
             },
             outcomes: {
               success: {
@@ -2855,10 +2925,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🐰 IL CONIGLIO SALTA",
-                text: "Un compito parte in ritardo e il coniglio-tempesta salta via: Pericolo +1. Ma nel salto perde metà della sua forza, e il mulino, un attimo dopo, riparte comunque.",
+                text: "Un compito parte in ritardo e il coniglio-tempesta salta via: Pericolo +1. Il mulino riparte, ma gira ancora un po' storto — funziona, non benissimo.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -2872,13 +2942,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il mulino torna a girare, ma con un leggero scricchiolio che prima non c'era. Il coniglio-tempesta è sparito, però il vento dell'isola resta un po' irregolare. Raccogliete comunque un lembo di nuvola cucito, meno morbido del previsto.",
+              masterTip: "Chiedi: la prossima volta, chi darebbe il segnale del «via!»?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Il Mulino delle Nuvole",
           final_read: "Il mulino macina piano e il coniglio-tempesta è solo una nuvoletta. La Vela di Nuvola ondeggia leggera tra le mani della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ IL MULINO RIPARTE, UN PO' STORTO",
+          fail_subtitle: "Il Mulino delle Nuvole — un finale diverso",
+          fail_final_read: "Il mulino gira di nuovo, ma con uno scricchiolio che prima non c'era. La vela che raccogliete è meno morbida del previsto, ma funziona."
         }
       }
     },
@@ -2930,12 +3014,11 @@ PIRATI.registerPack({
             scene: {
               read: "Sull'orlo della scogliera ci sono tre uova di vetro trasparente. Dentro ognuna si vede muoversi un piccolo vento vivo. Il bordo è in pendenza e le uova hanno già cominciato a dondolare. E da lontano stanno arrivando i bracconieri di venti.",
               ask: "Cosa facciamo per primo: fermare le uova che scivolano, o pensare a dove nasconderle?",
-              hints: [
-                "Se rotolano giù si rompono: la fretta è per quello.",
-                "I bracconieri arrivano, ma non sono ancora qui.",
-                "Un gruppo blocca, un gruppo prepara un riparo."
+              askOptions: [
+                { id: "fretta-rottura", label: "⏱️ Se rotolano giù si rompono: fretta!", reply: "«Non c'è tempo da perdere, dobbiamo fermarle subito» decidete, guardando le uova dondolare." },
+                { id: "bracconieri-lontani", label: "👀 I bracconieri non sono ancora qui", reply: "«Abbiamo ancora un attimo, ma non tanto» osservate le vele scure in lontananza." },
+                { id: "due-gruppi", label: "👥 Un gruppo blocca, un gruppo prepara un riparo", reply: "«Dividiamoci: chi ferma le uova, chi costruisce un riparo» organizzate in fretta." }
               ],
-              rescue: "Un uovo fa mezzo giro su se stesso e si ferma a un dito dal bordo. Poco tempo.",
               masterTip: "Trattieni il respiro guardando 'l'uovo' immaginario dondolare: la tensione passa ai bambini."
             },
             interaction: "Nessun tiro: si decide la priorità.",
@@ -2951,13 +3034,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Ogni uovo soffia in una direzione diversa: uno tira verso il mare, uno verso l'alto, uno gira in tondo. Tenerle ferme non è semplice.",
-              ask: "Le blocchiamo di forza con le mani e col corpo, o costruiamo al volo una trappola morbida che le raccolga?",
-              hints: [
-                "Bloccarle è immediato ma faticoso: soffiano forte.",
-                "Una trappola richiede un attimo in più ma tiene da sola.",
-                "Reti, mantelli e cuscini d'alghe possono servire."
-              ],
-              rescue: "Un mantello dimenticato sventola su una roccia: già pronto per fare da amaca a un uovo."
+              ask: "Le blocchiamo di forza con le mani e col corpo, o costruiamo al volo una trappola morbida che le raccolga?"
             },
             choices: [
               {
@@ -2982,12 +3059,11 @@ PIRATI.registerPack({
             scene: {
               read: "Tenere ferme tre uova che soffiano in tre direzioni diverse è come tenere tre palloni sott'acqua. E il bordo è scivoloso.",
               ask: "Come vi coordinate per non lasciarne scappare nemmeno una?",
-              hints: [
-                "Una coppia per uovo, schiena contro schiena.",
-                "Chi resta libero fa da rinforzo dove serve.",
-                "Contare insieme e stringere tutti allo stesso momento."
-              ],
-              rescue: "I piccoli venti, sentendo che li proteggete, soffiano un po' più piano."
+              askOptions: [
+                { id: "coppia-uovo", label: "👫 Una coppia per uovo, schiena contro schiena", reply: "Vi dividete in coppie, ognuna piantata saldamente davanti al proprio uovo." },
+                { id: "rinforzo", label: "🆘 Chi resta libero fa da rinforzo", reply: "Un pirata resta pronto a correre dove serve più forza, occhi su tutte e tre le uova." },
+                { id: "contare-stringere", label: "🔢 Contiamo insieme e stringiamo tutti a tempo", reply: "«Uno, due, tre... stringi!» — contate ad alta voce per agire tutti insieme." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -3015,12 +3091,11 @@ PIRATI.registerPack({
             scene: {
               read: "La rete d'alghe e mantelli va tesa bene: troppo lenta e l'uovo rimbalza fuori, troppo tesa e non attutisce.",
               ask: "Come costruite la conca morbida perché regga un uovo che cade soffiando?",
-              hints: [
-                "Doppio strato: mantelli sopra, alghe sotto.",
-                "Legarla a quattro rocce, una per angolo.",
-                "Provarla lanciandoci dentro un frutto pesante."
-              ],
-              rescue: "Un uovo dondola pericolosamente: fate in tempo a mettere la rete proprio sotto."
+              askOptions: [
+                { id: "doppio-strato", label: "🧣 Doppio strato: mantelli sopra, alghe sotto", reply: "Stendete prima le alghe morbide, poi i mantelli sopra, per un cuscino a doppio strato." },
+                { id: "quattro-rocce", label: "🪨 La leghiamo a quattro rocce, una per angolo", reply: "Fissate ogni angolo della rete a una roccia solida, tirando bene le corde." },
+                { id: "prova-frutto", label: "🍈 La proviamo con un frutto pesante", reply: "Lanciate un frutto grosso nella rete per testarne la tenuta prima che arrivi un uovo vero." }
+              ]
             },
             resolution: {
               policy: "destiny_group_or_dice",
@@ -3055,17 +3130,17 @@ PIRATI.registerPack({
             scene: {
               read: "Le uova sono al sicuro, ma la scogliera non è un posto per loro. Il vento più piccolo, quello curioso, sbuca fuori e vi guarda: aspetta che decidiate dove costruire il nuovo nido.",
               ask: "Progettate un nido che non voli via: che forma ha, di che materiale è, e dove lo mettete?",
-              hints: [
-                "Basso e pesante alla base, così il vento non lo prende.",
-                "Materiale che si piega col vento invece di rompersi.",
-                "Un posto riparato: una grotta, l'incavo di una roccia."
+              askOptions: [
+                { id: "basso-pesante", label: "⬇️ Basso e pesante alla base", reply: "«Se sta basso, il vento non riesce a sollevarlo» spiegate, ammucchiando pietre alla base." },
+                { id: "materiale-flessibile", label: "🌿 Materiale che si piega invece di rompersi", reply: "Intrecciate rami sottili ed elastici, che ondeggiano senza spezzarsi." },
+                { id: "posto-riparato", label: "🕳️ Un posto riparato, come l'incavo di una roccia", reply: "Scegliete un anfratto nascosto, protetto dal vento su tre lati." }
               ],
-              rescue: "Il vento piccolo soffia verso un anfratto nella roccia, come a dire «magari lì?».",
               masterTip: "Fatti dire forma, materiale e posto da tre bambini, poi chiedi di 'difendere' la scelta."
             },
             resolution: {
-              policy: "group",
-              group: "Decidete forma, materiale e posto del nido, e spiegate perché non volerà via."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "astuzia", target: 5 }
             },
             outcomes: {
               success: {
@@ -3076,10 +3151,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🌪 TROPPO LEGGERO",
-                text: "Il primo nido è troppo arioso e il vento lo scompiglia: Pericolo +1. Lo rifate più basso e pesante, e stavolta tiene.",
+                text: "Il primo nido è troppo arioso e il vento lo scompiglia: Pericolo +1. Lo sistemate alla bell'e meglio — regge, ma non è proprio quello che avevate in mente.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -3093,13 +3168,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "I tre piccoli venti si sistemano nel nido, un po' spettinati anche loro. Non è perfetto — una raffica forte potrebbe ancora scompigliarlo — ma per ora regge. Il più curioso vi lascia comunque un uovo di vetro vuoto, un po' incrinato.",
+              masterTip: "Chiedi: la prossima volta, come renderebbero il nido più solido?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Il Nido del Vento",
           final_read: "I piccoli venti girano felici nel nido riparato. L'Uovo di Brezza aspetta un soffio nella sacca della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ UN NIDO CHE REGGE A MALAPENA",
+          fail_subtitle: "Il Nido del Vento — un finale diverso",
+          fail_final_read: "Il nido regge, ma è meno solido del previsto. Il vento piccolo vi lascia comunque un uovo di vetro, un po' incrinato."
         }
       }
     },
@@ -3153,12 +3242,11 @@ PIRATI.registerPack({
             scene: {
               read: "Sulla spiaggia un granchio grande come una barca conta monete, con un paio di occhialini minuscoli sul naso. «Ogni tesoro di quest'isola appartiene alla Banca delle Maree. E la banca sono io. Se volete la chiave del caveau, dobbiamo trattare.»",
               ask: "Cosa possiamo offrire a un granchio che ha già tutte le monete del mondo?",
-              hints: [
-                "Qualcosa che non si compra: una storia, una risata.",
-                "Un oggetto buffo che lui non ha.",
-                "Un aiuto per la banca, non solo per noi."
+              askOptions: [
+                { id: "non-si-compra", label: "📖 Qualcosa che non si compra: una storia", reply: "«Una storia vera, mai raccontata prima» proponete, e il granchio alza un sopracciglio... se ce l'ha." },
+                { id: "oggetto-buffo", label: "🎈 Un oggetto buffo che lui non ha", reply: "«Deve avere qualcosa che manca alla sua collezione» pensate, frugando nelle tasche." },
+                { id: "aiuto-banca", label: "🏦 Un aiuto per la banca, non solo per noi", reply: "«E se gli dessimo qualcosa che aumenta il valore della banca?» propone qualcuno, pensieroso." }
               ],
-              rescue: "Il granchio sbadiglia contando: «Monete, monete, monete... che noia. Sorprendetemi.»",
               masterTip: "Parla lento e impettito come un banchiere che si annoia di tutto."
             },
             interaction: "Nessun tiro: si pensa allo scambio.",
@@ -3174,13 +3262,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Il granchio colleziona storie e oggetti strani. Ma nel suo mucchio di monete, notate, ce n'è una che luccica in modo sbagliato: forse è falsa. Se se ne accorge durante la trattativa, l'accordo salta.",
-              ask: "Puntiamo tutto su una trattativa creativa, o prima gli facciamo un favore trovando la moneta falsa nel mucchio?",
-              hints: [
-                "La trattativa è diretta, ma serve un'offerta forte.",
-                "Trovargli la moneta falsa lo mette di buon umore.",
-                "Si può cominciare col favore e poi trattare."
-              ],
-              rescue: "Il granchio tamburella una chela: «Ho tutto il giorno... ma voi no. La marea sale.»"
+              ask: "Puntiamo tutto su una trattativa creativa, o prima gli facciamo un favore trovando la moneta falsa nel mucchio?"
             },
             choices: [
               {
@@ -3205,23 +3287,16 @@ PIRATI.registerPack({
             scene: {
               read: "Il granchio ascolta ogni proposta e risponde sempre con una controproposta. Vuole un affare vero, non un regalo.",
               ask: "Proponete uno scambio che non usi monete e che convenga sia alla banca sia alla ciurma.",
-              hints: [
-                "Un servizio: raccontargli una storia nuova ogni volta che passate.",
-                "Un oggetto raro in cambio della chiave in prestito.",
-                "Insegnargli un gioco: un banchiere annoiato lo apprezzerebbe."
+              askOptions: [
+                { id: "servizio-storie", label: "📚 Una storia nuova ogni volta che passiamo", reply: "«Vi porteremo sempre una storia fresca» promettete. Il granchio si aggiusta gli occhialini, interessato." },
+                { id: "oggetto-raro", label: "💎 Un oggetto raro in prestito per la chiave", reply: "Mostrate il vostro oggetto più bizzarro. Il granchio lo esamina con occhio esperto." },
+                { id: "insegnare-gioco", label: "🎲 Gli insegniamo un gioco nuovo", reply: "«Un banchiere annoiato ha bisogno di svago» dite, e cominciate a spiegargli le regole." }
               ],
-              rescue: "Il granchio suggerisce: «Se mi date qualcosa che aumenta il valore della banca, la chiave è vostra...»",
               masterTip: "Fai controproposte finché l'offerta dei bambini non è generosa davvero (dà più di quanto chiede)."
             },
             resolution: {
-              policy: "destiny_group_or_dice",
-              destiny: { group: 60, dice: 40 },
-              destiny_screen: {
-                title: "✦ Il Destino soppesa l'affare",
-                button: "Affidiamoci al Destino",
-                group_result: "L'offerta è così vantaggiosa per tutti che il granchio stringe la chela: affare fatto, senza prove.",
-                dice_result: "Il granchio tratta ancora: serve una prova di Astuzia per chiudere alle vostre condizioni."
-              },
+              policy: "dice",
+              critical: true,
               dice: { stat: "astuzia", target: 6 }
             },
             outcomes: {
@@ -3233,10 +3308,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "📄 CLAUSOLA NASCOSTA",
-                text: "Il granchio vi presta la chiave, ma aggiunge una riga in fondo al contratto: gli dovrete un favore nel prossimo ciclo. Pericolo +1. La chiave però è vostra, per ora.",
+                text: "Il granchio non si convince fino in fondo e stringe la chela solo a metà: Pericolo +1. Vi presta la chiave, ma con una clausola scomoda in fondo al contratto — gli dovrete un favore, prima o poi.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -3246,15 +3321,15 @@ PIRATI.registerPack({
             scene: {
               read: "Il mucchio di monete è enorme e tutte sembrano uguali. La falsa, dice il granchio, «fa il solletico quando la tocchi». Ma con migliaia di monete, trovarla è come cercare un granello.",
               ask: "Come cercate la moneta falsa senza doverle toccare tutte a una a una?",
-              hints: [
-                "Dividere il mucchio in parti e cercare in squadre.",
-                "Ascoltare: una moneta falsa suona più sorda.",
-                "Guardare i bordi: la falsa è tagliata peggio."
-              ],
-              rescue: "Il granchio, senza volerlo, appoggia una chela proprio vicino alla moneta che 'ridacchia'."
+              askOptions: [
+                { id: "dividere-squadre", label: "👥 Dividiamo il mucchio in squadre", reply: "Vi dividete il mucchio in settori, ognuno con il proprio angolo da controllare." },
+                { id: "ascoltare-suono", label: "👂 Ascoltiamo: la falsa suona più sorda", reply: "Battete piano ogni monetina vicino all'orecchio, cercando quella con il suono diverso." },
+                { id: "guardare-bordi", label: "👁️ Guardiamo i bordi, tagliati peggio", reply: "Esaminate i bordi delle monete uno per uno, cercando una lavorazione imperfetta." }
+              ]
             },
             resolution: {
               policy: "dice",
+              critical: true,
               dice: { stat: "fortuna", target: 6 }
             },
             outcomes: {
@@ -3266,10 +3341,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "🪙 MONETA SBAGLIATA",
-                text: "Ne pescate una che sembrava falsa ma è vera: il granchio si insospettisce, Pericolo +1. Poi però ridete tutti insieme quando la vera falsa salta fuori da sola, e l'affare si fa lo stesso.",
+                text: "Ne pescate una che sembrava falsa ma è vera: il granchio si insospettisce, Pericolo +1. Alla fine vi presta la chiave lo stesso, ma con aria poco convinta, tenendo d'occhio ogni vostra mossa.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -3283,13 +3358,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi l'avventura"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il caveau si apre, ma con un click più stridulo del solito. Il granchio vi porge la chiave-maree con la chela, gli occhialini storti, non del tutto convinto dell'affare. «Va bene così... per questa volta.»",
+              masterTip: "Chiedi: la prossima volta, che offerta farebbero al granchio?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque l'avventura"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ AVVENTURA COMPLETATA!",
           subtitle: "Il Granchio Banchiere",
           final_read: "Il caveau si richiude e il granchio torna a contare, di buon umore. La Chiave delle Maree pende dalla cintura della ciurma.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ UN AFFARE UN PO' TIRATO",
+          fail_subtitle: "Il Granchio Banchiere — un finale diverso",
+          fail_final_read: "Il granchio vi consegna la chiave, non del tutto convinto. «Affare fatto... quasi» borbotta, sistemandosi gli occhialini."
         }
       }
     },
@@ -3342,12 +3431,11 @@ PIRATI.registerPack({
             scene: {
               read: "Il forziere scatta e si apre senza che nessuno lo tocchi. Dentro non c'è nessun tesoro d'oro. Galleggiano nell'aria sedici piccole stelle luminose, e ogni stella mostra il desiderio di un pirata della ciurma.",
               ask: "Cosa desidera il vostro pirata, davvero? Ognuno dice la sua stella.",
-              hints: [
-                "Un desiderio piccolo e vero: tornare a casa, un amico, imparare una cosa.",
-                "Non deve essere un tesoro: può essere un momento.",
-                "Va bene anche un desiderio buffo."
+              askOptions: [
+                { id: "piccolo-vero", label: "🏠 Un desiderio piccolo e vero", reply: "«Vorrei rivedere mia sorella» sussurra un pirata. La sua stella si accende piano." },
+                { id: "un-momento", label: "✨ Non un tesoro, ma un momento", reply: "«Vorrei che questo momento non finisse mai» dice qualcuno, guardando la ciurma intorno." },
+                { id: "buffo", label: "😄 Anche un desiderio buffo va bene", reply: "«Vorrei un pappagallo che canta solo canzoni vere» ride un pirata, e la sua stella ride con lui." }
               ],
-              rescue: "Una stella si avvicina al più silenzioso della ciurma e aspetta, dolce. Tocca a lui per primo.",
               masterTip: "Fai dire a ogni bambino il desiderio del proprio pirata, senza fretta: è il cuore del finale."
             },
             interaction: "Nessun tiro: è il momento in cui ognuno parla.",
@@ -3363,13 +3451,7 @@ PIRATI.registerPack({
             phase_flow: ["SCENE", "DECISION", "RESOLUTION"],
             scene: {
               read: "Il forziere sussurra: «Un solo desiderio si avvera stanotte. Ma nessuno deve restare indietro.» Le stelle si accendono più forte quando due desideri si somigliano.",
-              ask: "Uniamo i desideri con la testa, cercando quello che li contiene tutti, o ci affidiamo alla stella che brilla di più?",
-              hints: [
-                "Unire i desideri è un lavoro di ascolto: cosa hanno in comune?",
-                "Affidarsi alla stella è più veloce, ma è un salto nel buio luminoso.",
-                "A volte due desideri diversi puntano allo stesso posto."
-              ],
-              rescue: "Due stelle, lontane, si allungano una verso l'altra: sotto sotto vogliono la stessa cosa."
+              ask: "Uniamo i desideri con la testa, cercando quello che li contiene tutti, o ci affidiamo alla stella che brilla di più?"
             },
             choices: [
               {
@@ -3394,12 +3476,11 @@ PIRATI.registerPack({
             scene: {
               read: "Sedici desideri sono tanti. Ma se li ascoltate bene, alcuni sono lo stesso desiderio detto in modi diversi, e altri si aiutano a vicenda.",
               ask: "Unite tre desideri diversi in un solo obiettivo che tenga dentro un pezzo del sogno di tutti.",
-              hints: [
-                "Cercare la parola che torna in più desideri.",
-                "Un desiderio 'grande' può fare spazio a due 'piccoli'.",
-                "Scriverlo come una frase sola: «Vogliamo...»."
+              askOptions: [
+                { id: "parola-comune", label: "🔤 Cerchiamo la parola che torna più spesso", reply: "«Insieme» ricorre in quasi tutti i desideri, notate. Forse è da lì che si parte." },
+                { id: "grande-piccoli", label: "🌟 Un desiderio grande fa spazio a due piccoli", reply: "Scegliete il desiderio più ampio e ci infilate dentro, con cura, gli altri due." },
+                { id: "frase-sola", label: "✍️ Lo scriviamo come una frase sola", reply: "«Vogliamo...» cominciate, e la frase si completa pezzo dopo pezzo, voce dopo voce." }
               ],
-              rescue: "Il forziere aiuta: «Molti di voi hanno detto la parola 'insieme'. Partite da lì.»",
               masterTip: "Fatti dire da tre bambini i loro desideri e aiutali a trovare il filo comune."
             },
             resolution: {
@@ -3435,12 +3516,11 @@ PIRATI.registerPack({
             scene: {
               read: "Le stelle roteano più in fretta. Una di loro, poco per volta, brilla più delle altre: è il desiderio più generoso, quello che regala qualcosa a tutti.",
               ask: "Quale desiderio si sta accendendo? E siete d'accordo a lasciarlo avverare al posto del vostro?",
-              hints: [
-                "Il desiderio generoso di solito comincia con «per la ciurma...».",
-                "Lasciar avverare quello di un altro è un regalo.",
-                "Chiudere gli occhi e sentire quale luce scalda di più."
-              ],
-              rescue: "Una stella scende all'altezza dei vostri occhi, calda e paziente: aspetta il vostro sì."
+              askOptions: [
+                { id: "per-la-ciurma", label: "💛 Quello che comincia con «per la ciurma...»", reply: "Una stella brilla più forte proprio mentre qualcuno dice «vorrei qualcosa per tutti noi»." },
+                { id: "regalo", label: "🎁 Lasciamo avverare quello di un altro, come regalo", reply: "«Va bene, lasciamo che si avveri il suo» dice qualcuno, sorridendo a un compagno." },
+                { id: "occhi-chiusi", label: "😌 Chiudiamo gli occhi e sentiamo quale scalda di più", reply: "Tutti chiudono gli occhi, le mani alzate verso il cielo di stelle, in attesa." }
+              ]
             },
             resolution: {
               policy: "dice",
@@ -3468,16 +3548,17 @@ PIRATI.registerPack({
             scene: {
               read: "La luce si posa dentro il forziere e lì resta, viva. Il forziere fa un'ultima domanda: «Quale promessa fa questa ciurma per il ciclo che comincia?»",
               ask: "Unite tre desideri diversi in una sola promessa che aiuti tutta la ciurma nel prossimo ciclo.",
-              hints: [
-                "Una promessa breve, facile da ricordare.",
-                "Deve valere per tutti, non per uno solo.",
-                "Può cominciare con «Prometteremo di...»."
+              askOptions: [
+                { id: "breve", label: "✂️ Una promessa breve, facile da ricordare", reply: "«Restare uniti, sempre» decidete: poche parole, ma vere." },
+                { id: "per-tutti", label: "👥 Una promessa che valga per tutti", reply: "«Nessuno di noi resta mai indietro» dite insieme, guardandovi negli occhi." },
+                { id: "prometteremo", label: "🤝 Cominciamo con «Prometteremo di...»", reply: "«Prometteremo di ascoltarci, anche nei giorni difficili» — la frase prende forma piano piano." }
               ],
-              rescue: "Il forziere suggerisce: «Le promesse migliori si possono mantenere anche nei giorni difficili.»"
+              masterTip: "Lascia che la promessa esca dalle parole dei bambini, non dalle tue."
             },
             resolution: {
-              policy: "group",
-              group: "Scrivete insieme la promessa della ciurma per il prossimo ciclo: una frase sola, di tutti."
+              policy: "dice",
+              critical: true,
+              dice: { stat: "coraggio", target: 5 }
             },
             outcomes: {
               success: {
@@ -3488,10 +3569,10 @@ PIRATI.registerPack({
               },
               fail_forward: {
                 title: "📜 PROMESSA DA LIMARE",
-                text: "La prima promessa è troppo lunga e nessuno la ricorda: Pericolo +1. La accorciate a poche parole e il forziere, soddisfatto, la incide comunque.",
+                text: "La prima promessa è troppo lunga e nessuno la ricorda bene: Pericolo +1. Il forziere la incide comunque, ma le lettere restano un po' sbiadite, come se aspettasse una versione migliore.",
                 effects: ["Pericolo +1"],
                 audio: "fallimento",
-                next: "finale"
+                next: "finale-dubbio"
               }
             }
           },
@@ -3505,13 +3586,27 @@ PIRATI.registerPack({
             completion: {
               action_label: "🏴‍☠️ Concludi il ciclo"
             }
+          },
+          {
+            scene_id: "finale-dubbio",
+            phase_flow: ["SCENE", "REWARDS"],
+            scene: {
+              read: "Il forziere si richiude piano. Sul coperchio, la vostra promessa brilla, ma più debole del previsto — come se aspettasse ancora di essere detta per bene. Dentro il legno resta comunque una piccola luce: la Stella della Ciurma, un po' più fioca, ma vostra. Il primo ciclo è finito. Siete cresciuti insieme, anche così.",
+              masterTip: "Chiedi a ognuno: qual è stato il tuo momento più bello di tutto il ciclo?"
+            },
+            completion: {
+              action_label: "🏴‍☠️ Concludi comunque il ciclo"
+            }
           }
         ],
         reward_screen: {
           headline: "🏴‍☠️ CICLO COMPLETATO!",
           subtitle: "Il Forziere dei Desideri",
           final_read: "La promessa della ciurma brilla sul coperchio del forziere. La Stella della Ciurma vi accompagna nel ciclo che comincia.",
-          close_button: "⛵ Torna alla rotta"
+          close_button: "⛵ Torna alla rotta",
+          fail_headline: "⚓ UNA PROMESSA ANCORA DA LIMARE",
+          fail_subtitle: "Il Forziere dei Desideri — un finale diverso",
+          fail_final_read: "La promessa brilla più debole del previsto, ma la Stella della Ciurma resta comunque vostra. Ci sarà tempo per dirla meglio."
         }
       }
     }

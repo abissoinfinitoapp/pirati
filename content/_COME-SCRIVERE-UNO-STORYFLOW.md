@@ -49,9 +49,12 @@ Per far **riconvergere** i percorsi, basta puntarli alla stessa scena.
 
   scene: {                     // fase SCENE
     read: "Testo da leggere parola per parola.",
-    ask: "Domanda ai bambini.",
-    hints: ["spunto 1", "spunto 2", "spunto 3"],    // servono se c'è 'ask'
-    rescue: "Frase pronta se nessuno parte.",       // serve se c'è 'ask'
+    ask: "Domanda ai bambini.",                     // opzionale: solo etichetta sopra le risposte
+    askOptions: [                                   // RISPOSTE PRONTE, non testo libero (vedi sotto)
+      { id: "a", label: "🍃 Opzione corta per il bottone", reply: "Cosa succede quando la scelgono." },
+      { id: "b", label: "🌊 Seconda opzione", reply: "..." },
+      { id: "c", label: "🍯 Terza opzione", reply: "..." }
+    ],
     masterTip: "Indicazione di regia, discreta."
   },
 
@@ -68,6 +71,7 @@ Per far **riconvergere** i percorsi, basta puntarli alla stessa scena.
   // B) prova → fase RESOLUTION poi OUTCOME
   resolution: {
     policy: "destiny_group_or_dice",         // vedi tabella
+    critical: true,                          // SOLO su policy "dice": la prova decisiva, vedi "Finale alternativo"
     destiny: { group: 60, dice: 40 },        // pesi (per le policy destiny*)
     destiny_screen: {
       title: "✦ Il Destino ascolta la vostra medicina",
@@ -90,6 +94,39 @@ Per far **riconvergere** i percorsi, basta puntarli alla stessa scena.
   completion: { action_label: "🏴‍☠️ Concludi l'avventura" }
 }
 ```
+
+### Domande ai bambini: risposte pronte, non testo libero
+
+`ask` da solo (senza `askOptions` né `choices`) è un errore: era il vecchio schema
+(domanda + `hints` + `rescue` + una casella di testo libero) e il testo scritto lì
+**non veniva mai riletto da nessuna parte** — dato morto. Ora ogni `ask` deve
+portare a qualcosa di scritto:
+
+- Se la domanda è **il bivio vero** della scena (la ciurma decide la strada) →
+  usa `choices` (sopra). La reazione e il percorso (`next`) possono davvero
+  cambiare in base alla scelta.
+- Se la domanda è **un momento di colore** prima di una prova o di un esito
+  fisso (es. "che medicina preparate?", "qual è il piano?") → usa `askOptions`:
+  2-4 bottoni pronti, ognuno con un `reply` scritto che il Master legge subito
+  dopo il click. Non cambiano `next` (la scena prosegue come prima), ma danno
+  sempre una vera reazione invece di una nota mai riletta.
+
+### Finale alternativo: non si vince sempre
+
+Ogni `storyFlow` deve avere **almeno una prova a dadi obbligatoria**
+(`resolution.policy: "dice"` con `resolution.critical: true` — non una
+`destiny*`, che il Destino potrebbe far evitare del tutto). Di solito è
+l'ultima prova prima del finale, quella che tutti i percorsi attraversano.
+
+Se quella prova fallisce, `outcomes.fail_forward.next` NON deve riconvergere
+sul finale normale: deve puntare a una **scena finale alternativa**, con il suo
+`completion`, scritta con un tono più sobrio (non trionfale, ma mai punitivo:
+nessuno si fa male, nessun game over). Il motore si occupa del resto da solo:
+riconosce che la prova decisiva è fallita e assegna un bottino ridotto (solo
+monete, dimezzate — niente loot/trofeo/potere). Per personalizzare i testi
+della schermata premi in quel caso, aggiungi a `reward_screen`:
+`fail_headline`, `fail_subtitle`, `fail_final_read` (altrimenti il motore usa
+un testo generico).
 
 ### Avvistamento piratesco (`type: "raid"`)
 
@@ -162,13 +199,16 @@ Si impostano nei campi `audio` di `outcome` / `outcomes.*`.
 ## Regole d'oro
 
 - **4-7 scene**. 1-2 bivi veri, che riconvergono.
-- Ogni `ask` ha `hints` **e** `rescue`.
-- Ogni `choice` ha `reaction_title` + `reaction`.
-- Non tutte le scene hanno un dado.
-- Un `fail_forward` è un esito completo, mai un blocco.
+- Ogni `ask` ha `askOptions` (risposte pronte) **oppure** è affiancato da `choices`.
+- Ogni `choice` e ogni `askOptions[]` ha `reaction`/`reply` scritto.
+- Non tutte le scene hanno un dado — ma almeno UNA prova per quest è `dice` + `critical: true`.
+- Un `fail_forward` è un esito completo, mai un blocco. Quello della prova
+  `critical` porta a un finale alternativo (vedi sopra), gli altri possono
+  riconvergere come prima.
 
 ## Controllo
 
 `PIRATI.report()` in console (F12) dice quante quest sono "guidate" e segnala:
-`ask` senza `hints`/`rescue`, `next` verso scene inesistenti, scene
-irraggiungibili, `policy` sconosciuta.
+`ask` senza `askOptions`/`choices`, `askOptions` senza `label`/`reply`,
+storyFlow senza prova decisiva (`resolution.critical`), `next` verso scene
+inesistenti, scene irraggiungibili, `policy` sconosciuta.
