@@ -4,7 +4,6 @@ const core = require("../engine/domandona-core.js");
 
 test("withDomandonaDefaults inizializza lo stato e non condivide array col salvataggio", () => {
   const empty = core.withDomandonaDefaults({});
-  assert.equal(empty.tickets, 0);
   assert.equal(empty.pending, null);
   assert.deepEqual(empty.solvedIds, []);
 
@@ -15,8 +14,7 @@ test("withDomandonaDefaults inizializza lo stato e non condivide array col salva
 });
 
 test("withDomandonaDefaults scarta valori corrotti", () => {
-  const out = core.withDomandonaDefaults({ tickets: -3, solvedIds: "boh", pending: { questionId: 5 } });
-  assert.equal(out.tickets, 0);
+  const out = core.withDomandonaDefaults({ solvedIds: "boh", pending: { questionId: 5 } });
   assert.deepEqual(out.solvedIds, []);
   assert.equal(out.pending, null, "un pending senza questionId testuale non e' valido");
 });

@@ -28,6 +28,18 @@ test("il primo fallimento porta alla seconda scelta, il secondo chiude", () => {
   assert.deepEqual(core.resolveAttempt(6, 6, 2), { success: true, nextPhase: "result" });
 });
 
+test("raidLossPenalty: un quarto del carico in monete, mai più di quel che c'è nel forziere", () => {
+  const ship = { rewards: [{ type: "coins", amount: 800000 }, { type: "loot", id: "x" }] };
+  assert.equal(core.raidLossPenalty(ship, 1000000), 200000);
+  assert.equal(core.raidLossPenalty(ship, 100000), 100000, "non può scendere sotto zero: si limita a quel che c'è");
+  assert.equal(core.raidLossPenalty(ship, 0), 0);
+});
+
+test("raidLossPenalty: se la nave non ha monete tra i premi usa una base di sicurezza", () => {
+  const ship = { rewards: [{ type: "loot", id: "solo-oggetto" }] };
+  assert.equal(core.raidLossPenalty(ship, 999999999), 25000);
+});
+
 test("withRaidDefaults inizializza lo stato e conserva valori validi", () => {
   assert.deepEqual(core.withRaidDefaults({}), {
     usedDay: null,

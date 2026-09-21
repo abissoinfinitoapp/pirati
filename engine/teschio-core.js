@@ -50,20 +50,43 @@
     return pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
   }
 
-  /* Applica l'esito dello show: monete personali a chi ha tenuto, piu' un
-     premio-consolazione al "crollo piu' buffo" scelto dal Master (opzionale).
-     Muta lo stato passato (come applyRaidRewardsOnce). */
-  function applyShowRewards(state, sfida, passerIds, buffoId) {
+  /* Applica l'esito dello show: chi ha tenuto (o il "crollo piu' buffo") si
+     tiene META' di quello che guadagna come monete personali; l'altra meta'
+     va in un fondo comune diviso in parti uguali tra TUTTI i pirati attivi
+     oggi, tenuto o no. Cosi' nessuno resta mai a zero: i piu' bravi diventano
+     solo un po' piu' ricchi. Muta lo stato passato (come applyRaidRewardsOnce). */
+  function applyShowRewards(state, sfida, passerIds, buffoId, activeIds) {
     if (!state || typeof state !== "object" || !Array.isArray(state.players) || !sfida) return { total: 0 };
     const premio = Number(sfida.premio) || 0;
     const consolazione = Math.round(premio / 2);
     const passers = new Set(Array.isArray(passerIds) ? passerIds : []);
-    let total = 0;
+    const active = Array.isArray(activeIds) && activeIds.length ? activeIds : state.players.map((p) => p.id);
+
+    let personalTotal = 0;
+    let poolTotal = 0;
     state.players.forEach((p) => {
-      if (passers.has(p.id)) { p.coins = (Number(p.coins) || 0) + premio; total += premio; }
-      else if (buffoId && p.id === buffoId) { p.coins = (Number(p.coins) || 0) + consolazione; total += consolazione; }
+      let earned = 0;
+      if (passers.has(p.id)) earned = premio;
+      else if (buffoId && p.id === buffoId) earned = consolazione;
+      if (earned > 0) {
+        const personal = Math.round(earned / 2);
+        p.coins = (Number(p.coins) || 0) + personal;
+        personalTotal += personal;
+        poolTotal += earned - personal;
+      }
     });
-    return { total, premio, consolazione };
+
+    const heads = Math.max(1, active.length);
+    const each = Math.floor(poolTotal / heads);
+    let poolGiven = 0;
+    if (each > 0) {
+      active.forEach((id) => {
+        const p = state.players.find((pp) => pp.id === id);
+        if (p) { p.coins = (Number(p.coins) || 0) + each; poolGiven += each; }
+      });
+    }
+
+    return { total: personalTotal + poolGiven, premio, consolazione, pool: poolTotal, each, heads };
   }
 
   return { withTeschioDefaults, dayAvailable, pickSfida, pickFaccia, applyShowRewards };

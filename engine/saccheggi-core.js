@@ -35,6 +35,20 @@
     return { success, nextPhase: success || attempt >= 2 ? "result" : "retry-choice" };
   }
 
+  const LOSS_PENALTY_FRACTION = 0.25; // chi perde il saccheggio (secondo tentativo fallito) paga: la nave si vendica
+  const LOSS_PENALTY_FALLBACK = 100000; // se la nave non avesse un premio in monete da cui calcolarlo
+
+  /* Quante monete perde la ciurma quando il SECONDO tentativo fallisce: una
+     quota del carico che stava provando a rubare (più la nave era ricca,
+     più fa male tornare a mani vuote), mai più di quel che il forziere
+     comune ha davvero. */
+  function raidLossPenalty(ship, coinsAvailable) {
+    const rewards = ship && Array.isArray(ship.rewards) ? ship.rewards : [];
+    const coinsReward = rewards.reduce((sum, r) => sum + (r && r.type === "coins" && Number.isFinite(r.amount) ? r.amount : 0), 0);
+    const raw = Math.round((coinsReward || LOSS_PENALTY_FALLBACK) * LOSS_PENALTY_FRACTION);
+    return Math.max(0, Math.min(raw, Math.max(0, Number(coinsAvailable) || 0)));
+  }
+
   function raidFocusTargetIndex(currentIndex, focusableCount, backwards) {
     const count = Number.isInteger(focusableCount) && focusableCount > 0 ? focusableCount : 0;
     if (!count) return -1;
@@ -175,5 +189,5 @@
     return true;
   }
 
-  return { dayAvailable, pickPair, scoreRolls, resolveAttempt, raidFocusTargetIndex, raidViewModel, withRaidDefaults, applyRaidRewardsOnce };
+  return { dayAvailable, pickPair, scoreRolls, resolveAttempt, raidLossPenalty, raidFocusTargetIndex, raidViewModel, withRaidDefaults, applyRaidRewardsOnce };
 });

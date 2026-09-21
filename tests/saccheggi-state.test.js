@@ -49,6 +49,7 @@ function appHarness(savedState) {
   runScript(context, "engine/pirati-core.js");
   runScript(context, "engine/saccheggi-core.js");
   runScript(context, "engine/belarda-core.js");
+  runScript(context, "engine/nave-core.js");
   runScript(context, "engine/domandona-core.js");
   runScript(context, "engine/negozio-core.js");
   runScript(context, "engine/teschio-core.js");
@@ -56,6 +57,7 @@ function appHarness(savedState) {
   runScript(context, "catalog/saccheggi.js");
   runScript(context, "catalog/poteri.js");
   runScript(context, "catalog/belarda.js");
+  runScript(context, "catalog/nave.js");
   runScript(context, "catalog/domandona.js");
   runScript(context, "catalog/negozio.js");
   runScript(context, "catalog/teschio.js");
@@ -325,10 +327,34 @@ test("il primo fallimento offre il retry e il secondo chiude senza premio", () =
   api.resolveRaidAttempt();
   assert.equal(api.getState().raid.phase, "result");
   assert.equal(api.getState().raid.outcome.success, false);
-  assert.equal(api.getState().crew.coins, 0);
+  assert.equal(api.getState().crew.coins, 0, "il forziere era già a zero: la penale non può scendere sotto zero");
+  assert.equal(api.getState().raid.outcome.penalty, 0);
   assert.equal(api.getState().fame, 0);
   assert.deepEqual(plain(api.getState().crew.loot), []);
   assert.equal(api.getState().log.length, 1);
+});
+
+test("chi perde il secondo tentativo paga: la nave si vendica e toglie monete dal forziere comune", () => {
+  const { api } = appHarness();
+  api.setState(baseState({ crew: { coins: 5000000, loot: [], powers: [], cardUse: {} } }));
+  api.startRaid("dolce-freddo", "map");
+  api.chooseRaidShip("nave-zucchero-filato"); // rewards: coins 950000 -> penale attesa 237500
+
+  api.setRaidRoll("p1", 1);
+  api.setRaidRoll("p2", 1);
+  api.resolveRaidAttempt(); // primo fallimento: nessuna penale
+  assert.equal(api.getState().crew.coins, 5000000);
+  assert.equal(api.getState().raid.phase, "retry-choice");
+
+  api.chooseRaidShip("nave-zucchero-filato"); // ritenta sulla stessa nave
+  api.setRaidRoll("p1", 1);
+  api.setRaidRoll("p2", 1);
+  api.resolveRaidAttempt(); // secondo fallimento: si perde davvero
+
+  assert.equal(api.getState().raid.phase, "result");
+  assert.equal(api.getState().raid.outcome.success, false);
+  assert.equal(api.getState().raid.outcome.penalty, 237500);
+  assert.equal(api.getState().crew.coins, 5000000 - 237500);
 });
 
 test("resolveRaidAttempt non duplica il Diario quando il premio risulta già applicato", () => {

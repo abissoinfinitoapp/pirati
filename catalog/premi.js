@@ -51,7 +51,26 @@ PIRATI.registerRewards({
     { id: "banderuola-sincera",        name: "Banderuola Sincera",         icon: "🧭", rarity: "comune", text: "Puntata verso chi sta parlando, si gira davvero verso di lui solo se dice la verità." },
     { id: "rete-del-vento",            name: "Rete del Vento",             icon: "🪤", rarity: "raro",   text: "Lanciata in aria, ferma per un momento tutto quello che il vento sta portando via." },
     { id: "pacchetto-che-non-finisce", name: "Pacchetto che Non Finisce",  icon: "🎁", rarity: "raro",   text: "Dentro c'è sempre il regalo giusto per la persona che hai davanti. Una volta." },
-    { id: "bussola-oltre-i-confini",   name: "Bussola Oltre i Confini",    icon: "🧭", rarity: "epico",  text: "Non punta al nord: punta alla prossima avventura che la ciurma non ha ancora vissuto." }
+    { id: "bussola-oltre-i-confini",   name: "Bussola Oltre i Confini",    icon: "🧭", rarity: "epico",  text: "Non punta al nord: punta alla prossima avventura che la ciurma non ha ancora vissuto." },
+
+    /* --- La casa di Nonna Belarda: quando esplode, tocca a queste ---
+       'id' = nome file in assets/premi/ (e su R2 in img/pirati/premi/), niente
+       corrispondenza col testo del nome: le immagini sono già state disegnate
+       con questi nomi più corti, l'id le segue invece di rinominarle. --- */
+    { id: "barchetta-latta",     name: "Barchetta di Latta",         icon: "🛶", rarity: "comune", image: window.PIRATI_ASSET("premi/barchetta-latta.webp"),        text: "Galleggia davvero in una bacinella: perfetta per provare in anticipo se una rotta è sicura." },
+    { id: "galeone-bottiglia",   name: "Galeone in Bottiglia",       icon: "🍾", rarity: "raro",   image: window.PIRATI_ASSET("premi/galeone-bottiglia.webp"),      text: "Un veliero perfetto, incastrato per sempre dentro il vetro. Nessuno sa come ci sia entrato." },
+    { id: "vascello-sogni",      name: "Vascello dei Sogni",         icon: "⛵", rarity: "epico",  image: window.PIRATI_ASSET("premi/vascello-sogni.webp"),         text: "Tenuto vicino al cuscino, si dice regali il sogno più bello della settimana." },
+    { id: "collana-perle",       name: "Collana di Perle Vere",      icon: "📿", rarity: "raro",   image: window.PIRATI_ASSET("premi/collana-perle.webp"),          text: "Ogni perla è un po' storta: Nonna Belarda giura di averle pescate una a una." },
+    { id: "anello-gemma",        name: "Anello con la Gemma Verde",  icon: "💍", rarity: "epico",  image: window.PIRATI_ASSET("premi/anello-gemma.webp"),           text: "La gemma cambia leggermente colore quando chi lo indossa dice una bugia." },
+    { id: "corona-ammaccata",    name: "Corona Ammaccata",           icon: "👑", rarity: "raro",   image: window.PIRATI_ASSET("premi/corona-ammaccata.webp"),       text: "Ha una punta per ogni pirata della ciurma, tranne una: quella manca da sempre." },
+    { id: "moneta-gigante",      name: "Moneta d'Oro Gigante",       icon: "🪙", rarity: "comune", image: window.PIRATI_ASSET("premi/moneta-gigante.webp"),         text: "Troppo grande per spenderla: va solo mostrata in giro con orgoglio." },
+    { id: "scrigno-velluto",     name: "Scrigno di Velluto",         icon: "🎁", rarity: "raro",   image: window.PIRATI_ASSET("premi/scrigno-velluto.webp"),        text: "Vuoto quando lo trovate: perfetto per custodire il prossimo tesoro della ciurma." },
+    { id: "occhiali-vetro",      name: "Occhiale con un Solo Vetro", icon: "🕶️", rarity: "comune", image: window.PIRATI_ASSET("premi/occhiali-vetro.webp"),         text: "Chi lo indossa vede tutto doppio da un lato e benissimo dall'altro." },
+    { id: "pappagallo-canta",    name: "Pappagallo Impagliato che Canta Ancora", icon: "🦜", rarity: "raro", image: window.PIRATI_ASSET("premi/pappagallo-canta.webp"),  text: "Ogni tanto, senza motivo, intona due note di una vecchia canzone di mare." },
+    { id: "mappa-isola",         name: "Mappa di un'Isola che Non Esiste", icon: "🗺️", rarity: "epico", image: window.PIRATI_ASSET("premi/mappa-isola.webp"),       text: "Segnata con una X bellissima, in un punto dove il mare è solo mare." },
+    { id: "cannocchiale-arruginito", name: "Cannocchiale Arrugginito ma Preciso", icon: "🔭", rarity: "comune", image: window.PIRATI_ASSET("premi/cannocchiale-arruginito.webp"), text: "Scricchiola tutto, ma inquadra le cose lontane meglio di uno nuovo." },
+    { id: "vecchio-timone",      name: "Vecchio Timone di Legno",    icon: "☸️", rarity: "raro",   image: window.PIRATI_ASSET("premi/vecchio-timone.webp"),         text: "Consumato da mille mani: si dice ricordi da solo le rotte già navigate." },
+    { id: "bussola-nord",        name: "Bussola che Punta Sempre a Nord-Ovest", icon: "🧭", rarity: "comune", image: window.PIRATI_ASSET("premi/bussola-nord.webp"),      text: "Rotta o no, l'ago non ne vuole sapere di guardare altrove." }
   ],
 
   /* --- TROFEI: ricordi da appendere nella Sala dei Trofei --------------- */

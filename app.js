@@ -267,64 +267,64 @@ const TUTORIAL_STEPS = [
     icon: "🗺️",
     kicker: "Passo 5 · La mappa",
     title: "La ciurma naviga unita",
-    text: "Sulla mappa c'è una sola pedina per tutto il gruppo. Dal Porto scegliete la rotta, poi TUTTI i pirati in gioco tirano 1d6: la media dei tiri sono le miglia. La nave si muove da sola. Se si ferma su un incontro (mostro, tesoro, evento) o su un'isola con un'avventura, lo risolvete lì.",
+    text: "Sulla mappa c'è una sola pedina per tutto il gruppo. Dal Porto scegliete la rotta, poi TUTTI i pirati in gioco tirano 1d6: la media dei tiri sono le miglia. La nave si muove da sola. Se si ferma su un incontro (mostro, tesoro, evento) o su un'isola con un'avventura, lo risolvete lì: con 1-2 pirati in gioco tira uno solo, da 3 in su tirano TUTTI (media contro la soglia, come per la navigazione) — ai bambini piace tirare i dadi.",
     tip: "I bambini tirano il dado vero sul tavolo e tu premi il numero uscito. Non avete dadi? Nel menu attiva «Dadi digitali»: compare un pulsante «🎲 Tira» e l'app tira al posto vostro."
   },
   {
+    icon: "🚢",
+    kicker: "Passo 6 · La nave della ciurma",
+    title: "Da barchetta a vascello dei sogni",
+    text: "In cima alla Mappa, sempre visibile, c'è la nave della ciurma: parte scalcinata e ha 5 upgrade possibili. Ogni upgrade costa monete del forziere comune E il possesso di 1-2 premi della casa di Nonna Belarda (spariscono dal Bottino, montati sulla nave). Ogni livello dà Velocità (miglia in più quando si naviga) o Forza (bonus nelle prove di Coraggio contro mostri e assalti): all'ultimo livello la nave è più veloce e più forte.",
+    tip: "È un obiettivo a lungo termine, buono per tutta la ciurma insieme: motiva a far esplodere spesso la casa di Nonna Belarda, sperando che tiri fuori proprio il pezzo che serve per il prossimo upgrade."
+  },
+  {
     icon: "⚔️",
-    kicker: "Passo 6 · Navi all'orizzonte",
+    kicker: "Passo 7 · Navi all'orizzonte",
     title: "Il saccheggio del giorno",
-    text: "Una volta per giornata di gioco, sulla Mappa compare «🏴‍☠️ Navi all'orizzonte!». Si avvistano due navi assurde: di ognuna vedete nome, indizio, caratteristica richiesta e difficoltà — ma NON il carico. La ciurma discute e ne sceglie una (la scelta consuma il saccheggio del giorno). Poi tutti tirano 1d6 + caratteristica: la media deve raggiungere la soglia. Se riesce, il bottino è vostro. Se il primo tiro fallisce, scoprite con una risata cosa c'era sulla nave lasciata andare e avete un secondo e ultimo tentativo — sulla stessa nave o inseguendo l'altra.",
-    tip: "Un tiro fallito non toglie mai niente e non alza il Pericolo: è solo una beffa buffa. Lasciate litigare i bambini su quale nave abbordare, è metà del divertimento."
+    text: "Una volta per giornata di gioco, sulla Mappa compare «🏴‍☠️ Navi all'orizzonte!». Si avvistano due navi assurde: di ognuna vedete nome, indizio, caratteristica richiesta e difficoltà — ma NON il carico. La ciurma discute e ne sceglie una (la scelta consuma il saccheggio del giorno). Poi tutti tirano 1d6 + caratteristica: la media deve raggiungere la soglia. Se riesce, il bottino è vostro. Se il primo tiro fallisce, scoprite con una risata cosa c'era sulla nave lasciata andare e avete un secondo e ultimo tentativo — sulla stessa nave o inseguendo l'altra. Se fallisce anche questo, chi perde paga: la nave si vendica e saccheggia voi, -25% del suo carico dal forziere comune.",
+    tip: "Il primo tiro fallito non toglie mai niente, è solo una beffa buffa: la posta in gioco sale solo al secondo e ultimo tentativo. Lasciate litigare i bambini su quale nave abbordare (e su quanto rischiare), è metà del divertimento."
   },
   {
-    icon: "🏚️",
-    kicker: "Passo 7 · La casa di Nonna Belarda",
-    title: "Cianfrusaglie che esplodono in premi",
-    text: "Quasi ogni azione della ciurma — quest, saccheggi, Pesce Crostone, incontri — regala anche qualche kg di cianfrusaglie. Sulla Mappa, sotto la parola del giorno, c'è un secondo pannello a scomparsa: mostra quanti kg avete in giro e quanto pesa la casa di Nonna Belarda su ogni isola. Quando la ciurma sbarca da qualche parte, li consegna tutti a lei. Servono 12.000 kg — cioè 12 tonnellate — per far esplodere una casa: allora la ciurma vince un premio e Nonna Belarda, paziente, la ricostruisce vuota.",
-    tip: "Fate fare la conversione a voce alta: «1.000 kg fanno una tonnellata, quindi ce ne mancano ancora tante». È un modo divertente per far maneggiare ai bambini i numeri grandi e le unità di peso, non solo le monete."
-  },
-  {
-    icon: "🎫",
+    icon: "❓",
     kicker: "Passo 8 · La Nave Domandona",
-    title: "Un biglietto, una domanda, tanti milioni",
-    text: "Ogni volta che la ciurma completa un'avventura riceve un biglietto (li conti nella barra in alto sulla Mappa). Ogni tanto, navigando, si incontra la Nave Domandona: se avete un biglietto potete usarlo per tentare una domanda. Tu leggi la domanda e il primo indizio, i bambini rispondono a voce, tu giudici «giusta» o «sbagliata» (la risposta per te è nascosta in un pieghevole). Se sbagliano non si perde niente: la stessa domanda tornerà con un indizio più chiaro. Se azzeccano, vincono un premio enorme in monete.",
-    tip: "Nel menu puoi scegliere le domande «6-8 anni» o «9-10 anni» con lo stesso interruttore del testo delle avventure (facile / avanzato). Tieni il biglietto se la ciurma non è sicura: la nave ripassa."
+    title: "Per sbarcare, si risponde insieme",
+    text: "Niente più biglietti: per sbarcare su un'isola con un'avventura da fare, la ciurma deve prima rispondere a una domanda della Nave Domandona. Tu leggi la domanda e il primo indizio, i bambini rispondono a voce insieme, tu giudichi «giusta» o «sbagliata» (la risposta per te è nascosta in un pieghevole). Giusta: premio enorme in monete (diviso in parti uguali tra tutti i pirati in gioco) e si sbarca subito. Sbagliata: nessuna penalità, ma stavolta niente sbarco — la ciurma sceglie un'altra rotta e, quando ritenta, la stessa domanda torna con un indizio più chiaro. Ogni tanto la nave si fa vedere anche in mare aperto, senza obbligo: potete rispondere per divertimento o passare oltre.",
+    tip: "Nel menu puoi scegliere le domande «6-8 anni» o «9-10 anni» con lo stesso interruttore del testo delle avventure (facile / avanzato). È diventato un rituale fisso, un po' come il Pesce Crostone: ai bambini piace, lasciateli rispondere in coro."
   },
   {
     icon: "🛍️",
-    kicker: "Passo 9 · Il Negozio delle Cose Inutili",
-    title: "Comprare a valanghe per diventare Capitano",
-    text: "Il premio della Nave Domandona finisce nel borsellino PERSONALE di ogni pirata. Nella sezione Negozio ognuno può spenderlo in oggetti che non servono a niente: unicorni rosa, banane di gomma, action figure. L'unica cosa che conta è la quantità: per un solo punto di Prestigio ne servono centinaia o migliaia. Il primo pirata che arriva a Prestigio 3 diventa il Capitano del giorno e decide le rotte, le risposte e le scelte per tutta la ciurma. Ogni giorno il Prestigio si azzera e riparte la gara. Ogni tanto, navigando, si incontra il Bazar Galleggiante: parte lo «shopping sfrenato», 30 secondi a testa per ogni pirata, così nessuno litiga.",
-    tip: "È qui che i bambini fanno pratica coi numeri grandi: «10 monete l'uno, ma ne servono 5.000...». Aspettati capitani saggi, capitani caotici e qualche sabotatore: fa parte del divertimento."
+    kicker: "Passo 9 · Il Negozio e la casa di Nonna Belarda",
+    title: "Comprare a valanghe, far esplodere la casa",
+    text: "Il premio della Nave Domandona finisce nel borsellino PERSONALE di ogni pirata. Nella sezione Negozio ognuno può spenderlo in oggetti che non servono a niente: unicorni rosa, banane di gomma, action figure. Conta solo la quantità: per un solo punto di Prestigio ne servono centinaia o migliaia, e a Prestigio 3 si diventa Capitano del giorno. In cima alla pagina c'è la casa di Nonna Belarda, disegnata: OGNI oggetto comprato, da chiunque, la fa gonfiare e arrossire un po'. Quando si riempie esplode da sola, e la casa sputa fuori un oggetto nuovo — una nave, un gioiello, una cosa curiosa — che entra nel Bottino di tutta la ciurma: si vede per sempre nel Tesoro, anche chi non ha comprato niente. Ogni giorno il Prestigio si azzera e riparte la gara. Al Bazar Galleggiante (in mare) parte lo «shopping sfrenato», 30 secondi a testa.",
+    tip: "È qui che i bambini fanno pratica coi numeri grandi: «10 monete l'uno, ma ne servono 5.000...». Guardate insieme la casa gonfiarsi: è il segnale che l'esplosione si avvicina."
   },
   {
     icon: "💀",
     kicker: "Passo 10 · Lo Show del Teschio Multicolore",
     title: "20 secondi di follia tutti insieme",
-    text: "Ogni giorno, dalla Mappa (bottone «Show del Teschio» nella barra in alto o casella dedicata), puoi far partire lo show. Il Teschio pesca una sfida assurda e innocua — stare su una gamba sola, dito nel naso, uno scioglilingua in coro. Tu leggi l'annuncio, fai mettere tutti in posizione, e quando sei pronto premi VIA: parte il conto alla rovescia (fa un tic ogni secondo). TUTTI i pirati la fanno insieme. Allo STOP tocchi tu ogni pirata: ha tenuto o è crollato. Chi tiene prende monete personali (soldi per il Negozio); a ogni show si sblocca una «faccia del Teschio» da collezione. Chi crolla non perde niente — anzi, puoi dare mezzo premio al «crollo più buffo».",
+    text: "Ogni giorno, dalla Mappa (bottone «Show del Teschio» nella barra in alto o casella dedicata), puoi far partire lo show. Il Teschio pesca una sfida assurda e innocua — stare su una gamba sola, dito nel naso, uno scioglilingua in coro. Tu leggi l'annuncio, fai mettere tutti in posizione, e quando sei pronto premi VIA: parte il conto alla rovescia (fa un tic ogni secondo). TUTTI i pirati la fanno insieme. Allo STOP tocchi tu ogni pirata: ha tenuto o è crollato. Chi tiene (o il «crollo più buffo») si tiene metà premio; l'altra metà finisce in un fondo comune diviso tra TUTTI i pirati in gioco: nessuno resta mai a zero, chi ha tenuto diventa solo un po' più ricco. A ogni show si sblocca anche una «faccia del Teschio» da collezione.",
     tip: "È la valvola di sfogo: dopo tanto stare seduti, 20 secondi di ciurma che fa la linguaccia rimettono tutti in carreggiata. Nessuna acrobazia, niente di ginnico."
   },
   {
     icon: "📖",
     kicker: "Passo 11 · L'avventura guidata",
     title: "Una scena per volta",
-    text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda (con spunti pronti e un «se nessuno parte»), 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
-    tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Gli spunti servono a te, non ai bambini: usali solo se serve."
+    text: "In Quest scegli l'isola e l'avventura, poi «Comincia l'avventura». L'app ti conduce scena per scena: 📖 leggi il testo alla ciurma, 💬 fai la domanda con risposte già pronte tra cui scegliere, 👉 la ciurma decide. Dopo ogni scelta vedi subito come reagisce il mondo.",
+    tip: "Il riquadro 📖 è scritto per essere letto ad alta voce parola per parola. Le risposte pronte servono a far scegliere i bambini senza restare bloccati: sceglietene una insieme, ad alta voce."
   },
   {
     icon: "🎲",
     kicker: "Passo 12 · Il Destino e i dadi",
     title: "Fallire vuol dire andare avanti diversi",
-    text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare. Un fallimento non blocca mai la storia: aggiunge un costo (Pericolo, una scorciatoia storta, un guaio buffo) e si prosegue.",
-    tip: "Quando esce «complicazione», raccontala come una svolta dell'avventura, non come un errore di qualcuno."
+    text: "In alcune scene, dopo che la ciurma ha scelto, «il Destino decide»: o la loro idea basta così, o serve una prova. Ogni avventura ha almeno una prova a dadi che il Destino non può far evitare: se quella fallisce, l'avventura continua comunque verso un finale diverso (mai un blocco, mai una sconfitta). Nella prova tutti tirano 1d6 e aggiungono la caratteristica: la media deve raggiungere la soglia. Con «Dadi digitali» attivo (nel menu) è l'app a tirare.",
+    tip: "Quando esce «complicazione» o il finale alternativo, raccontalo come una svolta dell'avventura, non come un errore di qualcuno: nessuno perde davvero."
   },
   {
     icon: "🏆",
     kicker: "Passo 13 · Come cresce la ciurma",
     title: "Carte, Potenza, Gradi",
-    text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte finiscono nel Baule dei Poteri (Tesoro): durante una prova puoi giocarne una — toccala per ingrandirla, leggila, poi «Gioca». Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
-    tip: "Alla schermata dei premi leggi ad alta voce i numeri che salgono: monete, Potenza, Grado. È il momento che i bambini aspettano."
+    text: "Ogni pirata ha 3 oggetti personali (uno al giorno, in Oggetti). Le Carte Potere vinte si vedono sempre nel Baule dei Poteri (Tesoro), ma lì sono solo in mostra: per giocarle devono comparire nella mano visibile — sulla Mappa durante un incontro, dentro una quest, dentro una scena di avventura. Toccale per ingrandirle: l'ingrandimento dice sempre cosa fa DAVVERO la carta quando la giochi, e se in questo momento puoi giocarla o no — se non è il momento giusto la carta resta in mano, non si spreca mai. Ogni avventura completata fa salire la Potenza dei pirati e, ogni tot quest, il Grado della ciurma, che sblocca poteri più forti. Alla fine di ogni avventura una schermata ti mostra tutto quello che è cambiato.",
+    tip: "La prima volta che un bambino vince una carta, apritela insieme e leggete a voce alta la riga \"Quando la giochi\": è la spiegazione più chiara di come funziona."
   }
 ];
 
@@ -339,6 +339,7 @@ const BELARDA_CORE = window.PIRATI_BELARDA_CORE;
 const DOMANDONA_CORE = window.PIRATI_DOMANDONA_CORE;
 const NEGOZIO_CORE = window.PIRATI_NEGOZIO_CORE;
 const TESCHIO_CORE = window.PIRATI_TESCHIO_CORE;
+const NAVE_CORE = window.PIRATI_NAVE_CORE;
 const BELARDA_THRESHOLD = 12000; // kg (12 tonnellate) per far esplodere una casa
 const RAID_RETURN_VIEWS = Object.freeze({ map: "mappa", story: "quests" });
 
@@ -401,6 +402,7 @@ const defaultState = {
   },
   raid: RAID_CORE.withRaidDefaults({}),
   belarda: BELARDA_CORE.withBelardaDefaults({}),
+  ship: NAVE_CORE.withShipDefaults({}),   // { level } — la nave della ciurma, 0-5
   domandona: DOMANDONA_CORE.withDomandonaDefaults({}),
   negozioSelectedPlayerId: null,   // quale pirata sta comprando nel Negozio
   negozioSpree: null,              // shopping sfrenato in corso: { queue, idx, endsAt, day }
@@ -483,6 +485,8 @@ function withDefaults(saved) {
     : null;
   merged.negozioSpree = null; // uno shopping sfrenato è in tempo reale: non sopravvive a un ricaricamento
 
+  merged.ship = NAVE_CORE.withShipDefaults(saved && saved.ship);
+
   merged.teschio = TESCHIO_CORE.withTeschioDefaults(saved && saved.teschio);
   merged.teschio.facce = merged.teschio.facce.filter((id) => PIRATI.teschioFaccia(id));
   merged.teschio.recentSfideIds = merged.teschio.recentSfideIds.filter((id) => PIRATI.teschioSfida(id));
@@ -492,11 +496,12 @@ function withDefaults(saved) {
   if (merged.voyage && !merged.voyage.moveRoll) merged.voyage.moveRoll = { rolls: {} };
   if (merged.questCampaign.story && typeof merged.questCampaign.story === "object" && merged.questCampaign.story.questId) {
     const st = merged.questCampaign.story;
-    ["notes", "choices", "destiny", "rolls", "resolved", "cards"].forEach((k) => {
+    ["picks", "choices", "destiny", "rolls", "resolved", "cards"].forEach((k) => {
       if (!st[k] || typeof st[k] !== "object") st[k] = {};
     });
     if (!st.phase) st.phase = "SCENE";
     if (typeof st.step !== "number") st.step = 1;
+    if (typeof st.criticalFailed !== "boolean") st.criticalFailed = false;
   } else {
     merged.questCampaign.story = null;
   }
@@ -555,15 +560,10 @@ function withDefaults(saved) {
 
   merged.belarda = BELARDA_CORE.withBelardaDefaults(saved && saved.belarda);
   merged.belarda.threshold = BELARDA_THRESHOLD; // la soglia è del codice, non del salvataggio
-  const knownIslandIds = belardaIslandIds();
-  Object.keys(merged.belarda.houses).forEach((islandId) => {
-    const fill = merged.belarda.houses[islandId];
-    if (!knownIslandIds.has(islandId) || !Number.isFinite(fill)) { delete merged.belarda.houses[islandId]; return; }
-    merged.belarda.houses[islandId] = Math.max(0, Math.min(merged.belarda.threshold - 1, Math.round(fill)));
-  });
+  merged.belarda.fill = Math.max(0, Math.min(merged.belarda.threshold - 1, Math.round(merged.belarda.fill)));
   if (merged.belarda.lastReveal) {
     const r = merged.belarda.lastReveal;
-    const rewardOk = r && typeof r === "object" && typeof r.islandId === "string" && typeof r.text === "string";
+    const rewardOk = r && typeof r === "object" && typeof r.text === "string";
     merged.belarda.lastReveal = rewardOk ? r : null;
   }
 
@@ -790,14 +790,17 @@ function resolveRaidAttempt() {
   if (resolution.success) {
     const rewardsApplied = RAID_CORE.applyRaidRewardsOnce(state, ship);
     state.raid.phase = "result";
-    if (rewardsApplied) { awardJunk(600); pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`); }
+    if (rewardsApplied) { pushLog(`Saccheggio riuscito contro ${ship.name}. ${ship.success}`); }
   } else if (attempt < 2) {
     state.raid.phase = "retry-choice";
     state.raid.attempt = 2;
     state.raid.rolls = {};
   } else {
     state.raid.phase = "result";
-    pushLog(`Saccheggio concluso senza bottino contro ${ship.name}. ${ship.fail}`);
+    const penalty = RAID_CORE.raidLossPenalty(ship, state.crew.coins);
+    state.crew.coins -= penalty;
+    state.raid.outcome.penalty = penalty;
+    pushLog(`Saccheggio perso contro ${ship.name}: la ciurma nemica si vendica e saccheggia voi, -${fmtCoins(penalty)} monete dal forziere comune. ${ship.fail}`);
   }
   saveState();
 }
@@ -957,7 +960,9 @@ function renderRaid() {
         <p class="eyebrow">${success ? "Abbordaggio riuscito" : "Fuga finale"}</p>
         <h3>${success ? "Bottino conquistato!" : "Le navi spariscono all'orizzonte"}</h3>
         <p>${state.raid.outcome.text}</p>
-        ${success ? `<p class="raid-result-reward"><span>La ciurma ottiene</span><strong>${raidRewardLabel(ship)}</strong></p>` : `<p class="raid-result-reward"><span>Nessuna perdita</span><strong>Domani ci sarà un altro avvistamento.</strong></p>`}
+        ${success
+          ? `<p class="raid-result-reward"><span>La ciurma ottiene</span><strong>${raidRewardLabel(ship)}</strong></p>`
+          : `<p class="raid-result-reward is-penalty"><span>${ship.name} si vendica</span><strong>-${fmtCoins(state.raid.outcome.penalty || 0)} monete dal forziere comune</strong></p>`}
         <p class="raid-score">Media ${Number(state.raid.outcome.average).toFixed(1)} · soglia ${state.raid.outcome.target}</p>
         <button type="button" class="primary-button" data-raid-close>Continua la rotta</button>
       </section>`;
@@ -1409,7 +1414,9 @@ function treasuryTrophiesMarkup() {
 
   const lootCards = lootOwned.length
     ? lootOwned.map(({ entry, reward }) => `<article class="collectible pop-in is-earned rarity-${reward.rarity}">
-        <span class="collectible-icon" aria-hidden="true">${reward.icon}</span>
+        ${reward.image
+          ? `<img class="collectible-image" src="${reward.image}" alt="${reward.name}" loading="lazy" onerror="this.remove()">`
+          : `<span class="collectible-icon" aria-hidden="true">${reward.icon}</span>`}
         <strong>${reward.name}</strong>
         <small>${reward.text}</small>
         <em>Giorno ${entry.day}</em>
@@ -1461,8 +1468,9 @@ function renderMagnifier() {
   if (!magnifierState) { el.hidden = true; el.innerHTML = ""; document.body.classList.remove("magnifier-open"); return; }
   const power = PIRATI.power(magnifierState.powerId);
   if (!power) { el.hidden = true; el.innerHTML = ""; return; }
-  const playable = magnifierState.playAs && !isCardPlayed(power);
+  const known = !power.legendary || ownedPowerIds().has(power.id);
   const spent = magnifierState.playAs && isCardPlayed(power);
+  const readiness = magnifierState.playAs && !spent ? cardReadiness(power, magnifierState.playAs) : null;
   const num = powerNumber(power);
   el.hidden = false;
   document.body.classList.add("magnifier-open");
@@ -1478,8 +1486,10 @@ function renderMagnifier() {
       <figcaption>
         <strong>${power.name}</strong>
         <span class="magnifier-meta">${titleCase(power.category)}${power.grade ? " · Grado " + power.grade : ""}${num ? " · " + num : ""}</span>
-        <p>${power.legendary && !ownedPowerIds().has(power.id) ? power.howTo || power.effect : power.effect}</p>
-        ${playable ? `<button type="button" class="complete-quest-button" data-magnifier-play>▸ Gioca questa carta</button>` : ""}
+        <p>${known ? power.effect : power.howTo || power.effect}</p>
+        ${known ? `<p class="magnifier-mechanic">${cardMechanicText(power)}</p>` : ""}
+        ${readiness && readiness.ok ? `<button type="button" class="complete-quest-button" data-magnifier-play>▸ Gioca questa carta</button>` : ""}
+        ${readiness && !readiness.ok ? `<p class="magnifier-not-now">Non ora: ${readiness.reason}</p>` : ""}
         ${spent ? `<p class="magnifier-spent">Già giocata in questa prova.</p>` : ""}
       </figcaption>
     </figure>`;
@@ -1726,63 +1736,180 @@ function currentIslandId() {
   return null;
 }
 
-/* --- La casa di Nonna Belarda ------------------------------------------- */
+/* --- La casa di Nonna Belarda: vive dentro il Negozio -------------------- */
 
-function belardaIslandIds() {
-  if (!PIRATI.map) return new Set();
-  return new Set(Object.values(PIRATI.map.nodes).filter((n) => !n.home).map((n) => n.island));
-}
-
-function belardaIslandNodes() {
-  if (!PIRATI.map) return [];
-  return Object.values(PIRATI.map.nodes).filter((n) => !n.home);
-}
-
-/* Ogni azione che regala qualcosa alla ciurma le regala anche un po' di
-   cianfrusaglie: si accumulano finché non si sbarca su un'isola. */
-function awardJunk(amount) {
+/* Ogni oggetto comprato al Negozio pesa KG_PER_ITEM in cianfrusaglie, a
+   prescindere dal prezzo: conta la quantità, non il valore (coerente col
+   Prestigio). Se la casa esplode, applica il premio. */
+function addBelardaWeight(amount) {
   if (!state.belarda || !(amount > 0)) return;
-  state.belarda.pending = (Number(state.belarda.pending) || 0) + amount;
+  const result = BELARDA_CORE.addWeight(state.belarda, amount);
+  state.belarda.fill = result.fill;
+  if (result.exploded) explodeBelardaHouse(result);
 }
 
+/* Le monete di un'esplosione sono un premio della ciurma per aver fatto
+   girare l'economia insieme: si dividono sempre in parti uguali tra TUTTI i
+   pirati attivi oggi (borsellino personale), comprato o no — nessuno resta
+   a zero. Fama e loot restano condivisi come sempre. */
 function applyBelardaReward(entry) {
-  const crew = state.crew;
   const gained = [];
   (entry.rewards || []).forEach((item) => {
-    if (item.type === "coins") { crew.coins += item.amount; gained.push(`${fmtCoins(item.amount)} monete`); }
-    else if (item.type === "fame") { state.fame += item.amount; gained.push(`${item.amount} Fama`); }
+    if (item.type === "coins") {
+      const shareHolders = activePlayers().length ? activePlayers() : state.players;
+      const heads = Math.max(1, shareHolders.length);
+      const each = Math.floor(item.amount / heads);
+      shareHolders.forEach((p) => { p.coins = (p.coins || 0) + each; });
+      gained.push(`${fmtCoins(item.amount)} monete divise tra ${heads} pirati (${fmtCoins(each)} a testa, borsellino personale)`);
+    } else if (item.type === "fame") { state.fame += item.amount; gained.push(`${item.amount} Fama`); }
     else if (item.type === "loot") {
       const def = PIRATI.reward(item.id);
-      if (def) { crew.loot.push({ id: item.id, questId: null, day: state.day }); gained.push(def.name); }
+      if (def) { state.crew.loot.push({ id: item.id, questId: null, day: state.day }); gained.push(def.name); }
     }
   });
   return gained;
 }
 
-/* Consegna le cianfrusaglie in sospeso alla casa di Nonna Belarda sull'isola
-   appena raggiunta. Se la casa esplode, assegna un premio e la fa ricostruire
-   (l'eccesso resta nella casa nuova, non si perde). Ritorna una frase da
-   aggiungere al messaggio della mappa solo se la casa è appena esplosa. */
-function deliverJunkToIsland(node) {
-  if (!node || node.home || !state.belarda.pending) return "";
-  const result = BELARDA_CORE.deliverJunk(state.belarda, node.island);
-  if (!result) return "";
-  const delivered = state.belarda.pending;
-  state.belarda.houses = result.houses;
-  state.belarda.pending = 0;
-  if (!result.exploded) {
-    pushLog(`Consegnati ${fmtKg(delivered)} di cianfrusaglie alla casa di Nonna Belarda su ${node.name} (${fmtKg(result.after)} su ${fmtKg(state.belarda.threshold)} · ${fmtTonnellate(result.after)} t su ${fmtTonnellate(state.belarda.threshold)} t).`);
-    return "";
-  }
+function explodeBelardaHouse(result) {
   const entry = BELARDA_CORE.pickReward(PIRATI.belardaLoot, state.belarda.recentRewardIds);
   state.belarda.explosions = (state.belarda.explosions || 0) + 1;
   if (entry) state.belarda.recentRewardIds = state.belarda.recentRewardIds.concat(entry.id).slice(-2);
   const gained = entry ? applyBelardaReward(entry) : [];
-  state.belarda.lastReveal = { islandId: node.island, islandName: node.name, day: state.day, text: entry ? entry.text : "", gained };
+  state.belarda.lastReveal = { day: state.day, text: entry ? entry.text : "", gained };
   sfx("trionfo");
-  const note = `🏚️ La casa di Nonna Belarda su ${node.name} esplode con oltre ${fmtTonnellate(result.filled)} tonnellate di cianfrusaglie!${entry ? " " + entry.text : ""}`;
-  pushLog(`${note} Premi: ${gained.length ? gained.join(", ") : "—"}. Nonna Belarda, paziente, ricomincia a riempirla.`);
-  return note;
+  const note = `🏚️ La casa di Nonna Belarda esplode con oltre ${fmtTonnellate(result.filled)} tonnellate di cianfrusaglie!${entry ? " " + entry.text : ""}`;
+  pushLog(`${note} Premi: ${gained.length ? gained.join(", ") : "—"}. Nonna Belarda, paziente, la ricostruisce vuota.`);
+}
+
+/* Colore della casa: da un marrone tranquillo a un rosso acceso man mano che
+   si avvicina alla soglia. Usato sia nella barra sia nell'SVG. */
+function belardaFillColor(pct) {
+  const calm = [178, 138, 92];   // marrone cianfrusaglie
+  const danger = [214, 69, 69];  // rosso pericolo
+  const t = Math.max(0, Math.min(1, pct / 100));
+  const mix = calm.map((c, i) => Math.round(c + (danger[i] - c) * t));
+  return `rgb(${mix[0]},${mix[1]},${mix[2]})`;
+}
+
+/* Casa di Nonna Belarda: un'unica casa SVG in cima al Negozio, che si gonfia
+   e arrossisce man mano che si riempie. Esplode da sola quando si compra. */
+function belardaHouseMarkup() {
+  const b = state.belarda;
+  const fill = Math.min(b.threshold, b.fill || 0);
+  const pct = Math.max(0, Math.min(100, Math.round((fill / b.threshold) * 100)));
+  const scale = (0.82 + (pct / 100) * 0.36).toFixed(3);
+  const color = belardaFillColor(pct);
+
+  const reveal = b.lastReveal ? `
+    <div class="belarda-reveal">
+      <p class="eyebrow">La casa è appena esplosa!</p>
+      <p class="belarda-reveal-text">🏚️ ${b.lastReveal.text}</p>
+      ${b.lastReveal.gained.length ? `<p class="belarda-reveal-gained">Premi: ${b.lastReveal.gained.join(", ")}.</p>` : ""}
+      <button type="button" class="secondary-button" data-belarda-dismiss>Va bene, richiudi l'avviso</button>
+    </div>` : "";
+
+  return `
+    <div class="belarda-house-card ${pct >= 85 ? "is-swelling" : ""}">
+      <svg class="belarda-house-svg" viewBox="0 0 120 100" role="img" aria-label="Casa di Nonna Belarda: ${fmtKg(fill)} su ${fmtKg(b.threshold)}, ${pct}%">
+        <g transform="translate(60 84) scale(${scale}) translate(-60 -84)">
+          <polygon points="60,26 18,58 102,58" fill="#5b3a29"/>
+          <rect x="28" y="58" width="64" height="34" fill="${color}"/>
+          <rect x="53" y="72" width="14" height="20" fill="#3a2417"/>
+          <rect x="35" y="66" width="12" height="12" fill="#fef6e4"/>
+          <rect x="73" y="66" width="12" height="12" fill="#fef6e4"/>
+        </g>
+      </svg>
+      <div class="belarda-house-info">
+        <p class="belarda-house-title">🏚️ La casa di Nonna Belarda</p>
+        <div class="belarda-house-bar"><i style="width:${pct}%; background:${color}"></i></div>
+        <p class="belarda-house-val">${fmtKg(fill)} su ${fmtKg(b.threshold)} · ${fmtTonnellate(fill)} t su ${fmtTonnellate(b.threshold)} t${b.explosions ? ` · esplosa ${b.explosions} volt${b.explosions === 1 ? "a" : "e"}` : ""}</p>
+      </div>
+    </div>
+    ${reveal}`;
+}
+
+function dismissBelardaReveal() {
+  if (!state.belarda || !state.belarda.lastReveal) return;
+  state.belarda.lastReveal = null;
+  saveState();
+  renderNegozio();
+}
+
+/* --- La nave della ciurma: 6 livelli, sempre visibile sulla Mappa -------- */
+
+function currentShipUpgrade() {
+  return PIRATI.shipUpgrade(state.ship.level) || PIRATI.shipUpgrade(0);
+}
+function nextShipUpgrade() {
+  return PIRATI.shipUpgrade(state.ship.level + 1);
+}
+function shipBonuses() {
+  return NAVE_CORE.totalBonus(PIRATI.shipUpgrades, state.ship.level);
+}
+function shipSpeedBonus() { return shipBonuses().speed; }
+function shipStrengthBonus() { return shipBonuses().strength; }
+
+function upgradeShipEligibility() {
+  const next = nextShipUpgrade();
+  if (!next) return { ok: false, maxed: true };
+  return { ...NAVE_CORE.canUpgrade(state.ship.level, next, state.crew.coins, state.crew.loot.map((l) => l.id)), next };
+}
+
+function upgradeShip() {
+  const { ok, next } = upgradeShipEligibility();
+  if (!ok || !next) return;
+  state.crew.coins -= next.cost;
+  (next.requires || []).forEach((id) => {
+    const i = state.crew.loot.findIndex((entry) => entry.id === id);
+    if (i >= 0) state.crew.loot.splice(i, 1);
+  });
+  state.ship.level = next.level;
+  sfx("trionfo");
+  const bonusTxt = [next.speed ? `+${next.speed} Velocità` : "", next.strength ? `+${next.strength} Forza` : ""].filter(Boolean).join(", ");
+  pushLog(`La nave della ciurma diventa "${next.name}"! ${next.text}${bonusTxt ? ` (${bonusTxt})` : ""}`);
+  saveState();
+  renderMap();
+}
+
+function shipCardMarkup() {
+  const cur = currentShipUpgrade();
+  const next = nextShipUpgrade();
+  const bonus = shipBonuses();
+  const badges = [
+    bonus.speed ? `<span class="ship-badge">💨 Velocità +${bonus.speed}</span>` : "",
+    bonus.strength ? `<span class="ship-badge">💪 Forza +${bonus.strength}</span>` : ""
+  ].filter(Boolean).join("");
+
+  let teaser = "";
+  if (next) {
+    const elig = upgradeShipEligibility();
+    const missing = new Set(elig.missingItemIds || []);
+    const itemChips = (next.requires || []).map((id) => {
+      const def = PIRATI.reward(id);
+      const have = !missing.has(id);
+      return `<span class="ship-req-chip ${have ? "is-owned" : "is-missing"}">${have ? "✓" : "✗"} ${def ? def.name : id}</span>`;
+    }).join("");
+    teaser = `
+      <div class="ship-next">
+        <p class="ship-next-title">Prossimo: <strong>${next.name}</strong></p>
+        <p class="ship-next-cost ${elig.missingCoins ? "is-missing" : "is-owned"}">${elig.missingCoins ? `Mancano ${fmtCoins(elig.missingCoins)} monete` : `✓ ${fmtCoins(next.cost)} monete`}</p>
+        <div class="ship-req-row">${itemChips}</div>
+        <button type="button" class="primary-button" data-ship-upgrade ${elig.ok ? "" : "disabled"}>⚓ Aggiorna la nave!</button>
+      </div>`;
+  } else {
+    teaser = `<p class="ship-next-title is-max">⭐ La nave più bella dei sette mari: livello massimo raggiunto.</p>`;
+  }
+
+  return `
+    <div class="ship-card">
+      ${cur.image ? `<img class="ship-image" src="${cur.image}" alt="${cur.name}" loading="lazy" onerror="this.remove()">` : ""}
+      <div class="ship-info">
+        <p class="ship-title">🚢 ${cur.name} <small>livello ${state.ship.level}/5</small></p>
+        <p class="ship-text">${cur.text}</p>
+        ${badges ? `<div class="ship-badges">${badges}</div>` : ""}
+        ${teaser}
+      </div>
+    </div>`;
 }
 
 /* Movimento: tutti i pirati in gioco tirano, la media = miglia nautiche. */
@@ -1805,10 +1932,11 @@ function doCrewMove() {
   const avg = rolls.reduce((a, b) => a + b, 0) / rolls.length;
   const base = Math.max(1, Math.round(avg));
   const hasPass = ((state.crostone && state.crostone.pass) || []).includes(state.day);
-  const miles = hasPass ? base + 1 : base;
+  const speedBonus = shipSpeedBonus();
+  const miles = base + (hasPass ? 1 : 0) + speedBonus;
   v.moveRoll = { rolls: {} };
   sfx("salpa");
-  pushLog(`Navigazione: ${rolls.join(" + ")} → media ${avg.toFixed(1)} → ${base} miglia${hasPass ? " +1 (lasciapassare del Pesce Crostone)" : ""} → ${miles} miglia.`);
+  pushLog(`Navigazione: ${rolls.join(" + ")} → media ${avg.toFixed(1)} → ${base} miglia${hasPass ? " +1 (lasciapassare del Pesce Crostone)" : ""}${speedBonus ? ` +${speedBonus} (nave)` : ""} → ${miles} miglia.`);
   sail(miles, { crew: true, avg });
 }
 
@@ -1874,12 +2002,10 @@ function handleArrival(nodeId) {
     v.message = `Approdate al ${node.name}. Base sicura: rifornimenti +2, Pericolo ${before} → ${state.session.danger}. Scegliete la prossima rotta.`;
     pushLog(`La ciurma rientra al ${node.name}. Rifornimenti e riposo.`);
   } else if (nextIslandQuestId(node.island)) {
-    v.message = `Approdate a ${node.name}. C'è un'avventura che vi aspetta: sbarcate a esplorare o proseguite in mare?`;
+    v.message = `Approdate a ${node.name}. C'è un'avventura che vi aspetta: per sbarcare dovrete prima rispondere alla Nave Domandona.`;
   } else {
     v.message = `Approdate a ${node.name}. Qui avete già fatto tutto: scegliete dove salpare.`;
   }
-  const belardaNote = deliverJunkToIsland(node);
-  if (belardaNote) v.message += ` ${belardaNote}`;
   openRouteChoice();
 }
 
@@ -1890,7 +2016,10 @@ function openRouteChoice() {
   const node = PIRATI.mapNode(cur.node);
   const options = [];
 
-  if (loopSpaces(cur.node).length && nextIslandQuestId(node.island)) {
+  // Se la Nave Domandona ha appena respinto lo sbarco, questa volta non si
+  // ripropone: bisogna scegliere un'altra rotta (si ritenta a un altro giro).
+  const gateBlocked = v.gateBlockedNode === cur.node;
+  if (loopSpaces(cur.node).length && nextIslandQuestId(node.island) && !gateBlocked) {
     options.push({ label: `⚑ Sbarca ed esplora ${node.name}`, kind: "loop", node: cur.node });
   }
   PIRATI.legsFrom(cur.node).forEach((leg) => {
@@ -1910,14 +2039,14 @@ function chooseRoute(index) {
   const v = voyage();
   const opt = (v.choosing || [])[index];
   if (!opt) return;
-  if (opt.kind === "loop") {
-    v.cursor = { at: "loop", node: opt.node, i: 0 };  // 0 = costa, sicura
-    v.message = `Sbarcate su ${PIRATI.mapNode(opt.node).name}. Tirate il dado per avanzare sull'isola.`;
-  } else {
-    v.cursor = { at: "leg", leg: opt.leg, dir: opt.dir, i: -1 };
-    v.message = `Rotta tracciata verso ${PIRATI.mapNode(legEndNode(opt.leg, opt.dir)).name}. Tirate il dado per navigare.`;
-  }
   v.choosing = null;
+  if (opt.kind === "loop") {
+    startIslandGate(opt.node); // prima la Nave Domandona, poi (se va bene) si sbarca
+    return;
+  }
+  v.gateBlockedNode = null;
+  v.cursor = { at: "leg", leg: opt.leg, dir: opt.dir, i: -1 };
+  v.message = `Rotta tracciata verso ${PIRATI.mapNode(legEndNode(opt.leg, opt.dir)).name}. Tirate il dado per navigare.`;
   saveState();
   renderMap();
 }
@@ -1989,16 +2118,51 @@ function bumpEncounter() {
   state.crew.encounterCount = (state.crew.encounterCount || 0) + 1;
 }
 
+/* Spiega, prima di giocarla, cosa farà davvero una carta (indipendente dal
+   contesto: usato anche solo per leggerla nel Baule dei Poteri). */
+function cardMechanicText(power) {
+  const p = power.play || { type: "narrative" };
+  if (p.type === "bonus") return `Quando la giochi: +${p.amount}${p.stat ? " " + titleCase(p.stat) : ""} al tiro in corso. Serve un tiro di dado già iniziato.`;
+  if (p.type === "teambonus") return `Quando la giochi: +${p.amount} al tiro di tutta la ciurma in corso. Serve un tiro di dado già iniziato.`;
+  if (p.type === "skip") return "Quando la giochi: annulla l'incontro in corso, senza tirare il dado.";
+  if (p.type === "auto") return "Quando la giochi: fa vincere subito la prova in corso, senza tirare il dado.";
+  if (p.type === "move") return `Quando la giochi: la nave avanza di ${p.spaces} caselle subito, senza tirare (solo mentre si naviga, non durante un incontro).`;
+  return "Quando la giochi: il Master decide come si applica l'effetto nella storia, leggendo il testo qui sopra.";
+}
+
+/* Si può giocare ORA questa carta nel contesto indicato? Se no, il motivo —
+   così la carta non si consuma mai per niente (vedi playCard). */
+function cardReadiness(power, playAs) {
+  const p = power.play || { type: "narrative" };
+  if (playAs === "map") {
+    const enc = voyage().pending;
+    if (p.type === "bonus" || p.type === "teambonus" || p.type === "auto") {
+      return enc && enc.roll ? { ok: true } : { ok: false, reason: "serve un tiro di dado in corso sulla Mappa." };
+    }
+    if (p.type === "skip") {
+      return enc ? { ok: true } : { ok: false, reason: "serve un incontro in corso da saltare." };
+    }
+    if (p.type === "move") {
+      if (enc) return { ok: false, reason: "non durante un incontro: giocala mentre la nave sta navigando." };
+      if (voyage().cursor.at === "node") return { ok: false, reason: "scegli prima una rotta." };
+      return { ok: true };
+    }
+  }
+  return { ok: true }; // in quest/avventura ogni tipo risolve sempre qualcosa; fuori contesto (Tesoro) non si gioca comunque
+}
+
 function playCard(powerId) {
   const power = PIRATI.power(powerId);
   if (!power || isCardPlayed(power)) return;
-  sfx("star");
   const p = power.play || { type: "narrative" };
   const v = voyage();
   const enc = v.pending;
+  const readiness = cardReadiness(power, "map");
+  if (!readiness.ok) { v.message = `${power.name}: non ora — ${readiness.reason}`; renderMap(); return; }
+  sfx("star");
 
   // --- durante un incontro con tiro: bonus "in gioco" fino alla risoluzione ---
-  if (enc && enc.roll && (p.type === "bonus" || p.type === "teambonus")) {
+  if (p.type === "bonus" || p.type === "teambonus") {
     enc.cardBonuses = enc.cardBonuses || [];
     if (enc.cardBonuses.some((c) => c.id === power.id)) return;
     enc.cardBonuses.push({ id: power.id, name: power.name, amount: p.amount, stat: p.stat || null, team: p.type === "teambonus" });
@@ -2007,7 +2171,7 @@ function playCard(powerId) {
   }
 
   // --- salta l'incontro ---
-  if (enc && p.type === "skip") {
+  if (p.type === "skip") {
     markCardPlayed(power);
     v.pending = null;
     pushLog(`Carta giocata: ${power.name}. ${power.effect}`);
@@ -2016,7 +2180,7 @@ function playCard(powerId) {
   }
 
   // --- successo automatico su questo incontro ---
-  if (enc && enc.roll && p.type === "auto") {
+  if (p.type === "auto") {
     markCardPlayed(power);
     pushLog(`Carta giocata: ${power.name} — successo automatico.`);
     resolveMapEncounter(0, { forcedSuccess: true, cardName: power.name });
@@ -2024,8 +2188,7 @@ function playCard(powerId) {
   }
 
   // --- sposta la nave, quando non c'è un incontro ---
-  if (!enc && p.type === "move") {
-    if (v.cursor.at === "node") { v.message = `Scegli prima una rotta, poi gioca ${power.name}.`; renderMap(); return; }
+  if (p.type === "move") {
     markCardPlayed(power);
     pushLog(`Carta giocata: ${power.name}. La nave avanza di ${p.spaces} caselle senza tiro.`);
     sail(p.spaces);
@@ -2107,41 +2270,43 @@ function domandonaLevel() {
   return state.crew.readingLevel === "avanzato" ? "avanzato" : "facile";
 }
 
-function buildDomandonaEncounter() {
-  const hasTicket = (state.domandona.tickets || 0) > 0;
-  return {
-    kind: "domandona",
-    phase: "arrivo",
-    hasTicket,
-    prompt: hasTicket
-      ? "La Nave Domandona incrocia la vostra rotta: un vecchio veliero coperto di punti interrogativi dipinti a mano. Se avete un biglietto, potete provare a rispondere alla sua domanda."
-      : "La Nave Domandona incrocia la vostra rotta, ma senza un biglietto in mano la ciurma non riesce nemmeno ad avvicinarsi: sparisce di nuovo tra le onde, in attesa di un'altra avventura completata."
-  };
-}
-
-function domandonaUseTicket() {
-  const v = voyage();
-  const enc = v.pending;
-  if (!enc || enc.kind !== "domandona" || enc.phase !== "arrivo" || (state.domandona.tickets || 0) <= 0) return;
-
+/* Sceglie (o riprende) la domanda "in sospeso": se l'ultima risposta era
+   sbagliata, si ripresenta la stessa con un indizio più chiaro, altrimenti
+   se ne pesca una nuova. Ritorna null solo se il catalogo è vuoto per quel
+   livello di lettura (praticamente mai, è solo una rete di sicurezza). */
+function pickDomandonaQuestion() {
   let pending = state.domandona.pending;
   if (!pending) {
     const q = DOMANDONA_CORE.pickQuestion(PIRATI.domandonaQuestions, domandonaLevel(), state.domandona.solvedIds, state.domandona.recentIds);
-    if (!q) {
-      v.message = "La Nave Domandona non ha più domande pronte per oggi: strano davvero. Tirate per proseguire.";
-      v.pending = null;
-      saveState();
-      renderMap();
-      return;
-    }
+    if (!q) return null;
     pending = { questionId: q.id, hintLevel: 0 };
     state.domandona.pending = pending;
   }
+  return { question: PIRATI.domandonaQuestion(pending.questionId), hintLevel: pending.hintLevel };
+}
 
-  state.domandona.tickets -= 1;
-  enc.phase = "domanda";
-  enc.question = PIRATI.domandonaQuestion(pending.questionId);
-  enc.hintLevel = pending.hintLevel;
+/* Incontro casuale in mare aperto: nessun obbligo, si può sempre passare oltre. */
+function buildDomandonaEncounter() {
+  const picked = pickDomandonaQuestion();
+  return picked
+    ? { kind: "domandona", variant: "wander", question: picked.question, hintLevel: picked.hintLevel }
+    : { kind: "domandona", variant: "wander", question: null, hintLevel: 0 };
+}
+
+/* Ingresso obbligatorio a un'isola: si prova a sbarcare, ma prima bisogna
+   rispondere alla Nave Domandona. Se il catalogo non ha proprio nessuna
+   domanda disponibile (rete di sicurezza), si sbarca comunque senza gate. */
+function startIslandGate(nodeId) {
+  const v = voyage();
+  const picked = pickDomandonaQuestion();
+  if (!picked) {
+    v.cursor = { at: "loop", node: nodeId, i: 0 };
+    v.message = `Sbarcate su ${PIRATI.mapNode(nodeId).name}. Tirate il dado per avanzare sull'isola.`;
+    saveState();
+    renderMap();
+    return;
+  }
+  v.pending = { kind: "domandona", variant: "gate", gateNode: nodeId, question: picked.question, hintLevel: picked.hintLevel };
   sfx("quest");
   saveState();
   renderMap();
@@ -2150,7 +2315,7 @@ function domandonaUseTicket() {
 function domandonaGiusta() {
   const v = voyage();
   const enc = v.pending;
-  if (!enc || enc.kind !== "domandona" || enc.phase !== "domanda") return;
+  if (!enc || enc.kind !== "domandona" || !enc.question) return;
   const question = enc.question;
   const shareHolders = activePlayers().length ? activePlayers() : state.players;
   const heads = Math.max(1, shareHolders.length);
@@ -2170,7 +2335,13 @@ function domandonaGiusta() {
   state.domandona.pending = null;
   sfx("trionfo");
   pushLog(`Nave Domandona: «${question.domanda}» — risposta giusta! ${gained.join(", ") || "—"}.`);
-  v.message = `🎉 Risposta giusta! La Nave Domandona festeggia: ${gained.join(", ") || "un premio"}. Ora ognuno può spendere il suo al Negozio delle Cose Inutili. Tirate per proseguire.`;
+  if (enc.variant === "gate") {
+    const node = PIRATI.mapNode(enc.gateNode);
+    v.cursor = { at: "loop", node: enc.gateNode, i: 0 };
+    v.message = `🎉 Risposta giusta! La Nave Domandona vi lascia sbarcare su ${node.name}: ${gained.join(", ") || "un premio"}. Tirate il dado per avanzare sull'isola.`;
+  } else {
+    v.message = `🎉 Risposta giusta! La Nave Domandona festeggia: ${gained.join(", ") || "un premio"}. Ora ognuno può spendere il suo al Negozio delle Cose Inutili. Tirate per proseguire.`;
+  }
   v.pending = null;
   refreshGrade();
   saveState();
@@ -2180,13 +2351,18 @@ function domandonaGiusta() {
 function domandonaSbagliata() {
   const v = voyage();
   const enc = v.pending;
-  if (!enc || enc.kind !== "domandona" || enc.phase !== "domanda") return;
+  if (!enc || enc.kind !== "domandona" || !enc.question) return;
   const question = enc.question;
   const nextHint = DOMANDONA_CORE.bumpHint(enc.hintLevel, question.indizi.length - 1);
   state.domandona.pending = { questionId: question.id, hintLevel: nextHint };
   sfx("fallimento");
   pushLog(`Nave Domandona: «${question.domanda}» — risposta sbagliata, niente premio. Al prossimo incontro un indizio più chiaro.`);
-  v.message = "Risposta sbagliata, ma niente paura: nessuna penalità. La Nave Domandona tornerà a incrociarvi con un indizio più chiaro. Tirate per proseguire.";
+  if (enc.variant === "gate") {
+    v.gateBlockedNode = enc.gateNode;
+    v.message = "Risposta sbagliata: la Nave Domandona non vi lascia sbarcare, stavolta. Niente paura, nessuna penalità: scegliete un'altra rotta, tornerete con un indizio più chiaro.";
+  } else {
+    v.message = "Risposta sbagliata, ma niente paura: nessuna penalità. La Nave Domandona tornerà a incrociarvi con un indizio più chiaro. Tirate per proseguire.";
+  }
   v.pending = null;
   saveState();
   renderMap();
@@ -2209,6 +2385,12 @@ function applySceneWords(text) {
   return parts;
 }
 
+/* Bonus a una caratteristica dai poteri posseduti + (per Coraggio) dalla
+   Forza della nave: mostri e assalti si affrontano anche con lo scafo. */
+function mapStatBonus(stat) {
+  return passiveBonus(stat) + (stat === "coraggio" ? shipStrengthBonus() : 0);
+}
+
 function resolveMapEncounter(die, opts) {
   opts = opts || {};
   const v = voyage();
@@ -2218,7 +2400,7 @@ function resolveMapEncounter(die, opts) {
   if (!player) { v.message = "Aggiungi almeno un pirata in gioco per affrontare l'incontro."; renderMap(); return; }
   const character = getCharacter(player.characterId);
   const stat = enc.roll.stat;
-  const bonus = passiveBonus(stat);
+  const bonus = mapStatBonus(stat);
   const cardList = enc.cardBonuses || [];
   const cardBonus = cardList.reduce((s, c) => s + ((!c.stat || c.stat === stat) ? c.amount : 0), 0);
   cardList.forEach((c) => { const pw = PIRATI.power(c.id); if (pw) markCardPlayed(pw); });
@@ -2227,8 +2409,42 @@ function resolveMapEncounter(die, opts) {
   const cardTxt = cardList.length ? " + " + cardList.map((c) => `${c.amount} (${c.name})`).join(" + ") : "";
   const formula = opts.forcedSuccess
     ? `${opts.cardName || "Carta"}: successo automatico`
-    : `${player.name}: dado ${die} + ${character.stats[stat]} ${stat}${bonus ? " + " + bonus + " poteri" : ""}${cardTxt} = ${total} (soglia ${enc.roll.target})`;
+    : `${player.name}: dado ${die} + ${character.stats[stat]} ${stat}${bonus ? " + " + bonus + " poteri/nave" : ""}${cardTxt} = ${total} (soglia ${enc.roll.target})`;
+  finishMapEncounter(success, formula, enc);
+}
 
+/* Da 3 pirati in gioco in su: tira tutta la ciurma (ai bambini piace tirare
+   i dadi), non solo uno. Media dei risultati contro la soglia, come già per
+   la navigazione e le prove delle avventure. */
+function resolveMapEncounterGroup() {
+  const v = voyage();
+  const enc = v.pending;
+  if (!enc || !enc.roll) return;
+  const roster = activePlayers();
+  if (!roster.length) return;
+  const stat = enc.roll.stat;
+  const rolls = enc.rolls || {};
+  const entries = roster.map((p) => {
+    const character = getCharacter(p.characterId);
+    const die = Number(rolls[p.id]);
+    if (!character || !(die >= 1 && die <= 6)) return null;
+    const statValue = character.stats[stat] || 0;
+    return { name: p.name, die, stat: statValue, total: die + statValue };
+  });
+  if (entries.some((entry) => !entry)) return;
+  const bonus = mapStatBonus(stat);
+  const cardList = enc.cardBonuses || [];
+  const cardBonus = cardList.reduce((s, c) => s + ((!c.stat || c.stat === stat) ? c.amount : 0), 0);
+  cardList.forEach((c) => { const pw = PIRATI.power(c.id); if (pw) markCardPlayed(pw); });
+  const average = entries.reduce((sum, entry) => sum + entry.total, 0) / entries.length + bonus + cardBonus;
+  const success = average >= enc.roll.target;
+  const cardTxt = cardList.length ? " + " + cardList.map((c) => `${c.amount} (${c.name})`).join(" + ") : "";
+  const formula = `${entries.map((entry) => `${entry.name}: ${entry.die}+${entry.stat}`).join(" · ")}${bonus ? " + " + bonus + " poteri/nave" : ""}${cardTxt} → media ${average.toFixed(1)} (soglia ${enc.roll.target})`;
+  finishMapEncounter(success, formula, enc);
+}
+
+function finishMapEncounter(success, formula, enc) {
+  const v = voyage();
   const scene = enc.scene;
   const narrative = scene ? (success ? scene.success : scene.fail) : "";
   const effects = applySceneWords(narrative);
@@ -2238,21 +2454,18 @@ function resolveMapEncounter(die, opts) {
     if (success) {
       const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(500);
       if (enc.treasure) state.crew.loot.push({ id: null, name: enc.treasure.title, text: enc.treasure.text, day: state.day, fromMap: true });
       gains.push(`${fmtCoins(coins)} monete`);
       if (enc.treasure) gains.push(enc.treasure.title);
     } else {
       const coins = (1 + Math.floor(Math.random() * 2)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(150);
       gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "razzia") {
     if (success) {
       const coins = (6 + Math.ceil(Math.random() * 7)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(500);
       gains.push(`${fmtCoins(coins)} monete`);
     }
   } else if (enc.kind === "mostro" || enc.kind === "assalto") {
@@ -2260,7 +2473,6 @@ function resolveMapEncounter(die, opts) {
       state.session.danger = Math.max(0, state.session.danger - 1);
       const coins = (3 + Math.ceil(Math.random() * 4)) * COIN_UNIT;
       state.crew.coins += coins;
-      awardJunk(400);
       gains.push(`${fmtCoins(coins)} monete`, `bottino: ${enc.enemy.reward}`, "Pericolo -1");
     } else {
       const hit = enc.kind === "assalto" ? Math.min(state.crew.coins, (3 + Math.floor(Math.random() * 3)) * COIN_UNIT) : 0;
@@ -2272,7 +2484,6 @@ function resolveMapEncounter(die, opts) {
   } else if (success) { // evento riuscito
     const coins = (3 + Math.ceil(Math.random() * 3)) * COIN_UNIT;
     state.crew.coins += coins;
-    awardJunk(300);
     gains.push(`${fmtCoins(coins)} monete`);
   }
 
@@ -2295,7 +2506,7 @@ function resolveEventChoice(index) {
   if (!options || !options[index]) return;
   const opt = options[index];
   const gains = [];
-  if (opt.coins) { state.crew.coins += opt.coins; if (opt.coins > 0) awardJunk(300); gains.push(`${fmtCoins(opt.coins)} monete`); }
+  if (opt.coins) { state.crew.coins += opt.coins; gains.push(`${fmtCoins(opt.coins)} monete`); }
   if (opt.danger) {
     state.session.danger = Math.min(12, Math.max(0, state.session.danger + opt.danger));
     gains.push(`Pericolo ${opt.danger > 0 ? "+" : ""}${opt.danger}`);
@@ -2420,7 +2631,6 @@ function calmBoss() {
   state.fame += 4;
   const bossCoins = 20 * COIN_UNIT;
   state.crew.coins += bossCoins;
-  awardJunk(3500);
   if (!state.crew.trophies.some((t) => t.id === "sonno-dell-abisso")) {
     state.crew.trophies.push({ id: "sonno-dell-abisso", questId: null, day: state.day });
   }
@@ -2549,7 +2759,8 @@ function renderMap() {
   if ($("#map-potenza-value")) {
     $("#map-potenza-value").textContent = fmtPotenza(state.players.reduce((sum, p) => sum + playerPower(p), 0));
   }
-  if ($("#map-domandona-value")) $("#map-domandona-value").textContent = state.domandona.tickets;
+  const shipBox = $("#map-ship");
+  if (shipBox) shipBox.innerHTML = shipCardMarkup();
   const capBanner = $("#map-captain-banner");
   if (capBanner) {
     const captain = captainOfDay();
@@ -2605,7 +2816,8 @@ function renderMap() {
   const diceBox = $("#map-dice");
   if (diceBox) {
     const bossRoll = v.pending && v.pending.kind === "boss" && v.pending.offerIndex != null;
-    const showDice = (v.pending && v.pending.roll) || bossRoll;
+    const groupRoll = v.pending && v.pending.roll && activePlayers().length >= 3;
+    const showDice = ((v.pending && v.pending.roll) || bossRoll) && !groupRoll;
     diceBox.hidden = !showDice;
     const hint = $("#map-dice-hint");
     if (hint) hint.textContent = bossRoll ? "Il pirata tira 1d6: premi il numero uscito." : "Premi il numero uscito sul dado per risolvere l'incontro.";
@@ -2742,15 +2954,36 @@ function mapEncounterMarkup(enc) {
       <div class="encounter-choices">${options.map((opt, i) => `<button type="button" class="encounter-choice" data-event-choice="${i}">${opt.label}</button>`).join("")}</div>`;
   } else if (enc.roll) {
     const roster = activePlayers();
-    const actorId = enc.actorId || (roster[0] && roster[0].id) || "";
-    const chips = roster.map((player) => {
-      const character = getCharacter(player.characterId);
-      return `<button type="button" class="map-actor-chip ${player.id === actorId ? "is-selected" : ""}" data-map-actor="${player.id}">
-        <strong>${player.name}</strong><small>${character ? character.stats[enc.roll.stat] : 0} ${enc.roll.stat}</small></button>`;
-    }).join("");
-    action = `${enc.roll.act ? `<p class="encounter-act"><strong>${titleCase(enc.roll.stat)} · soglia ${enc.roll.target}</strong> ${enc.roll.act}</p>` : ""}
-      <p class="map-console-label">Tira ${state.players.find((p) => p.id === actorId)?.name || "un pirata"} <small>(il sistema sceglie, tocca un altro per cambiare)</small></p>
-      <div class="map-actor-row">${chips || `<span class="helper-text">Nessun pirata in gioco.</span>`}</div>`;
+    const actHeader = enc.roll.act ? `<p class="encounter-act"><strong>${titleCase(enc.roll.stat)} · soglia ${enc.roll.target}</strong> ${enc.roll.act}</p>` : "";
+    if (roster.length >= 3) {
+      // Ai bambini piace tirare: da 3 pirati in gioco in su tirano tutti, non solo uno.
+      enc.rolls = enc.rolls && typeof enc.rolls === "object" ? enc.rolls : {};
+      const rolls = enc.rolls;
+      const vals = roster.map((p) => Number(rolls[p.id])).filter((n) => n >= 1 && n <= 6);
+      const allIn = vals.length === roster.length;
+      action = `${actHeader}
+        <p class="map-console-label">Tira tutta la ciurma <span class="count-pill">${vals.length}/${roster.length}</span></p>
+        ${diceDigital ? `<button type="button" class="dice-roll-all" data-map-roll-all-group>🎲 Tira i dadi per la ciurma</button>` : ""}
+        ${roster.map((player) => {
+          const character = getCharacter(player.characterId);
+          const cur = Number(rolls[player.id]) || 0;
+          return `<div class="move-roll-row">
+            <span class="move-roll-name">${player.name}<small>${character ? character.stats[enc.roll.stat] : 0} ${enc.roll.stat}</small></span>
+            <span class="move-dice">${[1, 2, 3, 4, 5, 6].map((n) => `<button type="button" class="${cur === n ? "is-picked" : ""}" data-map-group-die="${player.id}:${n}">${n}</button>`).join("")}</span>
+          </div>`;
+        }).join("")}
+        <button type="button" class="primary-button" data-resolve-map-dice ${allIn ? "" : "disabled"}>Calcola la media della ciurma</button>`;
+    } else {
+      const actorId = enc.actorId || (roster[0] && roster[0].id) || "";
+      const chips = roster.map((player) => {
+        const character = getCharacter(player.characterId);
+        return `<button type="button" class="map-actor-chip ${player.id === actorId ? "is-selected" : ""}" data-map-actor="${player.id}">
+          <strong>${player.name}</strong><small>${character ? character.stats[enc.roll.stat] : 0} ${enc.roll.stat}</small></button>`;
+      }).join("");
+      action = `${actHeader}
+        <p class="map-console-label">Tira ${state.players.find((p) => p.id === actorId)?.name || "un pirata"} <small>(il sistema sceglie, tocca un altro per cambiare)</small></p>
+        <div class="map-actor-row">${chips || `<span class="helper-text">Nessun pirata in gioco.</span>`}</div>`;
+    }
   } else {
     action = "";
   }
@@ -2767,30 +3000,34 @@ function mapEncounterMarkup(enc) {
 }
 
 function domandonaEncounterMarkup(enc) {
-  if (enc.phase === "domanda") {
-    const q = enc.question;
-    const hintIndex = Math.min(enc.hintLevel, q.indizi.length - 1);
+  const isGate = enc.variant === "gate";
+  const tag = `<span class="map-encounter-tag">❓ Nave Domandona${isGate ? " · Ingresso all'isola" : ""}</span>`;
+
+  if (!enc.question) {
     return `<div class="map-encounter-card kind-domandona">
       <div class="map-encounter-body">
-        <span class="map-encounter-tag">❓ Nave Domandona</span>
-        <p class="encounter-read">“${q.domanda}”</p>
-        <p class="domandona-hint"><strong>Indizio ${hintIndex + 1} di ${q.indizi.length}</strong> ${q.indizi[hintIndex]}</p>
-        <details class="domandona-answer"><summary>Mostra la risposta (solo per il Master)</summary><p>${q.risposta}</p></details>
-        <p class="map-console-label">Cosa ha risposto la ciurma?</p>
-        <div class="encounter-choices">
-          <button type="button" class="encounter-choice is-good" data-domandona-giusta>✔ Risposta giusta!</button>
-          <button type="button" class="encounter-choice" data-domandona-sbagliata>✘ Risposta sbagliata</button>
-        </div>
+        ${tag}
+        <p class="encounter-read">“La Nave Domandona non ha più domande pronte per oggi: strano davvero.”</p>
+        <button type="button" class="secondary-button" data-map-skip>Passa oltre</button>
       </div>
     </div>`;
   }
+
+  const q = enc.question;
+  const hintIndex = Math.min(enc.hintLevel, q.indizi.length - 1);
   return `<div class="map-encounter-card kind-domandona">
     <div class="map-encounter-body">
-      <span class="map-encounter-tag">❓ Nave Domandona</span>
-      <p class="encounter-read">“${enc.prompt}”</p>
-      ${enc.hasTicket ? `<p class="domandona-ticket-count">🎫 Biglietti in mano: ${state.domandona.tickets}</p>
-        <button type="button" class="primary-button" data-domandona-use-ticket>Usa un biglietto e rispondi</button>` : ""}
-      <button type="button" class="secondary-button" data-map-skip>${enc.hasTicket ? "Non adesso (tieni il biglietto)" : "Passa oltre"}</button>
+      ${tag}
+      ${isGate ? `<p class="encounter-situation">Per sbarcare, la ciurma deve prima rispondere alla Nave Domandona.</p>` : ""}
+      <p class="encounter-read">“${q.domanda}”</p>
+      <p class="domandona-hint"><strong>Indizio ${hintIndex + 1} di ${q.indizi.length}</strong> ${q.indizi[hintIndex]}</p>
+      <details class="domandona-answer"><summary>Mostra la risposta (solo per il Master)</summary><p>${q.risposta}</p></details>
+      <p class="map-console-label">Cosa ha risposto la ciurma?</p>
+      <div class="encounter-choices">
+        <button type="button" class="encounter-choice is-good" data-domandona-giusta>✔ Risposta giusta!</button>
+        <button type="button" class="encounter-choice" data-domandona-sbagliata>✘ Risposta sbagliata</button>
+      </div>
+      ${!isGate ? `<button type="button" class="secondary-button" data-map-skip>Non adesso (tienila per dopo)</button>` : ""}
     </div>
   </div>`;
 }
@@ -2858,7 +3095,7 @@ function teschioEncounterMarkup(enc) {
     return `<div class="map-encounter-card kind-teschio"><div class="map-encounter-body">
       ${tag}
       <p class="encounter-read">“Applausi, applausi! ${chiHaTenuto}!”</p>
-      <p class="teschio-esito-reward">${fmtCoins(enc.reward.total)} monete personali distribuite${enc.buffoId ? " (metà premio al crollo più buffo)" : ""}.</p>
+      <p class="teschio-esito-reward">${fmtCoins(enc.reward.total)} monete personali distribuite: metà a chi ha tenuto${enc.buffoId ? " (o al crollo più buffo)" : ""}, l'altra metà divisa tra <strong>tutti</strong> i pirati in gioco (${fmtCoins(enc.reward.each || 0)} a testa). Nessuno resta senza.</p>
       ${faccia ? `<div class="teschio-faccia-nuova">
         <img src="${faccia.image}" alt="${faccia.nome}" loading="lazy" onerror="this.closest('.teschio-faccia-nuova').classList.add('no-img'); this.remove();">
         <span>Nuova faccia in collezione:<br><strong>${faccia.nome}</strong> (${state.teschio.facce.length}/${PIRATI.teschioFacce.length})</span>
@@ -2915,8 +3152,6 @@ function renderBestiario() {
 
 const CROSTONE_COINS_SUBITO = 5 * COIN_UNIT;    // indovinata al primo colpo (125.000)
 const CROSTONE_COINS_RECUPERO = 3 * COIN_UNIT;  // ripetuta dal Taccuino Nero il giorno dopo (75.000)
-const CROSTONE_JUNK_SUBITO = 500;    // kg per Nonna Belarda, indovinata al primo colpo
-const CROSTONE_JUNK_RECUPERO = 400;  // kg per Nonna Belarda, ripetuta dal Taccuino Nero
 
 function crostoneWord(id) {
   return PIRATI.word(id) || { id, parola: id, significato: "(parola non nel catalogo)", esempio: "", tranello: "" };
@@ -2949,7 +3184,6 @@ function crostoneIndovinata() {
   c.today.status = "vinta";
   if (!c.pass.includes(state.day)) c.pass.push(state.day);
   state.crew.coins += CROSTONE_COINS_SUBITO;
-  awardJunk(CROSTONE_JUNK_SUBITO);
   sfx("win-event");
   pushLog(`Pesce Crostone: la ciurma spiega «${crostoneWord(c.today.wordId).parola}». Lasciapassare ottenuto, +${fmtCoins(CROSTONE_COINS_SUBITO)} monete.`);
   saveState();
@@ -2976,7 +3210,6 @@ function crostoneRecupera(wordId) {
   c.taccuino.splice(i, 1);
   c.libro.push({ wordId, day: state.day, recuperata: true });
   state.crew.coins += CROSTONE_COINS_RECUPERO;
-  awardJunk(CROSTONE_JUNK_RECUPERO);
   pushLog(`Pesce Crostone: la ciurma ripete «${crostoneWord(wordId).parola}». Archiviata nel Libro delle Parole Impossibili, +${fmtCoins(CROSTONE_COINS_RECUPERO)} monete.`);
   saveState();
   lastShownCoins = state.crew.coins - CROSTONE_COINS_RECUPERO;
@@ -3139,71 +3372,6 @@ function mapParolaMarkup(c, t) {
     ${archivi}`;
 }
 
-/* La casa di Nonna Belarda vive in un secondo accordion, subito sotto quello
-   del Pesce Crostone: stesso schema (ricostruisce il corpo solo se cambia
-   qualcosa, così i bambini non perdono l'apertura/chiusura da soli). */
-function renderMapBelarda() {
-  const acc = $("#map-belarda");
-  const body = $("#map-belarda-body");
-  if (!acc || !body) return;
-  const b = state.belarda;
-  const nodes = belardaIslandNodes();
-
-  const statusEl = $("#map-belarda-status");
-  if (statusEl) {
-    const fullest = nodes.map((n) => ({ n, fill: b.houses[n.island] || 0 })).sort((x, y) => y.fill - x.fill)[0];
-    let s = `zaino: ${fmtKg(b.pending)} pronti da consegnare`;
-    if (fullest && fullest.fill > 0) s += ` · ${fullest.n.name} ${fmtKg(fullest.fill)} su ${fmtKg(b.threshold)}`;
-    if (b.explosions) s += ` · esplosa ${b.explosions} volt${b.explosions === 1 ? "a" : "e"}`;
-    statusEl.textContent = s;
-  }
-
-  const sig = JSON.stringify([b.pending, b.houses, b.threshold, b.explosions, b.lastReveal && b.lastReveal.day + b.lastReveal.islandId]);
-  if (acc.dataset.sig !== sig) {
-    acc.dataset.sig = sig;
-    body.innerHTML = mapBelardaMarkup(b, nodes);
-  }
-}
-
-function mapBelardaMarkup(b, nodes) {
-  const reveal = b.lastReveal ? `
-    <div class="crostone-block belarda-reveal">
-      <p class="eyebrow">Ultima esplosione — ${b.lastReveal.islandName}</p>
-      <p class="crostone-verdict">🏚️ ${b.lastReveal.text}</p>
-      ${b.lastReveal.gained.length ? `<p class="crostone-hint">Premi: ${b.lastReveal.gained.join(", ")}.</p>` : ""}
-      <button type="button" class="secondary-button" data-belarda-dismiss>Va bene, richiudi l'avviso</button>
-    </div>` : "";
-
-  const rows = nodes.map((n) => {
-    const fill = Math.min(b.threshold, b.houses[n.island] || 0);
-    const pct = Math.round((fill / b.threshold) * 100);
-    return `<li class="belarda-house">
-      <span class="belarda-house-name">${n.icon || "🏝️"} ${n.name}</span>
-      <span class="belarda-house-bar" role="img" aria-label="${n.name}: ${fmtKg(fill)} (${fmtTonnellate(fill)} t) su ${fmtKg(b.threshold)} (${fmtTonnellate(b.threshold)} t)">
-        <i style="width:${pct}%"></i>
-      </span>
-      <span class="belarda-house-val">${fmtKg(fill)}</span>
-    </li>`;
-  }).join("");
-
-  return `
-    <p class="crostone-intro">Ogni avventura, saccheggio o parola indovinata regala qualche cianfrusaglia in più, in kg. Quando sbarcate su un'isola le consegnate tutte a Nonna Belarda: 1.000 kg fanno 1 tonnellata, e servono <strong>${fmtTonnellate(b.threshold)} tonnellate</strong> (${fmtKg(b.threshold)}) per far scoppiare una casa. Se scoppia, la ciurma vince un premio e lei la ricostruisce, pronta a riempirsi ancora.</p>
-    <div class="crostone-counters">
-      <div><span>Nello zaino</span><strong>${fmtKg(b.pending)}</strong></div>
-      <div><span>Case esplose</span><strong>${b.explosions}</strong></div>
-      <div><span>Soglia per casa</span><strong>${fmtTonnellate(b.threshold)} t</strong></div>
-    </div>
-    ${reveal}
-    <ul class="belarda-houses">${rows}</ul>`;
-}
-
-function dismissBelardaReveal() {
-  if (!state.belarda || !state.belarda.lastReveal) return;
-  state.belarda.lastReveal = null;
-  saveState();
-  render();
-}
-
 /* =========================================================================
    Il Negozio delle Cose Inutili — Prestigio e Capitano del giorno
    ===================================================================== */
@@ -3251,6 +3419,9 @@ function buyShopItem(playerId, itemId, qty) {
   } else {
     pushLog(`${player.name} compra ${amount}× ${item.name} (${fmtCoins(item.price * amount)} monete). Prestigio: ${after.points}.`);
   }
+
+  addBelardaWeight(amount * BELARDA_CORE.KG_PER_ITEM);
+
   saveState();
   render();
 }
@@ -3465,7 +3636,7 @@ function finishTeschioShow() {
   const enc = v.pending;
   if (!enc || enc.kind !== "teschio" || enc.phase !== "giudizio") return;
   const sfida = PIRATI.teschioSfida(enc.sfidaId);
-  const res = TESCHIO_CORE.applyShowRewards(state, sfida, enc.passers, enc.buffoId);
+  const res = TESCHIO_CORE.applyShowRewards(state, sfida, enc.passers, enc.buffoId, activePlayers().map((p) => p.id));
   const faccia = TESCHIO_CORE.pickFaccia(PIRATI.teschioFacce, state.teschio.facce);
   if (faccia && !state.teschio.facce.includes(faccia.id)) state.teschio.facce.push(faccia.id);
   state.teschio.showsFatti = (state.teschio.showsFatti || 0) + 1;
@@ -3473,7 +3644,7 @@ function finishTeschioShow() {
   enc.phase = "esito";
   enc.reward = res;
   const names = enc.passers.map((id) => state.players.find((p) => p.id === id)?.name).filter(Boolean);
-  pushLog(`💀 Il Teschio ha deciso: hanno tenuto ${names.length ? names.join(", ") : "nessuno"}. ${fmtCoins(res.total)} monete personali distribuite${faccia ? `. Nuova faccia: ${faccia.nome}` : ""}.`);
+  pushLog(`💀 Il Teschio ha deciso: hanno tenuto ${names.length ? names.join(", ") : "nessuno"}. ${fmtCoins(res.total)} monete personali distribuite (metà a chi ha tenuto/al più buffo, metà divisa tra tutti i ${res.heads} pirati in gioco: ${fmtCoins(res.each || 0)} a testa)${faccia ? `. Nuova faccia: ${faccia.nome}` : ""}.`);
   sfx("trionfo");
   refreshGrade();
   saveState();
@@ -3520,7 +3691,7 @@ function renderNegozio() {
   if (!body) return;
 
   if (!state.players.length) {
-    body.innerHTML = `<p class="helper-text">Aggiungi i bambini nella sezione Giocatori: qui potranno spendere il premio della Nave Domandona in cose totalmente inutili.</p>`;
+    body.innerHTML = `<p class="helper-text">Aggiungi i bambini nella sezione Giocatori: qui potranno spendere il premio della Nave Domandona in cose totalmente inutili — e far esplodere la casa di Nonna Belarda.</p>`;
     return;
   }
 
@@ -3584,8 +3755,9 @@ function renderNegozio() {
   }).join("");
 
   body.innerHTML = `
+    ${belardaHouseMarkup()}
     ${spreeBar || banner}
-    <p class="negozio-intro">Qui si comprano cose che non servono a niente. L'unica cosa che conta è la <strong>quantità</strong>: per fare un solo punto di Prestigio ne servono a centinaia o a migliaia. A Prestigio ${need} si diventa Capitano del giorno.</p>
+    <p class="negozio-intro">Qui si comprano cose che non servono a niente. L'unica cosa che conta è la <strong>quantità</strong>: per fare un solo punto di Prestigio ne servono a centinaia o a migliaia. A Prestigio ${need} si diventa Capitano del giorno. Ogni oggetto comprato, da chiunque, pesa anche nella casa di Nonna Belarda qui sopra: quando esplode, <strong>tutta la ciurma</strong> trova un oggetto nuovo — navi, gioielli, cose curiose — che finisce nel Bottino di tutti.</p>
     <div class="negozio-players">${playerTabs}</div>
     ${wallet}
     <div class="negozio-grid">${grid}</div>`;
@@ -4077,8 +4249,8 @@ function startStory(questId) {
     sceneId: quest.storyFlow.start,
     phase: "SCENE",
     step: 1,
-    notes: {}, choices: {}, destiny: {}, rolls: {}, resolved: {}, cards: {},
-    completionSnapshot: null
+    picks: {}, choices: {}, destiny: {}, rolls: {}, resolved: {}, cards: {},
+    criticalFailed: false, completionSnapshot: null
   };
   sfx("quest");
   saveState();
@@ -4166,12 +4338,15 @@ function advanceFromChoice() {
   if (chosen && chosen.next) goToScene(chosen.next);
 }
 
-function noteStoryIdea(text) {
+function pickStoryAsk(optionId) {
   const a = activeStory();
   const scene = currentStoryScene();
-  if (!a || !scene) return;
-  a.s.notes[scene.id] = text;
+  const sc = scene && scene.scene;
+  if (!a || !sc || !Array.isArray(sc.askOptions) || !sc.askOptions.some((o) => o.id === optionId)) return;
+  a.s.picks[scene.id] = optionId;
+  sfx("click");
   saveState();
+  renderQuestCycle();
 }
 
 /* Il Destino: pesato, persistente. Esiti: group | narrative | dice */
@@ -4284,6 +4459,7 @@ function finishStoryScene(success, extra) {
   if (extra && extra.breakdown) res.breakdown = extra.breakdown;
   if (extra && extra.card) res.card = extra.card;
   a.s.resolved[scene.id] = res;
+  if (!success && scene.resolution && scene.resolution.critical) a.s.criticalFailed = true;
   if (outcome && outcome.effects) applyStoryEffects(outcome.effects);
   if (outcome && outcome.audio) sfx(outcome.audio);
   else sfx(success ? "win-event" : "fallimento");
@@ -4337,14 +4513,15 @@ function finishStory() {
   if (!a) return;
   if (a.s.completionSnapshot) { a.s.phase = "REWARDS"; saveState(); renderQuestCycle(); return; }
   const questId = a.quest.id;
+  const partial = Boolean(a.s.criticalFailed);    // la prova decisiva e' fallita: finale alternativo, bottino ridotto
   const before = progressSnapshot();
   state.questCampaign.resolution = null;          // guidata = collaborativa: crescita a tutta la ciurma
-  completeQuest(questId, { silent: true });       // idempotente, applica i premi una volta
+  completeQuest(questId, { silent: true, partial }); // idempotente, applica i premi una volta
   const after = progressSnapshot();
   state.questCampaign.revealedQuestId = questId;  // tenuto per la reward screen
-  a.s.completionSnapshot = { before, after };
+  a.s.completionSnapshot = { before, after, partial };
   a.s.phase = "REWARDS";
-  sfx("trionfo");
+  sfx(partial ? "click" : "trionfo");
   if (after.grade > before.grade) sfx("grado");
   saveState();
   renderQuestCycle();
@@ -4420,18 +4597,17 @@ function storyRaidPhaseMarkup(scene) {
 function storyScenePhaseMarkup(scene) {
   const sc = scene.scene || {};
   const a = activeStory();
-  const note = a.s.notes[scene.id] || "";
+  const pickedId = a.s.picks[scene.id];
+  const hasOptions = Array.isArray(sc.askOptions) && sc.askOptions.length;
+  const picked = hasOptions ? sc.askOptions.find((o) => o.id === pickedId) : null;
   let out = "";
   if (sc.read) out += `<div class="story-block story-read"><span class="story-tag">📖 Leggi alla ciurma</span><p>“${sc.read}”</p></div>`;
   if (sc.ask) {
     out += `<div class="story-block story-ask">
       <span class="story-tag">💬 Chiedi ai bambini</span>
       <p class="story-question">${sc.ask}</p>
-      ${(sc.hints || []).length ? `<ul class="story-hints-list">${sc.hints.map((h) => `<li>${h}</li>`).join("")}</ul>` : ""}
-      ${sc.rescue ? `<details class="story-rescue"><summary>⚡ Se nessuno parte</summary><p>“${sc.rescue}”</p></details>` : ""}
-      <label class="story-note-label">Annota l'idea della ciurma (facoltativo)
-        <textarea data-story-note rows="2" placeholder="La parola, il piano o la trovata dei bambini...">${note}</textarea>
-      </label>
+      ${hasOptions && !scene.choices ? `<div class="story-choice-row">${sc.askOptions.map((o) => `<button type="button" class="story-choice ${pickedId === o.id ? "is-decision" : ""}" data-story-ask-pick="${o.id}">${o.label}</button>`).join("")}</div>` : ""}
+      ${picked ? `<p class="story-ask-reply">“${picked.reply}”</p>` : ""}
     </div>`;
   }
   if (sc.masterTip) out += `<div class="story-block story-tip"><span class="story-tag">🎭 Spunto per il Master</span><p>${sc.masterTip}</p></div>`;
@@ -4443,6 +4619,8 @@ function storyScenePhaseMarkup(scene) {
     </div>`;
   } else if (scene.completion) {
     out += `<button type="button" class="complete-quest-button" data-story-finish>${scene.completion.action_label || "Concludi l'avventura"}</button>`;
+  } else if (hasOptions && !picked) {
+    out += `<p class="helper-text">Scegliete insieme una risposta per continuare.</p>`;
   } else {
     out += `<button type="button" class="complete-quest-button" data-story-advance>Continua ▸</button>`;
   }
@@ -4576,6 +4754,7 @@ function storyRewardMarkup(quest, story) {
   const rs = quest.storyFlow.rewardScreen || {};
   const snap = story.completionSnapshot;
   const b = snap.before, af = snap.after;
+  const partial = Boolean(snap.partial);
 
   const newPowerIds = af.powerIds.filter((id) => !b.powerIds.includes(id));
   const ba = (label, x, y) => x === y
@@ -4590,6 +4769,15 @@ function storyRewardMarkup(quest, story) {
     return `<li>${p.name}: Potenza ${fmtPotenza(was.power)} <em>→</em> <strong>${fmtPotenza(p.power)}</strong></li>`;
   }).join("");
 
+  // "Chi è il più forte adesso": i bambini lo chiedono sempre, a prescindere
+  // dalla Potenza della ciurma — meglio dirlo qui che farli aspettare la Scheda.
+  const ranking = af.players.slice().sort((x, y) => y.power - x.power);
+  const rankingRows = ranking.map((p, i) => `<li class="${i === 0 ? "is-top" : ""}">
+      <span class="story-rank-num">${i + 1}</span>
+      <span class="story-rank-name">${p.name}</span>
+      <span class="story-rank-power">${fmtPotenza(p.power)}</span>
+    </li>`).join("");
+
   const powerCards = newPowerIds.map((id) => {
     const pw = PIRATI.power(id);
     return pw ? `<figure class="story-reward-card"><img src="${pw.image}" alt="${pw.name}" onerror="this.parentNode.classList.add('no-img'); this.remove()"><figcaption>${pw.name}</figcaption></figure>` : "";
@@ -4597,15 +4785,20 @@ function storyRewardMarkup(quest, story) {
 
   const gradeUp = af.grade > b.grade;
 
+  const headline = partial ? (rs.fail_headline || "⚓ AVVENTURA CONCLUSA") : (rs.headline || "🏴‍☠️ AVVENTURA COMPLETATA!");
+  const subtitle = partial ? (rs.fail_subtitle || rs.subtitle || quest.title) : (rs.subtitle || quest.title);
+  const finalRead = partial ? (rs.fail_final_read || rs.final_read) : rs.final_read;
+
   return `
-    <div class="story-rewards">
-      <p class="story-rewards-headline">${rs.headline || "🏴‍☠️ AVVENTURA COMPLETATA!"}</p>
-      <p class="story-rewards-subtitle">${rs.subtitle || quest.title}</p>
-      ${rs.final_read ? `<p class="story-rewards-read">“${rs.final_read}”</p>` : ""}
+    <div class="story-rewards ${partial ? "is-partial" : ""}">
+      <p class="story-rewards-headline">${headline}</p>
+      <p class="story-rewards-subtitle">${subtitle}</p>
+      ${finalRead ? `<p class="story-rewards-read">“${finalRead}”</p>` : ""}
+      ${partial ? `<p class="story-rewards-note">Non è filata liscia come speravate, ma nessuno si è fatto male e la ciurma ha imparato qualcosa lo stesso.</p>` : ""}
 
       <div class="story-rewards-block">
-        <h4>Bottino conquistato</h4>
-        ${rewardCardsMarkup(quest)}
+        <h4>${partial ? "Quello che avete portato a casa" : "Bottino conquistato"}</h4>
+        ${rewardCardsMarkup(quest, { partial })}
       </div>
 
       ${powerCards ? `<div class="story-rewards-block"><h4>Nuove carte della ciurma</h4><div class="story-reward-cards">${powerCards}</div></div>` : ""}
@@ -4620,6 +4813,11 @@ function storyRewardMarkup(quest, story) {
         </div>
         ${grew ? `<p class="story-ba-label">Crescita dei pirati</p><ul class="story-grew-list">${grew}</ul>` : ""}
         ${gradeUp ? `<p class="story-grade-up">✦ Nuovo Grado ${af.grade}! Nuove carte del Baule dei Poteri sbloccate.</p>` : ""}
+      </div>
+
+      <div class="story-rewards-block">
+        <h4>Chi è il più forte adesso</h4>
+        <ol class="story-ranking">${rankingRows}</ol>
       </div>
 
       <button type="button" class="complete-quest-button" data-story-close-rewards>${rs.close_button || "⛵ Torna alla rotta"}</button>
@@ -4698,12 +4896,14 @@ function titleCase(text) {
 
 /* --- Premi e Gradi -------------------------------------------------------- */
 
-function rewardCardsMarkup(quest) {
-  const items = PIRATI.expandRewards(quest);
+function rewardCardsMarkup(quest, opts) {
+  const items = PIRATI.expandRewards(quest, opts);
   if (!items.length) return "";
   return `<div class="quest-reward-strip">${items.map((item) => `
     <article class="reward-chip rarity-${item.rarity || "comune"}">
-      <span class="reward-chip-icon" aria-hidden="true">${item.icon}</span>
+      ${item.image
+        ? `<img class="reward-chip-image" src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.remove()">`
+        : `<span class="reward-chip-icon" aria-hidden="true">${item.icon}</span>`}
       <strong>${item.name}</strong>
       ${item.text ? `<small>${item.text}</small>` : ""}
     </article>`).join("")}</div>`;
@@ -4728,8 +4928,8 @@ function questReadKidsMarkup(quest) {
     </div>`;
 }
 
-function grantQuestRewards(quest) {
-  const items = PIRATI.expandRewards(quest);
+function grantQuestRewards(quest, opts) {
+  const items = PIRATI.expandRewards(quest, opts);
   const crew = state.crew;
   const stamp = { questId: quest.id, day: state.day };
   const gained = [];
@@ -4817,12 +5017,9 @@ function completeQuest(questId, opts) {
   state.questCampaign.revealedQuestId = null;
   state.questCampaign.resolution = null;
 
-  const gained = grantQuestRewards(quest);
-  const questJunk = 1200;
-  awardJunk(questJunk);
-  state.domandona.tickets = (state.domandona.tickets || 0) + 1;
+  const gained = grantQuestRewards(quest, { partial: opts.partial });
   if (!opts.silent) sfx("trionfo");
-  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati. +${fmtKg(questJunk)} per Nonna Belarda. +1 biglietto della Nave Domandona (ora ${state.domandona.tickets}).`);
+  pushLog(`Quest completata: ${quest.title}.${resolutionNote} Premi: ${gained.join(", ")}. +${POTENZA_SCALE} Potenza ${titleCase(growthStat)} a ${growthTargets.length} pirati.`);
   const gradeUp = refreshGrade();
   if (gradeUp) { if (!opts.silent) sfx("grado"); pushLog(`La ciurma sale al Grado ${gradeUp.grade}: ${gradeUp.name}! Nuovi poteri sbloccati.`); }
   checkLegendaryGrants();
@@ -4918,7 +5115,6 @@ function render() {
   renderRaid();
   renderBestiario();
   renderMapParola();
-  renderMapBelarda();
   renderTeschioFacce();
   renderNegozio();
   renderLog();
@@ -5036,10 +5232,6 @@ function bindEvents() {
       setRaidRoll(event.target.dataset.raidRoll, event.target.value);
       const resolveButton = $("[data-raid-resolve]");
       if (resolveButton) resolveButton.disabled = !raidViewData().canResolve;
-      return;
-    }
-    if (event.target.matches("[data-story-note]")) {
-      noteStoryIdea(event.target.value);
       return;
     }
     const resolution = state.questCampaign?.resolution;
@@ -5259,6 +5451,7 @@ function bindEvents() {
     }
 
     if (event.target.closest("[data-belarda-dismiss]")) dismissBelardaReveal();
+    if (event.target.closest("[data-ship-upgrade]")) upgradeShip();
     if (event.target.closest("[data-crostone-ok]")) crostoneIndovinata();
     if (event.target.closest("[data-crostone-ko]")) crostoneSbagliata();
     const crostoneRecoverBtn = event.target.closest("[data-crostone-recover]");
@@ -5275,6 +5468,25 @@ function bindEvents() {
       if (state.voyage.pending.kind === "boss") resolveBossOffer(n);
       else if (state.voyage.pending.roll) resolveMapEncounter(n);
     }
+    const mapGroupDie = event.target.closest("[data-map-group-die]");
+    if (mapGroupDie && state.voyage.pending) {
+      const [pid, n] = mapGroupDie.dataset.mapGroupDie.split(":");
+      const enc = state.voyage.pending;
+      enc.rolls = enc.rolls || {};
+      if (enc.rolls[pid] === Number(n)) delete enc.rolls[pid];
+      else enc.rolls[pid] = Number(n);
+      saveState();
+      renderMap();
+    }
+    if (event.target.closest("[data-map-roll-all-group]") && state.voyage.pending) {
+      const enc = state.voyage.pending;
+      enc.rolls = enc.rolls || {};
+      activePlayers().forEach((p) => { enc.rolls[p.id] = d6(); });
+      sfx("click");
+      saveState();
+      renderMap();
+    }
+    if (event.target.closest("[data-resolve-map-dice]")) resolveMapEncounterGroup();
     const bossOffer = event.target.closest("[data-boss-offer]");
     if (bossOffer) chooseBossOffer(Number(bossOffer.dataset.bossOffer));
     if (event.target.closest("[data-summon-boss]")) startBossEncounter();
@@ -5302,7 +5514,6 @@ function bindEvents() {
     }
     if (event.target.closest("[data-map-skip]")) skipMapEncounter();
     if (event.target.closest("[data-map-open-quest]")) openMapQuest();
-    if (event.target.closest("[data-domandona-use-ticket]")) domandonaUseTicket();
     if (event.target.closest("[data-domandona-giusta]")) domandonaGiusta();
     if (event.target.closest("[data-domandona-sbagliata]")) domandonaSbagliata();
     const shopPlayerBtn = event.target.closest("[data-shop-player]");
@@ -5325,9 +5536,6 @@ function bindEvents() {
     if (event.target.closest("[data-teschio-close]")) closeTeschioShow();
     const eventChoice = event.target.closest("[data-event-choice]");
     if (eventChoice) resolveEventChoice(Number(eventChoice.dataset.eventChoice));
-    const playCardBtn = event.target.closest("[data-play-card]");
-    if (playCardBtn) playCard(playCardBtn.dataset.playCard);
-
     // --- lente carte: apri/chiudi/gioca dalla lente ---
     const magnifyBtn = event.target.closest("[data-magnify-power]");
     if (magnifyBtn) { openMagnifier(magnifyBtn.dataset.magnifyPower, magnifyBtn.dataset.magnifyAs); return; }
@@ -5394,6 +5602,8 @@ function bindEvents() {
     if (storyStartBtn) startStory(storyStartBtn.dataset.storyStart);
     if (event.target.closest("[data-story-abandon]")) abandonStory();
     if (event.target.closest("[data-story-advance]")) advanceFromScene();
+    const storyAskPickBtn = event.target.closest("[data-story-ask-pick]");
+    if (storyAskPickBtn) pickStoryAsk(storyAskPickBtn.dataset.storyAskPick);
     const storyChoiceBtn = event.target.closest("[data-story-choice]");
     if (storyChoiceBtn) chooseStoryOption(storyChoiceBtn.dataset.storyChoice);
     if (event.target.closest("[data-story-follow]")) advanceFromChoice();

@@ -36,6 +36,8 @@ window.PIRATI = (function () {
     raidPairById: new Map(),
     belardaLoot: [],          // premi quando esplode la casa di Nonna Belarda
     belardaLootById: new Map(),
+    shipUpgrades: [],         // i 6 livelli (0-5) della nave della ciurma
+    shipUpgradeByLevel: new Map(),
     domandonaQuestions: [],   // domande della Nave Domandona
     domandonaQuestionById: new Map(),
     negozio: [],              // oggetti del Negozio delle Cose Inutili
@@ -190,10 +192,14 @@ window.PIRATI = (function () {
         warn(`${where}: storyFlow scena "${id}" usa una coppia di saccheggio sconosciuta "${clone.pairId}".`);
 
       const sc = clone.scene || {};
-      if (sc.ask && (!Array.isArray(sc.hints) || !sc.hints.length))
-        warn(`${where}: storyFlow scena "${id}" ha 'ask' ma nessun 'hints'.`);
-      if (sc.ask && !sc.rescue)
-        warn(`${where}: storyFlow scena "${id}" ha 'ask' ma nessun 'rescue'.`);
+      if (sc.ask && !clone.choices && !(Array.isArray(sc.askOptions) && sc.askOptions.length))
+        warn(`${where}: storyFlow scena "${id}" ha 'ask' ma nessuna 'askOptions' né 'choices' collegate: la domanda non produce continuazione.`);
+      if (Array.isArray(sc.askOptions)) {
+        sc.askOptions.forEach((opt, oi) => {
+          if (!opt || !opt.label) warn(`${where}: storyFlow scena "${id}" askOptions #${oi + 1} senza 'label'.`);
+          if (!opt || !opt.reply) warn(`${where}: storyFlow scena "${id}" askOptions #${oi + 1} senza 'reply'.`);
+        });
+      }
 
       const r = clone.resolution;
       if (r) {
@@ -203,10 +209,21 @@ window.PIRATI = (function () {
         const needsDice = policy === "dice" || policy === "destiny" || policy === "destiny_group_or_dice";
         if (needsDice && !(r.dice && STATS.includes(String(r.dice.stat || "").toLowerCase())))
           warn(`${where}: storyFlow scena "${id}" policy "${policy}" richiede resolution.dice {stat,target}.`);
+        if (r.critical && policy !== "dice")
+          warn(`${where}: storyFlow scena "${id}" ha 'resolution.critical' ma policy "${policy}" non è "dice" (il Destino potrebbe evitare il tiro).`);
+        if (r.critical && !(clone.outcomes && clone.outcomes.fail_forward && clone.outcomes.fail_forward.next))
+          warn(`${where}: storyFlow scena "${id}" è 'critical' ma non ha 'outcomes.fail_forward.next' (serve un finale alternativo).`);
       }
       const ways = clone.type === "raid" ? 1 : (clone.choices ? 1 : 0) + (clone.outcomes ? 1 : 0) + (clone.outcome ? 1 : 0) + (clone.completion ? 1 : 0);
       if (!ways) warn(`${where}: storyFlow scena "${id}" senza 'choices', 'outcomes', 'outcome' né 'completion'.`);
     });
+
+    const hasCriticalDice = prog.some((entry) => {
+      const r = entry.resolution;
+      return r && String(r.policy).toLowerCase() === "dice" && r.critical;
+    });
+    if (!hasCriticalDice)
+      warn(`${where}: storyFlow senza nessuna prova decisiva a dadi obbligatori (resolution.critical su policy "dice").`);
 
     const start = flow.start || order[0];
     if (!scenes[start]) warn(`${where}: storyFlow.start "${start}" non è una scena.`);
@@ -257,6 +274,7 @@ window.PIRATI = (function () {
           bucket,
           name: entry.name || entry.id,
           icon: entry.icon || "🎁",
+          image: entry.image || "",
           rarity: entry.rarity || "comune",
           text: entry.text || ""
         };
@@ -398,6 +416,44 @@ window.PIRATI = (function () {
       state.belardaLoot.push(clean);
       state.belardaLootById.set(clean.id, clean);
     });
+  }
+
+  /* ---------- La nave della ciurma (upgrade) ------------------------------ */
+
+  function registerShipUpgrades(list) {
+    if (!Array.isArray(list)) return warn("registerShipUpgrades: serve un array.");
+    list.forEach((entry, index) => {
+      const where = `Upgrade della nave #${index + 1}`;
+      if (!entry || typeof entry !== "object" || !Number.isInteger(entry.level) || entry.level < 0 || entry.level > 5)
+        return warn(`${where}: 'level' deve essere un intero da 0 a 5.`);
+      if (state.shipUpgradeByLevel.has(entry.level)) return warn(`Upgrade della nave: livello duplicato "${entry.level}".`);
+      if (typeof entry.name !== "string" || !entry.name) return warn(`${where}: manca 'name'.`);
+      if (typeof entry.text !== "string" || !entry.text) return warn(`${where}: manca 'text'.`);
+      if (!Number.isFinite(entry.cost) || entry.cost < 0) return warn(`${where}: 'cost' non valido.`);
+      const requires = Array.isArray(entry.requires) ? entry.requires : [];
+      if (entry.level === 0) {
+        if (entry.cost !== 0 || requires.length) return warn(`${where}: il livello 0 (nave di partenza) non deve avere costo né premi richiesti.`);
+      } else {
+        if (requires.length < 1 || requires.length > 2) return warn(`${where}: 'requires' deve avere 1 o 2 premi.`);
+        if (entry.cost <= 0) return warn(`${where}: 'cost' deve essere positivo.`);
+      }
+      for (let i = 0; i < requires.length; i += 1) {
+        const id = requires[i];
+        if (typeof id !== "string" || !id || !state.rewardById.has(id))
+          return warn(`${where}: premio richiesto "${id}" non esiste nel catalogo (catalog/premi.js).`);
+      }
+      const speed = Number.isFinite(entry.speed) ? entry.speed : 0;
+      const strength = Number.isFinite(entry.strength) ? entry.strength : 0;
+      if (speed < 0 || strength < 0) return warn(`${where}: 'speed'/'strength' non possono essere negativi.`);
+      const clean = {
+        level: entry.level, name: entry.name, text: entry.text,
+        image: entry.image || "", cost: entry.cost, requires: requires.slice(),
+        speed, strength
+      };
+      state.shipUpgrades.push(clean);
+      state.shipUpgradeByLevel.set(clean.level, clean);
+    });
+    state.shipUpgrades.sort((a, b) => a.level - b.level);
   }
 
   /* ---------- La Nave Domandona ------------------------------------------ */
@@ -630,8 +686,16 @@ window.PIRATI = (function () {
 
   /* ---------- ricompense: espansione premi in oggetti concreti ---------- */
 
-  function expandRewards(quest) {
+  function expandRewards(quest, opts) {
     // trasforma quest.rewards (riferimenti) in card visibili con testo pronto
+    // opts.partial: la quest e' finita nel finale alternativo (prova decisiva fallita).
+    // Niente game over: solo un bottino piu' piccolo (monete dimezzate, niente loot/trofeo/potere).
+    if (opts && opts.partial) {
+      const coinReward = (quest.rewards || []).find((r) => r.type === "coins");
+      if (!coinReward) return [];
+      const amount = Math.max(1, Math.round(Number(coinReward.amount) * 0.4));
+      return [{ type: "coins", icon: "🪙", name: `${amount.toLocaleString("it-IT")} monete`, amount, rarity: "comune" }];
+    }
     return (quest.rewards || []).map((r) => {
       if (r.type === "coins") return { type: "coins", icon: "🪙", name: `${Number(r.amount).toLocaleString("it-IT")} monete`, amount: r.amount, rarity: "comune" };
       if (r.type === "fame") return { type: "fame", icon: "⭐", name: `${r.amount} Fama`, amount: r.amount, rarity: "raro" };
@@ -669,6 +733,7 @@ window.PIRATI = (function () {
       `Mappa: ${state.map ? Object.keys(state.map.nodes).length + " nodi, " + Object.keys(state.map.legs).length + " tratte" : "nessuna"}`,
       `Coppie di saccheggio: ${state.raidPairs.length}`,
       `Premi di Nonna Belarda: ${state.belardaLoot.length}`,
+      `Livelli nave: ${state.shipUpgrades.length}/6`,
       `Domande della Nave Domandona: ${state.domandonaQuestions.length}`,
       `Oggetti del Negozio: ${state.negozio.length}`,
       `Sfide del Teschio: ${state.teschioSfide.length} · Facce: ${state.teschioFacce.length}`,
@@ -686,6 +751,7 @@ window.PIRATI = (function () {
     registerPowers,
     registerRaidPairs,
     registerBelardaLoot,
+    registerShipUpgrades,
     registerDomandonaQuestions,
     registerNegozio,
     registerTeschioSfide,
@@ -702,6 +768,8 @@ window.PIRATI = (function () {
     raidPair: (id) => state.raidPairById.get(id) || null,
     get belardaLoot() { return state.belardaLoot; },
     belardaReward: (id) => state.belardaLootById.get(id) || null,
+    get shipUpgrades() { return state.shipUpgrades; },
+    shipUpgrade: (level) => state.shipUpgradeByLevel.get(level) || null,
     get domandonaQuestions() { return state.domandonaQuestions; },
     domandonaQuestion: (id) => state.domandonaQuestionById.get(id) || null,
     get negozio() { return state.negozio; },

@@ -62,11 +62,12 @@ function storyAppHarness() {
   vm.runInContext(fs.readFileSync(path.join(root, "engine/pirati-core.js"), "utf8"), context, { filename: "engine/pirati-core.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "engine/saccheggi-core.js"), "utf8"), context, { filename: "engine/saccheggi-core.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "engine/belarda-core.js"), "utf8"), context, { filename: "engine/belarda-core.js" });
+  vm.runInContext(fs.readFileSync(path.join(root, "engine/nave-core.js"), "utf8"), context, { filename: "engine/nave-core.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "engine/domandona-core.js"), "utf8"), context, { filename: "engine/domandona-core.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "engine/negozio-core.js"), "utf8"), context, { filename: "engine/negozio-core.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "engine/teschio-core.js"), "utf8"), context, { filename: "engine/teschio-core.js" });
   context.PIRATI = context.window.PIRATI;
-  for (const relativePath of ["catalog/premi.js", "catalog/saccheggi.js", "catalog/poteri.js", "catalog/belarda.js", "catalog/domandona.js", "catalog/negozio.js", "catalog/teschio.js"]) {
+  for (const relativePath of ["catalog/premi.js", "catalog/saccheggi.js", "catalog/poteri.js", "catalog/belarda.js", "catalog/nave.js", "catalog/domandona.js", "catalog/negozio.js", "catalog/teschio.js"]) {
     vm.runInContext(fs.readFileSync(path.join(root, relativePath), "utf8"), context, { filename: relativePath });
   }
   vm.runInContext(`PIRATI.registerPack({
@@ -300,7 +301,11 @@ test("valida i riferimenti alle coppie negli step raid dello StoryFlow", () => {
           {
             scene_id: "apertura",
             scene: { read: "Due vele compaiono all'orizzonte." },
-            outcome: { title: "Vele!", text: "La ciurma si prepara.", next: "navi-dolci" }
+            resolution: { policy: "dice", critical: true, dice: { stat: "coraggio", target: 5 } },
+            outcomes: {
+              success: { title: "Vele!", text: "La ciurma si prepara.", next: "navi-dolci" },
+              fail_forward: { title: "Quasi", text: "Ci si riprova comunque.", next: "navi-dolci" }
+            }
           },
           {
             id: "navi-dolci",

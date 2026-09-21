@@ -31,14 +31,28 @@ test("pickFaccia da' prima le facce nuove, poi ripesca da tutte", () => {
   assert.equal(core.pickFaccia(facce, ["a", "b", "c"], () => 0).id, "a", "collezione piena: doppioni");
 });
 
-test("applyShowRewards: monete personali a chi tiene, meta' al crollo piu' buffo", () => {
+test("applyShowRewards: meta' personale a chi tiene/al piu' buffo, l'altra meta' divisa tra TUTTI gli attivi", () => {
   const state = { players: [{ id: "p1", coins: 0 }, { id: "p2", coins: 100 }, { id: "p3", coins: 0 }] };
   const sfida = { premio: 300000 };
   const res = core.applyShowRewards(state, sfida, ["p1"], "p3");
-  assert.equal(state.players[0].coins, 300000);
-  assert.equal(state.players[1].coins, 100, "p2 non ha tenuto e non e' il piu' buffo: niente");
-  assert.equal(state.players[2].coins, 150000, "p3 crollo piu' buffo: meta' premio");
-  assert.equal(res.total, 450000);
+  // p1 tiene: 150000 personali + 75000 dal fondo comune
+  assert.equal(state.players[0].coins, 225000);
+  // p2 non ha tenuto e non e' il piu' buffo: nessuna quota personale, ma prende comunque la sua fetta del fondo
+  assert.equal(state.players[1].coins, 75100, "nessuno resta a zero");
+  // p3 crollo piu' buffo: 75000 personali (meta' della consolazione) + 75000 dal fondo comune
+  assert.equal(state.players[2].coins, 150000);
+  assert.equal(res.total, 450000, "il totale distribuito non cambia rispetto a prima, solo la spartizione");
+});
+
+test("applyShowRewards: il fondo comune si divide solo tra i pirati attivi", () => {
+  const state = { players: [{ id: "p1", coins: 0 }, { id: "p2", coins: 0 }, { id: "p3", coins: 0 }] };
+  const sfida = { premio: 200000 };
+  // p3 e' assente oggi: non tiene, non e' il piu' buffo, e non e' tra gli attivi
+  const res = core.applyShowRewards(state, sfida, ["p1"], null, ["p1", "p2"]);
+  assert.equal(state.players[0].coins, 150000, "100000 personali + 50000 dal fondo (diviso tra 2 attivi)");
+  assert.equal(state.players[1].coins, 50000, "solo la quota del fondo");
+  assert.equal(state.players[2].coins, 0, "assente: nessuna quota, ma non e' un bug, e' fuori gioco oggi");
+  assert.equal(res.total, 200000);
 });
 
 test("applyShowRewards regge stati strani senza lanciare", () => {

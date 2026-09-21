@@ -1,11 +1,13 @@
 /* =============================================================================
    MOTORE PURO — La Nave Domandona
    -----------------------------------------------------------------------------
-   Completare un'avventura regala un biglietto. Quando la ciurma incontra la
-   Nave Domandona in mare, se ha un biglietto puo' consumarlo per tentare una
-   domanda. Risposta giusta: premio (tante monete). Risposta sbagliata: nessuna
-   penalita', ma la STESSA domanda resta "in sospeso" e riapparira' con un
-   indizio piu' chiaro al prossimo incontro.
+   Niente biglietti: per sbarcare su un'isola con un'avventura da fare, la
+   ciurma deve rispondere a una domanda della Nave Domandona (capita anche,
+   senza obbligo, come incontro casuale in mare aperto). Risposta giusta:
+   premio (tante monete) e, se serviva per sbarcare, si sbarca. Risposta
+   sbagliata: nessuna penalita', ma la STESSA domanda resta "in sospeso" e
+   riapparira' con un indizio piu' chiaro al prossimo incontro — e se serviva
+   per sbarcare, stavolta niente sbarco: si sceglie un'altra rotta.
 
    Nessun dado: solo funzioni pure, testabili senza browser.
    ========================================================================== */
@@ -17,10 +19,9 @@
   "use strict";
 
   function withDomandonaDefaults(saved) {
-    const defaults = { tickets: 0, pending: null, solvedIds: [], recentIds: [] };
+    const defaults = { pending: null, solvedIds: [], recentIds: [] };
     const source = saved && typeof saved === "object" ? saved : {};
     const out = { ...defaults, ...source };
-    out.tickets = Number.isFinite(out.tickets) && out.tickets >= 0 ? Math.round(out.tickets) : 0;
     out.solvedIds = Array.isArray(out.solvedIds) ? out.solvedIds.slice() : [];
     out.recentIds = Array.isArray(out.recentIds) ? out.recentIds.slice() : [];
     out.pending = out.pending && typeof out.pending === "object" && typeof out.pending.questionId === "string" && out.pending.questionId

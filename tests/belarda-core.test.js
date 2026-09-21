@@ -2,51 +2,51 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const core = require("../engine/belarda-core.js");
 
-test("withBelardaDefaults inizializza lo stato e non condivide 'houses' col salvataggio", () => {
+test("withBelardaDefaults inizializza lo stato e non condivide 'recentRewardIds' col salvataggio", () => {
   const empty = core.withBelardaDefaults({});
-  assert.deepEqual(empty.houses, {});
-  assert.equal(empty.pending, 0);
+  assert.equal(empty.fill, 0);
   assert.equal(empty.threshold, core.DEFAULT_THRESHOLD);
+  assert.deepEqual(empty.recentRewardIds, []);
 
-  const saved = { houses: { vulcano: 4 }, pending: 2 };
+  const saved = { fill: 4, recentRewardIds: ["a"] };
   const out = core.withBelardaDefaults(saved);
-  out.houses.vulcano = 999;
-  assert.equal(saved.houses.vulcano, 4, "non deve mutare l'oggetto salvato");
+  out.recentRewardIds.push("b");
+  assert.deepEqual(saved.recentRewardIds, ["a"], "non deve mutare l'array salvato");
 });
 
 test("withBelardaDefaults scarta valori corrotti", () => {
-  const out = core.withBelardaDefaults({ pending: -3, threshold: 0, houses: "boh", recentRewardIds: "x" });
-  assert.equal(out.pending, 0);
+  const out = core.withBelardaDefaults({ fill: -3, threshold: 0, recentRewardIds: "x" });
+  assert.equal(out.fill, 0);
   assert.equal(out.threshold, core.DEFAULT_THRESHOLD);
-  assert.deepEqual(out.houses, {});
   assert.deepEqual(out.recentRewardIds, []);
 });
 
-test("deliverJunk accumula senza esplodere sotto soglia", () => {
-  const belarda = { pending: 5, houses: { vulcano: 3 }, threshold: 12 };
-  const result = core.deliverJunk(belarda, "vulcano");
+test("addWeight accumula senza esplodere sotto soglia", () => {
+  const belarda = { fill: 3, threshold: 12 };
+  const result = core.addWeight(belarda, 5);
   assert.equal(result.exploded, false);
+  assert.equal(result.fill, 8);
   assert.equal(result.after, 8);
-  assert.equal(result.pending, 0);
-  assert.deepEqual(result.houses, { vulcano: 8 });
 });
 
-test("deliverJunk fa esplodere la casa e riporta l'eccesso nella casa ricostruita", () => {
-  const belarda = { pending: 6, houses: { vulcano: 9 }, threshold: 12 };
-  const result = core.deliverJunk(belarda, "vulcano");
+test("addWeight fa esplodere la casa e riporta l'eccesso nella casa ricostruita", () => {
+  const belarda = { fill: 9, threshold: 12 };
+  const result = core.addWeight(belarda, 6);
   assert.equal(result.exploded, true);
   assert.equal(result.filled, 15);
-  assert.equal(result.after, 3); // 15 - 12, non si perde l'eccesso
+  assert.equal(result.fill, 3); // 15 - 12, non si perde l'eccesso
 });
 
-test("deliverJunk consegna solo all'isola scelta, le altre case restano ferme", () => {
-  const belarda = { pending: 4, houses: { vulcano: 5, corallo: 7 }, threshold: 12 };
-  const result = core.deliverJunk(belarda, "vulcano");
-  assert.deepEqual(result.houses, { vulcano: 9, corallo: 7 });
+test("addWeight con peso zero o negativo non fa nulla", () => {
+  const belarda = { fill: 5, threshold: 12 };
+  assert.deepEqual(core.addWeight(belarda, 0), { fill: 5, exploded: false, before: 5, filled: 5, after: 5 });
+  assert.deepEqual(core.addWeight(belarda, -10), { fill: 5, exploded: false, before: 5, filled: 5, after: 5 });
 });
 
-test("deliverJunk senza isola non fa nulla", () => {
-  assert.equal(core.deliverJunk({ pending: 3, houses: {}, threshold: 12 }, null), null);
+test("KG_PER_ITEM: 300 pezzi comprati riempiono esattamente la soglia di default", () => {
+  const result = core.addWeight({ fill: 0, threshold: core.DEFAULT_THRESHOLD }, 300 * core.KG_PER_ITEM);
+  assert.equal(result.exploded, true);
+  assert.equal(result.fill, 0, "riempie esattamente, niente eccesso");
 });
 
 test("pickReward evita gli ultimi due premi quando ce ne sono abbastanza", () => {

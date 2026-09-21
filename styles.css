@@ -1125,13 +1125,7 @@ select {
 .story-read p { margin: 0; font-family: Georgia, serif; font-size: 19px; line-height: 1.5; }
 .story-ask { border-color: rgba(45,138,166,.35); background: rgba(45,138,166,.06); }
 .story-question { margin: 0 0 10px; font-size: 16px; line-height: 1.45; font-weight: 700; }
-.story-hints-list { margin: 6px 0 0; padding-left: 18px; }
-.story-hints-list li { margin: 3px 0; font-size: 13px; line-height: 1.4; color: rgba(23,32,42,.7); }
-.story-rescue { margin-top: 8px; }
-.story-rescue summary { cursor: pointer; color: var(--sea-dark); font-weight: 800; font-size: 13px; }
-.story-rescue p { margin: 8px 0 0; font-family: Georgia, serif; font-size: 15px; line-height: 1.45; color: rgba(23,32,42,.8); }
-.story-note-label { display: block; margin-top: 12px; color: var(--sea-dark); font-size: 12px; font-weight: 800; }
-.story-note-label textarea { display: block; width: 100%; margin-top: 5px; resize: vertical; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font: 14px/1.4 inherit; color: var(--ink); background: white; }
+.story-ask-reply { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.6); font-family: Georgia, serif; font-size: 15px; line-height: 1.45; color: rgba(23,32,42,.85); }
 .story-tip { border-color: rgba(111,90,143,.3); background: rgba(111,90,143,.08); }
 .story-tip p { margin: 0; font-size: 13px; line-height: 1.45; }
 
@@ -1186,6 +1180,10 @@ select {
 .story-rewards-headline { margin: 0; font-size: clamp(24px, 4vw, 36px); font-weight: 900; color: #ffe08a; }
 .story-rewards-subtitle { margin: 4px 0 14px; font-size: 16px; color: rgba(255,255,255,.75); }
 .story-rewards-read { margin: 0 auto 18px; max-width: 52ch; font-family: Georgia, serif; font-size: 17px; line-height: 1.5; color: rgba(255,255,255,.9); }
+.story-rewards-note { margin: -8px auto 18px; max-width: 46ch; font-size: 14px; color: rgba(255,255,255,.68); }
+/* finale alternativo: stessa struttura, toni più smorzati (niente oro trionfale) */
+.story-rewards.is-partial { background: radial-gradient(circle at 50% 0%, rgba(120,140,150,.25), transparent 55%), linear-gradient(160deg, #0c3346, #071d2e 78%); }
+.story-rewards.is-partial .story-rewards-headline { color: #cfe3ea; }
 .story-rewards-block { margin: 18px 0; padding: 16px; border: 1px solid rgba(255,255,255,.14); border-radius: 18px; background: rgba(255,255,255,.05); }
 .story-rewards-block h4 { margin: 0 0 12px; color: #f3c76f; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
 .story-rewards-block .quest-reward-strip { justify-content: center; }
@@ -1212,6 +1210,13 @@ select {
 .story-grew-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
 .story-grew-list li { font-size: 14px; }
 .story-grew-list em { color: #f3c76f; font-style: normal; }
+.story-ranking { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.story-ranking li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.06); }
+.story-ranking li.is-top { background: rgba(243,199,111,.16); border: 1px solid rgba(243,199,111,.35); }
+.story-rank-num { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.12); font-size: 12px; font-weight: 900; flex: none; }
+.story-ranking li.is-top .story-rank-num { background: #f3c76f; color: #173449; }
+.story-rank-name { flex: 1; font-size: 14px; font-weight: 700; }
+.story-rank-power { font-size: 14px; font-weight: 900; color: #f3c76f; }
 .story-grade-up { margin: 12px 0 0; padding: 10px 14px; border-radius: 14px; background: rgba(243,199,111,.16); color: #ffe08a; font-weight: 800; font-size: 14px; }
 .story-rewards .complete-quest-button { margin-top: 20px; }
 
@@ -1729,6 +1734,7 @@ select {
   overflow: hidden;
 }
 .reward-chip-icon { font-size: 26px; line-height: 1; }
+.reward-chip-image { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; display: block; }
 .reward-chip strong { display: block; margin: 6px 0 3px; font-size: 15px; }
 .reward-chip small { font-size: 14px; line-height: 1.35; color: rgba(23,32,42,.66); }
 .reward-chip.rarity-comune { border-top-color: #9bb0bd; }
@@ -1889,6 +1895,7 @@ select {
   border-top: 4px solid #9bb0bd;
 }
 .collectible .collectible-icon { font-size: 30px; line-height: 1; }
+.collectible .collectible-image { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; display: block; }
 .collectible strong { font-size: 15px; }
 .collectible small { font-size: 14px; line-height: 1.35; color: rgba(23,32,42,.66); }
 .collectible em {
@@ -2043,6 +2050,8 @@ body.magnifier-open { overflow: hidden; }
 .magnifier-meta { color: #9fddcf; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .magnifier-card figcaption p { margin: 4px 0 0; font-size: 15px; line-height: 1.5; }
 .magnifier-card .complete-quest-button { margin: 14px 0 0; width: 100%; }
+.magnifier-mechanic { margin: 8px 0 0 !important; padding: 8px 10px; border-radius: 8px; background: rgba(154,205,196,.14); color: #cdeee6; font-size: 13px !important; font-weight: 700; line-height: 1.4 !important; }
+.magnifier-not-now { margin: 12px 0 0; color: #f0a9a4; font-size: 13px; font-weight: 700; }
 .magnifier-spent { margin: 12px 0 0; color: #f0a9a4; font-size: 13px; font-weight: 700; }
 .magnifier-close {
   position: absolute;
@@ -2555,36 +2564,51 @@ body.magnifier-open { overflow: hidden; }
   font-weight: 900;
 }
 
-/* La casa di Nonna Belarda: lista delle isole con barra di riempimento */
-.belarda-reveal { border-color: rgba(243,199,111,.4); background: rgba(243,199,111,.08); }
-.belarda-reveal .secondary-button { margin-top: 10px; }
-.belarda-houses { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
-.belarda-house {
-  display: grid;
-  grid-template-columns: minmax(64px, 1.3fr) minmax(60px, 1fr) 50px;
+/* La casa di Nonna Belarda: unica casa SVG in cima al Negozio, si gonfia e
+   arrossisce man mano che gli acquisti la riempiono. */
+.belarda-house-card {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 11px;
-  background: rgba(255,255,255,.05);
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #fff6e6, #ffe9c7);
+  border: 1px solid rgba(214,138,78,.35);
 }
-.belarda-house-name { font-size: 15px; font-weight: 700; color: #fffaf0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.belarda-house-card.is-swelling { animation: belarda-pulse 1.1s ease-in-out infinite; }
+@keyframes belarda-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+.belarda-house-svg { width: 84px; height: 70px; flex: none; overflow: visible; }
+.belarda-house-info { flex: 1; min-width: 0; }
+.belarda-house-title { margin: 0 0 6px; font-size: 15px; font-weight: 900; color: #5b3a29; }
 .belarda-house-bar {
   position: relative;
   display: block;
-  height: 10px;
+  height: 12px;
   border-radius: 999px;
-  background: rgba(0,0,0,.3);
+  background: rgba(91,58,41,.15);
   overflow: hidden;
 }
 .belarda-house-bar i {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #f3c76f, #d5893e);
-  transition: width .3s ease;
+  transition: width .3s ease, background-color .3s ease;
 }
-.belarda-house-val { font-size: 13px; font-weight: 900; color: rgba(255,255,255,.68); text-align: right; }
+.belarda-house-val { margin: 6px 0 0; font-size: 12px; font-weight: 700; color: rgba(91,58,41,.75); }
+.belarda-reveal {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(214,69,69,.35);
+  background: rgba(214,69,69,.08);
+}
+.belarda-reveal .eyebrow { color: #b23b3b; }
+.belarda-reveal-text { margin: 6px 0; font-family: Georgia, serif; font-size: 15px; line-height: 1.45; color: rgba(23,32,42,.85); }
+.belarda-reveal-gained { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: rgba(23,32,42,.7); }
 
 .map-topbar {
   display: flex;
@@ -2611,19 +2635,6 @@ body.magnifier-open { overflow: hidden; }
 .map-potenza-button:hover { background: rgba(243,199,111,.26); color: #fff; }
 .map-potenza-button span { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .map-potenza-button strong { font-size: 24px; line-height: 1; color: #f3c76f; }
-.map-domandona-badge {
-  display: grid;
-  place-items: center;
-  gap: 2px;
-  min-width: 110px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(154,205,196,.45);
-  background: rgba(154,205,196,.14);
-  color: #dff5ef;
-}
-.map-domandona-badge span { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
-.map-domandona-badge strong { font-size: 24px; line-height: 1; color: #9acdc4; }
 .map-danger {
   display: grid;
   grid-template-columns: auto auto;
@@ -2836,7 +2847,6 @@ body.magnifier-open { overflow: hidden; }
 .teschio-faccia-card.is-locked { padding: 12px 4px; color: rgba(23,32,42,.35); }
 .teschio-faccia-card.is-locked span { font-size: 28px; }
 .teschio-faccia-card.no-img::before { content: "💀"; font-size: 32px; display: block; padding: 8px 0 2px; }
-.domandona-ticket-count { font-size: 13px; font-weight: 800; color: var(--sea-dark); }
 .domandona-hint {
   border-radius: 10px;
   padding: 9px 11px;
@@ -2862,6 +2872,39 @@ body.magnifier-open { overflow: hidden; }
 }
 .map-captain-banner strong { color: #f3c76f; }
 .map-captain-banner span { font-size: 18px; }
+
+/* --- La nave della ciurma: sempre visibile sopra la mappa --- */
+.map-ship:empty { display: none; }
+.ship-card {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 10px 0 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(243,199,111,.35);
+  background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+}
+.ship-image { width: 84px; height: 84px; object-fit: contain; flex: none; border-radius: 12px; }
+.ship-info { flex: 1; min-width: 0; }
+.ship-title { margin: 0 0 4px; font-size: 16px; font-weight: 900; color: #fffdf5; }
+.ship-title small { margin-left: 8px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55); }
+.ship-text { margin: 0 0 8px; font-size: 13px; line-height: 1.4; color: rgba(255,255,255,.72); font-family: Georgia, serif; }
+.ship-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.ship-badge { border-radius: 999px; padding: 3px 10px; background: rgba(243,199,111,.18); color: #f3c76f; font-size: 12px; font-weight: 800; }
+.ship-next { border-top: 1px solid rgba(255,255,255,.14); padding-top: 8px; margin-top: 4px; }
+.ship-next-title { margin: 0 0 4px; font-size: 13px; font-weight: 800; color: #fffdf5; }
+.ship-next-title.is-max { color: #f3c76f; }
+.ship-next-cost { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.6); }
+.ship-next-cost.is-owned { color: #8fd19e; }
+.ship-next-cost.is-missing { color: #ffb4a8; }
+.ship-req-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.ship-req-chip { border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.5); }
+.ship-req-chip.is-owned { color: #8fd19e; border-color: rgba(143,209,158,.4); background: rgba(143,209,158,.1); }
+@media (max-width: 640px) {
+  .ship-card { flex-direction: column; align-items: flex-start; }
+  .ship-image { width: 100%; height: 140px; }
+}
 
 /* --- Il Negozio delle Cose Inutili --- */
 .negozio-captain {
@@ -3077,6 +3120,14 @@ body.magnifier-open { overflow: hidden; }
 .map-actor-chip strong { font-size: 15px; }
 .map-actor-chip small { font-size: 12px; color: var(--sea-dark); font-weight: 800; }
 .map-actor-chip.is-selected { border-color: var(--sea); background: rgba(45,138,166,.12); }
+
+/* prova dadi di gruppo negli incontri (da 3 pirati in gioco in su, sfondo chiaro) */
+.map-encounter-card .count-pill { background: rgba(45,138,166,.12); color: var(--sea-dark); }
+.map-encounter-card .move-roll-row { margin: 6px 0; }
+.map-encounter-card .move-roll-name { color: var(--ink); }
+.map-encounter-card .move-roll-name small { display: block; color: var(--sea-dark); font-weight: 700; font-size: 12px; }
+.map-encounter-card .move-dice button { border-color: var(--line); background: white; color: var(--ink); }
+.map-encounter-card .move-dice button.is-picked { background: #f3c76f; border-color: #f3c76f; color: #173449; }
 
 .map-dice-hint { font-size: 15px; color: rgba(255,255,255,.8); }
 .map-physical-dice button { min-height: 46px; font-size: 20px; }
@@ -3333,6 +3384,9 @@ body.raid-open { overflow: hidden; }
 .raid-result-reward { display: grid; gap: 3px; padding: 14px 20px; border: 1px solid rgba(243,199,111,.48); border-radius: 14px; background: rgba(243,199,111,.12); }
 .raid-result-reward span { color: #f3c76f; font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .raid-result-reward strong { font-size: 19px; }
+.raid-result-reward.is-penalty { border-color: rgba(214,69,69,.5); background: rgba(214,69,69,.14); }
+.raid-result-reward.is-penalty span { color: #ff8f86; }
+.raid-result-reward.is-penalty strong { color: #ffb4a8; }
 .raid-score { color: rgba(255,255,255,.65); font-weight: 800; }
 .raid-result .primary-button { min-width: 220px; min-height: 48px; }
 

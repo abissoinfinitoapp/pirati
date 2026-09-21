@@ -1,12 +1,12 @@
 /* =============================================================================
    MOTORE PURO — La casa di Nonna Belarda
    -----------------------------------------------------------------------------
-   Ogni azione della ciurma (quest, saccheggio, Pesce Crostone, incontri...)
-   produce un po' di cianfrusaglie. Quando la ciurma sbarca su un'isola, le
-   cianfrusaglie accumulate vengono consegnate alla casa di Nonna Belarda su
-   QUELLA isola. Se la casa si riempie, esplode: la ciurma vince un premio e
-   la casa (paziente) viene ricostruita vuota, pronta a riempirsi di nuovo.
-   L'eccesso oltre la soglia non si perde: resta nella casa appena ricostruita.
+   Una SOLA casa, legata al Negozio delle Cose Inutili: ogni oggetto comprato
+   (qualunque sia il prezzo) pesa altrettanto in cianfrusaglie e riempie la
+   casa. Quando si riempie, esplode: la ciurma vince un oggetto nuovo (mai
+   monete — è il catalogo in catalog/belarda.js a deciderlo) e la casa
+   (paziente) viene ricostruita vuota. L'eccesso oltre la soglia non si
+   perde: resta nella casa appena ricostruita.
 
    Nessun dado, nessuna scelta: solo funzioni pure, testabili senza browser.
    ========================================================================== */
@@ -18,11 +18,11 @@
   "use strict";
 
   const DEFAULT_THRESHOLD = 12000; // kg = 12 tonnellate
+  const KG_PER_ITEM = 40;          // ogni pezzo comprato pesa altrettanto, a prescindere dal prezzo
 
   function withBelardaDefaults(saved) {
     const defaults = {
-      pending: 0,
-      houses: {},
+      fill: 0,
       threshold: DEFAULT_THRESHOLD,
       explosions: 0,
       recentRewardIds: [],
@@ -30,11 +30,8 @@
     };
     const source = saved && typeof saved === "object" ? saved : {};
     const out = { ...defaults, ...source };
-    out.houses = source.houses && typeof source.houses === "object" && !Array.isArray(source.houses)
-      ? { ...source.houses }
-      : {};
     out.recentRewardIds = Array.isArray(out.recentRewardIds) ? out.recentRewardIds.slice() : [];
-    out.pending = Number.isFinite(out.pending) && out.pending >= 0 ? out.pending : 0;
+    out.fill = Number.isFinite(out.fill) && out.fill >= 0 ? out.fill : 0;
     out.threshold = Number.isFinite(out.threshold) && out.threshold > 0 ? out.threshold : DEFAULT_THRESHOLD;
     out.explosions = Number.isFinite(out.explosions) && out.explosions >= 0 ? out.explosions : 0;
     out.lastReveal = out.lastReveal && typeof out.lastReveal === "object" && !Array.isArray(out.lastReveal)
@@ -43,16 +40,16 @@
     return out;
   }
 
-  /* Consegna a Nonna Belarda tutte le cianfrusaglie in sospeso, sull'isola
-     data. Restituisce il nuovo blocco case + se e' esplosa. Non muta l'input. */
-  function deliverJunk(belarda, islandId) {
-    if (!islandId) return null;
+  /* Aggiunge peso (kg) alla casa. Se supera la soglia, esplode: l'eccesso
+     resta nella casa appena ricostruita. Non muta l'input. */
+  function addWeight(belarda, kg) {
     const b = withBelardaDefaults(belarda);
-    const before = Number(b.houses[islandId]) || 0;
-    const filled = before + b.pending;
+    const amount = Number(kg) || 0;
+    if (amount <= 0) return { fill: b.fill, exploded: false, before: b.fill, filled: b.fill, after: b.fill };
+    const filled = b.fill + amount;
     const exploded = filled >= b.threshold;
-    const houses = { ...b.houses, [islandId]: exploded ? filled - b.threshold : filled };
-    return { houses, pending: 0, exploded, before, filled, after: houses[islandId] };
+    const after = exploded ? filled - b.threshold : filled;
+    return { fill: after, exploded, before: b.fill, filled, after };
   }
 
   /* Sceglie un premio d'esplosione evitando gli ultimi visti (se ce ne sono
@@ -66,5 +63,5 @@
     return pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
   }
 
-  return { DEFAULT_THRESHOLD, withBelardaDefaults, deliverJunk, pickReward };
+  return { DEFAULT_THRESHOLD, KG_PER_ITEM, withBelardaDefaults, addWeight, pickReward };
 });
