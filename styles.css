@@ -166,6 +166,10 @@ button {
   }
   .nav-scrim[hidden] { display: none; }
   .app-header { padding-left: 58px; }
+  /* Il Master viene scrollato qui a ogni cambio di scena (storyScrollTop) o
+     aprendo il Pesce Crostone: senza margine, il titolo finisce sotto
+     l'hamburger fisso in alto a sinistra. */
+  #quest-master-sheet, #map-parola { scroll-margin-top: 66px; }
 }
 
 .tutorial-open { overflow: hidden; }
@@ -1537,7 +1541,7 @@ select {
   .base-rule-card { align-items: flex-start; }
   .quest-islands { grid-template-columns: 1fr; }
   .quest-master-sheet { padding: 16px; }
-  .quest-sheet-heading { align-items: flex-start; }
+  .quest-sheet-heading { align-items: flex-start; flex-wrap: wrap; row-gap: 8px; }
   .quest-sheet-heading h3 { font-size: 24px; }
   .quest-outcomes { grid-template-columns: 1fr; }
   .resolution-heading { align-items: flex-start; }
@@ -3169,6 +3173,12 @@ body.magnifier-open { overflow: hidden; }
   font-weight: 800;
 }
 .move-dice button.is-picked { background: #f3c76f; border-color: #f3c76f; color: #173449; }
+@media (max-width: 480px) {
+  /* Da telefono la colonna "auto" dei 6 dadi non lascia spazio al nome:
+     si impila, nome sopra e dadi sotto, invece di stringersi in verticale. */
+  .move-roll-row { grid-template-columns: 1fr; gap: 4px; }
+  .move-dice { flex-wrap: wrap; }
+}
 .move-foot {
   display: flex;
   align-items: center;
