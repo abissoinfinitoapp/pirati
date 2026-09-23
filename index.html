@@ -3,19 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pirati: Isole del Teschio d'Oro</title>
-  <meta name="description" content="Un gioco di ruolo da Master per bambini: mappa, dadi, quest e mille premi. Un gioco spalla di Abisso.">
+  <!-- Nome della hub provvisorio: "I Giochi del Master" — facile da cambiare, non è ancora un brand deciso. -->
+  <title>I Giochi del Master</title>
+  <meta name="description" content="Una raccolta di giochi di ruolo da Master, pensati per essere letti ad alta voce e giocati insieme. Accesso su invito.">
   <script src="config.js"></script>
   <script src="vendor/supabase.js"></script>
   <script src="auth.js"></script>
-  <script>
-    /* sfondo e logo della home: arrivano dallo stesso assetBase delle altre immagini */
-    try {
-      document.documentElement.style.setProperty(
-        "--home-bg", 'url("' + window.PIRATI_ASSET("sfondi/sfondo-home.webp") + '")'
-      );
-    } catch (e) {}
-  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -40,10 +33,8 @@
       overflow-x: hidden;
     }
     h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: .2px; }
-    /* sfondo illustrato + velatura per la leggibilità */
     body::before {
       content: ""; position: fixed; inset: 0; z-index: -2;
-      background: var(--home-bg) center top / cover no-repeat;
       background-color: #061a29;
     }
     body::after {
@@ -55,84 +46,35 @@
 
     .page { width: 100%; max-width: 960px; margin: 0 auto; padding: 0 20px 56px; }
 
-    /* ---- banner a tutta larghezza ---- */
-    .banner { width: 100%; background: #061a29; line-height: 0; margin-bottom: 6px; }
-    .banner img { display: block; width: 100%; height: auto; }
-    @media (min-width: 800px) {
-      .banner img { height: clamp(320px, 33vw, 460px); object-fit: cover; object-position: center 42%; }
-    }
-    .brand-text { display: none; text-align: center; padding: 44px 20px 4px; }
-    .brand-text.show { display: block; }
-    .brand-text h1 { margin: 0; font-size: clamp(28px, 7vw, 42px); }
+    .brand-head { text-align: center; padding: 56px 20px 4px; }
+    .brand-head h1 { margin: 0; font-size: clamp(28px, 7vw, 42px); }
     .lead {
-      margin: 30px auto 0; max-width: 580px; text-align: center;
+      margin: 18px auto 0; max-width: 580px; text-align: center;
       font-size: 16px; line-height: 1.65; color: rgba(255,255,255,.85);
     }
 
-    /* ---- giostra 3D della ciurma ---- */
     section { margin-top: 54px; }
     .sect-head { text-align: center; margin-bottom: 22px; }
     .sect-head h2 { margin: 0; font-size: clamp(20px, 4.5vw, 26px); }
     .sect-head p { margin: 8px auto 0; max-width: 480px; font-size: 14.5px; line-height: 1.55; color: rgba(255,255,255,.74); }
 
-    .scene {
-      position: relative; height: 340px; margin: 0 auto;
-      perspective: 1100px; touch-action: pan-y;
-      cursor: grab;
+    /* ---- griglia dei giochi (visibile solo a chi è già dentro) ---- */
+    .games-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .game-card {
+      border: 1px solid var(--line); border-radius: 18px; padding: 20px;
+      background: var(--panel); backdrop-filter: blur(6px); text-align: left;
+      display: flex; flex-direction: column; gap: 10px;
     }
-    .scene:active { cursor: grabbing; }
-    .ring {
-      position: absolute; inset: 0; margin: auto; width: 200px; height: 200px;
-      transform-style: preserve-3d; will-change: transform;
-    }
-    .cell {
-      position: absolute; inset: 0;
-      backface-visibility: hidden;
-    }
-    .cell img {
-      position: absolute; top: 0; left: 0;
-      width: 200px; height: 200px; object-fit: cover; object-position: center;
-      border-radius: 18px; border: 3px solid rgba(243,199,111,.8);
-      background: #0c2331;
-      box-shadow: 0 18px 34px rgba(0,0,0,.45);
-      -webkit-user-drag: none; user-select: none;
-    }
-    .cell span {
-      position: absolute; top: 210px; left: 0; width: 200px; text-align: center;
-      font-family: var(--font-display);
-      font-size: 14px; font-weight: 600; letter-spacing: .02em;
-      color: var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,.6);
-    }
-
-    /* ---- mostri ---- */
-    .foes {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;
-    }
-    .foe {
-      width: 84px; height: 84px; border-radius: 50%;
-      object-fit: cover; object-position: center 28%;
-      border: 2px solid rgba(255,255,255,.28);
-      background: #0c2331;
-      box-shadow: 0 10px 22px rgba(0,0,0,.4);
-    }
-
-    /* ---- come si gioca ---- */
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .step {
-      border: 1px solid var(--line); border-radius: 16px; padding: 18px 16px;
-      background: var(--panel); backdrop-filter: blur(6px); text-align: center;
-    }
-    .step .ico { font-size: 30px; line-height: 1; }
-    .step h3 { margin: 10px 0 6px; font-size: 16px; }
-    .step p { margin: 0; font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,.75); }
-    .reassure {
-      margin: 16px auto 0; max-width: 620px; text-align: center;
-      font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,.78);
-    }
-    .reassure b { color: var(--ink); }
+    .game-card .kind { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+    .game-card h3 { margin: 0; font-size: 19px; }
+    .game-card p { margin: 0; font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,.75); flex: 1; }
+    .game-card .btn-primary { margin-top: 4px; }
+    .game-card.is-soon { opacity: .6; border-style: dashed; }
+    .game-card.is-soon .kind { color: rgba(255,255,255,.5); }
 
     /* ---- riquadro accesso ---- */
     .gate { margin: 54px auto 0; max-width: 440px; }
+    .gate.is-wide { max-width: 620px; }
     .card {
       border: 1px solid var(--line); border-radius: 20px; padding: 24px;
       background: rgba(9,28,42,.72); backdrop-filter: blur(8px);
@@ -191,78 +133,21 @@
       .abisso { max-width: 440px; }
       .abisso-btn { left: 9%; width: 82%; top: 84%; height: 8.5%; }
     }
-
-    @media (max-width: 640px) {
-      .steps { grid-template-columns: 1fr; }
-      .scene { height: 260px; }
-      .cell img { width: 120px; height: 120px; }
-      .ring { width: 120px; height: 120px; }
-      .cell span { top: 128px; width: 120px; font-size: 12px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .scene { cursor: default; }
-    }
   </style>
 </head>
 <body>
 
-<div class="banner">
-  <img id="logo" alt="Pirati: Isole del Teschio d'Oro">
-  <div class="brand-text" id="brand-text"><h1>Pirati: Isole del Teschio d'Oro</h1></div>
-</div>
-
 <div class="page">
 
-  <p class="lead">Il gioco di ruolo da Master per tenere occupata una ciurma di bambini: una mappa, tanti dadi da tirare, avventure da leggere e premi a non finire.</p>
+  <div class="brand-head"><h1>I Giochi del Master</h1></div>
+  <p class="lead">Giochi di ruolo da Master, pensati per essere letti ad alta voce e giocati insieme: tu guidi la storia, l'app tiene i conti.</p>
 
-  <section aria-label="La ciurma">
-    <div class="sect-head">
-      <h2>La tua ciurma</h2>
-      <p>Dodici piccoli pirati, ognuno con un potere speciale. I bambini scelgono chi essere.</p>
-    </div>
-    <div class="scene" id="scene">
-      <div class="ring" id="ring"></div>
-    </div>
-  </section>
-
-  <section aria-label="Avversari">
-    <div class="sect-head">
-      <h2>E qualcuno da affrontare…</h2>
-      <p>Bidelli dei mari, ammiragli in salamoia e un capitano che nessuno vuole incontrare.</p>
-    </div>
-    <div class="foes" id="foes"></div>
-  </section>
-
-  <section aria-label="Come si gioca">
-    <div class="sect-head"><h2>Come funziona</h2></div>
-    <div class="steps">
-      <div class="step">
-        <div class="ico">🎲</div>
-        <h3>Dadi veri in mano</h3>
-        <p>I bambini tirano i loro dadi. Tu scrivi il numero: ai conti ci pensa l'app.</p>
-      </div>
-      <div class="step">
-        <div class="ico">🗺️</div>
-        <h3>Una mappa, una ciurma</h3>
-        <p>Nove isole. La nave si muove da sola e l'app dice cosa succede: quest, mostro o tesoro.</p>
-      </div>
-      <div class="step">
-        <div class="ico">🏆</div>
-        <h3>Premi a ogni passo</h3>
-        <p>Trofei, carte e poteri che restano per sempre. Più giocano, più diventano forti.</p>
-      </div>
-    </div>
-    <p class="reassure"><b>Guidi tu:</b> leggi l'avventura ad alta voce e proponi le scelte. Nessun regolamento da studiare — l'app tiene i conti, i gradi e i premi.</p>
-  </section>
-
-  <div class="gate">
+  <div class="gate" id="gate-box">
     <div class="card">
-      <!-- Sei già dentro -->
+      <!-- Sei già dentro: qui compare la griglia dei giochi -->
       <div id="already" hidden>
-        <h2>Bentornato, capitano.</h2>
+        <h2>Bentornato!</h2>
         <p class="msg" id="already-who"></p>
-        <button class="btn-primary" onclick="location.href='/gioco'">Continua a giocare →</button>
-        <button class="btn-ghost" id="logout-btn">Esci</button>
       </div>
 
       <!-- Login -->
@@ -288,7 +173,7 @@
 
       <!-- Richiesta di accesso -->
       <form id="request" hidden>
-        <h2>Chiedi di entrare nella ciurma</h2>
+        <h2>Chiedi un accesso</h2>
         <p class="msg" id="req-intro">Lascia la tua email: il Master ti aggiunge e poi potrai entrare con Google o password.</p>
         <label for="req-email">La tua email</label>
         <input id="req-email" type="email" required autocomplete="email">
@@ -303,17 +188,38 @@
       <div id="nogate" hidden>
         <h2>Accesso libero</h2>
         <p class="msg">Il login non è configurato: puoi entrare direttamente.</p>
-        <button class="btn-primary" onclick="location.href='/gioco'">Entra nel gioco →</button>
       </div>
     </div>
 
     <p class="foot" id="page-foot">Serve un invito per giocare.</p>
   </div>
 
+  <!-- Griglia dei giochi: mostrata solo dopo il login (dentro #already o al posto del gate se il login è disattivo) -->
+  <section id="games-section" aria-label="I giochi disponibili" hidden>
+    <div class="sect-head"><h2>Scegli un gioco</h2></div>
+    <div class="games-grid">
+      <div class="game-card">
+        <span class="kind">Gioco di ruolo da Master</span>
+        <h3>Pirati: Isole del Teschio d'Oro</h3>
+        <p>Mappa, dadi, quest e mille premi. ~55 minuti a incontro, per bambini.</p>
+        <button type="button" class="btn-primary" onclick="location.href='/gioco'">Gioca →</button>
+      </div>
+      <div class="game-card is-soon">
+        <span class="kind">In arrivo</span>
+        <h3>Il prossimo gioco</h3>
+        <p>Il Master sta preparando qualcosa di più cupo, come chiesto dalla ciurma. Torna presto.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="already-actions" hidden style="text-align:center; margin-top: 28px;">
+    <button type="button" class="btn-ghost" id="logout-btn" style="max-width:220px; margin: 0 auto;">Esci</button>
+  </div>
+
   <section class="abisso" aria-label="Abisso Infinito">
     <picture>
       <source id="abisso-src-mobile" media="(max-width: 640px)">
-      <img id="abisso-img" class="abisso-img" alt="Se hai 10 anni o più e ti è piaciuta questa avventura, amerai Abisso Infinito: un gioco cooperativo online dove il Master apre una sessione privata nel browser per fino a 16 giocatori — mappa vivente, mostri, dadi, mercati e una progressione che continua anche dopo la serata. Puoi anche creare avventure personalizzate con mostri e quest tue.">
+      <img id="abisso-img" class="abisso-img" alt="Se hai 10 anni o più, prova anche Abisso Infinito: un gioco cooperativo online dove il Master apre una sessione privata nel browser per fino a 16 giocatori — mappa vivente, mostri, dadi, mercati e una progressione che continua anche dopo la serata. Puoi anche creare avventure personalizzate con mostri e quest tue.">
     </picture>
     <a class="abisso-btn" href="https://abissoinfinito.it" target="_blank" rel="noopener" aria-label="Discendi nell'Abisso — vai ad Abisso Infinito"></a>
   </section>
@@ -321,98 +227,20 @@
 </div>
 
 <script>
-/* ---------- giostra 3D della ciurma + mostri ---------- */
+/* ---------- pannello Abisso Infinito: immagine (desktop / mobile) + zona cliccabile invisibile ---------- */
 (function () {
-  const CIURMA = ["arturo","bruno","gigi","luna","mina","nerina","nino","pepita","rocco","sofia","tito","zoe"];
-  const MOSTRI = ["capitan-vongola","ammiraglia-salamoia","nonna-cannonata","ruggine-squittio",
-                  "fifi-ombralunga","le-sorelle-mordicchio","sbadiglio-il-mozzo","ossobello-il-traballante",
-                  "zia-rete-la-polposa","bombolo-micciacorta","barbabisso"];
-  const nome = (id) => id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-
-  /* logo */
-  const logo = document.getElementById("logo");
-  logo.addEventListener("error", () => {
-    logo.style.display = "none";
-    document.getElementById("brand-text").classList.add("show");
-  });
-  logo.src = PIRATI_ASSET("sfondi/logo.webp");
-
-  /* pannello Abisso Infinito: immagine (desktop / mobile) + zona cliccabile invisibile */
   const abissoImg = document.getElementById("abisso-img");
   const abissoSrcMobile = document.getElementById("abisso-src-mobile");
-  if (abissoImg) {
-    if (abissoSrcMobile) abissoSrcMobile.srcset = PIRATI_ASSET("sfondi/abisso-mobile.webp");
-    abissoImg.addEventListener("error", () => {
-      if (abissoImg.dataset.fb) return;
-      abissoImg.dataset.fb = "1";
-      const mobile = window.matchMedia("(max-width: 640px)").matches;
-      if (abissoSrcMobile) abissoSrcMobile.remove();
-      abissoImg.src = mobile ? "assets/sfondi/abisso-mobile.webp" : "assets/sfondi/abisso.webp";
-    });
-    abissoImg.src = PIRATI_ASSET("sfondi/abisso.webp");
-  }
-
-  /* mostri */
-  const foes = document.getElementById("foes");
-  MOSTRI.forEach((id) => {
-    const img = new Image();
-    img.className = "foe"; img.loading = "lazy"; img.alt = nome(id);
-    img.src = PIRATI_ASSET("contendenti/" + id + ".webp");
-    foes.appendChild(img);
+  if (!abissoImg) return;
+  if (abissoSrcMobile) abissoSrcMobile.srcset = PIRATI_ASSET("sfondi/abisso-mobile.webp");
+  abissoImg.addEventListener("error", () => {
+    if (abissoImg.dataset.fb) return;
+    abissoImg.dataset.fb = "1";
+    const mobile = window.matchMedia("(max-width: 640px)").matches;
+    if (abissoSrcMobile) abissoSrcMobile.remove();
+    abissoImg.src = mobile ? "assets/sfondi/abisso-mobile.webp" : "assets/sfondi/abisso.webp";
   });
-
-  /* giostra */
-  const scene = document.getElementById("scene");
-  const ring = document.getElementById("ring");
-  const N = CIURMA.length;
-  const step = 360 / N;
-  let radius = 300;
-
-  CIURMA.forEach((id, i) => {
-    const cell = document.createElement("div");
-    cell.className = "cell";
-    const img = new Image();
-    img.alt = nome(id); img.loading = "lazy";
-    img.src = PIRATI_ASSET("ciurma/" + id + ".webp");
-    const cap = document.createElement("span");
-    cap.textContent = nome(id);
-    cell.appendChild(img); cell.appendChild(cap);
-    ring.appendChild(cell);
-  });
-  const cells = [...ring.children];
-
-  function layout() {
-    const vw = Math.min(window.innerWidth, 960);
-    radius = vw < 640 ? 250 : Math.max(300, Math.min(430, vw * 0.5));
-    cells.forEach((c, i) => {
-      c.style.transform = "rotateY(" + (i * step) + "deg) translateZ(" + radius + "px)";
-    });
-  }
-  layout();
-  window.addEventListener("resize", layout);
-
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let angle = 0, spin = reduce ? 0 : 0.12, dragging = false, hovering = false, lastX = 0;
-
-  function frame() {
-    if (!dragging && !hovering) angle += spin;
-    ring.style.transform = "translateZ(" + (-radius) + "px) rotateY(" + angle + "deg)";
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-
-  scene.addEventListener("pointerenter", () => { hovering = true; });
-  scene.addEventListener("pointerleave", () => { hovering = false; dragging = false; });
-  scene.addEventListener("pointerdown", (e) => {
-    dragging = true; lastX = e.clientX;
-    try { scene.setPointerCapture(e.pointerId); } catch (err) {}
-  });
-  scene.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
-    angle += (e.clientX - lastX) * 0.35;
-    lastX = e.clientX;
-  });
-  scene.addEventListener("pointerup", () => { dragging = false; });
+  abissoImg.src = PIRATI_ASSET("sfondi/abisso.webp");
 })();
 </script>
 
@@ -425,13 +253,24 @@
   const show = (id) => { $(id).hidden = false; };
   const hide = (id) => { $(id).hidden = true; };
 
-  if (!PIRATI_AUTH.enabled) { show("nogate"); return; }
+  function enterHub(who) {
+    show("already");
+    $("already-who").textContent = who;
+    show("games-section");
+    show("already-actions");
+  }
+
+  if (!PIRATI_AUTH.enabled) {
+    show("nogate");
+    show("games-section");
+    return;
+  }
 
   const user = await PIRATI_AUTH.currentUser();
   if (user && !user.guest && (await PIRATI_AUTH.isAllowed(user.email))) {
-    show("already");
-    $("already-who").textContent = "Sei entrato come " + user.email + ".";
+    enterHub("Sei entrato come " + user.email + ".");
     $("logout-btn").addEventListener("click", () => PIRATI_AUTH.signOut());
+    // arriva qui rimandato da un gioco specifico (es. /gioco) senza sessione: torna là appena loggato.
     if (q.get("login") === "1") location.href = "/gioco";
     return;
   }
@@ -470,9 +309,12 @@
     const btn = $("submit-btn");
     btn.disabled = true; msg.className = "msg"; msg.textContent = "Controllo…";
     try {
-      await PIRATI_AUTH.signInWithPassword($("email").value, $("password").value);
-      msg.className = "msg ok"; msg.textContent = "Fatto! Si salpa…";
-      location.href = "/gioco";
+      const u = await PIRATI_AUTH.signInWithPassword($("email").value, $("password").value);
+      hide("login");
+      msg.className = "msg ok"; msg.textContent = "";
+      $("page-foot").textContent = "";
+      enterHub("Sei entrato come " + u.email + ".");
+      if (q.get("login") === "1") location.href = "/gioco";
     } catch (e) {
       msg.className = "msg err";
       if (e.code === "not_allowed") { msg.textContent = ""; apriRichiesta($("email").value); }
@@ -492,7 +334,7 @@
       $("req-btn").disabled = true;
     } catch (e) {
       out.className = "msg err";
-      out.innerHTML = "Non è riuscito l'invio. Scrivi direttamente a <a href='mailto:" + PIRATI_AUTH.contact + "?subject=Accesso%20a%20Pirati'>" + PIRATI_AUTH.contact + "</a>.";
+      out.innerHTML = "Non è riuscito l'invio. Scrivi direttamente a <a href='mailto:" + PIRATI_AUTH.contact + "?subject=Accesso'>" + PIRATI_AUTH.contact + "</a>.";
       btn.disabled = false;
     }
   });
