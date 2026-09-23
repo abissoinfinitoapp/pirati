@@ -94,36 +94,11 @@
      RISOLUZIONE DI UN ATTACCO
      ========================================================================= */
 
-  /**
-   * Risolve un attacco completo.
-   * @param {object} p
-   *  weapon: { baseDice, range, power, special:{type,n?} }
-   *  encounterRange: "vicino"|"medio"|"lontano"
-   *  aiuto: bool — un compagno ha rinunciato al proprio attacco per questo
-   *  effectBonus: number — eventuale bonus dadi da altre fonti (default 0)
-   *  targetBelowHalfHp: bool — per executionerStrike
-   *  targetEliminated: bool — per silentKill (l'attacco ha eliminato il bersaglio?)
-   *  rng: funzione dado iniettabile
-   */
-  function resolveAttack(p) {
-    const weapon = p.weapon;
-    const rng = p.rng || defaultRng;
+  /* Tutto ciò che segue "i dadi sono ormai definitivi": identico sia che i
+     rolls arrivino da un RNG (test/simulazione) sia da dadi fisici inseriti
+     dal Master. Nessuna delle due modalità duplica questa logica. */
+  function finishAttackResolution(diceCount, rolls, weapon, p) {
     const specialType = weapon.special ? weapon.special.type : "none";
-    const isRangeless = specialType === "rangeless";
-
-    const diceCount = computeDiceCount({
-      baseDice: weapon.baseDice,
-      weaponRange: weapon.range,
-      encounterRange: p.encounterRange,
-      isRangeless,
-      aiuto: Boolean(p.aiuto),
-      effectBonus: p.effectBonus || 0
-    });
-
-    let rolls = rollDice(diceCount, rng);
-    if (specialType === "critOnSix") rolls = applyCritOnSix(rolls);
-    else if (specialType === "rerollOnes") rolls = applyRerollOnes(rolls, rng);
-
     let total = sumRolls(rolls) + weapon.power;
 
     const result = {
@@ -152,6 +127,115 @@
     }
 
     return result;
+  }
+
+  /**
+   * Risolve un attacco completo con dadi generati da RNG (test/simulazione).
+   * @param {object} p
+   *  weapon: { baseDice, range, power, special:{type,n?} }
+   *  encounterRange: "vicino"|"medio"|"lontano"
+   *  aiuto: bool — un compagno ha rinunciato al proprio attacco per questo
+   *  effectBonus: number — eventuale bonus dadi da altre fonti (default 0)
+   *  targetBelowHalfHp: bool — per executionerStrike
+   *  targetEliminated: bool — per silentKill (l'attacco ha eliminato il bersaglio?)
+   *  rng: funzione dado iniettabile
+   */
+  function resolveAttack(p) {
+    const weapon = p.weapon;
+    const rng = p.rng || defaultRng;
+    const specialType = weapon.special ? weapon.special.type : "none";
+    const isRangeless = specialType === "rangeless";
+
+    const diceCount = computeDiceCount({
+      baseDice: weapon.baseDice,
+      weaponRange: weapon.range,
+      encounterRange: p.encounterRange,
+      isRangeless,
+      aiuto: Boolean(p.aiuto),
+      effectBonus: p.effectBonus || 0
+    });
+
+    let rolls = rollDice(diceCount, rng);
+    if (specialType === "critOnSix") rolls = applyCritOnSix(rolls);
+    else if (specialType === "rerollOnes") rolls = applyRerollOnes(rolls, rng);
+
+    return finishAttackResolution(diceCount, rolls, weapon, p);
+  }
+
+  /* =========================================================================
+     DADI FISICI — nessuna generazione automatica durante una partita reale.
+     ========================================================================= */
+
+  function isValidDie(n) {
+    return Number.isInteger(n) && n >= 1 && n <= 6;
+  }
+
+  function validateRolls(rolls, expectedCount) {
+    if (!Array.isArray(rolls) || rolls.length !== expectedCount) {
+      const got = Array.isArray(rolls) ? rolls.length : "non un array";
+      throw new Error(`Servono esattamente ${expectedCount} risultati, ricevuti ${got}`);
+    }
+    rolls.forEach((n, i) => {
+      if (!isValidDie(n)) throw new Error(`Risultato dado #${i + 1} non valido: ${n} (deve essere un intero 1-6)`);
+    });
+  }
+
+  /* Indici (0-based, stesso ordine di rolls) dei dadi che rerollOnes richiede
+     di ritirare FISICAMENTE perché mostrano 1 — calcolati PRIMA di applicare
+     alcun ritiro, con lo stesso identico criterio di applyRerollOnes. */
+  function pendingRerollIndices(rolls, specialType) {
+    if (specialType !== "rerollOnes") return [];
+    const indices = [];
+    rolls.forEach((n, i) => { if (n === 1) indices.push(i); });
+    return indices;
+  }
+
+  /**
+   * Risolve un attacco a partire da risultati di dadi FISICI, mai generati
+   * dall'app. Stessa firma concettuale di resolveAttack (weapon/encounterRange/
+   * aiuto/effectBonus/targetBelowHalfHp/targetEliminated), senza rng.
+   *
+   * Ritorna:
+   *  - { status: "needs-reroll", rerollIndices, diceCount, rolls } se l'arma ha
+   *    rerollOnes e uno o più dadi mostrano 1: il chiamante deve far ritirare
+   *    FISICAMENTE solo quei dadi e richiamare questa funzione una seconda
+   *    volta passando `rerollValues` (stessi `rolls` originali, mai ricreati).
+   *  - { status: "resolved", ...stessi campi di resolveAttack } altrimenti.
+   *
+   * Riusa SEMPRE computeDiceCount/applyCritOnSix/applyRerollOnes/
+   * finishAttackResolution: nessuna regola di combattimento duplicata.
+   */
+  function resolveAttackFromRolls(p, rolls, rerollValues) {
+    const weapon = p.weapon;
+    const specialType = weapon.special ? weapon.special.type : "none";
+    const isRangeless = specialType === "rangeless";
+
+    const diceCount = computeDiceCount({
+      baseDice: weapon.baseDice,
+      weaponRange: weapon.range,
+      encounterRange: p.encounterRange,
+      isRangeless,
+      aiuto: Boolean(p.aiuto),
+      effectBonus: p.effectBonus || 0
+    });
+
+    validateRolls(rolls, diceCount);
+
+    let finalRolls = rolls;
+    if (specialType === "critOnSix") {
+      finalRolls = applyCritOnSix(rolls);
+    } else if (specialType === "rerollOnes") {
+      const pending = pendingRerollIndices(rolls, specialType);
+      if (pending.length && !rerollValues) {
+        return { status: "needs-reroll", rerollIndices: pending, diceCount, rolls };
+      }
+      if (pending.length) {
+        validateRolls(rerollValues, pending.length);
+        finalRolls = applyRerollOnes(rolls, makeQueueRng(rerollValues));
+      }
+    }
+
+    return Object.assign({ status: "resolved" }, finishAttackResolution(diceCount, finalRolls, weapon, p));
   }
 
   /* =========================================================================
@@ -196,6 +280,7 @@
     rangeModifier, clampDice, computeDiceCount, rollDice,
     applyCritOnSix, applyRerollOnes, sumRolls,
     resolveAttack,
+    isValidDie, validateRolls, pendingRerollIndices, resolveAttackFromRolls,
     createNoiseTracker, registerAttackNoise, checkReinforcements
   };
 });

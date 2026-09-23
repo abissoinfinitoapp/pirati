@@ -220,3 +220,81 @@ test("silentKill su kill azzera il Rumore e disabilita i rinforzi per il resto d
   const check = combat.checkReinforcements(tracker, combat.makeQueueRng([6]));
   assert.equal(check.reinforcementArrived, false);
 });
+
+/* =========================================================================
+   DADI FISICI — resolveAttackFromRolls. Nessuna generazione automatica:
+   i risultati arrivano sempre dall'esterno (dadi fisici in partita reale,
+   valori fissi nei test). Deve riusare esattamente le stesse regole di
+   resolveAttack (computeDiceCount/applyCritOnSix/applyRerollOnes/power/
+   ignoreShield/areaDamage), mai una copia.
+   ========================================================================= */
+
+test("resolveAttackFromRolls: stesso risultato di resolveAttack a parità di dadi (nessuna arma speciale)", () => {
+  const weapon = { baseDice: 2, range: "medio", power: 2, special: { type: "none" } };
+  const p = { weapon, encounterRange: "medio" }; // ideale -> 3 dadi
+  const fromRng = combat.resolveAttack(Object.assign({}, p, { rng: combat.makeQueueRng([5, 4, 3]) }));
+  const fromRolls = combat.resolveAttackFromRolls(p, [5, 4, 3]);
+  assert.equal(fromRolls.status, "resolved");
+  assert.equal(fromRolls.total, fromRng.total);
+  assert.deepEqual(fromRolls.rolls, fromRng.rolls);
+  assert.equal(fromRolls.total, 5 + 4 + 3 + 2);
+});
+
+test("resolveAttackFromRolls rifiuta un numero di risultati diverso da diceCount", () => {
+  const weapon = { baseDice: 1, range: "medio", power: 1, special: { type: "none" } };
+  const p = { weapon, encounterRange: "medio" }; // 2 dadi (ideale)
+  assert.throws(() => combat.resolveAttackFromRolls(p, [5]));
+  assert.throws(() => combat.resolveAttackFromRolls(p, [5, 4, 3]));
+});
+
+test("resolveAttackFromRolls rifiuta valori di dado fuori dall'intervallo 1-6", () => {
+  const weapon = { baseDice: 1, range: "medio", power: 1, special: { type: "none" } };
+  const p = { weapon, encounterRange: "medio" };
+  assert.throws(() => combat.resolveAttackFromRolls(p, [0, 4]));
+  assert.throws(() => combat.resolveAttackFromRolls(p, [7, 4]));
+  assert.throws(() => combat.resolveAttackFromRolls(p, [3.5, 4]));
+});
+
+test("resolveAttackFromRolls: un 6 fisico attiva il critico (vale 12), come da regola esistente", () => {
+  const weapon = { baseDice: 1, range: "medio", power: 1, special: { type: "critOnSix" } };
+  const p = { weapon, encounterRange: "medio" }; // ideale -> 2 dadi
+  const outcome = combat.resolveAttackFromRolls(p, [6, 3]);
+  assert.equal(outcome.status, "resolved");
+  assert.deepEqual(outcome.rolls, [12, 3]);
+  assert.equal(outcome.total, 12 + 3 + 1);
+});
+
+test("resolveAttackFromRolls: rerollOnes richiede un ritiro fisico esplicito, mai generato da solo", () => {
+  const weapon = { baseDice: 2, range: "vicino", power: 1, special: { type: "rerollOnes" } };
+  const p = { weapon, encounterRange: "vicino" }; // ideale -> 3 dadi
+  const first = combat.resolveAttackFromRolls(p, [1, 5, 3]);
+  assert.equal(first.status, "needs-reroll");
+  assert.deepEqual(first.rerollIndices, [0]);
+  assert.equal(first.diceCount, 3);
+
+  const done = combat.resolveAttackFromRolls(p, [1, 5, 3], [4]);
+  assert.equal(done.status, "resolved");
+  assert.deepEqual(done.rolls, [4, 5, 3]);
+  assert.equal(done.total, 4 + 5 + 3 + 1);
+});
+
+test("resolveAttackFromRolls: se il ritiro fisico è ancora 1, resta 1 — nessun secondo ritiro", () => {
+  const weapon = { baseDice: 1, range: "vicino", power: 0, special: { type: "rerollOnes" } };
+  const p = { weapon, encounterRange: "vicino" }; // ideale -> 2 dadi
+  combat.resolveAttackFromRolls(p, [1, 4]); // scarta il "needs-reroll", serve solo a validare l'indice
+  const done = combat.resolveAttackFromRolls(p, [1, 4], [1]);
+  assert.equal(done.status, "resolved");
+  assert.deepEqual(done.rolls, [1, 4]);
+});
+
+test("resolveAttackFromRolls: più dadi da 1 richiedono un ritiro per ciascuno, nell'ordine originale", () => {
+  const weapon = { baseDice: 3, range: "vicino", power: 0, special: { type: "rerollOnes" } };
+  const p = { weapon, encounterRange: "vicino" }; // ideale, clamp a 3 -> 3 dadi
+  const first = combat.resolveAttackFromRolls(p, [1, 1, 4]);
+  assert.equal(first.status, "needs-reroll");
+  assert.deepEqual(first.rerollIndices, [0, 1]);
+
+  const done = combat.resolveAttackFromRolls(p, [1, 1, 4], [5, 2]);
+  assert.equal(done.status, "resolved");
+  assert.deepEqual(done.rolls, [5, 2, 4]);
+});

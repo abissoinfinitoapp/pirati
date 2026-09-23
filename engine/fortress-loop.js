@@ -1,0 +1,943 @@
+/* =============================================================================
+   Fortress Army — Loop di partita puro (v2, round-based).
+
+   Nessun DOM, nessuna UI, nessuna grafica di mappa. Orchestra round, zone,
+   nemici, boss, loot, KO — ma delega SEMPRE la matematica di un attacco a
+   engine/fortress-combat.js. Non ridefinisce dadi/gittata/special/Rumore/Aiuta.
+
+   gameState è dati puri (serializzabile). L'unica fonte di verità per la
+   posizione è player.zoneId / enemy.zoneId: le presenze per zona si derivano,
+   non si salvano due volte.
+
+   RNG sempre iniettabile: nessuna funzione qui dentro chiama Math.random()
+   direttamente se non come default esplicito.
+   ========================================================================= */
+(function (root, factory) {
+  const combat = typeof module === "object" && module.exports
+    ? require("./fortress-combat.js")
+    : root.FORTRESS_COMBAT;
+  const api = factory(combat);
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root) root.FORTRESS_LOOP = api;
+})(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : null), function (combat) {
+  "use strict";
+
+  const RING_ORDER = ["esterno", "interno", "centro"];
+
+  /* =========================================================================
+     ARCHETIPI NEMICO — configurazione dati, mai numeri sparsi nella logica.
+     ========================================================================= */
+  /* shield è provvisorio (da simulare), ma va preso dalla configurazione
+     dell'archetipo: mai un numero sparso nella risoluzione del combattimento. */
+  const DEFAULT_ENEMY_ARCHETYPES = {
+    normale: {
+      hp: 10, shield: 0, movement: "static",
+      attackProfile: { baseDice: 1, power: 2, range: "medio", special: { type: "none" } }
+    },
+    aggressivo: {
+      hp: 10, shield: 0, movement: "chase",
+      attackProfile: { baseDice: 2, power: 1, range: "vicino", special: { type: "rerollOnes" } }
+    },
+    resistente: {
+      hp: 20, shield: 5, movement: "static",
+      attackProfile: { baseDice: 1, power: 3, range: "medio", special: { type: "ignoreShield", n: 1 } }
+    },
+    distanza: {
+      hp: 10, shield: 2, movement: "static",
+      attackProfile: { baseDice: 1, power: 3, range: "lontano", special: { type: "critOnSix" } }
+    },
+    elite: {
+      hp: 36, shield: 6, movement: "static",
+      attackProfile: { baseDice: 2, power: 3, range: "medio", special: { type: "areaDamage" } }
+    }
+  };
+
+  /* =========================================================================
+     MAPPA DI DEFAULT — 4 esterne + 4 interne + 1 centro, nessuna griglia.
+     encounterRange è un dato esplicito della zona (default dal type in fase
+     di creazione, ma salvato — mai ricalcolato a runtime dal type).
+     ========================================================================= */
+  const TYPE_DEFAULT_RANGE = { citta: "vicino", bosco: "lontano", deposito: "medio" };
+
+  function makeZone({ id, name, type, ring, connections, danger, encounterRange }) {
+    return {
+      id, name, type, ring,
+      connections: connections.slice(),
+      danger,
+      encounterRange: encounterRange || TYPE_DEFAULT_RANGE[type] || "medio",
+      stormState: "sicura",
+      ambientLootClaimed: false,
+      chests: [],
+      noiseTracker: combat.createNoiseTracker()
+    };
+  }
+
+  function createDefaultZoneLayout() {
+    return [
+      makeZone({ id: "e1", name: "Città Nord", type: "citta", ring: "esterno", danger: "medio", connections: ["e2", "e4", "i1"] }),
+      makeZone({ id: "e2", name: "Bosco Est", type: "bosco", ring: "esterno", danger: "basso", connections: ["e1", "e3", "i2"] }),
+      makeZone({ id: "e3", name: "Deposito Sud", type: "deposito", ring: "esterno", danger: "alto", connections: ["e2", "e4", "i3"] }),
+      makeZone({ id: "e4", name: "Collina Ovest", type: "bosco", ring: "esterno", danger: "basso", connections: ["e3", "e1", "i4"] }),
+      makeZone({ id: "i1", name: "Rovine Nord", type: "deposito", ring: "interno", danger: "medio", connections: ["e1", "i2", "i4", "centro"] }),
+      makeZone({ id: "i2", name: "Zona Industriale Est", type: "citta", ring: "interno", danger: "alto", connections: ["e2", "i1", "i3", "centro"] }),
+      makeZone({ id: "i3", name: "Avamposto Sud", type: "deposito", ring: "interno", danger: "medio", connections: ["e3", "i2", "i4", "centro"] }),
+      makeZone({ id: "i4", name: "Base Ovest", type: "citta", ring: "interno", danger: "alto", connections: ["e4", "i3", "i1", "centro"] }),
+      makeZone({ id: "centro", name: "Cittadella Centrale", type: "citta", ring: "centro", danger: "alto", connections: ["i1", "i2", "i3", "i4"] })
+    ];
+  }
+
+  /* =========================================================================
+     QUERY DERIVATE — mai salvate due volte.
+     ========================================================================= */
+  const getPlayer = (state, id) => state.players.find((p) => p.id === id);
+  const getZone = (state, id) => state.zones.find((z) => z.id === id);
+  const getEnemy = (state, id) => state.enemies.find((e) => e.id === id);
+  const playersInZone = (state, zoneId) => state.players.filter((p) => p.zoneId === zoneId);
+  const activePlayersInZone = (state, zoneId) => playersInZone(state, zoneId).filter((p) => p.status === "active");
+  const enemiesInZone = (state, zoneId) => state.enemies.filter((e) => e.zoneId === zoneId && e.hp > 0);
+  const activePlayers = (state) => state.players.filter((p) => p.status === "active");
+
+  function pushLog(state, text) {
+    state.log.unshift(text);
+    if (state.log.length > 60) state.log.length = 60;
+  }
+
+  /* =========================================================================
+     CREAZIONE PARTITA
+     ========================================================================= */
+  function createGame({ players, zones, bossConfig }) {
+    const zoneList = zones || createDefaultZoneLayout();
+    return {
+      phase: "atterraggio",
+      round: 0,
+      initialPlayerCount: players.length,
+      players: players.map((p) => ({
+        id: p.id, name: p.name, status: "active",
+        zoneId: null,
+        hp: 10, shield: 10,
+        koRoundsRemaining: null, koSinceRound: null,
+        movedThisRound: false, actedThisRound: false,
+        equipment: { primary: null, secondary: null, utility: null, consumable: null }
+      })),
+      zones: zoneList,
+      enemies: [],
+      boss: bossConfig ? { active: false, hp: 0, maxHp: 0, shield: 0, maxShield: 0, config: bossConfig, phaseIndex: 0, roundsSinceActivation: 0, zoneId: "centro", lastTargetId: null, suppressed: false, noiseTracker: combat.createNoiseTracker() } : null,
+      pendingAiuto: {}, // playerId aiutato -> true, consumato dal suo prossimo attacco, azzerato a inizio round
+      log: [],
+      winner: null
+    };
+  }
+
+  /* =========================================================================
+     ATTERRAGGIO — solo zone esterne, nessun dado. L'arrivo usa la stessa
+     procedura "entra in zona" di ogni movimento successivo.
+     ========================================================================= */
+  function landPlayer(state, playerId, zoneId, rng) {
+    const player = getPlayer(state, playerId);
+    const zone = getZone(state, zoneId);
+    if (!player || !zone) throw new Error("Giocatore o zona inesistente");
+    if (zone.ring !== "esterno") throw new Error("Si può atterrare solo in una zona esterna");
+    player.zoneId = zoneId;
+    const lootFound = enterZoneAmbient(state, zone, rng);
+    return { player, lootFound };
+  }
+
+  function allPlayersLanded(state) {
+    return state.players.every((p) => p.zoneId !== null);
+  }
+
+  function beginExploration(state, rng) {
+    if (!allPlayersLanded(state)) throw new Error("Non tutti i giocatori sono atterrati");
+    state.phase = "esplorazione";
+    startRound(state, rng);
+  }
+
+  /* Loot ambientale: una sola volta per zona, chiunque arrivi per primo.
+     Risoluzione dell'oggetto lasciata a un placeholder: le tabelle di
+     probabilità definitive per rarità/categoria sono un lavoro successivo. */
+  function rollLootCategory(danger, rng) {
+    const roll = rng();
+    const rarityByDanger = {
+      basso: [0.6, 0.9], medio: [0.4, 0.8], alto: [0.2, 0.6]
+    }[danger] || [0.5, 0.85];
+    const categoria = roll < rarityByDanger[0] ? "comune" : (roll < rarityByDanger[1] ? "non-comune" : "rara");
+    return { tipo: "arma", rarita: categoria };
+  }
+
+  function enterZoneAmbient(state, zone, rng) {
+    if (zone.ambientLootClaimed) return null;
+    zone.ambientLootClaimed = true;
+    const roll = rng || Math.random;
+    const found = rollLootCategory(zone.danger, roll);
+    pushLog(state, `Loot ambientale in ${zone.name}: ${found.rarita} ${found.tipo}`);
+    return found;
+  }
+
+  /* =========================================================================
+     MOVIMENTO
+     ========================================================================= */
+  function moveAction(state, playerId, targetZoneId, rng) {
+    const player = getPlayer(state, playerId);
+    if (!player || player.status !== "active") throw new Error("Giocatore non attivo");
+    if (player.movedThisRound) throw new Error("Movimento già usato in questo round");
+    const currentZone = getZone(state, player.zoneId);
+    if (!currentZone.connections.includes(targetZoneId)) throw new Error("Zona non collegata");
+    const target = getZone(state, targetZoneId);
+    if (target.stormState === "storm" || target.stormState === "eliminated") {
+      throw new Error("Non si può entrare volontariamente in una zona in Tempesta o eliminata");
+    }
+    player.zoneId = targetZoneId;
+    player.movedThisRound = true;
+    // Stessa funzione condivisa con landPlayer: "un solo loot ambientale per zona",
+    // mai una seconda implementazione della regola.
+    const lootFound = enterZoneAmbient(state, target, rng);
+    return { player, lootFound };
+  }
+
+  /* =========================================================================
+     AZIONI PRINCIPALI
+     ========================================================================= */
+  function ensureCanAct(player) {
+    if (!player || player.status !== "active") throw new Error("Giocatore non attivo");
+    if (player.actedThisRound) throw new Error("Azione principale già usata in questo round");
+  }
+
+  function aiutoAction(state, helperId, targetId) {
+    const helper = getPlayer(state, helperId);
+    ensureCanAct(helper);
+    const target = getPlayer(state, targetId);
+    if (!target || target.zoneId !== helper.zoneId) throw new Error("Aiuta richiede la stessa zona");
+    state.pendingAiuto[targetId] = true;
+    helper.actedThisRound = true;
+  }
+
+  /* Distribuisce i secondari (areaDamage/chainStrike) su altri bersagli
+     validi nella stessa zona, in ordine deterministico per id. */
+  function applySecondaryHits(secondaryHits, others, applyFn) {
+    const ordered = others.slice().sort((a, b) => (a.id < b.id ? -1 : 1));
+    secondaryHits.forEach((amount, i) => { if (ordered[i]) applyFn(ordered[i], amount); });
+  }
+
+  /* Anteprima pura (nessun dado tirato, nessuna mutazione, richiamabile quante
+     volte serve per mostrare/aggiornare uno schermo): riusa ESATTAMENTE
+     combat.computeDiceCount/rangeModifier con gli stessi input che l'attacco
+     reale userebbe (aiuto pendente, marcatore suppress, gittata di zona).
+     Serve perché quegli input vivono solo qui nel loop: il combat engine da
+     solo non li conosce. Nessuna formula duplicata, solo dati raccolti. */
+  function previewPlayerAttack(state, playerId, enemyId, weapon) {
+    const player = getPlayer(state, playerId);
+    const enemy = getEnemy(state, enemyId);
+    if (!player || !enemy) throw new Error("Giocatore o nemico inesistente");
+    const zone = getZone(state, player.zoneId);
+    const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+    const aiuto = Boolean(state.pendingAiuto[playerId]);
+    const effectBonus = enemy.suppressed ? 1 : 0;
+
+    const diceCount = combat.computeDiceCount({
+      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      isRangeless, aiuto, effectBonus
+    });
+    const rangeMod = combat.rangeModifier(weapon.range, zone.encounterRange, isRangeless);
+
+    return {
+      diceCount, rangeModifier: rangeMod,
+      weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      aiuto, effectBonus,
+      enemyHp: enemy.hp, enemyMaxHp: enemy.maxHp, enemyShield: enemy.shield, enemyMaxShield: enemy.maxShield
+    };
+  }
+
+  /* Stessa anteprima pura, ma contro il boss: nessuna mutazione, riusa
+     computeDiceCount/rangeModifier, richiamabile quante volte serve. */
+  function previewBossAttack(state, playerId, weapon) {
+    const player = getPlayer(state, playerId);
+    const boss = state.boss;
+    if (!player || !boss || !boss.active) throw new Error("Giocatore o boss inesistente/non attivo");
+    const zone = getZone(state, player.zoneId);
+    const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+    const aiuto = Boolean(state.pendingAiuto[playerId]);
+    const effectBonus = boss.suppressed ? 1 : 0;
+
+    const diceCount = combat.computeDiceCount({
+      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      isRangeless, aiuto, effectBonus
+    });
+    const rangeMod = combat.rangeModifier(weapon.range, zone.encounterRange, isRangeless);
+
+    return {
+      diceCount, rangeModifier: rangeMod,
+      weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      aiuto, effectBonus,
+      bossHp: boss.hp, bossMaxHp: boss.maxHp, bossShield: boss.shield, bossMaxShield: boss.maxShield
+    };
+  }
+
+  /* =========================================================================
+     ATTACCO GIOCATORE → NEMICO — "dichiara" (una tantum, blocca aiuto/
+     suppress/POTENZA-modificatori per tutta la durata dell'attacco, anche
+     attraverso un ritiro fisico) + "risolvi da dadi" (mai calcoli propri:
+     tutto passa da combat.resolveAttackFromRolls) + wrapper RNG per
+     test/simulazioni.
+     ========================================================================= */
+
+  /* Mutazione minima e una tantum: valida che si possa attaccare, consuma il
+     marcatore suppress (se presente, esattamente come faceva prima l'attacco
+     unico), e congela aiuto/effectBonus/targetBelowHalfHp/diceCount per tutta
+     la durata dell'attacco — anche se servirà un ritiro fisico più avanti. */
+  function declarePlayerAttack(state, playerId, enemyId, weapon) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    const enemy = getEnemy(state, enemyId);
+    if (!enemy || enemy.zoneId !== player.zoneId || enemy.hp <= 0) throw new Error("Bersaglio non valido");
+    const zone = getZone(state, player.zoneId);
+    const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+    const aiuto = Boolean(state.pendingAiuto[playerId]);
+    const effectBonus = enemy.suppressed ? 1 : 0;
+    enemy.suppressed = false; // consumato ORA, alla dichiarazione, prima di qualunque dado
+    const targetBelowHalfHp = enemy.hp < enemy.maxHp / 2;
+    const diceCount = combat.computeDiceCount({
+      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      isRangeless, aiuto, effectBonus
+    });
+    return { kind: "player-vs-enemy", playerId, enemyId, weapon, encounterRange: zone.encounterRange, aiuto, effectBonus, targetBelowHalfHp, diceCount };
+  }
+
+  /* Tail comune a RNG e dadi fisici: applica il risultato già calcolato dal
+     combat engine, mai un ricalcolo. */
+  function finishPlayerAttackOnEnemy(state, player, enemy, weapon, aiuto, outcome) {
+    applyDamageToEnemy(enemy, outcome);
+    const eliminated = enemy.hp <= 0;
+
+    if (outcome.secondaryHits && outcome.secondaryHits.length) {
+      const others = enemiesInZone(state, enemy.zoneId).filter((e) => e.id !== enemy.id);
+      applySecondaryHits(outcome.secondaryHits, others, (target, amount) => applyDamageToEnemy(target, { total: amount, ignoreShieldN: 0 }));
+    }
+    if (outcome.appliesSuppressMarker) enemy.suppressed = true; // nuovo marcatore per il prossimo alleato
+
+    const noiseResult = weapon.special && weapon.special.type === "silentKill"
+      ? Object.assign({}, outcome, { resetsNoise: eliminated, disablesReinforcements: eliminated })
+      : outcome;
+    const zone = getZone(state, player.zoneId);
+    zone.noiseTracker = combat.registerAttackNoise(zone.noiseTracker, noiseResult);
+
+    if (aiuto) delete state.pendingAiuto[player.id];
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} attacca ${enemy.archetype || "il nemico"}: ${outcome.total} danni${eliminated ? " (eliminato)" : ""}`);
+    return { result: outcome, eliminated };
+  }
+
+  /* Risolve da risultati di dadi FISICI. `declared` è ESATTAMENTE l'oggetto
+     restituito da declarePlayerAttack: non viene mai ricalcolato qui, quindi
+     resta identico anche a cavallo di un ritiro fisico (rerollOnes). */
+  function resolvePlayerAttackFromRolls(state, declared, rolls, rerollValues) {
+    const player = getPlayer(state, declared.playerId);
+    const enemy = getEnemy(state, declared.enemyId);
+    if (!player || !enemy) throw new Error("Giocatore o nemico non più validi rispetto alla dichiarazione dell'attacco");
+
+    const outcome = combat.resolveAttackFromRolls(
+      { weapon: declared.weapon, encounterRange: declared.encounterRange, aiuto: declared.aiuto, effectBonus: declared.effectBonus, targetBelowHalfHp: declared.targetBelowHalfHp },
+      rolls, rerollValues
+    );
+    if (outcome.status === "needs-reroll") return outcome;
+
+    return Object.assign({ status: "resolved" }, finishPlayerAttackOnEnemy(state, player, enemy, declared.weapon, declared.aiuto, outcome));
+  }
+
+  /* Wrapper di compatibilità per test/simulazioni (RNG, mai in partita reale). */
+  function attackEnemyAction(state, playerId, enemyId, weapon, rng) {
+    const declared = declarePlayerAttack(state, playerId, enemyId, weapon);
+    const player = getPlayer(state, playerId);
+    const enemy = getEnemy(state, enemyId);
+    const roll = rng || Math.random;
+    const outcome = combat.resolveAttack({
+      weapon, encounterRange: declared.encounterRange, aiuto: declared.aiuto,
+      effectBonus: declared.effectBonus, targetBelowHalfHp: declared.targetBelowHalfHp, rng: roll
+    });
+    return finishPlayerAttackOnEnemy(state, player, enemy, weapon, declared.aiuto, outcome);
+  }
+
+  function rianimaAction(state, playerId, targetId) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    const target = getPlayer(state, targetId);
+    if (!target || target.status !== "ko" || target.zoneId !== player.zoneId) throw new Error("Rianimazione non valida");
+    target.status = "active";
+    target.hp = 5;
+    target.shield = 0;
+    target.koRoundsRemaining = null;
+    target.koSinceRound = null;
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} rianima ${target.name}`);
+  }
+
+  function scambiaAction(state, fromId, toId, slot) {
+    const from = getPlayer(state, fromId);
+    ensureCanAct(from);
+    const to = getPlayer(state, toId);
+    if (!to || to.status !== "active" || to.zoneId !== from.zoneId) throw new Error("Scambio non valido");
+    const item = from.equipment[slot];
+    if (item === undefined) throw new Error("Slot inesistente");
+    const other = to.equipment[slot];
+    to.equipment[slot] = item;
+    from.equipment[slot] = other || null;
+    from.actedThisRound = true;
+    pushLog(state, `${from.name} scambia ${slot} con ${to.name}`);
+  }
+
+  /* Effetto generico: consuma il consumabile equipaggiato. Le regole numeriche
+     precise (quanti HP/Scudo cura un oggetto) sono un lavoro di contenuto
+     successivo: qui l'oggetto porta già il proprio valore. */
+  function usaOggettoAction(state, playerId) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    const item = player.equipment.consumable;
+    if (!item) throw new Error("Nessun oggetto equipaggiato");
+    if (item.type === "cura") player.hp = Math.min(10, player.hp + (item.amount || 0));
+    if (item.type === "scudo") player.shield = Math.min(10, player.shield + (item.amount || 0));
+    player.equipment.consumable = null;
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} usa ${item.type}`);
+  }
+
+  /* Placeholder generico: nessuna regola numerica specifica assegnata ancora
+     (leve, terminali, NPC...). Consuma comunque l'azione. */
+  function interagisciAction(state, playerId) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} interagisce con la zona`);
+  }
+
+  function apriCassaAction(state, playerId, chestId, rng) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    const zone = getZone(state, player.zoneId);
+    const chest = zone.chests.find((c) => c.id === chestId);
+    if (!chest || chest.opened) throw new Error("Cassa non disponibile");
+    chest.opened = true;
+    const roll = rng || Math.random;
+    const found = rollLootCategory(zone.danger, roll);
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} apre una cassa in ${zone.name}: ${found.rarita} ${found.tipo}`);
+    return found;
+  }
+
+  /* =========================================================================
+     BFS — solo per l'Aggressivo, nessun pathfinding spaziale.
+     ========================================================================= */
+  function bfsFrom(zones, startId) {
+    const dist = { [startId]: 0 };
+    const prev = {};
+    const queue = [startId];
+    while (queue.length) {
+      const cur = queue.shift();
+      const zone = zones.find((z) => z.id === cur);
+      const neighbors = zone.connections.slice().sort();
+      for (const n of neighbors) {
+        if (!(n in dist)) { dist[n] = dist[cur] + 1; prev[n] = cur; queue.push(n); }
+      }
+    }
+    return { dist, prev };
+  }
+
+  function nearestZoneWithActivePlayer(state, fromZoneId) {
+    const { dist, prev } = bfsFrom(state.zones, fromZoneId);
+    const candidates = state.zones
+      .filter((z) => z.id !== fromZoneId && dist[z.id] !== undefined && activePlayersInZone(state, z.id).length > 0)
+      .sort((a, b) => (dist[a.id] - dist[b.id]) || (a.id < b.id ? -1 : 1));
+    if (!candidates.length) return null;
+    const targetId = candidates[0].id;
+    let step = targetId;
+    while (prev[step] !== fromZoneId && prev[step] !== undefined) step = prev[step];
+    return { targetZoneId: targetId, firstStep: step, distance: dist[targetId] };
+  }
+
+  /* =========================================================================
+     TIE-BREAK BERSAGLIO — rotazione deterministica tra candidati a pari
+     distanza, mai casuale. Usato sia dai nemici sia dal boss.
+     ========================================================================= */
+  function pickTarget(candidates, lastTargetId) {
+    if (!candidates.length) return null;
+    if (candidates.length === 1) return candidates[0];
+    const ids = candidates.map((c) => c.id);
+    const idx = ids.indexOf(lastTargetId);
+    const nextIdx = (idx + 1) % ids.length;
+    return candidates[nextIdx];
+  }
+
+  /* =========================================================================
+     FASE NEMICI
+     ========================================================================= */
+  /* Ordine deterministico della fase nemici: calcolato UNA VOLTA (solo id,
+     nessun esito precalcolato) così un chiamante passo-passo (il futuro
+     Director) sa quanti nemici agiranno e in che ordine, senza dover
+     rieseguire la stessa risoluzione più volte. */
+  function getEnemyPhaseOrder(state) {
+    return state.enemies.filter((e) => e.hp > 0).sort((a, b) => (a.id < b.id ? -1 : 1)).map((e) => e.id);
+  }
+
+  /* Prepara UN SOLO nemico della fase, SENZA tirare dadi: stessa identica
+     logica di targeting/movimento che prima viveva dentro il forEach di
+     resolveEnemyPhase, ma si ferma un istante prima del combat engine.
+     Il bersaglio (targetId) è deciso qui e va passato invariato a
+     resolveEnemyStepFromRolls: mai un secondo pickTarget dopo aver preso i
+     dadi fisici. Se l'id non esiste più o l'enemy è già a 0 HP (snapshot
+     dell'ordine ormai stale), nessun errore: "skipped". */
+  function prepareEnemyStep(state, enemyId) {
+    const enemy = getEnemy(state, enemyId);
+    if (!enemy || enemy.hp <= 0) return { type: "skipped", enemyId };
+
+    const candidates = activePlayersInZone(state, enemy.zoneId);
+    if (candidates.length) {
+      const target = pickTarget(candidates, enemy.lastTargetId);
+      const zone = getZone(state, enemy.zoneId);
+      const weapon = enemy.attackProfile;
+      const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+      const diceCount = combat.computeDiceCount({
+        baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+        isRangeless, aiuto: false, effectBonus: 0
+      });
+      return { type: "attack", enemyId: enemy.id, targetId: target.id, weapon, encounterRange: zone.encounterRange, diceCount };
+    }
+
+    const archetypeDef = DEFAULT_ENEMY_ARCHETYPES[enemy.archetype];
+    if (archetypeDef && archetypeDef.movement === "chase") {
+      const move = nearestZoneWithActivePlayer(state, enemy.zoneId);
+      if (move) {
+        const fromZoneId = enemy.zoneId;
+        enemy.zoneId = move.firstStep;
+        return { type: "move", enemyId: enemy.id, fromZoneId, toZoneId: enemy.zoneId };
+      }
+    }
+    return { type: "idle", enemyId: enemy.id };
+  }
+
+  /* Tail comune a RNG e dadi fisici: applica un esito di attacco NEMICO→
+     giocatore già calcolato dal combat engine (mai un ricalcolo). */
+  function applyEnemyAttackOutcome(state, enemy, target, outcome) {
+    const hpBefore = target.hp, shieldBefore = target.shield, statusBefore = target.status;
+    applyDamageToPlayer(state, target, outcome);
+
+    const secondaryHits = [];
+    if (outcome.secondaryHits && outcome.secondaryHits.length) {
+      const others = activePlayersInZone(state, enemy.zoneId).filter((p) => p.id !== target.id);
+      applySecondaryHits(outcome.secondaryHits, others, (p, amount) => {
+        const hpB = p.hp, shieldB = p.shield, statusB = p.status;
+        applyDamageToPlayer(state, p, { total: amount });
+        secondaryHits.push({
+          playerId: p.id, amount, ignoreShieldN: 0,
+          hpBefore: hpB, hpAfter: p.hp,
+          shieldBefore: shieldB, shieldAfter: p.shield,
+          statusBefore: statusB, statusAfter: p.status
+        });
+      });
+    }
+
+    const zone = getZone(state, enemy.zoneId);
+    zone.noiseTracker = combat.registerAttackNoise(zone.noiseTracker, outcome);
+    enemy.lastTargetId = target.id;
+    pushLog(state, `${enemy.archetype} attacca ${target.name}: ${outcome.total} danni`);
+
+    return {
+      type: "attack", enemyId: enemy.id, targetId: target.id, result: outcome,
+      ignoreShieldN: outcome.ignoreShieldN || 0,
+      hpBefore, hpAfter: target.hp,
+      shieldBefore, shieldAfter: target.shield,
+      statusBefore, statusAfter: target.status,
+      secondaryHits
+    };
+  }
+
+  /* Risolve da risultati di dadi FISICI. `prepared` è ESATTAMENTE l'oggetto
+     restituito da prepareEnemyStep: il bersaglio non viene mai deciso di nuovo qui. */
+  function resolveEnemyStepFromRolls(state, prepared, rolls, rerollValues) {
+    if (prepared.type !== "attack") throw new Error("Questo step non prevede un tiro di dadi");
+    const outcome = combat.resolveAttackFromRolls(
+      { weapon: prepared.weapon, encounterRange: prepared.encounterRange },
+      rolls, rerollValues
+    );
+    if (outcome.status === "needs-reroll") return outcome;
+
+    const enemy = getEnemy(state, prepared.enemyId);
+    const target = getPlayer(state, prepared.targetId);
+    if (!enemy || !target) throw new Error("Nemico o bersaglio non più validi rispetto alla preparazione dello step");
+    return Object.assign({ status: "resolved" }, applyEnemyAttackOutcome(state, enemy, target, outcome));
+  }
+
+  /* Wrapper di compatibilità per test/simulazioni (RNG, mai in partita reale). */
+  function resolveEnemyStep(state, enemyId, rng) {
+    const prepared = prepareEnemyStep(state, enemyId);
+    if (prepared.type !== "attack") return prepared;
+    const roll = rng || Math.random;
+    const enemy = getEnemy(state, prepared.enemyId);
+    const target = getPlayer(state, prepared.targetId);
+    const outcome = combat.resolveAttack({ weapon: prepared.weapon, encounterRange: prepared.encounterRange, rng: roll });
+    return applyEnemyAttackOutcome(state, enemy, target, outcome);
+  }
+
+  /* Wrapper di compatibilità: stesso ordine, stesso comportamento di sempre.
+     Chi non ha bisogno dello step-by-step continua a chiamare questa. */
+  function resolveEnemyPhase(state, rng) {
+    getEnemyPhaseOrder(state).forEach((id) => resolveEnemyStep(state, id, rng));
+  }
+
+  /* Applica danno a QUALUNQUE bersaglio con hp/shield (giocatore, nemico o
+     boss): Scudo prima, poi Salute. Se l'arma ha ignoreShield(N), N punti del
+     danno totale bypassano lo Scudo e colpiscono subito la Salute; il resto
+     del danno segue l'ordine normale Scudo→Salute. Unica implementazione,
+     riusata per ogni tipo di bersaglio — mai duplicata.
+     Diversa dalla Tempesta (che ignora SEMPRE lo Scudo, vedi endRound). */
+  function applyDamage(target, result) {
+    let dmg = result.total;
+    const bypass = Math.min(result.ignoreShieldN || 0, dmg);
+    if (bypass > 0) {
+      target.hp = Math.max(0, target.hp - bypass);
+      dmg -= bypass;
+    }
+    if (dmg > 0 && target.shield > 0) {
+      const fromShield = Math.min(target.shield, dmg);
+      target.shield -= fromShield;
+      dmg -= fromShield;
+    }
+    if (dmg > 0) target.hp = Math.max(0, target.hp - dmg);
+  }
+
+  function applyDamageToPlayer(state, player, result) {
+    applyDamage(player, result);
+    if (player.hp <= 0 && player.status === "active") setPlayerKO(state, player);
+  }
+
+  function applyDamageToEnemy(enemy, result) {
+    applyDamage(enemy, result);
+  }
+
+  function setPlayerKO(state, player) {
+    player.status = "ko";
+    player.hp = 0;
+    player.koRoundsRemaining = 3;
+    player.koSinceRound = state.round;
+    pushLog(state, `${player.name} va KO`);
+  }
+
+  /* =========================================================================
+     FASE BOSS
+     ========================================================================= */
+  /* Sceglie la fase più avanzata (soglia più bassa) tra quelle il cui
+     threshold è >= al rapporto hp/maxHp corrente. */
+  function currentBossPhase(boss) {
+    const ratio = boss.hp / boss.maxHp;
+    const phases = boss.config.phases;
+    const eligible = phases.filter((p) => ratio <= p.threshold);
+    return eligible.length ? eligible.reduce((a, b) => (a.threshold < b.threshold ? a : b)) : phases[phases.length - 1];
+  }
+
+  /* Prepara l'attacco del boss (un solo attacco a round) SENZA tirare dadi:
+     stessa scelta di fase/bersaglio di sempre, bloccata prima del combat
+     engine e mai ridecisa dopo un ritiro fisico. */
+  function prepareBossStep(state) {
+    const boss = state.boss;
+    if (!boss || !boss.active || boss.hp <= 0) return { type: "idle" };
+    const zone = getZone(state, boss.zoneId);
+    const candidates = activePlayersInZone(state, boss.zoneId);
+    if (!candidates.length) return { type: "idle" }; // il boss non attacca chi non è nella sua zona
+
+    const phase = currentBossPhase(boss);
+    const target = pickTarget(candidates, boss.lastTargetId);
+    const weapon = phase.attackProfile;
+    const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+    const diceCount = combat.computeDiceCount({
+      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      isRangeless, aiuto: false, effectBonus: 0
+    });
+    return { type: "attack", targetId: target.id, weapon, encounterRange: zone.encounterRange, diceCount };
+  }
+
+  /* Tail comune a RNG e dadi fisici: applica un esito di attacco BOSS→
+     giocatore già calcolato dal combat engine (mai un ricalcolo). */
+  function applyBossAttackOutcome(state, target, outcome) {
+    const boss = state.boss;
+    const hpBefore = target.hp, shieldBefore = target.shield, statusBefore = target.status;
+    applyDamageToPlayer(state, target, outcome);
+
+    const secondaryHits = [];
+    if (outcome.secondaryHits && outcome.secondaryHits.length) {
+      const others = activePlayersInZone(state, boss.zoneId).filter((p) => p.id !== target.id);
+      applySecondaryHits(outcome.secondaryHits, others, (p, amount) => {
+        const hpB = p.hp, shieldB = p.shield, statusB = p.status;
+        applyDamageToPlayer(state, p, { total: amount });
+        secondaryHits.push({
+          playerId: p.id, amount, ignoreShieldN: 0,
+          hpBefore: hpB, hpAfter: p.hp,
+          shieldBefore: shieldB, shieldAfter: p.shield,
+          statusBefore: statusB, statusAfter: p.status
+        });
+      });
+    }
+
+    const zone = getZone(state, boss.zoneId);
+    zone.noiseTracker = combat.registerAttackNoise(zone.noiseTracker, outcome);
+    boss.lastTargetId = target.id;
+    pushLog(state, `Il boss attacca ${target.name}: ${outcome.total} danni`);
+
+    return {
+      type: "attack", targetId: target.id, result: outcome,
+      ignoreShieldN: outcome.ignoreShieldN || 0,
+      hpBefore, hpAfter: target.hp,
+      shieldBefore, shieldAfter: target.shield,
+      statusBefore, statusAfter: target.status,
+      secondaryHits
+    };
+  }
+
+  /* Risolve da risultati di dadi FISICI. `prepared` è ESATTAMENTE l'oggetto
+     restituito da prepareBossStep. */
+  function resolveBossStepFromRolls(state, prepared, rolls, rerollValues) {
+    if (prepared.type !== "attack") throw new Error("Questo step non prevede un tiro di dadi");
+    const outcome = combat.resolveAttackFromRolls(
+      { weapon: prepared.weapon, encounterRange: prepared.encounterRange },
+      rolls, rerollValues
+    );
+    if (outcome.status === "needs-reroll") return outcome;
+
+    const target = getPlayer(state, prepared.targetId);
+    if (!target) throw new Error("Bersaglio non più valido rispetto alla preparazione dello step");
+    return Object.assign({ status: "resolved" }, applyBossAttackOutcome(state, target, outcome));
+  }
+
+  /* Wrapper di compatibilità per test/simulazioni (RNG, mai in partita reale). */
+  function resolveBossStep(state, rng) {
+    const prepared = prepareBossStep(state);
+    if (prepared.type !== "attack") return prepared;
+    const roll = rng || Math.random;
+    const target = getPlayer(state, prepared.targetId);
+    const outcome = combat.resolveAttack({ weapon: prepared.weapon, encounterRange: prepared.encounterRange, rng: roll });
+    return applyBossAttackOutcome(state, target, outcome);
+  }
+
+  /* Wrapper di compatibilità: stesso comportamento di sempre. */
+  function resolveBossPhase(state, rng) {
+    return resolveBossStep(state, rng);
+  }
+
+  /* =========================================================================
+     ATTACCO GIOCATORE → BOSS — stesso identico principio (dichiara/risolvi da
+     dadi/wrapper RNG) e stesso combat engine dell'attacco contro un nemico:
+     nessun combattimento boss separato. Il boss non ha un'entità "enemy" nel
+     catalogo nemici: applyDamage/applyDamageToEnemy sono già generiche su
+     qualunque bersaglio con hp/shield, quindi si riusano direttamente su
+     state.boss senza bisogno di una terza implementazione di applyDamage.
+     ========================================================================= */
+
+  function declareBossAttack(state, playerId, weapon) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    const boss = state.boss;
+    if (!boss || !boss.active || boss.hp <= 0 || boss.zoneId !== player.zoneId) throw new Error("Bersaglio boss non valido");
+    const zone = getZone(state, player.zoneId);
+    const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+    const aiuto = Boolean(state.pendingAiuto[playerId]);
+    const effectBonus = boss.suppressed ? 1 : 0;
+    boss.suppressed = false; // consumato ORA, alla dichiarazione, prima di qualunque dado
+    const targetBelowHalfHp = boss.hp < boss.maxHp / 2;
+    const diceCount = combat.computeDiceCount({
+      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      isRangeless, aiuto, effectBonus
+    });
+    return { kind: "player-vs-boss", playerId, weapon, encounterRange: zone.encounterRange, aiuto, effectBonus, targetBelowHalfHp, diceCount };
+  }
+
+  function finishPlayerAttackOnBoss(state, player, weapon, aiuto, outcome) {
+    const boss = state.boss;
+    applyDamage(boss, outcome); // stessa funzione condivisa hp/shield di sempre
+    const defeated = boss.hp <= 0;
+
+    if (outcome.appliesSuppressMarker) boss.suppressed = true;
+    // areaDamage/chainStrike: il boss non ha altri "bersagli boss" nella
+    // propria zona — i secondari, se presenti, non hanno un bersaglio valido
+    // e restano semplicemente non applicati (stessa sorte che avrebbero
+    // contro un nemico solitario senza compagni nella stessa zona).
+
+    const zone = getZone(state, player.zoneId);
+    zone.noiseTracker = combat.registerAttackNoise(zone.noiseTracker, outcome);
+
+    if (aiuto) delete state.pendingAiuto[player.id];
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} attacca il boss: ${outcome.total} danni${defeated ? " (sconfitto)" : ""}`);
+    checkVictoryOrDefeat(state);
+    return { result: outcome, defeated };
+  }
+
+  function resolveBossAttackFromRolls(state, declared, rolls, rerollValues) {
+    const player = getPlayer(state, declared.playerId);
+    if (!player) throw new Error("Giocatore non più valido rispetto alla dichiarazione dell'attacco");
+
+    const outcome = combat.resolveAttackFromRolls(
+      { weapon: declared.weapon, encounterRange: declared.encounterRange, aiuto: declared.aiuto, effectBonus: declared.effectBonus, targetBelowHalfHp: declared.targetBelowHalfHp },
+      rolls, rerollValues
+    );
+    if (outcome.status === "needs-reroll") return outcome;
+
+    return Object.assign({ status: "resolved" }, finishPlayerAttackOnBoss(state, player, declared.weapon, declared.aiuto, outcome));
+  }
+
+  /* Wrapper di compatibilità per test/simulazioni (RNG, mai in partita reale). */
+  function attackBossAction(state, playerId, weapon, rng) {
+    const declared = declareBossAttack(state, playerId, weapon);
+    const player = getPlayer(state, playerId);
+    const roll = rng || Math.random;
+    const outcome = combat.resolveAttack({
+      weapon, encounterRange: declared.encounterRange, aiuto: declared.aiuto,
+      effectBonus: declared.effectBonus, targetBelowHalfHp: declared.targetBelowHalfHp, rng: roll
+    });
+    return finishPlayerAttackOnBoss(state, player, weapon, declared.aiuto, outcome);
+  }
+
+  /* =========================================================================
+     TEMPESTA — tabella fissa round-per-round, nessuna formula generica.
+     ========================================================================= */
+  const STORM_TABLE = {
+    4: { ring: "esterno", state: "warning" },
+    5: { ring: "esterno", state: "storm" },
+    7: { ring: "esterno", state: "eliminated" },
+    // round 7 dichiara ANCHE l'allerta interna
+    8: { ring: "interno", state: "storm" },
+    10: { ring: "interno", state: "eliminated" }
+  };
+  const STORM_TABLE_SECONDARY = { 7: { ring: "interno", state: "warning" } };
+  const STORM_DAMAGE = { 5: 3, 6: 3, 8: 5, 9: 5 };
+
+  function applyStormTransition(state, round) {
+    const primary = STORM_TABLE[round];
+    if (primary) state.zones.filter((z) => z.ring === primary.ring).forEach((z) => { z.stormState = primary.state; });
+    const secondary = STORM_TABLE_SECONDARY[round];
+    if (secondary) state.zones.filter((z) => z.ring === secondary.ring).forEach((z) => { z.stormState = secondary.state; });
+  }
+
+  /* Elimina immediatamente chiunque (active o ko) si trovi in una zona
+     appena diventata "eliminated" in QUESTO round. */
+  function eliminatePlayersInNewlyEliminatedZones(state, round) {
+    const justEliminatedRings = [];
+    if (STORM_TABLE[round] && STORM_TABLE[round].state === "eliminated") justEliminatedRings.push(STORM_TABLE[round].ring);
+    if (!justEliminatedRings.length) return;
+    state.zones.filter((z) => justEliminatedRings.includes(z.ring)).forEach((zone) => {
+      playersInZone(state, zone.id).forEach((p) => {
+        if (p.status !== "eliminated") {
+          p.status = "eliminated";
+          pushLog(state, `${p.name} eliminato: la zona ${zone.name} è stata inghiottita dalla Tempesta`);
+        }
+      });
+    });
+  }
+
+  /* =========================================================================
+     INIZIO ROUND
+     ========================================================================= */
+  function startRound(state, rng) {
+    state.round += 1;
+    applyStormTransition(state, state.round);
+    eliminatePlayersInNewlyEliminatedZones(state, state.round);
+    if (state.round === 10 && state.boss && !state.boss.active) activateBoss(state);
+    state.players.forEach((p) => { p.movedThisRound = false; p.actedThisRound = false; });
+    state.pendingAiuto = {};
+  }
+
+  function activateBoss(state) {
+    const boss = state.boss;
+    boss.active = true;
+    boss.maxHp = boss.config.hpPerPlayer * state.initialPlayerCount;
+    boss.hp = boss.maxHp;
+    // Shield NON scala coi giocatori (a differenza dell'HP): resta un numero
+    // esplicito di configurazione, provvisorio finché non si simula.
+    boss.maxShield = boss.config.shield || 0;
+    boss.shield = boss.maxShield;
+    pushLog(state, `Il boss si attiva! HP: ${boss.maxHp}, Scudo: ${boss.maxShield}`);
+  }
+
+  /* =========================================================================
+     FINE ROUND
+     ========================================================================= */
+  function endRound(state, rng) {
+    const roll = rng || Math.random;
+
+    // 1. Rumore/Rinforzi per ogni zona con nemici vivi
+    state.zones.forEach((zone) => {
+      if (!enemiesInZone(state, zone.id).length) return;
+      const check = combat.checkReinforcements(zone.noiseTracker, roll);
+      zone.noiseTracker = check.tracker;
+      if (check.reinforcementArrived) spawnEnemy(state, "normale", zone.id);
+    });
+
+    // 2. Danno Tempesta: diretto alla Salute, ignora lo Scudo
+    const dmg = STORM_DAMAGE[state.round];
+    if (dmg) {
+      state.zones.filter((z) => z.stormState === "storm").forEach((zone) => {
+        activePlayersInZone(state, zone.id).forEach((p) => {
+          p.hp = Math.max(0, p.hp - dmg);
+          if (p.hp <= 0) setPlayerKO(state, p);
+        });
+      });
+    }
+
+    // 3. Countdown KO — chi è entrato in KO in QUESTO round non perde nulla ora
+    state.players.filter((p) => p.status === "ko").forEach((p) => {
+      if (p.koSinceRound === state.round) return;
+      p.koRoundsRemaining -= 1;
+      const zone = getZone(state, p.zoneId);
+      if (zone.stormState === "storm") p.koRoundsRemaining -= 1;
+      if (p.koRoundsRemaining <= 0) { p.status = "eliminated"; pushLog(state, `${p.name} eliminato: nessuno lo ha rianimato in tempo`); }
+    });
+
+    // 4. Evocazione boss
+    if (state.boss && state.boss.active && state.boss.hp > 0) {
+      state.boss.roundsSinceActivation += 1;
+      const every = state.boss.config.summonEvery || 3;
+      if (state.boss.config.summonEvery && state.boss.roundsSinceActivation % every === 0) {
+        spawnEnemy(state, state.boss.config.summonArchetype || "normale", state.boss.zoneId);
+        pushLog(state, "Il boss evoca un rinforzo");
+      }
+    }
+
+    // 5. Vittoria/sconfitta
+    checkVictoryOrDefeat(state);
+  }
+
+  function spawnEnemy(state, archetype, zoneId) {
+    const def = DEFAULT_ENEMY_ARCHETYPES[archetype];
+    const id = archetype + "_" + Math.random().toString(36).slice(2, 8);
+    state.enemies.push({
+      id, archetype, zoneId, hp: def.hp, maxHp: def.hp,
+      shield: def.shield || 0, maxShield: def.shield || 0,
+      attackProfile: def.attackProfile, lastTargetId: null,
+      suppressed: false
+    });
+    return id;
+  }
+
+  function checkVictoryOrDefeat(state) {
+    if (state.boss && state.boss.active && state.boss.hp <= 0 && state.phase !== "vittoria") {
+      state.phase = "vittoria"; state.winner = "squadra";
+      pushLog(state, "Il boss è sconfitto! La squadra vince.");
+      return;
+    }
+    if (state.players.length && state.players.every((p) => p.status === "eliminated") && state.phase !== "sconfitta") {
+      state.phase = "sconfitta"; state.winner = "sistema";
+      pushLog(state, "Tutta la squadra è stata eliminata.");
+    }
+  }
+
+  return {
+    DEFAULT_ENEMY_ARCHETYPES, STORM_TABLE, STORM_DAMAGE,
+    createDefaultZoneLayout, createGame,
+    getPlayer, getZone, getEnemy, playersInZone, activePlayersInZone, enemiesInZone, activePlayers,
+    landPlayer, allPlayersLanded, beginExploration,
+    moveAction, aiutoAction,
+    previewPlayerAttack, declarePlayerAttack, resolvePlayerAttackFromRolls, attackEnemyAction,
+    previewBossAttack, declareBossAttack, resolveBossAttackFromRolls, attackBossAction,
+    rianimaAction, scambiaAction, usaOggettoAction, interagisciAction, apriCassaAction,
+    bfsFrom, nearestZoneWithActivePlayer, pickTarget,
+    getEnemyPhaseOrder, prepareEnemyStep, resolveEnemyStepFromRolls, resolveEnemyStep, resolveEnemyPhase,
+    prepareBossStep, resolveBossStepFromRolls, resolveBossStep, resolveBossPhase,
+    startRound, endRound, activateBoss, spawnEnemy,
+    checkVictoryOrDefeat, applyDamage, applyDamageToPlayer, applyDamageToEnemy, setPlayerKO
+  };
+});
