@@ -134,6 +134,7 @@
 
   function getRange(weapon) { return getArchetype(weapon.category, weapon.archetype).range; }
   function getBaseDice(weapon) { return getArchetype(weapon.category, weapon.archetype).baseDice; }
+  function getImage(weapon) { return "assets/fortress/weapons/" + weapon.id + ".webp"; }
 
   /* =========================================================================
      LE 100 ARMI — dati grezzi. MAI: baseDice, range, power, specialValue,
@@ -143,8 +144,8 @@
   const ARMI_100 = [
     // --- Fucili d'assalto (14): standard 2 dadi / precision 1 dado ---
     { id: "assault_base", name: "Fucile d'Assalto Standard", category: "assalto", archetype: "standard", rarity: "comune", special: { type: "none" }, equivalentGroup: "assault-standard-equivalent-a", description: "Il fucile base, nessun punto debole.", role: "assalto baseline" },
-    { id: "assault_lightning", name: "Fucile Fulmine", category: "assalto", archetype: "standard", rarity: "comune", special: { type: "none" }, equivalentGroup: "assault-standard-equivalent-a", description: "Variante estetica del fucile base.", role: "assalto baseline (reskin)" },
     { id: "assault_burst", name: "Fucile a Raffica Corta", category: "assalto", archetype: "precision", rarity: "comune", special: { type: "none" }, description: "Leggero, un dado solo.", role: "assalto entry-level a dado singolo" },
+    { id: "assault_lightning", name: "Fucile Fulmine", category: "assalto", archetype: "standard", rarity: "comune", special: { type: "none" }, equivalentGroup: "assault-standard-equivalent-a", description: "Variante estetica del fucile base.", role: "assalto baseline (reskin)" },
     { id: "assault_heavy", name: "Fucile d'Assalto Pesante", category: "assalto", archetype: "standard", rarity: "non-comune", special: { type: "none" }, description: "Standard potenziato.", role: "assalto standard, tappa intermedia" },
     { id: "assault_suppressed", name: "Fucile Silenziato", category: "assalto", archetype: "standard", rarity: "non-comune", special: { type: "silent" }, description: "Non attira attenzioni.", role: "assalto furtivo" },
     { id: "assault_precision_tactical", name: "Fucile di Precisione Tattico", category: "assalto", archetype: "precision", rarity: "non-comune", special: { type: "none" }, description: "Un colpo alla volta, più preciso.", role: "assalto a dado singolo, tappa intermedia" },
@@ -159,10 +160,10 @@
 
     // --- Shotgun (12): standard 2 dadi vicino / oneshot 1 dado vicino ---
     { id: "shotgun_base", name: "Fucile a Pompa Base", category: "shotgun", archetype: "standard", rarity: "comune", special: { type: "none" }, equivalentGroup: "shotgun-standard-equivalent-a", description: "Il classico fucile a pompa.", role: "shotgun baseline" },
-    { id: "shotgun_lever", name: "Fucile a Leva", category: "shotgun", archetype: "standard", rarity: "comune", special: { type: "none" }, equivalentGroup: "shotgun-standard-equivalent-a", description: "Variante estetica del fucile a pompa.", role: "shotgun baseline (reskin)" },
-    { id: "shotgun_makeshift", name: "Fucile Improvvisato", category: "shotgun", archetype: "standard", rarity: "comune", special: { type: "silent" }, description: "Rudimentale ma discreto.", role: "shotgun furtiva, entry-level" },
     { id: "shotgun_doublebarrel", name: "Doppietta", category: "shotgun", archetype: "oneshot", rarity: "comune", special: { type: "none" }, equivalentGroup: "shotgun-oneshot-equivalent-a", description: "Un colpo solo, ma pesante.", role: "shotgun a colpo singolo, alto rischio" },
+    { id: "shotgun_lever", name: "Fucile a Leva", category: "shotgun", archetype: "standard", rarity: "comune", special: { type: "none" }, equivalentGroup: "shotgun-standard-equivalent-a", description: "Variante estetica del fucile a pompa.", role: "shotgun baseline (reskin)" },
     { id: "shotgun_primitive", name: "Fucile Primitivo", category: "shotgun", archetype: "oneshot", rarity: "comune", special: { type: "none" }, equivalentGroup: "shotgun-oneshot-equivalent-a", description: "Variante estetica della doppietta.", role: "shotgun a colpo singolo (reskin)" },
+    { id: "shotgun_makeshift", name: "Fucile Improvvisato", category: "shotgun", archetype: "standard", rarity: "comune", special: { type: "silent" }, description: "Rudimentale ma discreto.", role: "shotgun furtiva, entry-level" },
     { id: "shotgun_tactical", name: "Fucile a Pompa Tattico", category: "shotgun", archetype: "standard", rarity: "non-comune", special: { type: "none" }, description: "Pompa standard potenziato.", role: "shotgun standard, tappa intermedia" },
     { id: "shotgun_combat", name: "Fucile da Combattimento", category: "shotgun", archetype: "oneshot", rarity: "non-comune", special: { type: "none" }, description: "Un colpo solo, potenziato.", role: "shotgun a colpo singolo, tappa intermedia" },
     { id: "shotgun_heavy", name: "Fucile a Pompa Pesante", category: "shotgun", archetype: "standard", rarity: "rara", special: { type: "ignoreShield", n: 1 }, description: "Perfora corazze da vicino.", role: "shotgun perforante" },
@@ -304,12 +305,13 @@
     range: getRange(w),
     power: computePower(w),
     specialValue: computeSpecialValue(w),
-    potenza: computePotenza(w)
+    potenza: computePotenza(w),
+    image: getImage(w)
   })));
 
   return {
     ARMI_100, ARMI, CATEGORIE_ARMI, ARCHETYPES, RARITY_BONUS, RARITY_ORDER, SPECIAL_TYPES,
-    getArchetype, getRange, getBaseDice, computePower, computeSpecialValue, computePotenza,
+    getArchetype, getRange, getBaseDice, getImage, computePower, computeSpecialValue, computePotenza,
     validateCatalog, catalogProblems
   };
 });

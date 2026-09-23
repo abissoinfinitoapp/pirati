@@ -1,7 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const catalog = require("../catalog/fortress-armi.js");
 const combat = require("../engine/fortress-combat.js");
+const characters = require("../catalog/fortress-characters.js");
 
 test("il catalogo ha esattamente 100 armi", () => {
   assert.equal(catalog.ARMI.length, 100);
@@ -149,5 +152,56 @@ test("le 4 Mitiche non dominano tutte le distanze: alla gittata opposta alla lor
       megliorLeggendariaLi > dannoMiticaFuoriGittata,
       `${m.id} a ${gittataOpposta} (${dannoMiticaFuoriGittata}) dovrebbe essere superata da almeno una leggendaria (miglior risultato: ${megliorLeggendariaLi})`
     );
+  });
+});
+
+/* =========================================================================
+   Immagini armi (assets/fortress/weapons/<id>.webp) e censimento personaggi.
+   ========================================================================= */
+
+test("tutte le 100 armi hanno un campo image", () => {
+  catalog.ARMI.forEach((w) => {
+    assert.equal(typeof w.image, "string", w.id);
+    assert.ok(w.image.length > 0, w.id);
+  });
+});
+
+test("il campo image punta sempre a assets/fortress/weapons/<id>.webp", () => {
+  catalog.ARMI.forEach((w) => {
+    assert.equal(w.image, `assets/fortress/weapons/${w.id}.webp`, w.id);
+  });
+});
+
+test("tutti i file immagine delle armi esistono su disco", () => {
+  catalog.ARMI.forEach((w) => {
+    const full = path.join(__dirname, "..", w.image);
+    assert.ok(fs.existsSync(full), `manca il file: ${w.image}`);
+  });
+});
+
+test("la cartella assets/fortress/weapons contiene esattamente 100 file, uno per arma, nessun duplicato", () => {
+  const dir = path.join(__dirname, "..", "assets", "fortress", "weapons");
+  const files = fs.readdirSync(dir);
+  assert.equal(files.length, 100);
+  assert.equal(new Set(files).size, 100);
+  const expected = new Set(catalog.ARMI.map((w) => `${w.id}.webp`));
+  files.forEach((f) => assert.ok(expected.has(f), `file inatteso: ${f}`));
+});
+
+test("censimento personaggi: 10 personaggi, tutti con id e image, nessun duplicato", () => {
+  assert.equal(characters.CHARACTERS.length, 10);
+  const ids = characters.CHARACTERS.map((c) => c.id);
+  assert.equal(new Set(ids).size, 10);
+  characters.CHARACTERS.forEach((c) => {
+    assert.ok(c.id && c.id.trim().length > 0);
+    assert.ok(c.name && c.name.trim().length > 0);
+    assert.ok(c.image && c.image.trim().length > 0);
+  });
+});
+
+test("tutti i file immagine dei personaggi esistono su disco", () => {
+  characters.CHARACTERS.forEach((c) => {
+    const full = path.join(__dirname, "..", c.image);
+    assert.ok(fs.existsSync(full), `manca il file: ${c.image}`);
   });
 });
