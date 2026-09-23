@@ -37,6 +37,7 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-header h1 { font-size: clamp(24px, 5vw, 32px); color: var(--fa-ink); text-shadow: 0 2px 12px rgba(181,48,63,.35); }
 .fa-home-link { color: var(--fa-muted); text-decoration: none; font-size: 13px; border: 1px solid var(--fa-line); border-radius: 10px; padding: 8px 12px; }
 .fa-home-link:hover { color: var(--fa-ink); border-color: var(--fa-steel); }
+.fa-header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .fa-panel {
   background: var(--fa-panel); border: 1px solid var(--fa-line); border-radius: 18px;
@@ -156,6 +157,76 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 
 .fa-reset-line { text-align: center; margin-top: 30px; }
 
+/* ---- Libreria Armi (overlay, sola consultazione) ---- */
+.fa-library-overlay, .fa-modal-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(6,4,3,.82);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.fa-library-overlay[hidden], .fa-modal-overlay[hidden] { display: none; }
+
+.fa-library-panel {
+  width: 100%; max-width: 1100px; max-height: 92vh; overflow-y: auto;
+  background: var(--fa-bg-1); border: 1px solid var(--fa-line); border-radius: 18px;
+  padding: 22px; display: flex; flex-direction: column; gap: 16px;
+}
+.fa-library-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.fa-library-controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.fa-library-search, .fa-library-select {
+  background: rgba(0,0,0,.3); border: 1px solid var(--fa-line); color: var(--fa-ink);
+  border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 13.5px;
+}
+.fa-library-search { flex: 1 1 220px; }
+.fa-library-select { flex: 0 1 180px; }
+.fa-library-search::-webkit-search-cancel-button { cursor: pointer; }
+
+.fa-library-count { margin: 0; font-size: 12.5px; color: var(--fa-muted); font-weight: 700; }
+
+.fa-library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+
+.fa-lib-card {
+  border: 1px solid var(--fa-line); border-radius: 14px; padding: 10px; background: rgba(0,0,0,.28);
+  display: flex; flex-direction: column; gap: 6px; text-align: center; cursor: pointer;
+}
+.fa-lib-card:hover, .fa-lib-card:focus-visible { border-color: var(--fa-steel); outline: none; }
+.fa-lib-card-img { width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); border-radius: 10px; overflow: hidden; }
+.fa-lib-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.fa-lib-name { font-size: 13px; line-height: 1.25; min-height: 2.4em; }
+.fa-lib-potenza { font-size: 13px; font-weight: 800; color: var(--fa-gold); }
+.fa-lib-potenza b { font-size: 16px; }
+.fa-lib-meta { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 11.5px; color: var(--fa-muted); }
+.fa-lib-special { font-size: 11px; color: var(--fa-steel); font-weight: 700; }
+.fa-lib-empty { grid-column: 1 / -1; text-align: center; color: var(--fa-muted); padding: 30px 0; }
+
+.fa-modal-panel {
+  width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto;
+  background: var(--fa-bg-1); border: 1px solid var(--fa-line); border-radius: 18px; padding: 22px;
+  position: relative; text-align: center;
+}
+.fa-modal-close { position: absolute; top: 14px; right: 14px; }
+.fa-detail-img { width: 100%; max-width: 260px; margin: 30px auto 12px; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); border-radius: 14px; overflow: hidden; }
+.fa-detail-img-el { max-width: 100%; max-height: 100%; object-fit: contain; }
+.fa-modal-panel h2 { font-size: 20px; margin: 6px 0; }
+.fa-detail-desc { color: var(--fa-muted); font-size: 13.5px; margin: 10px 0 16px; }
+.fa-detail-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: left; margin-bottom: 16px; }
+.fa-detail-stats div { border: 1px solid var(--fa-line); border-radius: 10px; padding: 8px 10px; }
+.fa-detail-stats span { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--fa-muted); font-weight: 800; }
+.fa-detail-stats b { font-size: 14px; }
+.fa-detail-special { border: 1px solid var(--fa-line); border-radius: 12px; padding: 12px 14px; text-align: left; background: rgba(0,0,0,.2); }
+.fa-detail-special h3 { font-size: 14px; margin-bottom: 6px; }
+.fa-detail-special p { margin: 0; font-size: 13px; color: var(--fa-muted); line-height: 1.5; }
+
+@media (max-width: 900px) {
+  .fa-library-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+
 @media (max-width: 640px) {
   .fa-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+@media (max-width: 480px) {
+  .fa-library-grid { grid-template-columns: repeat(2, 1fr); }
+  .fa-library-panel { padding: 16px; }
+  .fa-detail-stats { grid-template-columns: 1fr; }
 }

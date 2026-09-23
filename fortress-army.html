@@ -32,7 +32,10 @@
       <p class="fa-eyebrow">Gioco da tavolo · App Master</p>
       <h1>⚔️ Fortress Army</h1>
     </div>
-    <a class="fa-home-link" href="/">← Torna alla hub</a>
+    <div class="fa-header-actions">
+      <button type="button" class="fa-btn fa-btn-ghost" id="fa-open-library">📖 Libreria Armi</button>
+      <a class="fa-home-link" href="/">← Torna alla hub</a>
+    </div>
   </header>
 
   <main>
@@ -119,6 +122,35 @@
     <p class="fa-reset-line"><button type="button" class="fa-btn-link" id="fa-reset">Azzera la partita (test)</button></p>
 
   </main>
+</div>
+
+<!-- ===== Libreria Armi (sola consultazione) ===== -->
+<div id="fa-library" class="fa-library-overlay" hidden role="dialog" aria-modal="true" aria-label="Libreria Armi">
+  <div class="fa-library-panel">
+    <header class="fa-library-header">
+      <div>
+        <p class="fa-eyebrow">Sola consultazione</p>
+        <h2>📖 Libreria Armi</h2>
+      </div>
+      <button type="button" class="fa-btn fa-btn-ghost" id="fa-library-close">✕ Chiudi</button>
+    </header>
+
+    <div class="fa-library-controls">
+      <input type="search" id="fa-library-search" class="fa-library-search" placeholder="Cerca arma...">
+      <select id="fa-library-category" class="fa-library-select" aria-label="Filtra per categoria"></select>
+      <select id="fa-library-rarity" class="fa-library-select" aria-label="Filtra per rarità"></select>
+      <select id="fa-library-sort" class="fa-library-select" aria-label="Ordina per"></select>
+    </div>
+
+    <p id="fa-library-count" class="fa-library-count"></p>
+
+    <div id="fa-library-grid" class="fa-library-grid"></div>
+  </div>
+</div>
+
+<!-- ===== Dettaglio singola arma (sola consultazione) ===== -->
+<div id="fa-weapon-detail" class="fa-modal-overlay" hidden role="dialog" aria-modal="true" aria-label="Dettaglio arma">
+  <div class="fa-modal-panel" id="fa-weapon-detail-content"></div>
 </div>
 
 <script src="fortress-army.js"></script>
