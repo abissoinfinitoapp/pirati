@@ -67,9 +67,11 @@ window.PIRATI_AUTH = (function () {
 
   async function signInWithGoogle() {
     if (!enabled) throw new Error("Login non configurato: compila config.js.");
+    // Torna sempre alla home: è lei a decidere se mostrare la griglia dei giochi
+    // o rimandare al gioco da cui si era partiti (query string preservata, es. ?login=1).
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: location.origin + "/gioco" }
+      options: { redirectTo: location.origin + "/" + location.search }
     });
     if (error) throw error;
   }
