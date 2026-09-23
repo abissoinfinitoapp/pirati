@@ -4606,7 +4606,7 @@ function storyScenePhaseMarkup(scene) {
     out += `<div class="story-block story-ask">
       <span class="story-tag">💬 Chiedi ai bambini</span>
       <p class="story-question">${sc.ask}</p>
-      ${hasOptions && !scene.choices ? `<div class="story-choice-row">${sc.askOptions.map((o) => `<button type="button" class="story-choice ${pickedId === o.id ? "is-decision" : ""}" data-story-ask-pick="${o.id}">${o.label}</button>`).join("")}</div>` : ""}
+      ${hasOptions && !scene.choices && !picked ? `<div class="story-choice-row">${sc.askOptions.map((o) => `<button type="button" class="story-choice" data-story-ask-pick="${o.id}">${o.label}</button>`).join("")}</div>` : ""}
       ${picked ? `<p class="story-ask-reply">“${picked.reply}”</p>` : ""}
     </div>`;
   }
