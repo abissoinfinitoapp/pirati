@@ -47,40 +47,7 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-panel-head h2 { font-size: 19px; margin-bottom: 4px; }
 .fa-panel-head p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--fa-muted); }
 
-/* ---- stato ---- */
-.fa-status { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; }
-.fa-status-item { display: flex; flex-direction: column; gap: 4px; }
-.fa-status-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--fa-muted); font-weight: 800; }
-.fa-status-item strong { font-size: 18px; }
 #fa-money::before { content: "💰 "; }
-
-/* ---- roster ---- */
-.fa-roster { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
-.fa-player {
-  display: flex; align-items: center; gap: 8px;
-  border: 1px solid var(--fa-line); border-radius: 12px; padding: 8px 10px; background: rgba(0,0,0,.25);
-}
-.fa-player input[type="text"] {
-  background: transparent; border: 0; color: var(--fa-ink); font: inherit; font-weight: 700; width: 110px;
-}
-.fa-player input[type="text"]:focus { outline: none; border-bottom: 1px solid var(--fa-gold); }
-.fa-player button { background: transparent; border: 0; color: var(--fa-muted); cursor: pointer; font-size: 15px; padding: 2px 4px; }
-.fa-player button:hover { color: var(--fa-blood-bright); }
-.fa-player.is-inactive { opacity: .45; }
-
-/* ---- griglia castelli ---- */
-.fa-castles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 14px; }
-.fa-castle-card {
-  border: 1px solid var(--fa-line); border-radius: 16px; padding: 16px; background: rgba(0,0,0,.28);
-  display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
-}
-.fa-castle-card img.fa-castle-img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; }
-.fa-castle-card h3 { font-size: 16px; }
-.fa-castle-meta { display: flex; gap: 12px; font-size: 12.5px; color: var(--fa-muted); }
-.fa-castle-meta b { color: var(--fa-gold); font-weight: 800; }
-.fa-castle-card.is-conquered { border-color: var(--fa-gold); background: linear-gradient(160deg, rgba(201,162,74,.14), rgba(0,0,0,.28)); }
-.fa-castle-card.is-conquered .fa-conquered-tag { color: var(--fa-gold); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
-.fa-castle-card.is-boss { border-color: var(--fa-blood-bright); }
 
 /* ---- bottoni ---- */
 .fa-btn {
@@ -93,23 +60,6 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-btn-ghost { background: transparent; border: 1px solid var(--fa-line); color: var(--fa-ink); }
 .fa-btn-ghost:hover { border-color: var(--fa-steel); }
 .fa-btn-link { background: none; border: 0; color: var(--fa-muted); font-size: 12px; text-decoration: underline; cursor: pointer; padding: 0; }
-
-/* ---- battaglia ---- */
-.fa-battle { border-color: var(--fa-blood-bright); }
-.fa-battle-rolls { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-.fa-battle-roll-row { display: flex; flex-direction: column; gap: 6px; }
-.fa-battle-roll-row span { font-size: 12.5px; color: var(--fa-muted); font-weight: 700; }
-.fa-dice-row { display: flex; gap: 4px; }
-.fa-dice-row button {
-  width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--fa-line);
-  background: rgba(0,0,0,.3); color: var(--fa-ink); font-weight: 800; cursor: pointer;
-}
-.fa-dice-row button.is-picked { background: var(--fa-blood-bright); border-color: var(--fa-blood-bright); color: #fff; }
-.fa-battle-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.fa-battle-result { margin-top: 16px; padding: 14px 16px; border-radius: 14px; }
-.fa-battle-result.is-win { background: rgba(201,162,74,.14); border: 1px solid var(--fa-gold); }
-.fa-battle-result.is-lose { background: rgba(122,31,43,.18); border: 1px solid var(--fa-blood-bright); }
-.fa-battle-result strong { display: block; margin-bottom: 4px; font-size: 16px; }
 
 /* ---- negozi (armi / skin) ---- */
 .fa-shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; }
@@ -139,23 +89,6 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-rarity-tag.rarity-leggendaria { background: rgba(201,162,74,.2); color: var(--fa-gold); }
 .rarity-mitica { border-left-color: var(--fa-blood-bright); }
 .fa-rarity-tag.rarity-mitica { background: rgba(181,48,63,.22); color: #ff8f9c; }
-
-/* ---- accordion categorie armeria ---- */
-.fa-shop-category { border: 1px solid var(--fa-line); border-radius: 14px; padding: 4px 14px; margin-bottom: 10px; background: rgba(0,0,0,.18); }
-.fa-shop-category summary { cursor: pointer; padding: 12px 0; font-family: var(--fa-font-display); font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
-.fa-shop-category summary::-webkit-details-marker { display: none; }
-.fa-shop-category summary::after { content: "▸"; color: var(--fa-muted); margin-left: 8px; }
-.fa-shop-category[open] summary::after { content: "▾"; }
-.fa-cat-count { font-family: var(--fa-font-body); font-size: 12px; font-weight: 700; color: var(--fa-muted); }
-.fa-shop-category .fa-shop-grid { padding-bottom: 14px; }
-
-/* ---- diario ---- */
-.fa-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
-.fa-log li { font-size: 13px; line-height: 1.5; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.25); color: var(--fa-muted); }
-.fa-log li:first-child { color: var(--fa-ink); }
-.fa-log-empty { color: var(--fa-muted); font-size: 13px; }
-
-.fa-reset-line { text-align: center; margin-top: 30px; }
 
 /* ---- Libreria Armi (overlay, sola consultazione) ---- */
 .fa-library-overlay, .fa-modal-overlay {
@@ -217,16 +150,194 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-detail-special h3 { font-size: 14px; margin-bottom: 6px; }
 .fa-detail-special p { margin: 0; font-size: 13px; color: var(--fa-muted); line-height: 1.5; }
 
+/* =========================================================================
+   SETUP PARTITA
+   ========================================================================= */
+.fa-setup-count { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.fa-setup-count label { font-size: 13px; font-weight: 800; color: var(--fa-muted); text-transform: uppercase; letter-spacing: .06em; }
+.fa-setup-count select {
+  background: rgba(0,0,0,.3); border: 1px solid var(--fa-line); color: var(--fa-ink);
+  border-radius: 10px; padding: 8px 12px; font: inherit; font-weight: 800; font-size: 15px;
+}
+.fa-setup-players { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+.fa-setup-player-row { border: 1px solid var(--fa-line); border-radius: 14px; padding: 14px; background: rgba(0,0,0,.22); }
+.fa-setup-player-row input[type="text"] {
+  width: 100%; background: rgba(0,0,0,.3); border: 1px solid var(--fa-line); color: var(--fa-ink);
+  border-radius: 10px; padding: 9px 12px; font: inherit; font-weight: 800; font-size: 14.5px; margin-bottom: 10px;
+}
+.fa-setup-avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+.fa-setup-avatar {
+  border: 2px solid var(--fa-line); border-radius: 12px; background: rgba(0,0,0,.25); padding: 4px;
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.fa-setup-avatar img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; }
+.fa-setup-avatar span { font-size: 9.5px; color: var(--fa-muted); text-transform: uppercase; letter-spacing: .04em; }
+.fa-setup-avatar.is-selected { border-color: var(--fa-gold); background: linear-gradient(160deg, rgba(201,162,74,.18), rgba(0,0,0,.25)); }
+.fa-setup-avatar.is-taken { opacity: .3; cursor: not-allowed; }
+.fa-setup-actions { text-align: center; }
+.fa-setup-error { color: var(--fa-blood-bright); font-size: 13px; font-weight: 700; margin: 0 0 12px; text-align: center; }
+
+/* =========================================================================
+   MAPPA DI GIOCO
+   ========================================================================= */
+.fa-game-layout { display: grid; grid-template-columns: 1fr 340px; gap: 18px; align-items: start; }
+.fa-map-wrap { position: relative; background: var(--fa-panel); border: 1px solid var(--fa-line); border-radius: 18px; padding: 16px; }
+.fa-map-connections { position: absolute; inset: 16px; width: calc(100% - 32px); height: calc(100% - 32px); pointer-events: none; z-index: 0; }
+.fa-map-connections line { stroke: var(--fa-line); stroke-width: 2; }
+
+.fa-map-zones {
+  position: relative; z-index: 1; display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas:
+    ".      forest        ."
+    ".      ancient-ruins  ."
+    "abandoned-city central-fortress hill-outpost"
+    "industrial-zone supply-depot military-base"
+    ".      frontier-camp  .";
+  gap: 10px;
+}
+.fa-zone-tile[data-zone="forest"] { grid-area: forest; }
+.fa-zone-tile[data-zone="ancient-ruins"] { grid-area: ancient-ruins; }
+.fa-zone-tile[data-zone="abandoned-city"] { grid-area: abandoned-city; }
+.fa-zone-tile[data-zone="central-fortress"] { grid-area: central-fortress; }
+.fa-zone-tile[data-zone="hill-outpost"] { grid-area: hill-outpost; }
+.fa-zone-tile[data-zone="industrial-zone"] { grid-area: industrial-zone; }
+.fa-zone-tile[data-zone="supply-depot"] { grid-area: supply-depot; }
+.fa-zone-tile[data-zone="military-base"] { grid-area: military-base; }
+.fa-zone-tile[data-zone="frontier-camp"] { grid-area: frontier-camp; }
+
+.fa-zone-tile {
+  position: relative; border: 2px solid var(--fa-line); border-radius: 14px; overflow: hidden;
+  background: rgba(0,0,0,.35); aspect-ratio: 1/1; display: flex; flex-direction: column;
+  padding: 0; font: inherit; color: var(--fa-ink); text-align: left; cursor: default;
+}
+.fa-zone-tile.is-central { border-color: var(--fa-blood-bright); }
+.fa-zone-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; }
+.fa-zone-body { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 8px; }
+.fa-zone-name { font-family: var(--fa-font-display); font-size: clamp(11px, 1.6vw, 14px); text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+.fa-zone-meta { margin-top: auto; display: flex; flex-wrap: wrap; gap: 4px; font-size: 10px; color: var(--fa-ink); text-shadow: 0 1px 3px rgba(0,0,0,.9); }
+.fa-zone-meta .fa-danger-stars { color: var(--fa-gold); }
+
+.fa-zone-tile.is-current { border-color: var(--fa-gold); box-shadow: 0 0 0 3px rgba(201,162,74,.35); }
+.fa-zone-tile.is-selectable { cursor: pointer; border-color: #8fdd9c; box-shadow: 0 0 0 3px rgba(79,157,92,.35); }
+.fa-zone-tile.is-selectable:hover { filter: brightness(1.15); }
+.fa-zone-tile.is-dimmed .fa-zone-img { opacity: .25; }
+.fa-zone-tile.is-dimmed .fa-zone-body { opacity: .55; }
+
+.fa-zone-storm-badge {
+  position: absolute; top: 6px; right: 6px; z-index: 2; font-size: 9px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em; padding: 3px 6px; border-radius: 8px;
+}
+.fa-zone-tile.is-storm-warning .fa-zone-img { filter: sepia(.4) saturate(1.5); }
+.fa-zone-tile.is-storm-warning .fa-zone-storm-badge { background: rgba(201,162,74,.85); color: #241512; }
+.fa-zone-tile.is-storm-storm { border-color: var(--fa-blood-bright); }
+.fa-zone-tile.is-storm-storm::after {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: repeating-linear-gradient(135deg, rgba(181,48,63,.35) 0 10px, rgba(0,0,0,.35) 10px 20px);
+}
+.fa-zone-tile.is-storm-storm .fa-zone-storm-badge { background: var(--fa-blood-bright); color: #fff; z-index: 3; }
+.fa-zone-tile.is-storm-eliminated { cursor: not-allowed; }
+.fa-zone-tile.is-storm-eliminated .fa-zone-img { opacity: .12; filter: grayscale(1); }
+.fa-zone-tile.is-storm-eliminated .fa-zone-storm-badge { background: #000; color: var(--fa-muted); border: 1px solid var(--fa-line); }
+
+.fa-zone-tokens { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.fa-token { display: flex; flex-direction: column; align-items: center; width: 30%; min-width: 34px; }
+.fa-token img {
+  width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fa-steel); background: #000;
+}
+.fa-token span { font-size: 8px; font-weight: 800; text-transform: uppercase; color: var(--fa-ink); text-shadow: 0 1px 3px rgba(0,0,0,.9); }
+.fa-token.is-current img { border-color: var(--fa-gold); box-shadow: 0 0 0 2px rgba(201,162,74,.5); }
+.fa-token.is-ko img { border-color: var(--fa-blood-bright); filter: grayscale(.6); }
+.fa-token.is-ko span { color: #ff8f9c; }
+
+.fa-zone-enemies { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.fa-enemy-marker {
+  display: flex; align-items: center; gap: 2px; font-size: 8.5px; font-weight: 800;
+  background: rgba(0,0,0,.55); border: 1px solid var(--fa-blood-bright); border-radius: 8px; padding: 2px 5px; color: var(--fa-ink);
+}
+.fa-boss-marker {
+  display: flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 800;
+  background: rgba(181,48,63,.35); border: 1px solid var(--fa-blood-bright); border-radius: 8px; padding: 3px 6px; margin-top: 4px; color: #fff;
+}
+
+/* =========================================================================
+   PANNELLO DI TURNO
+   ========================================================================= */
+.fa-turn-panel {
+  background: var(--fa-panel); border: 1px solid var(--fa-line); border-radius: 18px; padding: 18px;
+  display: flex; flex-direction: column; gap: 14px; max-height: 80vh; overflow-y: auto;
+}
+.fa-panel-round { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--fa-blood-bright); }
+.fa-panel-turn { font-family: var(--fa-font-display); font-size: 20px; }
+.fa-panel-section { border-top: 1px solid var(--fa-line); padding-top: 12px; }
+.fa-panel-section h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--fa-muted); font-weight: 800; }
+.fa-panel-section p { margin: 2px 0; font-size: 13.5px; }
+.fa-situation-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--fa-muted); }
+
+.fa-action-list { display: flex; flex-direction: column; gap: 8px; }
+.fa-action-btn {
+  font-family: var(--fa-font-body); font-weight: 800; font-size: 15px; cursor: pointer;
+  border: 1px solid var(--fa-line); border-radius: 12px; padding: 13px 16px; background: rgba(0,0,0,.3); color: var(--fa-ink); text-align: left;
+}
+.fa-action-btn:hover { border-color: var(--fa-steel); }
+.fa-action-btn.is-primary { background: linear-gradient(160deg, var(--fa-blood-bright), var(--fa-blood)); color: #fff; border-color: transparent; }
+.fa-action-btn.is-rianima { background: linear-gradient(160deg, rgba(201,162,74,.35), rgba(0,0,0,.3)); border-color: var(--fa-gold); }
+.fa-action-btn.is-end-turn { border-style: dashed; color: var(--fa-muted); }
+
+.fa-ko-banner {
+  border: 2px solid var(--fa-blood-bright); background: rgba(181,48,63,.18); border-radius: 12px;
+  padding: 10px 12px; text-align: center;
+}
+.fa-ko-banner strong { display: block; font-size: 15px; color: #ff8f9c; }
+
+/* =========================================================================
+   ATTACCO A DADI FISICI / ANNUNCI
+   ========================================================================= */
+.fa-attack-panel, .fa-announcement-panel { max-width: 460px; }
+.fa-attack-weapon-img { width: 140px; height: 140px; margin: 0 auto 10px; border-radius: 14px; overflow: hidden; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; }
+.fa-attack-weapon-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.fa-attack-potenza { font-size: 15px; font-weight: 800; color: var(--fa-gold); margin: 4px 0; }
+.fa-attack-range-row { display: flex; justify-content: center; gap: 16px; font-size: 13px; color: var(--fa-muted); margin-bottom: 10px; }
+.fa-attack-dice-count { font-size: 32px; margin: 10px 0; }
+
+.fa-dice-input-group { margin-bottom: 14px; text-align: left; }
+.fa-dice-input-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--fa-muted); margin-bottom: 6px; }
+.fa-dice-input-buttons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.fa-dice-btn {
+  aspect-ratio: 1/1; border: 1px solid var(--fa-line); border-radius: 10px; background: rgba(0,0,0,.3);
+  color: var(--fa-ink); font-weight: 800; font-size: 18px; cursor: pointer;
+}
+.fa-dice-btn.is-selected { background: var(--fa-blood-bright); border-color: var(--fa-blood-bright); color: #fff; }
+
+.fa-reroll-die { font-size: 40px; text-align: center; margin: 10px 0; }
+
+.fa-result-line { font-size: 22px; font-weight: 800; text-align: center; margin: 6px 0; }
+.fa-result-total { font-size: 30px; font-weight: 900; color: var(--fa-gold); text-align: center; margin: 8px 0; }
+.fa-result-stat { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-top: 1px solid var(--fa-line); }
+.fa-result-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0; }
+.fa-result-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 4px 10px; border-radius: 20px; background: rgba(181,48,63,.25); border: 1px solid var(--fa-blood-bright); color: #ff8f9c; }
+
+.fa-announcement-panel h2 { margin-bottom: 8px; }
+.fa-announcement-panel p { color: var(--fa-muted); font-size: 14.5px; line-height: 1.5; }
+
 @media (max-width: 900px) {
   .fa-library-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .fa-game-layout { grid-template-columns: 1fr; }
+  .fa-turn-panel { max-height: none; }
 }
 
 @media (max-width: 640px) {
   .fa-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .fa-map-zones { gap: 6px; }
+  .fa-zone-name { font-size: 10px; }
+  .fa-zone-meta { font-size: 8.5px; }
+  .fa-token { width: 45%; }
 }
 
 @media (max-width: 480px) {
   .fa-library-grid { grid-template-columns: repeat(2, 1fr); }
   .fa-library-panel { padding: 16px; }
   .fa-detail-stats { grid-template-columns: 1fr; }
+  .fa-setup-avatar-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+  .fa-dice-input-buttons { grid-template-columns: repeat(3, 1fr); }
 }
