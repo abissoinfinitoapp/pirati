@@ -374,6 +374,35 @@ test("stessi risultati fisici producono sempre lo stesso risultato (determinismo
   assert.equal(a.result.total, 12 + 4 + 2);
 });
 
+/* ---- fino a 10 giocatori (nessun limite hardcoded a 5) ---- */
+
+test("turnOrder e avanzamento turno funzionano con 10 giocatori", () => {
+  const { state, dir } = startGame(10);
+  assert.deepEqual(dir.turnOrder, Array.from({ length: 10 }, (_, i) => "p" + (i + 1)));
+  assert.equal(director.getCurrentPlayerId(state, dir), "p1");
+
+  for (let i = 1; i < 10; i++) {
+    director.endPlayerTurn(state, dir, "p" + i);
+    assert.equal(director.getCurrentPlayerId(state, dir), "p" + (i + 1), `dopo il turno di p${i} deve toccare a p${i + 1}`);
+  }
+  director.endPlayerTurn(state, dir, "p10");
+  assert.equal(dir.directorPhase, "end-of-round", "dopo l'ultimo dei 10 giocatori si passa alla fase nemici/fine round");
+});
+
+test("il boss scala su initialPlayerCount reale anche con 10 giocatori iniziali", () => {
+  const state = newGame(10, { hpPerPlayer: 50 });
+  landAll(state, "e1");
+  loop.beginExploration(state, () => 0.99);
+  loop.activateBoss(state);
+  assert.equal(state.initialPlayerCount, 10);
+  assert.equal(state.boss.maxHp, 500);
+  assert.equal(state.boss.hp, 500);
+
+  // l'eliminazione di giocatori non deve ridurre l'HP massimo già fissato
+  state.players.slice(0, 5).forEach((p) => { p.status = "eliminated"; });
+  assert.equal(state.boss.maxHp, 500);
+});
+
 /* ---- il Director non tocca mai gameState direttamente ---- */
 
 test("il Director non assegna mai direttamente campi di gameState: ogni mutazione passa da una funzione del loop", () => {

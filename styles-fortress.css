@@ -240,10 +240,10 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-zone-tile.is-storm-eliminated .fa-zone-img { opacity: .12; filter: grayscale(1); }
 .fa-zone-tile.is-storm-eliminated .fa-zone-storm-badge { background: #000; color: var(--fa-muted); border: 1px solid var(--fa-line); }
 
-.fa-zone-tokens { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
-.fa-token { display: flex; flex-direction: column; align-items: center; width: 30%; min-width: 34px; }
+.fa-zone-tokens { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 4px; }
+.fa-token { display: flex; flex-direction: column; align-items: center; width: 18%; min-width: 22px; }
 .fa-token img {
-  width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fa-steel); background: #000;
+  width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fa-steel); background: #000;
 }
 .fa-token span { font-size: 8px; font-weight: 800; text-transform: uppercase; color: var(--fa-ink); text-shadow: 0 1px 3px rgba(0,0,0,.9); }
 .fa-token.is-current img { border-color: var(--fa-gold); box-shadow: 0 0 0 2px rgba(201,162,74,.5); }
@@ -331,7 +331,7 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
   .fa-map-zones { gap: 6px; }
   .fa-zone-name { font-size: 10px; }
   .fa-zone-meta { font-size: 8.5px; }
-  .fa-token { width: 45%; }
+  .fa-token { width: 22%; }
 }
 
 @media (max-width: 480px) {

@@ -74,16 +74,19 @@
   /* =========================================================================
      SETUP PARTITA
      ========================================================================= */
+  const MAX_PLAYERS = 10; // pari al numero di personaggi/avatar disponibili in catalog/fortress-characters.js
+
   function ensureSetupPlayers() {
     if (!setupPlayers) {
-      setupPlayers = Array.from({ length: 5 }, (_, i) => ({ name: "Giocatore " + (i + 1), avatarId: null }));
+      setupPlayers = Array.from({ length: MAX_PLAYERS }, (_, i) => ({ name: "Giocatore " + (i + 1), avatarId: null }));
     }
   }
 
   function renderSetup() {
     ensureSetupPlayers();
+    const countOptions = Array.from({ length: MAX_PLAYERS - 1 }, (_, i) => i + 2); // 2..MAX_PLAYERS
     const countSelect = `<div class="fa-setup-count"><label for="fa-setup-count-select">Numero giocatori</label>
-      <select id="fa-setup-count-select">${[2, 3, 4, 5].map((n) => `<option value="${n}" ${n === setupCount ? "selected" : ""}>${n}</option>`).join("")}</select></div>`;
+      <select id="fa-setup-count-select">${countOptions.map((n) => `<option value="${n}" ${n === setupCount ? "selected" : ""}>${n}</option>`).join("")}</select></div>`;
 
     const rows = Array.from({ length: setupCount }, (_, i) => {
       const p = setupPlayers[i];
