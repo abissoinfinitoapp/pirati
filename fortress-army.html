@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fortress Army</title>
+  <script src="config.js"></script>
+  <script src="vendor/supabase.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    /* Stessa guardia di gioco.html: un solo login per tutta la hub.
+       Disattivata su localhost per il playtest. */
+    (function () {
+      var local = ["localhost", "127.0.0.1", "[::1]", ""].indexOf(location.hostname) !== -1;
+      if (local) return;
+      document.documentElement.style.visibility = "hidden";
+      PIRATI_AUTH.requireSession().then(function (ok) {
+        if (ok) document.documentElement.style.visibility = "";
+      });
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-fortress.css">
+</head>
+<body>
+<div id="fortress-app">
+  <header class="fa-header">
+    <div>
+      <p class="fa-eyebrow">Gioco da tavolo · App Master</p>
+      <h1>⚔️ Fortress Army</h1>
+    </div>
+    <a class="fa-home-link" href="/">← Torna alla hub</a>
+  </header>
+
+  <main>
+
+    <!-- ===== Stato della ciurma ===== -->
+    <section class="fa-panel fa-status" aria-label="Stato della squadra">
+      <div class="fa-status-item">
+        <span class="fa-status-label">Base</span>
+        <strong id="fa-home-castle">—</strong>
+      </div>
+      <div class="fa-status-item">
+        <span class="fa-status-label">Monete</span>
+        <strong id="fa-money">0</strong>
+      </div>
+      <div class="fa-status-item">
+        <span class="fa-status-label">Castelli conquistati</span>
+        <strong id="fa-conquered-count">0</strong>
+      </div>
+      <div class="fa-status-item">
+        <span class="fa-status-label">Arma equipaggiata</span>
+        <strong id="fa-equipped-weapon">Nessuna</strong>
+      </div>
+    </section>
+
+    <!-- ===== Squadra ===== -->
+    <section class="fa-panel" aria-label="La squadra">
+      <div class="fa-panel-head">
+        <h2>La squadra</h2>
+        <p>Chi è in gioco oggi. Ognuno tira il proprio dado quando si attacca un castello.</p>
+      </div>
+      <div id="fa-roster" class="fa-roster"></div>
+      <button type="button" class="fa-btn fa-btn-ghost" id="fa-add-player">+ Aggiungi giocatore</button>
+    </section>
+
+    <!-- ===== Mappa dei castelli ===== -->
+    <section class="fa-panel" aria-label="Mappa dei castelli">
+      <div class="fa-panel-head">
+        <h2>🗺️ I castelli da conquistare</h2>
+        <p>Attacca un castello: la squadra tira i dadi, la media più il bonus dell'arma deve superare la difesa.</p>
+      </div>
+      <div id="fa-castles" class="fa-castles-grid"></div>
+    </section>
+
+    <!-- ===== Combattimento in corso ===== -->
+    <section class="fa-panel fa-battle" id="fa-battle" hidden aria-label="Battaglia in corso">
+      <div class="fa-panel-head">
+        <h2 id="fa-battle-title">Attacco al castello</h2>
+        <p id="fa-battle-sub"></p>
+      </div>
+      <div id="fa-battle-rolls" class="fa-battle-rolls"></div>
+      <div class="fa-battle-actions">
+        <button type="button" class="fa-btn fa-btn-primary" id="fa-battle-resolve" disabled>⚔️ Risolvi l'attacco</button>
+        <button type="button" class="fa-btn fa-btn-ghost" id="fa-battle-cancel">Ritirata (annulla)</button>
+      </div>
+      <div id="fa-battle-result" class="fa-battle-result" hidden></div>
+    </section>
+
+    <!-- ===== Armeria ===== -->
+    <section class="fa-panel" aria-label="Armeria">
+      <div class="fa-panel-head">
+        <h2>🗡️ Armeria</h2>
+        <p>Compra un'arma con le monete guadagnate. Solo un'arma alla volta è equipaggiata.</p>
+      </div>
+      <div id="fa-weapons" class="fa-shop-grid"></div>
+    </section>
+
+    <!-- ===== Guardaroba (skin) ===== -->
+    <section class="fa-panel" aria-label="Guardaroba">
+      <div class="fa-panel-head">
+        <h2>🎭 Guardaroba</h2>
+        <p>Skin cosmetiche: non danno bonus, servono solo a fare scena.</p>
+      </div>
+      <div id="fa-skins" class="fa-shop-grid"></div>
+    </section>
+
+    <!-- ===== Diario ===== -->
+    <section class="fa-panel" aria-label="Diario">
+      <div class="fa-panel-head">
+        <h2>📜 Diario di guerra</h2>
+      </div>
+      <ul id="fa-log" class="fa-log"></ul>
+    </section>
+
+    <p class="fa-reset-line"><button type="button" class="fa-btn-link" id="fa-reset">Azzera la partita (test)</button></p>
+
+  </main>
+</div>
+
+<script src="fortress-army.js"></script>
+</body>
+</html>

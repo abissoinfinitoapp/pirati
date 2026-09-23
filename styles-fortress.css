@@ -1,0 +1,137 @@
+/* =========================================================================
+   Fortress Army — scheletro v0. Estetica cupa, distinta da Pirati.
+   Placeholder testuali/emoji finché non arrivano le immagini vere
+   (assets/fortress/castelli|armi|skin/<id>.webp — fallback automatico).
+   ========================================================================= */
+
+:root {
+  --fa-bg-0: #0a0908;
+  --fa-bg-1: #15110f;
+  --fa-panel: rgba(255,255,255,.04);
+  --fa-line: rgba(255,255,255,.12);
+  --fa-ink: #e9e2d8;
+  --fa-muted: rgba(233,226,216,.62);
+  --fa-blood: #7a1f2b;
+  --fa-blood-bright: #b5303f;
+  --fa-steel: #8a8f98;
+  --fa-gold: #c9a24a;
+  --fa-font-display: "Cinzel", "Segoe UI", system-ui, serif;
+  --fa-font-body: "Nunito", "Segoe UI", system-ui, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  font-family: var(--fa-font-body);
+  color: var(--fa-ink);
+  background: radial-gradient(circle at 20% 0%, #241512 0%, var(--fa-bg-0) 55%) fixed, var(--fa-bg-0);
+}
+h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin: 0; }
+#fortress-app { max-width: 980px; margin: 0 auto; padding: 0 18px 60px; }
+
+.fa-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 28px 4px 20px; border-bottom: 1px solid var(--fa-line); margin-bottom: 28px;
+}
+.fa-eyebrow { margin: 0 0 4px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--fa-blood-bright); font-weight: 800; }
+.fa-header h1 { font-size: clamp(24px, 5vw, 32px); color: var(--fa-ink); text-shadow: 0 2px 12px rgba(181,48,63,.35); }
+.fa-home-link { color: var(--fa-muted); text-decoration: none; font-size: 13px; border: 1px solid var(--fa-line); border-radius: 10px; padding: 8px 12px; }
+.fa-home-link:hover { color: var(--fa-ink); border-color: var(--fa-steel); }
+
+.fa-panel {
+  background: var(--fa-panel); border: 1px solid var(--fa-line); border-radius: 18px;
+  padding: 20px; margin-bottom: 22px;
+}
+.fa-panel-head { margin-bottom: 16px; }
+.fa-panel-head h2 { font-size: 19px; margin-bottom: 4px; }
+.fa-panel-head p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--fa-muted); }
+
+/* ---- stato ---- */
+.fa-status { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; }
+.fa-status-item { display: flex; flex-direction: column; gap: 4px; }
+.fa-status-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--fa-muted); font-weight: 800; }
+.fa-status-item strong { font-size: 18px; }
+#fa-money::before { content: "💰 "; }
+
+/* ---- roster ---- */
+.fa-roster { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.fa-player {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--fa-line); border-radius: 12px; padding: 8px 10px; background: rgba(0,0,0,.25);
+}
+.fa-player input[type="text"] {
+  background: transparent; border: 0; color: var(--fa-ink); font: inherit; font-weight: 700; width: 110px;
+}
+.fa-player input[type="text"]:focus { outline: none; border-bottom: 1px solid var(--fa-gold); }
+.fa-player button { background: transparent; border: 0; color: var(--fa-muted); cursor: pointer; font-size: 15px; padding: 2px 4px; }
+.fa-player button:hover { color: var(--fa-blood-bright); }
+.fa-player.is-inactive { opacity: .45; }
+
+/* ---- griglia castelli ---- */
+.fa-castles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 14px; }
+.fa-castle-card {
+  border: 1px solid var(--fa-line); border-radius: 16px; padding: 16px; background: rgba(0,0,0,.28);
+  display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
+}
+.fa-castle-card img.fa-castle-img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; }
+.fa-castle-card h3 { font-size: 16px; }
+.fa-castle-meta { display: flex; gap: 12px; font-size: 12.5px; color: var(--fa-muted); }
+.fa-castle-meta b { color: var(--fa-gold); font-weight: 800; }
+.fa-castle-card.is-conquered { border-color: var(--fa-gold); background: linear-gradient(160deg, rgba(201,162,74,.14), rgba(0,0,0,.28)); }
+.fa-castle-card.is-conquered .fa-conquered-tag { color: var(--fa-gold); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.fa-castle-card.is-boss { border-color: var(--fa-blood-bright); }
+
+/* ---- bottoni ---- */
+.fa-btn {
+  font-family: var(--fa-font-body); font-weight: 800; font-size: 14px; cursor: pointer;
+  border: 0; border-radius: 11px; padding: 10px 16px;
+}
+.fa-btn-primary { background: linear-gradient(160deg, var(--fa-blood-bright), var(--fa-blood)); color: #fff; }
+.fa-btn-primary:hover { filter: brightness(1.1); }
+.fa-btn-primary:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+.fa-btn-ghost { background: transparent; border: 1px solid var(--fa-line); color: var(--fa-ink); }
+.fa-btn-ghost:hover { border-color: var(--fa-steel); }
+.fa-btn-link { background: none; border: 0; color: var(--fa-muted); font-size: 12px; text-decoration: underline; cursor: pointer; padding: 0; }
+
+/* ---- battaglia ---- */
+.fa-battle { border-color: var(--fa-blood-bright); }
+.fa-battle-rolls { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.fa-battle-roll-row { display: flex; flex-direction: column; gap: 6px; }
+.fa-battle-roll-row span { font-size: 12.5px; color: var(--fa-muted); font-weight: 700; }
+.fa-dice-row { display: flex; gap: 4px; }
+.fa-dice-row button {
+  width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--fa-line);
+  background: rgba(0,0,0,.3); color: var(--fa-ink); font-weight: 800; cursor: pointer;
+}
+.fa-dice-row button.is-picked { background: var(--fa-blood-bright); border-color: var(--fa-blood-bright); color: #fff; }
+.fa-battle-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.fa-battle-result { margin-top: 16px; padding: 14px 16px; border-radius: 14px; }
+.fa-battle-result.is-win { background: rgba(201,162,74,.14); border: 1px solid var(--fa-gold); }
+.fa-battle-result.is-lose { background: rgba(122,31,43,.18); border: 1px solid var(--fa-blood-bright); }
+.fa-battle-result strong { display: block; margin-bottom: 4px; font-size: 16px; }
+
+/* ---- negozi (armi / skin) ---- */
+.fa-shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; }
+.fa-shop-card {
+  border: 1px solid var(--fa-line); border-radius: 16px; padding: 14px; background: rgba(0,0,0,.28);
+  display: flex; flex-direction: column; gap: 8px; text-align: center;
+}
+.fa-shop-icon { font-size: 30px; }
+.fa-shop-card img.fa-shop-img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
+.fa-shop-card h3 { font-size: 14.5px; }
+.fa-shop-cost { font-size: 13px; color: var(--fa-gold); font-weight: 800; }
+.fa-shop-card.is-owned { border-color: var(--fa-steel); }
+.fa-shop-card.is-equipped { border-color: var(--fa-gold); background: linear-gradient(160deg, rgba(201,162,74,.14), rgba(0,0,0,.28)); }
+.fa-owned-tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--fa-steel); font-weight: 800; }
+
+/* ---- diario ---- */
+.fa-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+.fa-log li { font-size: 13px; line-height: 1.5; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.25); color: var(--fa-muted); }
+.fa-log li:first-child { color: var(--fa-ink); }
+.fa-log-empty { color: var(--fa-muted); font-size: 13px; }
+
+.fa-reset-line { text-align: center; margin-top: 30px; }
+
+@media (max-width: 640px) {
+  .fa-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
