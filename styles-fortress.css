@@ -113,16 +113,40 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 /* ---- negozi (armi / skin) ---- */
 .fa-shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; }
 .fa-shop-card {
-  border: 1px solid var(--fa-line); border-radius: 16px; padding: 14px; background: rgba(0,0,0,.28);
+  border: 1px solid var(--fa-line); border-left-width: 4px; border-radius: 16px; padding: 14px; background: rgba(0,0,0,.28);
   display: flex; flex-direction: column; gap: 8px; text-align: center;
 }
 .fa-shop-icon { font-size: 30px; }
 .fa-shop-card img.fa-shop-img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
 .fa-shop-card h3 { font-size: 14.5px; }
 .fa-shop-cost { font-size: 13px; color: var(--fa-gold); font-weight: 800; }
-.fa-shop-card.is-owned { border-color: var(--fa-steel); }
+.fa-shop-card.is-owned { border-color: var(--fa-steel); border-left-color: inherit; }
 .fa-shop-card.is-equipped { border-color: var(--fa-gold); background: linear-gradient(160deg, rgba(201,162,74,.14), rgba(0,0,0,.28)); }
 .fa-owned-tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--fa-steel); font-weight: 800; }
+
+/* ---- rarità (colore identificativo, stile "tier" battle royale) ---- */
+.fa-rarity-tag { align-self: center; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; padding: 2px 8px; border-radius: 20px; }
+.rarity-comune { border-left-color: #7d838c; }
+.fa-rarity-tag.rarity-comune { background: rgba(125,131,140,.18); color: #c3c8cf; }
+.rarity-non-comune { border-left-color: #4f9d5c; }
+.fa-rarity-tag.rarity-non-comune { background: rgba(79,157,92,.18); color: #8fdd9c; }
+.rarity-rara { border-left-color: #3f7fd1; }
+.fa-rarity-tag.rarity-rara { background: rgba(63,127,209,.18); color: #90b9ef; }
+.rarity-epica { border-left-color: #9a4fd1; }
+.fa-rarity-tag.rarity-epica { background: rgba(154,79,209,.18); color: #cd9cf2; }
+.rarity-leggendaria { border-left-color: var(--fa-gold); }
+.fa-rarity-tag.rarity-leggendaria { background: rgba(201,162,74,.2); color: var(--fa-gold); }
+.rarity-mitica { border-left-color: var(--fa-blood-bright); }
+.fa-rarity-tag.rarity-mitica { background: rgba(181,48,63,.22); color: #ff8f9c; }
+
+/* ---- accordion categorie armeria ---- */
+.fa-shop-category { border: 1px solid var(--fa-line); border-radius: 14px; padding: 4px 14px; margin-bottom: 10px; background: rgba(0,0,0,.18); }
+.fa-shop-category summary { cursor: pointer; padding: 12px 0; font-family: var(--fa-font-display); font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.fa-shop-category summary::-webkit-details-marker { display: none; }
+.fa-shop-category summary::after { content: "▸"; color: var(--fa-muted); margin-left: 8px; }
+.fa-shop-category[open] summary::after { content: "▾"; }
+.fa-cat-count { font-family: var(--fa-font-body); font-size: 12px; font-weight: 700; color: var(--fa-muted); }
+.fa-shop-category .fa-shop-grid { padding-bottom: 14px; }
 
 /* ---- diario ---- */
 .fa-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }

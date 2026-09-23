@@ -23,12 +23,12 @@ const CASTELLI = [
   { id: "trono-spezzato", name: "Il Trono Spezzato", defense: 10, reward: 90, boss: true }
 ];
 
-const ARMI = [
-  { id: "spada-arrugginita", name: "Spada Arrugginita", cost: 15, bonus: 1 },
-  { id: "ascia-da-guerra", name: "Ascia da Guerra", cost: 30, bonus: 2 },
-  { id: "balestra-nera", name: "Balestra Nera", cost: 50, bonus: 3 },
-  { id: "lama-del-covo", name: "Lama del Covo", cost: 75, bonus: 4 }
+/* Catalogo Armi vero (100 voci) in catalog/fortress-armi.js, caricato prima
+   di questo file. Fallback minimo se per qualche motivo non è disponibile. */
+const ARMI = window.FORTRESS_ARMI || [
+  { id: "spada-arrugginita", name: "Spada Arrugginita", category: "mischia", rarity: "comune", cost: 15, bonus: 1 }
 ];
+const CATEGORIE_ARMI = window.FORTRESS_CATEGORIE_ARMI || { mischia: "Mischia" };
 
 const SKIN = [
   { id: "mantello-cenere", name: "Mantello di Cenere", cost: 20 },
@@ -99,7 +99,7 @@ function renderAll() {
   renderRoster();
   renderCastles();
   renderBattle();
-  renderShop("fa-weapons", ARMI, "weapons", "equippedWeaponId", (a) => `+${a.bonus} all'attacco`);
+  renderWeaponsShop();
   renderShop("fa-skins", SKIN, "skins", "equippedSkinId", () => "solo estetica");
   renderLog();
 }
@@ -172,6 +172,47 @@ function renderBattle() {
     resolveBtn.hidden = false;
     cancelBtn.textContent = "Ritirata (annulla)";
   }
+}
+
+/* Armeria: 100 armi raggruppate per categoria in accordion (altrimenti una
+   griglia sola sarebbe ingestibile). openWeaponCats non è salvato: è solo
+   lo stato "aperto/chiuso" di questa sessione di gioco. */
+let openWeaponCats = new Set();
+
+function weaponCardMarkup(item) {
+  const owned = state.weapons.includes(item.id);
+  const isEquipped = state.equippedWeaponId === item.id;
+  const canAfford = state.money >= item.cost;
+  return `<div class="fa-shop-card rarity-${item.rarity} ${owned ? "is-owned" : ""} ${isEquipped ? "is-equipped" : ""}">
+    ${imgOrNothing(`assets/fortress/weapons/${item.id}.webp`, item.name, "fa-shop-img")}
+    <span class="fa-rarity-tag rarity-${item.rarity}">${item.rarity}</span>
+    <h3>${item.name}</h3>
+    <span class="fa-shop-cost">+${item.bonus} all'attacco</span>
+    ${owned
+      ? (isEquipped
+          ? `<span class="fa-owned-tag">Equipaggiata</span>`
+          : `<button type="button" class="fa-btn fa-btn-ghost" data-equip="weapons:${item.id}">Equipaggia</button>`)
+      : `<button type="button" class="fa-btn fa-btn-primary" data-buy="weapons:${item.id}" ${canAfford ? "" : "disabled"}>Compra · ${item.cost}💰</button>`}
+  </div>`;
+}
+
+function renderWeaponsShop() {
+  const box = $("fa-weapons");
+  box.innerHTML = Object.keys(CATEGORIE_ARMI).map((catKey) => {
+    const items = ARMI.filter((a) => a.category === catKey);
+    if (!items.length) return "";
+    const ownedCount = items.filter((i) => state.weapons.includes(i.id)).length;
+    return `<details class="fa-shop-category" data-cat="${catKey}" ${openWeaponCats.has(catKey) ? "open" : ""}>
+      <summary>${CATEGORIE_ARMI[catKey]} <span class="fa-cat-count">${ownedCount}/${items.length}</span></summary>
+      <div class="fa-shop-grid">${items.map(weaponCardMarkup).join("")}</div>
+    </details>`;
+  }).join("");
+  box.querySelectorAll("details[data-cat]").forEach((d) => {
+    d.addEventListener("toggle", () => {
+      if (d.open) openWeaponCats.add(d.dataset.cat);
+      else openWeaponCats.delete(d.dataset.cat);
+    });
+  });
 }
 
 function renderShop(boxId, catalog, ownedKey, equippedKey, effectLabel) {
