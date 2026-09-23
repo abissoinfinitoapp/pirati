@@ -23,12 +23,12 @@ const CASTELLI = [
   { id: "trono-spezzato", name: "Il Trono Spezzato", defense: 10, reward: 90, boss: true }
 ];
 
-/* Catalogo Armi vero (100 voci) in catalog/fortress-armi.js, caricato prima
-   di questo file. Fallback minimo se per qualche motivo non è disponibile. */
-const ARMI = window.FORTRESS_ARMI || [
-  { id: "spada-arrugginita", name: "Spada Arrugginita", category: "mischia", rarity: "comune", cost: 15, bonus: 1 }
-];
-const CATEGORIE_ARMI = window.FORTRESS_CATEGORIE_ARMI || { mischia: "Mischia" };
+/* Catalogo Armi vero (100 voci, schema v2.4) in catalog/fortress-armi.js,
+   caricato prima di questo file. Le armi NON si comprano più: si trovano
+   solo durante la partita (motore in engine/fortress-combat.js, non ancora
+   integrato in questa UI). Qui serve solo per mostrare l'arma equipaggiata,
+   se mai una verrà assegnata da un sistema futuro. */
+const ARMI = window.FORTRESS_ARMI || [];
 
 const SKIN = [
   { id: "mantello-cenere", name: "Mantello di Cenere", cost: 20 },
@@ -99,7 +99,7 @@ function renderAll() {
   renderRoster();
   renderCastles();
   renderBattle();
-  renderWeaponsShop();
+  renderWeaponsNotice();
   renderShop("fa-skins", SKIN, "skins", "equippedSkinId", () => "solo estetica");
   renderLog();
 }
@@ -109,7 +109,7 @@ function renderStatus() {
   $("fa-money").textContent = state.money;
   $("fa-conquered-count").textContent = `${state.conqueredCastleIds.length}/${CASTELLI.length}`;
   const w = equippedWeapon();
-  $("fa-equipped-weapon").textContent = w ? `${w.name} (+${w.bonus})` : "Nessuna";
+  $("fa-equipped-weapon").textContent = w ? `${w.name} (+${w.power})` : "Nessuna";
 }
 
 function renderRoster() {
@@ -145,7 +145,7 @@ function renderBattle() {
   const roster = activePlayers();
   const w = equippedWeapon();
   $("fa-battle-title").textContent = `Attacco a ${c.name}`;
-  $("fa-battle-sub").textContent = `Ogni giocatore attivo tira 1d6. La media${w ? ` + il bonus di ${w.name} (+${w.bonus})` : ""} deve superare la difesa (${c.defense}).`;
+  $("fa-battle-sub").textContent = `Ogni giocatore attivo tira 1d6. La media${w ? ` + il bonus di ${w.name} (+${w.power})` : ""} deve superare la difesa (${c.defense}).`;
 
   $("fa-battle-rolls").innerHTML = roster.length ? roster.map((p) => {
     const cur = Number(b.rolls[p.id]) || 0;
@@ -174,45 +174,13 @@ function renderBattle() {
   }
 }
 
-/* Armeria: 100 armi raggruppate per categoria in accordion (altrimenti una
-   griglia sola sarebbe ingestibile). openWeaponCats non è salvato: è solo
-   lo stato "aperto/chiuso" di questa sessione di gioco. */
-let openWeaponCats = new Set();
-
-function weaponCardMarkup(item) {
-  const owned = state.weapons.includes(item.id);
-  const isEquipped = state.equippedWeaponId === item.id;
-  const canAfford = state.money >= item.cost;
-  return `<div class="fa-shop-card rarity-${item.rarity} ${owned ? "is-owned" : ""} ${isEquipped ? "is-equipped" : ""}">
-    ${imgOrNothing(`assets/fortress/weapons/${item.id}.webp`, item.name, "fa-shop-img")}
-    <span class="fa-rarity-tag rarity-${item.rarity}">${item.rarity}</span>
-    <h3>${item.name}</h3>
-    <span class="fa-shop-cost">+${item.bonus} all'attacco</span>
-    ${owned
-      ? (isEquipped
-          ? `<span class="fa-owned-tag">Equipaggiata</span>`
-          : `<button type="button" class="fa-btn fa-btn-ghost" data-equip="weapons:${item.id}">Equipaggia</button>`)
-      : `<button type="button" class="fa-btn fa-btn-primary" data-buy="weapons:${item.id}" ${canAfford ? "" : "disabled"}>Compra · ${item.cost}💰</button>`}
-  </div>`;
-}
-
-function renderWeaponsShop() {
-  const box = $("fa-weapons");
-  box.innerHTML = Object.keys(CATEGORIE_ARMI).map((catKey) => {
-    const items = ARMI.filter((a) => a.category === catKey);
-    if (!items.length) return "";
-    const ownedCount = items.filter((i) => state.weapons.includes(i.id)).length;
-    return `<details class="fa-shop-category" data-cat="${catKey}" ${openWeaponCats.has(catKey) ? "open" : ""}>
-      <summary>${CATEGORIE_ARMI[catKey]} <span class="fa-cat-count">${ownedCount}/${items.length}</span></summary>
-      <div class="fa-shop-grid">${items.map(weaponCardMarkup).join("")}</div>
-    </details>`;
-  }).join("");
-  box.querySelectorAll("details[data-cat]").forEach((d) => {
-    d.addEventListener("toggle", () => {
-      if (d.open) openWeaponCats.add(d.dataset.cat);
-      else openWeaponCats.delete(d.dataset.cat);
-    });
-  });
+/* Le armi non si comprano più: si trovano durante la partita (motore in
+   engine/fortress-combat.js, non ancora integrato in questa UI — la mappa/
+   il loop di gioco sono uno step separato). L'Armeria a monete precedente
+   (weaponCardMarkup/renderWeaponsShop/openWeaponCats) è stata rimossa: usava
+   campi (cost/bonus) che il nuovo catalogo non ha più. */
+function renderWeaponsNotice() {
+  $("fa-weapons").innerHTML = ""; // il testo esplicativo è già nell'intestazione statica del pannello
 }
 
 function renderShop(boxId, catalog, ownedKey, equippedKey, effectLabel) {
@@ -296,7 +264,7 @@ function resolveBattle() {
   const rolls = roster.map((p) => Number(b.rolls[p.id]) || 0);
   const avg = rolls.reduce((a, n) => a + n, 0) / rolls.length;
   const w = equippedWeapon();
-  const total = avg + (w ? w.bonus : 0);
+  const total = avg + (w ? w.power : 0);
   const win = total >= c.defense;
 
   if (win) {
@@ -384,7 +352,8 @@ function bindEvents() {
     const buy = ev.target.closest("[data-buy]");
     if (buy) {
       const [key, id] = buy.dataset.buy.split(":");
-      buyItem(key, id, key === "weapons" ? ARMI : SKIN);
+      if (key === "weapons") return; // le armi non si comprano più: si trovano in partita
+      buyItem(key, id, SKIN);
       return;
     }
     const equip = ev.target.closest("[data-equip]");
