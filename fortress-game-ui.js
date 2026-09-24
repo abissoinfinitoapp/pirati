@@ -41,6 +41,8 @@
   const zonesApi = window.FORTRESS_ZONES_API;
   const CHARACTERS = window.FORTRESS_CHARACTERS || [];
   const ARMI = window.FORTRESS_ARMI || [];
+  const ITEMS = window.FORTRESS_ITEMS;
+  const loot = window.FORTRESS_LOOT;
   /* Guardaroba (skin cosmetiche): solo lettura, solo per scegliere quale
      immagine mostrare. Nessuna logica di gioco arriva da qui. */
   const skinsApi = window.FORTRESS_SKINS_API;
@@ -72,14 +74,12 @@
   function zoneNameOf(id) { const z = zoneCatalogEntry(id); return z ? z.name : id; }
 
   /* =========================================================================
-     FIXTURE DEV — SOLO per testare il combattimento prima del Loot definitivo.
-     Nessuna regola di gioco: assegna un'arma base a ciascun giocatore usando
-     lo slot equipment.primary già esistente nel loop. Da eliminare (una sola
-     funzione, un solo punto di chiamata) quando il Loot vero sarà pronto.
+     ARMA INIZIALE — fissa per tutti (§3), mai comprata/scelta/registrata come
+     trovata: assegnata direttamente allo slot primary, MAI attraverso
+     loop.equipFoundWeapon (quindi non entra mai in collectedWeaponIds).
      ========================================================================= */
-  const DEV_STARTING_WEAPON_ID = "assault_base";
-  function applyDevStartingEquipment(state) {
-    const weapon = ARMI.find((w) => w.id === DEV_STARTING_WEAPON_ID);
+  function applyStarterEquipment(state) {
+    const weapon = ARMI.find((w) => w.id === loot.STARTER_WEAPON_ID);
     if (!weapon) return;
     state.players.forEach((p) => { p.equipment.primary = weapon; });
   }
@@ -95,6 +95,7 @@
   let setupPlayers = null;
   let setupError = null;
   let moveMode = false;
+  let scannerMode = false; // in attesa che il giocatore scelga la zona adiacente da scansionare
   let attackFlow = null;      // { step: "target"|"weapon"|"preview", targetKind, targetId, weapon }
   let diceSelections = null;  // array di risultati 1-6 in corso di inserimento
   let pendingResult = null;   // esito già risolto dal motore, in attesa del CONTINUA
@@ -168,7 +169,7 @@
       ]
     };
     const state = loop.createGame({ players, zones, bossConfig });
-    applyDevStartingEquipment(state);
+    applyStarterEquipment(state);
 
     const playerAvatars = {};
     players.forEach((p, i) => { playerAvatars[p.id] = activePlayers[i].avatarId; });
@@ -188,7 +189,7 @@
     const state = game.state;
     const player = state.players[game.landingIndex];
     const { lootFound } = loop.landPlayer(state, player.id, zoneId, Math.random);
-    if (lootFound) pushEvent(`${player.name}: HAI TROVATO ${lootLabel(lootFound)}`);
+    if (lootFound) pushEvent(`${player.name}: HAI TROVATO ${lootEntryLabel(lootFound)}`);
     game.landingIndex += 1;
 
     if (loop.allPlayersLanded(state)) {
@@ -198,8 +199,32 @@
     render();
   }
 
-  function lootLabel(loot) {
-    return `${(loot.tipo || "").toUpperCase()} · ${(loot.rarita || "").toUpperCase()}`;
+  /* Risolve un riferimento minimo di groundLoot ({kind, weaponId|itemId}) in
+     un'etichetta leggibile, SOLO per la UI: mai una copia dello stato. */
+  function resolveLootEntry(entry) {
+    if (entry.kind === "weapon") return ARMI.find((w) => w.id === entry.weaponId);
+    return ITEMS.findItem(entry.itemId);
+  }
+  function lootEntryLabel(entry) {
+    const resolved = resolveLootEntry(entry);
+    if (!resolved) return "???";
+    return entry.kind === "weapon" ? `${resolved.name} (${resolved.rarity})` : resolved.name;
+  }
+
+  /* UI minima (§27): un oggetto a terra si raccoglie scegliendo lo slot.
+     Nessuna assegnazione automatica: sempre un click esplicito, sempre
+     tramite director.performEquipFound*/
+  function groundLootMarkup(groundLoot) {
+    if (!groundLoot || !groundLoot.length) return "";
+    const rows = groundLoot.map((entry) => {
+      const label = escapeHtml(lootEntryLabel(entry));
+      const buttons = entry.kind === "weapon"
+        ? `<button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="primary">→ Primary</button>
+           <button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="secondary">→ Secondary</button>`
+        : `<button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="${entry.kind}">Raccogli</button>`;
+      return `<div class="fa-groundloot-row"><span>${label}</span>${buttons}</div>`;
+    }).join("");
+    return `<div class="fa-panel-section"><h4>A terra</h4>${rows}</div>`;
   }
   function pushEvent(text) {
     eventLog.unshift(text);
@@ -341,7 +366,8 @@
     const cls = a.id === "fine_turno" ? "is-end-turn" : (a.id === "rianima" ? "is-rianima" : (a.id === "attacca" ? "is-primary" : ""));
     const targetAttr = a.targetId ? ` data-target="${a.targetId}"` : "";
     const chestAttr = a.chestId ? ` data-chest="${a.chestId}"` : "";
-    return `<button type="button" class="fa-action-btn ${cls}" data-action="${a.id}"${targetAttr}${chestAttr}>${a.label}</button>`;
+    const utilityAttr = a.utilityId ? ` data-utility="${a.utilityId}"` : "";
+    return `<button type="button" class="fa-action-btn ${cls}" data-action="${a.id}"${targetAttr}${chestAttr}${utilityAttr}>${a.label}</button>`;
   }
 
   function renderPanel() {
@@ -389,8 +415,10 @@
     if (!player) { panel.innerHTML = ""; return; }
     const situation = director.getSituation(state, player);
     const stormRisk = director.getStormRisk(state, player);
-    const actions = (attackFlow || moveMode) ? [] : director.getAvailableActions(state, player);
+    const actions = (attackFlow || moveMode || scannerMode) ? [] : director.getAvailableActions(state, player);
     const stars = zoneStars(situation.danger);
+    const equip = player.equipment;
+    const equipLine = (label, item) => `<span>${label}: ${item ? escapeHtml(item.name) : "—"}</span>`;
 
     panel.innerHTML = `
       <div class="fa-panel-round">ROUND ${state.round}</div>
@@ -422,14 +450,26 @@
       ${eventLog.length ? `<div class="fa-panel-section"><h4>Eventi recenti</h4><ul class="fa-situation-list">${eventLog.map((e) => `<li>${escapeHtml(e)}</li>`).join("")}</ul></div>` : ""}
 
       <div class="fa-panel-section">
+        <h4>Inventario</h4>
+        <div class="fa-inventory-line">${equipLine("Primary", equip.primary)}</div>
+        <div class="fa-inventory-line">${equipLine("Secondary", equip.secondary)}</div>
+        <div class="fa-inventory-line">${equipLine("Cura", equip.cura)}</div>
+        <div class="fa-inventory-line">${equipLine("Scudo", equip.scudo)}</div>
+        <div class="fa-inventory-line">${equipLine("Utility", equip.utility)}</div>
+      </div>
+
+      ${groundLootMarkup(situation.groundLoot)}
+
+      <div class="fa-panel-section">
         <h4>Cosa vuoi fare?</h4>
-        <div class="fa-action-list">${moveMode ? `<p>Scegli una zona evidenziata sulla mappa.</p>` : actions.map(actionButtonMarkup).join("")}</div>
+        <div class="fa-action-list">${(moveMode || scannerMode) ? `<p>Scegli una zona evidenziata sulla mappa.</p>` : actions.map(actionButtonMarkup).join("")}</div>
         ${moveMode ? `<button type="button" class="fa-btn fa-btn-ghost" id="fa-move-cancel">Annulla spostamento</button>` : ""}
+        ${scannerMode ? `<button type="button" class="fa-btn fa-btn-ghost" id="fa-scanner-cancel">Annulla Scanner</button>` : ""}
       </div>
     `;
   }
 
-  function handlePlayerAction(actionId, targetId, chestId) {
+  function handlePlayerAction(actionId, targetId, chestId, utilityId) {
     const state = game.state, dir = game.dir;
     const playerId = director.getCurrentPlayerId(state, dir);
     switch (actionId) {
@@ -438,15 +478,37 @@
       case "rianima": director.performRianima(state, dir, playerId, targetId); break;
       case "aiuta": director.performAiuto(state, dir, playerId, targetId); break;
       case "scambia": director.performScambia(state, dir, playerId, targetId, "primary"); break;
-      case "usa_oggetto": director.performUsaOggetto(state, dir, playerId); break;
+      case "usa_cura": director.performUsaCura(state, dir, playerId); break;
+      case "usa_scudo": director.performUsaScudo(state, dir, playerId); break;
+      case "usa_utility": {
+        if (utilityId === "scanner") { scannerMode = true; break; }
+        const result = director.performUsaUtility(state, dir, playerId, null);
+        if (result.type === "fumogeno") pushEvent("Fumogeno lanciato: -1 dado al prossimo attacco nemico qui.");
+        if (result.type === "stim") pushEvent("Stim pronto: +1 dado al tuo prossimo attacco.");
+        break;
+      }
       case "apri_cassa": {
-        const loot = director.performApriCassa(state, dir, playerId, chestId, Math.random);
-        if (loot) pushEvent(`HAI TROVATO: ${lootLabel(loot)}`);
+        const found = director.performApriCassa(state, dir, playerId, chestId, Math.random);
+        pushEvent(`HAI TROVATO: ${lootEntryLabel(found.weapon)} + ${lootEntryLabel(found.support)}`);
         break;
       }
       case "fine_turno": director.endPlayerTurn(state, dir, playerId); break;
       default: break;
     }
+    render();
+  }
+
+  function handlePickup(instanceId, slot) {
+    const state = game.state, dir = game.dir;
+    const playerId = director.getCurrentPlayerId(state, dir);
+    const player = loop.getPlayer(state, playerId);
+    const zone = loop.getZone(state, player.zoneId);
+    const entry = zone.groundLoot.find((g) => g.instanceId === instanceId);
+    if (!entry) return;
+    const resolved = resolveLootEntry(entry);
+    if (!resolved) return;
+    if (entry.kind === "weapon") director.performEquipFoundWeapon(state, dir, playerId, slot, entry.instanceId, resolved);
+    else director.performEquipFoundSupportItem(state, dir, playerId, slot, entry.instanceId, resolved);
     render();
   }
 
@@ -458,9 +520,24 @@
       if (btn.id === "fa-boss-continue") { director.beginBossRollStep(game.state, game.dir); render(); return; }
       if (btn.id === "fa-end-round") { director.resolveEndOfRound(game.state, game.dir, Math.random); render(); return; }
       if (btn.id === "fa-move-cancel") { moveMode = false; render(); return; }
+      if (btn.id === "fa-scanner-cancel") { scannerMode = false; render(); return; }
+      if (btn.dataset.pickup) { handlePickup(Number(btn.dataset.pickup), btn.dataset.pickupSlot); return; }
       const actionId = btn.dataset.action;
-      if (actionId) handlePlayerAction(actionId, btn.dataset.target, btn.dataset.chest);
+      if (actionId) handlePlayerAction(actionId, btn.dataset.target, btn.dataset.chest, btn.dataset.utility);
     });
+  }
+
+  function handleScanZone(zoneId) {
+    const state = game.state, dir = game.dir;
+    const playerId = director.getCurrentPlayerId(state, dir);
+    scannerMode = false;
+    try {
+      const result = director.performUsaUtility(state, dir, playerId, zoneId);
+      pushEvent(`SCANNER su ${escapeHtml(zoneNameOf(zoneId))}: ${result.enemyCount} nemici, ${result.chestCount} casse`);
+    } catch (e) {
+      pushEvent(e.message);
+    }
+    render();
   }
 
   function bindMapEvents() {
@@ -470,6 +547,7 @@
       const zoneId = tile.dataset.zone;
       if (isLanding()) { chooseLandingZone(zoneId); return; }
       if (moveMode) { handleMoveToZone(zoneId); return; }
+      if (scannerMode) { handleScanZone(zoneId); return; }
     });
   }
 

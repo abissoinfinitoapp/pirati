@@ -199,7 +199,8 @@
       companions: loop.playersInZone(state, zone.id).filter((p) => p.id !== player.id).map((p) => ({
         id: p.id, name: p.name, status: p.status
       })),
-      openChests: (zone.chests || []).filter((c) => !c.opened).map((c) => ({ id: c.id }))
+      openChests: (zone.chests || []).filter((c) => !c.opened).map((c) => ({ id: c.id })),
+      groundLoot: (zone.groundLoot || []).slice()
     };
   }
 
@@ -265,7 +266,14 @@
       if (activeCompanion) actions.push({ id: "aiuta", label: "AIUTA " + activeCompanion.name, targetId: activeCompanion.id });
       if (activeCompanion) actions.push({ id: "scambia", label: "SCAMBIA con " + activeCompanion.name, targetId: activeCompanion.id });
 
-      if (player.equipment.consumable) actions.push({ id: "usa_oggetto", label: "USA OGGETTO" });
+      if (player.equipment.cura) actions.push({ id: "usa_cura", label: "USA CURA" });
+      if (player.equipment.scudo) actions.push({ id: "usa_scudo", label: "USA SCUDO" });
+      // Scanner/Fumogeno/Stim consumano tutti e tre l'azione principale
+      // (decisione presa): stesso blocco "!player.actedThisRound" di
+      // Cura/Scudo/Aiuta/Scambia/Apri Cassa, nessuna eccezione tra loro.
+      if (player.equipment.utility) {
+        actions.push({ id: "usa_utility", label: "USA " + player.equipment.utility.name.toUpperCase(), utilityId: player.equipment.utility.id });
+      }
     }
 
     actions.push({ id: "fine_turno", label: "FINE TURNO" });
@@ -344,12 +352,44 @@
     return result;
   }
 
-  function performUsaOggetto(state, dir, playerId) {
+  function performUsaCura(state, dir, playerId) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    const result = loop.usaOggettoAction(state, playerId);
+    const result = loop.usaCuraAction(state, playerId);
     autoAdvanceIfActed(state, dir, playerId);
     return result;
+  }
+
+  function performUsaScudo(state, dir, playerId) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    const result = loop.usaScudoAction(state, playerId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
+  }
+
+  /* Scanner/Fumogeno/Stim: tutte e tre consumano l'azione principale, oltre
+     all'oggetto Utility stesso (nessuna eccezione tra loro). */
+  function performUsaUtility(state, dir, playerId, targetZoneId) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    const result = loop.usaUtilityAction(state, playerId, targetZoneId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
+  }
+
+  /* Raccogliere non consuma l'azione principale (§18/§27 Loot): nessun
+     auto-avanzamento qui, il giocatore può ancora agire dopo. */
+  function performEquipFoundWeapon(state, dir, playerId, slot, groundLootInstanceId, weaponObject) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    return loop.equipFoundWeapon(state, playerId, slot, groundLootInstanceId, weaponObject);
+  }
+
+  function performEquipFoundSupportItem(state, dir, playerId, slot, groundLootInstanceId, itemObject) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    return loop.equipFoundSupportItem(state, playerId, slot, groundLootInstanceId, itemObject);
   }
 
   function performApriCassa(state, dir, playerId, chestId, rng) {
@@ -628,7 +668,8 @@
     getSituation, getReachableZones, getAvailableActions, getStormRisk, hasActiveBoss,
     buildAttackPreview, buildBossAttackPreview,
     performMove, performRianima, performAiuto, performScambia,
-    performUsaOggetto, performApriCassa,
+    performUsaCura, performUsaScudo, performUsaUtility,
+    performEquipFoundWeapon, performEquipFoundSupportItem, performApriCassa,
     endPlayerTurn,
     beginPlayerAttackOnEnemy, beginPlayerAttackOnBoss,
     beginEnemyRollStep, beginBossRollStep,

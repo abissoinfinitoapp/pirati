@@ -145,14 +145,14 @@ test("nessun Campo a inizio round -> comportamento identico a oggi (turnOrder pi
   assert.deepEqual(dir.roundPlayerQueue, ["p1", "p2", "p3"]);
 });
 
-test("auto-avanzamento dopo un'azione immediata (usa_oggetto): nessuna FINE TURNO manuale necessaria", () => {
+test("auto-avanzamento dopo un'azione immediata (usa_cura): nessuna FINE TURNO manuale necessaria", () => {
   const state = newGame(2);
   land(state, "p1", "e1"); land(state, "p2", "e1");
   loop.spawnEnemy(state, "normale", "e1");
   const dir = beginAndFreeze(state);
-  loop.getPlayer(state, "p1").equipment.consumable = { id: "bende", name: "Bende", amount: 3, full: false };
+  loop.getPlayer(state, "p1").equipment.cura = { id: "bende", name: "Bende", amount: 3, full: false };
   assert.equal(director.getCurrentPlayerId(state, dir), "p1");
-  director.performUsaOggetto(state, dir, "p1");
+  director.performUsaCura(state, dir, "p1");
   assert.equal(director.getCurrentPlayerId(state, dir), "p2", "dopo l'azione principale si passa da soli al prossimo");
 });
 
@@ -165,9 +165,16 @@ test("il movimento NON fa avanzare la coda: il giocatore deve ancora agire o pre
   assert.equal(director.getCurrentPlayerId(state, dir), "p1", "muoversi non consuma l'azione principale");
 });
 
-// "raccogliere da terra NON fa avanzare la coda" arriva col commit Loot
-// (performEquipFoundWeapon/SupportItem + zone.groundLoot non esistono ancora
-// su questo commit, che resta a monte del rework Loot/Arsenale).
+test("raccogliere da terra NON fa avanzare la coda", () => {
+  const state = newGame(2);
+  land(state, "p1", "e1"); land(state, "p2", "e1");
+  loop.spawnEnemy(state, "normale", "e1");
+  const dir = beginAndFreeze(state);
+  const zone = loop.getZone(state, "e1");
+  zone.groundLoot.push({ kind: "cura", itemId: "bende", instanceId: 999 });
+  director.performEquipFoundSupportItem(state, dir, "p1", "cura", 999, { id: "bende", name: "Bende", amount: 3, full: false });
+  assert.equal(director.getCurrentPlayerId(state, dir), "p1");
+});
 
 test("auto-avanzamento dopo un attacco a dadi fisici, solo a risoluzione definitiva (mai con awaitingRoll pendente)", () => {
   const state = newGame(2);
@@ -245,7 +252,7 @@ test("dopo l'intera coda (Campo + residui) si passa alla fase nemici, esattament
   assert.equal(dir.directorPhase, "enemy-phase");
 });
 
-test("aiuta/usa_oggetto avanzano entrambi la coda in automatico", () => {
+test("aiuta/scambia/apri_cassa/usa_scudo/usa_utility avanzano tutti la coda in automatico", () => {
   const state = newGame(2);
   land(state, "p1", "e1"); land(state, "p2", "e1");
   loop.spawnEnemy(state, "normale", "e1");
@@ -255,8 +262,8 @@ test("aiuta/usa_oggetto avanzano entrambi la coda in automatico", () => {
   director.performAiuto(state, dir, "p1", "p2");
   assert.equal(director.getCurrentPlayerId(state, dir), "p2");
 
-  // usa_oggetto per p2
-  loop.getPlayer(state, "p2").equipment.consumable = { id: "bende", name: "Bende", amount: 3, full: false };
-  director.performUsaOggetto(state, dir, "p2");
+  // usa_scudo per p2
+  loop.getPlayer(state, "p2").equipment.scudo = { id: "mini_scudo", name: "Mini Scudo", amount: 3, full: false };
+  director.performUsaScudo(state, dir, "p2");
   assert.equal(dir.directorPhase, "enemy-phase", "erano solo 2 giocatori: la coda finisce qui");
 });

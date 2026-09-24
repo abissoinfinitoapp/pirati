@@ -16,10 +16,13 @@
   const combat = typeof module === "object" && module.exports
     ? require("./fortress-combat.js")
     : root.FORTRESS_COMBAT;
-  const api = factory(combat);
+  const loot = typeof module === "object" && module.exports
+    ? require("./fortress-loot.js")
+    : root.FORTRESS_LOOT;
+  const api = factory(combat, loot);
   if (typeof module === "object" && module.exports) module.exports = api;
   if (root) root.FORTRESS_LOOP = api;
-})(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : null), function (combat) {
+})(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : null), function (combat, loot) {
   "use strict";
 
   const RING_ORDER = ["esterno", "interno", "centro"];
@@ -68,6 +71,8 @@
       stormState: "sicura",
       ambientLootClaimed: false,
       chests: [],
+      groundLoot: [],
+      smokeActive: false,
       noiseTracker: combat.createNoiseTracker()
     };
   }
@@ -107,6 +112,11 @@
      ========================================================================= */
   function createGame({ players, zones, bossConfig }) {
     const zoneList = zones || createDefaultZoneLayout();
+    // Quantità di casse fissata UNA VOLTA qui, dal numero INIZIALE di
+    // giocatori: mai ricalcolata durante la run (§6). Zone senza lootTier
+    // (es. la mappa di default usata dai test) risolvono a "boss" (0 casse):
+    // vedi loot.resolveLootTierBucket.
+    loot.setupChests(zoneList, players.length);
     return {
       phase: "atterraggio",
       round: 0,
@@ -117,7 +127,8 @@
         hp: 10, shield: 10,
         koRoundsRemaining: null, koSinceRound: null,
         movedThisRound: false, actedThisRound: false,
-        equipment: { primary: null, secondary: null, utility: null, consumable: null }
+        equipment: { primary: null, secondary: null, cura: null, scudo: null, utility: null },
+        collectedWeaponIds: [] // run-level: mai la starter, serve solo allo sblocco a vittoria
       })),
       zones: zoneList,
       enemies: [],
@@ -127,6 +138,8 @@
       // createDefaultZoneLayout() senza specificare zoneId esplicitamente.
       boss: bossConfig ? { active: false, hp: 0, maxHp: 0, shield: 0, maxShield: 0, config: bossConfig, phaseIndex: 0, roundsSinceActivation: 0, zoneId: bossConfig.zoneId || "centro", lastTargetId: null, suppressed: false, noiseTracker: combat.createNoiseTracker() } : null,
       pendingAiuto: {}, // playerId aiutato -> true, consumato dal suo prossimo attacco, azzerato a inizio round
+      pendingStim: {}, // playerId -> true, consumato dal SUO prossimo attacco (mai azzerato a inizio round: sopravvive fino a quando serve)
+      lootRegistry: loot.createLootRegistry(), // { seenWeaponIds, nextInstanceId }: run-level, mai per-zona/per-giocatore
       log: [],
       winner: null
     };
@@ -156,25 +169,31 @@
     startRound(state, rng);
   }
 
-  /* Loot ambientale: una sola volta per zona, chiunque arrivi per primo.
-     Risoluzione dell'oggetto lasciata a un placeholder: le tabelle di
-     probabilità definitive per rarità/categoria sono un lavoro successivo. */
-  function rollLootCategory(danger, rng) {
-    const roll = rng();
-    const rarityByDanger = {
-      basso: [0.6, 0.9], medio: [0.4, 0.8], alto: [0.2, 0.6]
-    }[danger] || [0.5, 0.85];
-    const categoria = roll < rarityByDanger[0] ? "comune" : (roll < rarityByDanger[1] ? "non-comune" : "rara");
-    return { tipo: "arma", rarita: categoria };
+  /* Aggiunge un riferimento minimo (mai il record intero del catalogo) a
+     zone.groundLoot, con un instanceId run-level per distinguere due copie
+     identiche presenti insieme nella stessa zona (§15). Unico punto che
+     scrive su groundLoot: ogni fonte di loot passa sempre da qui. */
+  function pushGroundLoot(state, zone, descriptor) {
+    const entry = Object.assign({ instanceId: loot.nextGroundLootInstanceId(state.lootRegistry) }, descriptor);
+    zone.groundLoot.push(entry);
+    return entry;
   }
 
+  function lootDescriptorLabel(d) {
+    return d.kind === "weapon" ? `arma (${d.weaponId})` : `${d.kind} (${d.itemId})`;
+  }
+
+  /* Loot ambientale: una sola volta per zona, chiunque arrivi per primo.
+     La risoluzione (che cosa esce) vive interamente in engine/fortress-loot.js:
+     qui resta solo la regola "una volta per zona". */
   function enterZoneAmbient(state, zone, rng) {
     if (zone.ambientLootClaimed) return null;
     zone.ambientLootClaimed = true;
     const roll = rng || Math.random;
-    const found = rollLootCategory(zone.danger, roll);
-    pushLog(state, `Loot ambientale in ${zone.name}: ${found.rarita} ${found.tipo}`);
-    return found;
+    const found = loot.rollAmbientLoot(zone.danger, roll, state.lootRegistry);
+    const entry = pushGroundLoot(state, zone, found);
+    pushLog(state, `Loot ambientale in ${zone.name}: ${lootDescriptorLabel(found)}`);
+    return entry;
   }
 
   /* =========================================================================
@@ -235,7 +254,7 @@
     const zone = getZone(state, player.zoneId);
     const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
     const aiuto = Boolean(state.pendingAiuto[playerId]);
-    const effectBonus = enemy.suppressed ? 1 : 0;
+    const effectBonus = (enemy.suppressed ? 1 : 0) + (state.pendingStim[playerId] ? 1 : 0);
 
     const diceCount = combat.computeDiceCount({
       baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
@@ -260,7 +279,7 @@
     const zone = getZone(state, player.zoneId);
     const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
     const aiuto = Boolean(state.pendingAiuto[playerId]);
-    const effectBonus = boss.suppressed ? 1 : 0;
+    const effectBonus = (boss.suppressed ? 1 : 0) + (state.pendingStim[playerId] ? 1 : 0);
 
     const diceCount = combat.computeDiceCount({
       baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
@@ -296,7 +315,7 @@
     const zone = getZone(state, player.zoneId);
     const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
     const aiuto = Boolean(state.pendingAiuto[playerId]);
-    const effectBonus = enemy.suppressed ? 1 : 0;
+    const effectBonus = (enemy.suppressed ? 1 : 0) + (state.pendingStim[playerId] ? 1 : 0);
     enemy.suppressed = false; // consumato ORA, alla dichiarazione, prima di qualunque dado
     const targetBelowHalfHp = enemy.hp < enemy.maxHp / 2;
     const diceCount = combat.computeDiceCount({
@@ -306,15 +325,43 @@
     return { kind: "player-vs-enemy", playerId, enemyId, weapon, encounterRange: zone.encounterRange, aiuto, effectBonus, targetBelowHalfHp, diceCount };
   }
 
+  /* Loot alla morte di UN nemico, idempotente (§7 punto 7): un nemico produce
+     loot una volta sola quando passa realmente da vivo a morto, marcato con
+     enemy.lootResolved. Copre sia il bersaglio primario sia i secondari di
+     areaDamage/chainStrike (entrambi passano da qui). Il Boss non è mai
+     coinvolto (nessun "enemy" del catalogo nemici, nessun loot da run: §7). */
+  function resolveEnemyDeathLoot(state, enemy, lootRng) {
+    if (enemy.hp > 0 || enemy.lootResolved) return null;
+    enemy.lootResolved = true;
+    const zone = getZone(state, enemy.zoneId);
+    const roll = lootRng || Math.random;
+    const drop = enemy.archetype === "elite"
+      ? loot.rollEliteLoot(zone.danger, roll, state.lootRegistry)
+      : { support: loot.rollNormalEnemyLoot(zone.danger, roll) };
+    const entries = [];
+    if (drop.weapon) entries.push(pushGroundLoot(state, zone, drop.weapon));
+    if (drop.support) entries.push(pushGroundLoot(state, zone, drop.support));
+    return entries.length ? { enemyId: enemy.id, zoneId: zone.id, items: entries } : null;
+  }
+
   /* Tail comune a RNG e dadi fisici: applica il risultato già calcolato dal
-     combat engine, mai un ricalcolo. */
-  function finishPlayerAttackOnEnemy(state, player, enemy, weapon, aiuto, outcome) {
+     combat engine, mai un ricalcolo. lootRng è INDIPENDENTE dal rng dei dadi
+     di combattimento (che nel gioco reale sono fisici, non generati qui): di
+     default Math.random, mai la stessa coda usata per validare i tiri. */
+  function finishPlayerAttackOnEnemy(state, player, enemy, weapon, aiuto, outcome, lootRng) {
     applyDamageToEnemy(enemy, outcome);
     const eliminated = enemy.hp <= 0;
+    const lootFound = [];
+    const primaryDrop = resolveEnemyDeathLoot(state, enemy, lootRng);
+    if (primaryDrop) lootFound.push(primaryDrop);
 
     if (outcome.secondaryHits && outcome.secondaryHits.length) {
       const others = enemiesInZone(state, enemy.zoneId).filter((e) => e.id !== enemy.id);
-      applySecondaryHits(outcome.secondaryHits, others, (target, amount) => applyDamageToEnemy(target, { total: amount, ignoreShieldN: 0 }));
+      applySecondaryHits(outcome.secondaryHits, others, (target, amount) => {
+        applyDamageToEnemy(target, { total: amount, ignoreShieldN: 0 });
+        const drop = resolveEnemyDeathLoot(state, target, lootRng);
+        if (drop) lootFound.push(drop);
+      });
     }
     if (outcome.appliesSuppressMarker) enemy.suppressed = true; // nuovo marcatore per il prossimo alleato
 
@@ -325,15 +372,16 @@
     zone.noiseTracker = combat.registerAttackNoise(zone.noiseTracker, noiseResult);
 
     if (aiuto) delete state.pendingAiuto[player.id];
+    delete state.pendingStim[player.id];
     player.actedThisRound = true;
     pushLog(state, `${player.name} attacca ${enemy.archetype || "il nemico"}: ${outcome.total} danni${eliminated ? " (eliminato)" : ""}`);
-    return { result: outcome, eliminated };
+    return { result: outcome, eliminated, lootFound };
   }
 
   /* Risolve da risultati di dadi FISICI. `declared` è ESATTAMENTE l'oggetto
      restituito da declarePlayerAttack: non viene mai ricalcolato qui, quindi
      resta identico anche a cavallo di un ritiro fisico (rerollOnes). */
-  function resolvePlayerAttackFromRolls(state, declared, rolls, rerollValues) {
+  function resolvePlayerAttackFromRolls(state, declared, rolls, rerollValues, lootRng) {
     const player = getPlayer(state, declared.playerId);
     const enemy = getEnemy(state, declared.enemyId);
     if (!player || !enemy) throw new Error("Giocatore o nemico non più validi rispetto alla dichiarazione dell'attacco");
@@ -344,11 +392,11 @@
     );
     if (outcome.status === "needs-reroll") return outcome;
 
-    return Object.assign({ status: "resolved" }, finishPlayerAttackOnEnemy(state, player, enemy, declared.weapon, declared.aiuto, outcome));
+    return Object.assign({ status: "resolved" }, finishPlayerAttackOnEnemy(state, player, enemy, declared.weapon, declared.aiuto, outcome, lootRng));
   }
 
   /* Wrapper di compatibilità per test/simulazioni (RNG, mai in partita reale). */
-  function attackEnemyAction(state, playerId, enemyId, weapon, rng) {
+  function attackEnemyAction(state, playerId, enemyId, weapon, rng, lootRng) {
     const declared = declarePlayerAttack(state, playerId, enemyId, weapon);
     const player = getPlayer(state, playerId);
     const enemy = getEnemy(state, enemyId);
@@ -357,7 +405,7 @@
       weapon, encounterRange: declared.encounterRange, aiuto: declared.aiuto,
       effectBonus: declared.effectBonus, targetBelowHalfHp: declared.targetBelowHalfHp, rng: roll
     });
-    return finishPlayerAttackOnEnemy(state, player, enemy, weapon, declared.aiuto, outcome);
+    return finishPlayerAttackOnEnemy(state, player, enemy, weapon, declared.aiuto, outcome, lootRng);
   }
 
   function rianimaAction(state, playerId, targetId) {
@@ -374,6 +422,17 @@
     pushLog(state, `${player.name} rianima ${target.name}`);
   }
 
+  /* Slot arma -> "weapon" nel loot; slot supporto -> stesso nome dello slot
+     (coincide già col "kind" usato in groundLoot). */
+  function slotToLootKind(slot) {
+    return (slot === "primary" || slot === "secondary") ? "weapon" : slot;
+  }
+
+  /* SCAMBIA: trasferimento a SENSO UNICO (§5 decisione). Il mittente dà
+     l'oggetto e il suo slot resta vuoto (non c'è "resto" automatico). Se lo
+     slot del destinatario era occupato, il SUO oggetto precedente non viene
+     mai distrutto: va a terra nella zona (§15 groundLoot), mai sovrascritto
+     silenziosamente. Costa comunque l'azione principale di chi dà. */
   function scambiaAction(state, fromId, toId, slot) {
     const from = getPlayer(state, fromId);
     ensureCanAct(from);
@@ -381,26 +440,80 @@
     if (!to || to.status !== "active" || to.zoneId !== from.zoneId) throw new Error("Scambio non valido");
     const item = from.equipment[slot];
     if (item === undefined) throw new Error("Slot inesistente");
-    const other = to.equipment[slot];
+    if (!item) throw new Error("Niente da scambiare in questo slot");
+    const zone = getZone(state, from.zoneId);
+    const previous = to.equipment[slot];
     to.equipment[slot] = item;
-    from.equipment[slot] = other || null;
+    from.equipment[slot] = null;
+    if (previous) {
+      const kind = slotToLootKind(slot);
+      pushGroundLoot(state, zone, kind === "weapon" ? { kind, weaponId: previous.id } : { kind, itemId: previous.id });
+    }
     from.actedThisRound = true;
-    pushLog(state, `${from.name} scambia ${slot} con ${to.name}`);
+    pushLog(state, `${from.name} dà ${item.name || slot} a ${to.name}`);
   }
 
-  /* Effetto generico: consuma il consumabile equipaggiato. Le regole numeriche
-     precise (quanti HP/Scudo cura un oggetto) sono un lavoro di contenuto
-     successivo: qui l'oggetto porta già il proprio valore. */
-  function usaOggettoAction(state, playerId) {
+  /* Cura: clamp a 10 HP. "full" (Kit Medico) riporta al massimo, altrimenti
+     somma item.amount. Azione principale. */
+  function usaCuraAction(state, playerId) {
     const player = getPlayer(state, playerId);
     ensureCanAct(player);
-    const item = player.equipment.consumable;
-    if (!item) throw new Error("Nessun oggetto equipaggiato");
-    if (item.type === "cura") player.hp = Math.min(10, player.hp + (item.amount || 0));
-    if (item.type === "scudo") player.shield = Math.min(10, player.shield + (item.amount || 0));
-    player.equipment.consumable = null;
+    const item = player.equipment.cura;
+    if (!item) throw new Error("Nessuna Cura equipaggiata");
+    player.hp = item.full ? 10 : Math.min(10, player.hp + (item.amount || 0));
+    player.equipment.cura = null;
     player.actedThisRound = true;
-    pushLog(state, `${player.name} usa ${item.type}`);
+    pushLog(state, `${player.name} usa ${item.name}`);
+  }
+
+  /* Scudo: clamp a 10 Shield, stessa logica di usaCuraAction. */
+  function usaScudoAction(state, playerId) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    const item = player.equipment.scudo;
+    if (!item) throw new Error("Nessuno Scudo equipaggiato");
+    player.shield = item.full ? 10 : Math.min(10, player.shield + (item.amount || 0));
+    player.equipment.scudo = null;
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} usa ${item.name}`);
+  }
+
+  /* Utility: un solo punto d'ingresso, dispatch sull'oggetto equipaggiato.
+     Le tre Utility consumano SEMPRE l'azione principale, oltre all'oggetto
+     stesso — nessuna eccezione tra Scanner/Fumogeno/Stim (decisione presa).
+     Il bonus/malus (Fumogeno/Stim) resta comunque congelato al momento in
+     cui viene preparato l'attacco reale (prepareEnemyStep/prepareBossStep/
+     declarePlayerAttack/declareBossAttack), mai qui: usarlo non tira dadi. */
+  function usaUtilityAction(state, playerId, targetZoneId) {
+    const player = getPlayer(state, playerId);
+    ensureCanAct(player);
+    const item = player.equipment.utility;
+    if (!item) throw new Error("Nessuna Utility equipaggiata");
+    let result;
+    if (item.id === "scanner") {
+      const zone = getZone(state, player.zoneId);
+      if (!targetZoneId || zone.connections.indexOf(targetZoneId) === -1) throw new Error("Serve una zona adiacente");
+      const targetZone = getZone(state, targetZoneId);
+      if (targetZone.stormState === "eliminated") throw new Error("Zona non più raggiungibile");
+      result = {
+        type: "scanner", zoneId: targetZoneId,
+        enemyCount: enemiesInZone(state, targetZoneId).length,
+        chestCount: (targetZone.chests || []).filter((c) => !c.opened).length
+      };
+    } else if (item.id === "fumogeno") {
+      const zone = getZone(state, player.zoneId);
+      zone.smokeActive = true; // non stacka: è già un booleano
+      result = { type: "fumogeno", zoneId: zone.id };
+    } else if (item.id === "stim") {
+      state.pendingStim[playerId] = true; // non stacka: è già un booleano
+      result = { type: "stim", playerId };
+    } else {
+      throw new Error("Utility sconosciuta: " + item.id);
+    }
+    player.equipment.utility = null;
+    player.actedThisRound = true;
+    pushLog(state, `${player.name} usa ${item.name}`);
+    return result;
   }
 
   /* Placeholder generico: nessuna regola numerica specifica assegnata ancora
@@ -412,6 +525,9 @@
     pushLog(state, `${player.name} interagisce con la zona`);
   }
 
+  /* Cassa: sempre 1 arma + 1 supporto garantiti (§7), entrambi finiscono in
+     groundLoot — l'assegnazione a un giocatore specifico è un passo separato
+     (equipFoundWeapon/equipFoundSupportItem), mai automatica. */
   function apriCassaAction(state, playerId, chestId, rng) {
     const player = getPlayer(state, playerId);
     ensureCanAct(player);
@@ -420,10 +536,52 @@
     if (!chest || chest.opened) throw new Error("Cassa non disponibile");
     chest.opened = true;
     const roll = rng || Math.random;
-    const found = rollLootCategory(zone.danger, roll);
+    const found = loot.rollChestLoot(zone.danger, roll, state.lootRegistry);
+    const weaponEntry = pushGroundLoot(state, zone, found.weapon);
+    const supportEntry = pushGroundLoot(state, zone, found.support);
     player.actedThisRound = true;
-    pushLog(state, `${player.name} apre una cassa in ${zone.name}: ${found.rarita} ${found.tipo}`);
-    return found;
+    pushLog(state, `${player.name} apre una cassa in ${zone.name}: ${lootDescriptorLabel(found.weapon)} + ${lootDescriptorLabel(found.support)}`);
+    return { weapon: weaponEntry, support: supportEntry };
+  }
+
+  /* Raccogliere un oggetto già a terra (appena rivelato o lasciato da un
+     compagno) non costa l'azione principale (§18: solo APRIRE la cassa la
+     costa, distribuirne/raccoglierne il contenuto no). Sostituzione atomica:
+     l'oggetto nuovo entra, quello vecchio (se presente) va a terra — mai
+     distrutto silenziosamente (§4). weaponObject è già risolto dal chiamante
+     (stesso principio di declarePlayerAttack: il loop non conosce il
+     catalogo Armi, riceve oggetti già pronti). */
+  function equipFoundWeapon(state, playerId, slot, groundLootInstanceId, weaponObject) {
+    if (slot !== "primary" && slot !== "secondary") throw new Error("Slot arma non valido: " + slot);
+    const player = getPlayer(state, playerId);
+    if (!player || player.status !== "active") throw new Error("Giocatore non attivo");
+    const zone = getZone(state, player.zoneId);
+    const idx = zone.groundLoot.findIndex((g) => g.instanceId === groundLootInstanceId);
+    if (idx === -1 || zone.groundLoot[idx].kind !== "weapon") throw new Error("Arma non trovata a terra in questa zona");
+    if (zone.groundLoot[idx].weaponId !== weaponObject.id) throw new Error("L'arma risolta non corrisponde al loot a terra");
+    zone.groundLoot.splice(idx, 1);
+    const previous = player.equipment[slot];
+    player.equipment[slot] = weaponObject;
+    if (previous) pushGroundLoot(state, zone, { kind: "weapon", weaponId: previous.id });
+    if (player.collectedWeaponIds.indexOf(weaponObject.id) === -1) player.collectedWeaponIds.push(weaponObject.id);
+    pushLog(state, `${player.name} equipaggia ${weaponObject.name} (${slot})`);
+  }
+
+  /* Stessa logica di equipFoundWeapon per Cura/Scudo/Utility. itemObject è
+     già risolto dal chiamante (catalog/fortress-items.js). */
+  function equipFoundSupportItem(state, playerId, slot, groundLootInstanceId, itemObject) {
+    if (slot !== "cura" && slot !== "scudo" && slot !== "utility") throw new Error("Slot supporto non valido: " + slot);
+    const player = getPlayer(state, playerId);
+    if (!player || player.status !== "active") throw new Error("Giocatore non attivo");
+    const zone = getZone(state, player.zoneId);
+    const idx = zone.groundLoot.findIndex((g) => g.instanceId === groundLootInstanceId);
+    if (idx === -1 || zone.groundLoot[idx].kind !== slot) throw new Error("Oggetto non trovato a terra in questa zona");
+    if (zone.groundLoot[idx].itemId !== itemObject.id) throw new Error("L'oggetto risolto non corrisponde al loot a terra");
+    zone.groundLoot.splice(idx, 1);
+    const previous = player.equipment[slot];
+    player.equipment[slot] = itemObject;
+    if (previous) pushGroundLoot(state, zone, { kind: slot, itemId: previous.id });
+    pushLog(state, `${player.name} equipaggia ${itemObject.name} (${slot})`);
   }
 
   /* =========================================================================
@@ -497,11 +655,16 @@
       const zone = getZone(state, enemy.zoneId);
       const weapon = enemy.attackProfile;
       const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+      // Fumogeno: -1 dado, congelato QUI (mai ricalcolato dopo un ritiro
+      // fisico) e consumato SOLO perché questo step è davvero un attacco
+      // (non da movimento/idle, vedi §14).
+      const effectBonus = zone.smokeActive ? -1 : 0;
+      zone.smokeActive = false;
       const diceCount = combat.computeDiceCount({
         baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
-        isRangeless, aiuto: false, effectBonus: 0
+        isRangeless, aiuto: false, effectBonus
       });
-      return { type: "attack", enemyId: enemy.id, targetId: target.id, weapon, encounterRange: zone.encounterRange, diceCount };
+      return { type: "attack", enemyId: enemy.id, targetId: target.id, weapon, encounterRange: zone.encounterRange, effectBonus, diceCount };
     }
 
     const archetypeDef = DEFAULT_ENEMY_ARCHETYPES[enemy.archetype];
@@ -557,7 +720,7 @@
   function resolveEnemyStepFromRolls(state, prepared, rolls, rerollValues) {
     if (prepared.type !== "attack") throw new Error("Questo step non prevede un tiro di dadi");
     const outcome = combat.resolveAttackFromRolls(
-      { weapon: prepared.weapon, encounterRange: prepared.encounterRange },
+      { weapon: prepared.weapon, encounterRange: prepared.encounterRange, effectBonus: prepared.effectBonus },
       rolls, rerollValues
     );
     if (outcome.status === "needs-reroll") return outcome;
@@ -575,7 +738,7 @@
     const roll = rng || Math.random;
     const enemy = getEnemy(state, prepared.enemyId);
     const target = getPlayer(state, prepared.targetId);
-    const outcome = combat.resolveAttack({ weapon: prepared.weapon, encounterRange: prepared.encounterRange, rng: roll });
+    const outcome = combat.resolveAttack({ weapon: prepared.weapon, encounterRange: prepared.encounterRange, effectBonus: prepared.effectBonus, rng: roll });
     return applyEnemyAttackOutcome(state, enemy, target, outcome);
   }
 
@@ -649,11 +812,14 @@
     const target = pickTarget(candidates, boss.lastTargetId);
     const weapon = phase.attackProfile;
     const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+    // Fumogeno: stesso principio di prepareEnemyStep, congelato qui.
+    const effectBonus = zone.smokeActive ? -1 : 0;
+    zone.smokeActive = false;
     const diceCount = combat.computeDiceCount({
       baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
-      isRangeless, aiuto: false, effectBonus: 0
+      isRangeless, aiuto: false, effectBonus
     });
-    return { type: "attack", targetId: target.id, weapon, encounterRange: zone.encounterRange, diceCount };
+    return { type: "attack", targetId: target.id, weapon, encounterRange: zone.encounterRange, effectBonus, diceCount };
   }
 
   /* Tail comune a RNG e dadi fisici: applica un esito di attacco BOSS→
@@ -698,7 +864,7 @@
   function resolveBossStepFromRolls(state, prepared, rolls, rerollValues) {
     if (prepared.type !== "attack") throw new Error("Questo step non prevede un tiro di dadi");
     const outcome = combat.resolveAttackFromRolls(
-      { weapon: prepared.weapon, encounterRange: prepared.encounterRange },
+      { weapon: prepared.weapon, encounterRange: prepared.encounterRange, effectBonus: prepared.effectBonus },
       rolls, rerollValues
     );
     if (outcome.status === "needs-reroll") return outcome;
@@ -714,7 +880,7 @@
     if (prepared.type !== "attack") return prepared;
     const roll = rng || Math.random;
     const target = getPlayer(state, prepared.targetId);
-    const outcome = combat.resolveAttack({ weapon: prepared.weapon, encounterRange: prepared.encounterRange, rng: roll });
+    const outcome = combat.resolveAttack({ weapon: prepared.weapon, encounterRange: prepared.encounterRange, effectBonus: prepared.effectBonus, rng: roll });
     return applyBossAttackOutcome(state, target, outcome);
   }
 
@@ -740,7 +906,7 @@
     const zone = getZone(state, player.zoneId);
     const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
     const aiuto = Boolean(state.pendingAiuto[playerId]);
-    const effectBonus = boss.suppressed ? 1 : 0;
+    const effectBonus = (boss.suppressed ? 1 : 0) + (state.pendingStim[playerId] ? 1 : 0);
     boss.suppressed = false; // consumato ORA, alla dichiarazione, prima di qualunque dado
     const targetBelowHalfHp = boss.hp < boss.maxHp / 2;
     const diceCount = combat.computeDiceCount({
@@ -765,6 +931,7 @@
     zone.noiseTracker = combat.registerAttackNoise(zone.noiseTracker, outcome);
 
     if (aiuto) delete state.pendingAiuto[player.id];
+    delete state.pendingStim[player.id];
     player.actedThisRound = true;
     pushLog(state, `${player.name} attacca il boss: ${outcome.total} danni${defeated ? " (sconfitto)" : ""}`);
     checkVictoryOrDefeat(state);
@@ -916,9 +1083,28 @@
       id, archetype, zoneId, hp: def.hp, maxHp: def.hp,
       shield: def.shield || 0, maxShield: def.shield || 0,
       attackProfile: def.attackProfile, lastTargetId: null,
-      suppressed: false
+      suppressed: false, lootResolved: false
     });
     return id;
+  }
+
+  /* =========================================================================
+     PARTY — mai una struttura persistita: si deriva sempre da zoneId+status.
+     getActivePartyMembers è lo stesso alias di activePlayersInZone (nessuna
+     seconda implementazione): 1 solo attivo nella zona = "solo", 2+ = "party".
+     Un giocatore KO resta fisicamente nella zona ma non è mai un membro
+     attivo del Party.
+     ========================================================================= */
+  const getActivePartyMembers = activePlayersInZone;
+
+  function isSolo(state, playerId) {
+    const player = getPlayer(state, playerId);
+    if (!player) throw new Error("Giocatore inesistente");
+    return getActivePartyMembers(state, player.zoneId).length <= 1;
+  }
+
+  function isInParty(state, playerId) {
+    return !isSolo(state, playerId);
   }
 
   function checkVictoryOrDefeat(state) {
@@ -937,11 +1123,13 @@
     DEFAULT_ENEMY_ARCHETYPES, STORM_TABLE, STORM_DAMAGE,
     createDefaultZoneLayout, createGame,
     getPlayer, getZone, getEnemy, playersInZone, activePlayersInZone, enemiesInZone, activePlayers,
+    getActivePartyMembers, isSolo, isInParty,
     landPlayer, allPlayersLanded, beginExploration,
     moveAction, aiutoAction,
     previewPlayerAttack, declarePlayerAttack, resolvePlayerAttackFromRolls, attackEnemyAction,
     previewBossAttack, declareBossAttack, resolveBossAttackFromRolls, attackBossAction,
-    rianimaAction, scambiaAction, usaOggettoAction, interagisciAction, apriCassaAction,
+    rianimaAction, scambiaAction, usaCuraAction, usaScudoAction, usaUtilityAction, interagisciAction, apriCassaAction,
+    equipFoundWeapon, equipFoundSupportItem, resolveEnemyDeathLoot,
     bfsFrom, nearestZoneWithActivePlayer, pickTarget,
     getEnemyPhaseOrder, prepareEnemyStep, resolveEnemyStepFromRolls, resolveEnemyStep, resolveEnemyPhase,
     prepareBossStep, resolveBossStepFromRolls, resolveBossStep, resolveBossPhase,

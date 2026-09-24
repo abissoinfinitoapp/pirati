@@ -117,9 +117,12 @@
       connections: z.connections.slice(),
       danger: z.danger,
       encounterRange: z.encounterRange,
+      lootTier: z.lootTier, // legge SOLO loot.setupChests(): mai il danger, mai l'id della zona
       stormState: "sicura",
       ambientLootClaimed: false,
       chests: [],
+      groundLoot: [],
+      smokeActive: false,
       noiseTracker: combat.createNoiseTracker()
     }));
   }
