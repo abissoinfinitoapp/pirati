@@ -6,20 +6,20 @@ const catalog = require("../catalog/fortress-armi.js");
 const combat = require("../engine/fortress-combat.js");
 const characters = require("../catalog/fortress-characters.js");
 
-test("il catalogo ha esattamente 100 armi", () => {
-  assert.equal(catalog.ARMI.length, 100);
-  assert.equal(catalog.ARMI_100.length, 100);
+test("il catalogo ha esattamente 140 armi (100 base + 40 Armi Speciali)", () => {
+  assert.equal(catalog.ARMI.length, 140);
+  assert.equal(catalog.ARMI_100.length, 140);
 });
 
-test("100 id univoci", () => {
+test("140 id univoci", () => {
   const ids = catalog.ARMI.map((w) => w.id);
-  assert.equal(new Set(ids).size, 100);
+  assert.equal(new Set(ids).size, 140);
 });
 
-test("100 nomi validi e univoci", () => {
+test("140 nomi validi e univoci", () => {
   const names = catalog.ARMI.map((w) => w.name);
   names.forEach((n) => assert.ok(n && n.trim().length > 0));
-  assert.equal(new Set(names).size, 100);
+  assert.equal(new Set(names).size, 140);
 });
 
 test("nessun problema di validazione rilevato a caricamento", () => {
@@ -179,11 +179,11 @@ test("tutti i file immagine delle armi esistono su disco", () => {
   });
 });
 
-test("la cartella assets/fortress/weapons contiene esattamente 100 file, uno per arma, nessun duplicato", () => {
+test("la cartella assets/fortress/weapons contiene esattamente 140 file, uno per arma, nessun duplicato", () => {
   const dir = path.join(__dirname, "..", "assets", "fortress", "weapons");
   const files = fs.readdirSync(dir);
-  assert.equal(files.length, 100);
-  assert.equal(new Set(files).size, 100);
+  assert.equal(files.length, 140);
+  assert.equal(new Set(files).size, 140);
   const expected = new Set(catalog.ARMI.map((w) => `${w.id}.webp`));
   files.forEach((f) => assert.ok(expected.has(f), `file inatteso: ${f}`));
 });
