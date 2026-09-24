@@ -37,10 +37,12 @@
 
   /* Ordine fisso, salvato come soli id (mai una copia dei dati giocatore):
      lo snapshot di state.players al momento in cui inizia l'esplorazione.
-     Non ruota mai round dopo round. */
+     Non ruota mai round dopo round. È la sola sorgente d'ordine usata per
+     costruire roundPlayerQueue a ogni round: mai riordinata direttamente. */
   function createDirectorState(state) {
     return {
       turnOrder: state.players.map((p) => p.id),
+      roundPlayerQueue: [], // congelata a ogni startPlayerTurnPhase, vedi buildRoundPlayerQueue
       currentPlayerIndex: -1,
       directorPhase: "round-announcement",
       pendingAnnouncements: [{ type: "round-start", payload: { round: state.round } }],
@@ -50,9 +52,69 @@
     };
   }
 
+  /* =========================================================================
+     CAMPI DI BATTAGLIA (derivati, mai persistiti) — zoneId È l'identità del
+     Campo. Un Campo esiste quando la zona ha almeno un giocatore active/non-KO
+     E almeno un nemico vivo o il Boss attivo/vivo lì. Riusa solo query già
+     esistenti nel loop (activePlayersInZone/enemiesInZone): nessuna nuova
+     regola di simulazione, solo una vista di orchestrazione del Director.
+     ========================================================================= */
+  function isBattlefield(state, zoneId) {
+    if (!loop.activePlayersInZone(state, zoneId).length) return false;
+    if (loop.enemiesInZone(state, zoneId).length) return true;
+    const boss = state.boss;
+    return Boolean(boss && boss.active && boss.hp > 0 && boss.zoneId === zoneId);
+  }
+
+  /* Costruisce la queue giocatori di QUESTO round, una volta sola, deterministica
+     (nessun random): raggruppa gli attivi per zona nell'ordine di turnOrder,
+     tiene solo le zone che sono davvero Campi, alterna i Campi "a colonne"
+     (un membro per Campo, poi il secondo, ecc. — mai tutto un Campo di fila),
+     poi accoda in fondo chi non apparteneva a nessun Campo, nell'ordine
+     originale di turnOrder. Ogni giocatore attivo compare ESATTAMENTE una
+     volta nell'array risultante. */
+  function buildRoundPlayerQueue(state, turnOrder) {
+    const membersByZone = {};
+    const zoneOrder = [];
+    turnOrder.forEach((playerId) => {
+      const player = loop.getPlayer(state, playerId);
+      if (!player || player.status !== "active") return;
+      if (!membersByZone[player.zoneId]) { membersByZone[player.zoneId] = []; zoneOrder.push(player.zoneId); }
+      membersByZone[player.zoneId].push(playerId);
+    });
+
+    const battlefieldZones = zoneOrder.filter((zoneId) => isBattlefield(state, zoneId));
+
+    const queue = [];
+    const placed = new Set();
+    const cursors = {};
+    battlefieldZones.forEach((zoneId) => { cursors[zoneId] = 0; });
+    let added = true;
+    while (added) {
+      added = false;
+      battlefieldZones.forEach((zoneId) => {
+        const members = membersByZone[zoneId];
+        const idx = cursors[zoneId];
+        if (idx < members.length) {
+          queue.push(members[idx]);
+          placed.add(members[idx]);
+          cursors[zoneId] += 1;
+          added = true;
+        }
+      });
+    }
+
+    turnOrder.forEach((playerId) => {
+      const player = loop.getPlayer(state, playerId);
+      if (player && player.status === "active" && !placed.has(playerId)) queue.push(playerId);
+    });
+
+    return queue;
+  }
+
   function getCurrentPlayerId(state, dir) {
     if (dir.directorPhase !== "player-turn") return null;
-    return dir.turnOrder[dir.currentPlayerIndex] || null;
+    return dir.roundPlayerQueue[dir.currentPlayerIndex] || null;
   }
 
   function getCurrentPlayer(state, dir) {
@@ -60,24 +122,30 @@
     return id ? loop.getPlayer(state, id) : null;
   }
 
-  /* Primo/prossimo indice nel turnOrder il cui giocatore è status === "active",
+  /* Primo/prossimo indice in `queue` il cui giocatore è status === "active",
      scansionando SENZA giro (mai wraparound): serve a sapere sia "chi tocca
-     ora" sia "il round dei turni è finito" (ritorna -1). KO ed eliminati
-     vengono sempre saltati automaticamente. */
-  function advanceIndex(state, turnOrder, fromIndex) {
-    for (let i = fromIndex; i < turnOrder.length; i++) {
-      const player = loop.getPlayer(state, turnOrder[i]);
+     ora" sia "la queue di questo round è finita" (ritorna -1). KO ed eliminati
+     vengono sempre saltati automaticamente — la queue è congelata ma ogni
+     elemento è validato SOLO quando gli tocca, mai in anticipo. */
+  function advanceIndex(state, queue, fromIndex) {
+    for (let i = fromIndex; i < queue.length; i++) {
+      const player = loop.getPlayer(state, queue[i]);
       if (player && player.status === "active") return i;
     }
     return -1;
   }
 
+  /* Costruisce roundPlayerQueue UNA VOLTA, a inizio della fase giocatori del
+     round: mai ricostruita dopo (niente riordinamenti/duplicazioni). Se un
+     Campo termina o un giocatore entra in uno nuovo a metà round, se ne
+     accorgerà la queue del round SUCCESSIVO, mai questa. */
   function startPlayerTurnPhase(state, dir) {
-    const firstActive = advanceIndex(state, dir.turnOrder, 0);
+    dir.roundPlayerQueue = buildRoundPlayerQueue(state, dir.turnOrder);
+    const firstActive = advanceIndex(state, dir.roundPlayerQueue, 0);
     if (firstActive === -1) {
       // nessun giocatore attivo: la vittoria/sconfitta è già gestita da
       // resolveEndOfRound, ma per sicurezza il Director non resta bloccato
-      dir.currentPlayerIndex = dir.turnOrder.length;
+      dir.currentPlayerIndex = dir.roundPlayerQueue.length;
       beginEnemyPhase(state, dir);
       return;
     }
@@ -241,45 +309,68 @@
     return loop.moveAction(state, playerId, targetZoneId, rng);
   }
 
+  /* Chiamata alla fine di ogni azione principale immediata (mai per il
+     movimento, mai per un raccolto da terra: nessuno dei due consuma
+     l'azione principale). Se l'azione ha davvero consumato l'azione
+     principale (player.actedThisRound), il Director passa da solo al
+     prossimo della queue — "il sistema non deve chiedere manualmente chi
+     viene dopo". FINE TURNO resta comunque disponibile per chi rinuncia. */
+  function autoAdvanceIfActed(state, dir, playerId) {
+    const player = loop.getPlayer(state, playerId);
+    if (player && player.actedThisRound) endPlayerTurn(state, dir, playerId);
+  }
+
   function performRianima(state, dir, playerId, targetId) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    return loop.rianimaAction(state, playerId, targetId);
+    const result = loop.rianimaAction(state, playerId, targetId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
   }
 
   function performAiuto(state, dir, playerId, targetId) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    return loop.aiutoAction(state, playerId, targetId);
+    const result = loop.aiutoAction(state, playerId, targetId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
   }
 
   function performScambia(state, dir, playerId, targetId, slot) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    return loop.scambiaAction(state, playerId, targetId, slot);
+    const result = loop.scambiaAction(state, playerId, targetId, slot);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
   }
 
   function performUsaOggetto(state, dir, playerId) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    return loop.usaOggettoAction(state, playerId);
+    const result = loop.usaOggettoAction(state, playerId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
   }
 
   function performApriCassa(state, dir, playerId, chestId, rng) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    return loop.apriCassaAction(state, playerId, chestId, rng);
+    const result = loop.apriCassaAction(state, playerId, chestId, rng);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
   }
 
   /* FINE TURNO: puro Director, nessuna action type nel loop. Il bambino può
-     chiuderlo anche senza essersi mosso o aver agito. */
+     chiuderlo anche senza essersi mosso o aver agito — e questa stessa
+     funzione è anche l'auto-avanzamento interno dopo un'azione già risolta
+     (vedi autoAdvanceIfActed e il ramo "player" di applyRollOutcome). */
   function endPlayerTurn(state, dir, playerId) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
     assertNoAwaitingRoll(dir);
-    const next = advanceIndex(state, dir.turnOrder, dir.currentPlayerIndex + 1);
+    const next = advanceIndex(state, dir.roundPlayerQueue, dir.currentPlayerIndex + 1);
     if (next === -1) {
-      dir.currentPlayerIndex = dir.turnOrder.length;
+      dir.currentPlayerIndex = dir.roundPlayerQueue.length;
       beginEnemyPhase(state, dir);
     } else {
       dir.currentPlayerIndex = next;
@@ -405,6 +496,7 @@
       return outcome;
     }
     const actorType = dir.awaitingRoll.actorType;
+    const actorId = dir.awaitingRoll.actorId;
     dir.lastStepResult = outcome;
     dir.awaitingRoll = null;
     if (actorType === "enemy") {
@@ -413,8 +505,11 @@
     } else if (actorType === "boss") {
       enqueueKoAnnouncementsFromStep(state, dir, outcome);
       dir.directorPhase = "end-of-round";
+    } else if (actorType === "player") {
+      // Solo ORA che l'attacco è risolto in via definitiva (mai durante un
+      // ritiro fisico pendente) il Director passa al prossimo della queue.
+      autoAdvanceIfActed(state, dir, actorId);
     }
-    // actorType === "player": un giocatore non va mai KO attaccando; nessun annuncio da accodare qui.
     return outcome;
   }
 
@@ -528,10 +623,12 @@
 
   return {
     createDirectorState,
+    isBattlefield, buildRoundPlayerQueue,
     getCurrentPlayerId, getCurrentPlayer,
     getSituation, getReachableZones, getAvailableActions, getStormRisk, hasActiveBoss,
     buildAttackPreview, buildBossAttackPreview,
-    performMove, performRianima, performAiuto, performScambia, performUsaOggetto, performApriCassa,
+    performMove, performRianima, performAiuto, performScambia,
+    performUsaOggetto, performApriCassa,
     endPlayerTurn,
     beginPlayerAttackOnEnemy, beginPlayerAttackOnBoss,
     beginEnemyRollStep, beginBossRollStep,
