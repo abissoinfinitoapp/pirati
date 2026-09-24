@@ -68,12 +68,18 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
   display: flex; flex-direction: column; gap: 8px; text-align: center;
 }
 .fa-shop-icon { font-size: 30px; }
-.fa-shop-card img.fa-shop-img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
+.fa-shop-img-wrap { width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); border-radius: 10px; overflow: hidden; }
+.fa-shop-card img.fa-shop-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
 .fa-shop-card h3 { font-size: 14.5px; }
 .fa-shop-cost { font-size: 13px; color: var(--fa-gold); font-weight: 800; }
 .fa-shop-card.is-owned { border-color: var(--fa-steel); border-left-color: inherit; }
 .fa-shop-card.is-equipped { border-color: var(--fa-gold); background: linear-gradient(160deg, rgba(201,162,74,.14), rgba(0,0,0,.28)); }
+.fa-shop-card.is-unavailable { opacity: .45; }
 .fa-owned-tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--fa-steel); font-weight: 800; }
+.fa-shop-meta { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.fa-skin-character { font-size: 11.5px; color: var(--fa-muted); font-weight: 700; }
+.fa-skin-tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; }
+.fa-skin-tag-inarrivo { color: var(--fa-muted); }
 
 /* ---- rarità (colore identificativo, stile "tier" battle royale) ---- */
 .fa-rarity-tag { align-self: center; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; padding: 2px 8px; border-radius: 20px; }

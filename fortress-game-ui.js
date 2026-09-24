@@ -24,6 +24,20 @@
   const zonesApi = window.FORTRESS_ZONES_API;
   const CHARACTERS = window.FORTRESS_CHARACTERS || [];
   const ARMI = window.FORTRESS_ARMI || [];
+  /* Guardaroba (skin cosmetiche): solo lettura, solo per scegliere quale
+     immagine mostrare. Nessuna logica di gioco arriva da qui. */
+  const skinsApi = window.FORTRESS_SKINS_API;
+  function characterDisplayImage(characterId, fallback) {
+    if (skinsApi) return skinsApi.getCharacterDisplayImage(characterId);
+    return fallback;
+  }
+
+  /* Equip/unequip di una skin ridisegna subito il token sulla mappa: solo
+     un refresh visivo (renderMap), nessuna azione di gioco, nessun dado,
+     nessun tocco a loop/director/combat. */
+  window.addEventListener("fortress-skin-changed", () => {
+    if (uiMode === "game" && game) renderMap();
+  });
 
   if (!loop || !director || !combat || !zonesApi) return; // pagina senza i motori caricati: niente da fare
 
@@ -254,8 +268,9 @@
     const character = CHARACTERS.find((c) => c.id === game.playerAvatars[player.id]);
     const isCurrent = Boolean(currentPlayer && currentPlayer.id === player.id);
     const isKo = player.status === "ko";
+    const img = character ? characterDisplayImage(character.id, character.image) : "";
     return `<div class="fa-token ${isCurrent ? "is-current" : ""} ${isKo ? "is-ko" : ""}">
-      ${imgTag(character ? character.image : "", player.name)}
+      ${imgTag(img, player.name)}
       <span>${escapeHtml(player.name)}${isKo ? " (KO)" : ""}</span>
     </div>`;
   }

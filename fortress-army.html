@@ -25,10 +25,12 @@
   <link rel="stylesheet" href="styles-fortress.css">
   <script src="catalog/fortress-armi.js"></script>
   <script src="catalog/fortress-characters.js"></script>
+  <script src="catalog/fortress-skins.js"></script>
   <script src="catalog/fortress-zones.js"></script>
   <script src="engine/fortress-combat.js"></script>
   <script src="engine/fortress-loop.js"></script>
   <script src="engine/fortress-director.js"></script>
+  <script src="engine/fortress-skins-core.js"></script>
 </head>
 <body>
 <div id="fortress-app">
@@ -71,7 +73,12 @@
         <h2>🎭 Guardaroba</h2>
         <p>Skin cosmetiche: non danno bonus, servono solo a fare scena. Monete: <strong id="fa-money">0</strong> 💰</p>
       </div>
-      <div id="fa-skins" class="fa-shop-grid"></div>
+      <div class="fa-library-controls">
+        <select id="fa-wardrobe-rarity" class="fa-library-select" aria-label="Filtra per rarità"></select>
+        <select id="fa-wardrobe-character" class="fa-library-select" aria-label="Filtra per personaggio"></select>
+      </div>
+      <p id="fa-wardrobe-count" class="fa-library-count"></p>
+      <div id="fa-wardrobe-grid" class="fa-shop-grid"></div>
     </section>
 
   </main>

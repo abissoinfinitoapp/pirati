@@ -9,31 +9,31 @@
    stato rimosso: non era mai stato collegato al loop/Director reali.
    ========================================================================= */
 
-const STORAGE_KEY = "fortress-army-state-v1";
+const STORAGE_KEY = "fortress-army-state-v2";
 
 /* Catalogo Armi vero (100 voci, schema v2.4) in catalog/fortress-armi.js,
    caricato prima di questo file. Usato qui solo dalla Libreria (consultazione). */
 const ARMI = window.FORTRESS_ARMI || [];
 
-const SKIN = [
-  { id: "mantello-cenere", name: "Mantello di Cenere", cost: 20 },
-  { id: "elmo-teschio", name: "Elmo a Teschio", cost: 35 },
-  { id: "armatura-ombra", name: "Armatura d'Ombra", cost: 60 }
-];
+/* Catalogo Skin vero (50 voci, 10 personaggi x 5 tier) in
+   catalog/fortress-skins.js. 100% estetico: nessun campo di gameplay letto
+   o scritto da questo file. Motore puro in engine/fortress-skins-core.js. */
+const SKINS = window.FORTRESS_SKINS || [];
+const SKIN_RARITY_ORDER = (window.FORTRESS_SKINS_CATALOG && window.FORTRESS_SKINS_CATALOG.RARITY_ORDER) || [];
+const CHARACTERS_FOR_SKINS = window.FORTRESS_CHARACTERS || [];
+const skinsCore = window.FORTRESS_SKINS_CORE;
 
-/* --- stato: solo Guardaroba (monete/skin possedute/equipaggiata) --- */
-function defaultState() {
-  return { money: 40, skins: [], equippedSkinId: null };
-}
-
-let state = defaultState();
+/* --- stato: solo Guardaroba (monete/skin possedute/equipaggiata per personaggio) ---
+   "money" è una fixture DEV isolata (nessuna economia reale collegata):
+   serve solo a testare acquisto -> possesso -> equip delle skin. */
+let state = skinsCore.defaultState();
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
     const saved = JSON.parse(raw);
-    state = Object.assign(defaultState(), saved);
+    state = Object.assign(skinsCore.defaultState(), saved);
   } catch (e) { /* salvataggio corrotto: si riparte da zero */ }
 }
 
@@ -51,58 +51,128 @@ function imgOrNothing(src, alt, cls) {
 }
 
 /* =========================================================================
-   GUARDAROBA (skin cosmetiche)
+   GUARDAROBA (skin cosmetiche) — 100% estetico: nessuna di queste funzioni
+   legge o scrive poteri, statistiche, loot o stato di combattimento.
    ========================================================================= */
 
-function renderAll() {
+/* API pubblica per la mappa/token (fortress-game-ui.js) e per qualunque
+   altra UI futura: deve solo chiedere "che immagine mostro per X". */
+window.FORTRESS_SKINS_API = {
+  getEquippedSkin: (characterId) => skinsCore.getEquippedSkin(state, SKINS, characterId),
+  getCharacterDisplayImage: (characterId) => skinsCore.getCharacterDisplayImage(state, SKINS, CHARACTERS_FOR_SKINS, characterId)
+};
+
+/* Notifica UI-only (nessuno stato di gioco coinvolto): permette a
+   fortress-game-ui.js di ridisegnare subito il token sulla mappa dopo un
+   equip/unequip, senza aspettare la prossima azione di gioco. */
+function notifySkinChanged(characterId) {
+  window.dispatchEvent(new CustomEvent("fortress-skin-changed", { detail: { characterId } }));
+}
+
+const wardrobeState = { rarity: "all", characterId: "all" };
+
+function populateWardrobeFilters() {
+  const raritySel = $("fa-wardrobe-rarity");
+  raritySel.innerHTML = ['<option value="all">Tutte</option>']
+    .concat(SKIN_RARITY_ORDER.map((r) => `<option value="${r}">${RARITY_LABELS[r] || r}</option>`))
+    .join("");
+
+  const charSel = $("fa-wardrobe-character");
+  charSel.innerHTML = ['<option value="all">Tutti</option>']
+    .concat(CHARACTERS_FOR_SKINS.map((c) => `<option value="${c.id}">${c.name}</option>`))
+    .join("");
+}
+
+function getFilteredSkins() {
+  return SKINS.filter((s) =>
+    (wardrobeState.rarity === "all" || s.rarity === wardrobeState.rarity) &&
+    (wardrobeState.characterId === "all" || s.characterId === wardrobeState.characterId)
+  );
+}
+
+/* stato visuale della card: "unavailable" | "equipped" | "owned" | "buyable" */
+function skinCardState(skin) {
+  if (!skin.assetReady) return "unavailable";
+  const equippedId = skinsCore.getEquippedSkinId(state, skin.characterId);
+  if (equippedId === skin.id) return "equipped";
+  if (skinsCore.ownsSkin(state, skin)) return "owned";
+  return "buyable";
+}
+
+function wardrobeCardMarkup(skin) {
+  const character = CHARACTERS_FOR_SKINS.find((c) => c.id === skin.characterId);
+  const cardState = skinCardState(skin);
+  const rarityLabel = RARITY_LABELS[skin.rarity] || skin.rarity;
+
+  let stateTag = "";
+  let actionHtml = "";
+  if (cardState === "unavailable") {
+    stateTag = `<span class="fa-skin-tag fa-skin-tag-inarrivo">In arrivo</span>`;
+  } else if (cardState === "equipped") {
+    stateTag = `<span class="fa-owned-tag">Equipaggiata</span>`;
+    actionHtml = `<button type="button" class="fa-btn fa-btn-ghost" data-unequip-skin="${skin.characterId}">Torna alla Base</button>`;
+  } else if (cardState === "owned") {
+    actionHtml = `<button type="button" class="fa-btn fa-btn-ghost" data-equip-skin="${skin.id}">Equipaggia</button>`;
+  } else {
+    const canAfford = state.money >= skin.price;
+    actionHtml = `<button type="button" class="fa-btn fa-btn-primary" data-buy-skin="${skin.id}" ${canAfford ? "" : "disabled"}>Compra · ${skin.price}💰</button>`;
+  }
+
+  return `<article class="fa-shop-card ${cardState === "equipped" ? "is-equipped" : ""} ${cardState === "unavailable" ? "is-unavailable" : ""}">
+    <div class="fa-shop-img-wrap">${imgOrNothing(skin.image, skin.name, "fa-shop-img")}</div>
+    <h3>${skin.name}</h3>
+    <div class="fa-shop-meta">
+      <span class="fa-rarity-tag rarity-${skin.rarity}">${rarityLabel}</span>
+      <span class="fa-skin-character">${character ? character.name : skin.characterId}</span>
+    </div>
+    ${stateTag}
+    ${actionHtml}
+  </article>`;
+}
+
+function renderWardrobe() {
   $("fa-money").textContent = state.money;
-  renderShop("fa-skins", SKIN, "skins", "equippedSkinId", () => "solo estetica");
+  const list = getFilteredSkins();
+  $("fa-wardrobe-count").textContent = `${list.length} di ${SKINS.length} skin`;
+  $("fa-wardrobe-grid").innerHTML = list.length
+    ? list.map(wardrobeCardMarkup).join("")
+    : `<p class="fa-lib-empty">Nessuna skin trovata.</p>`;
 }
 
-function renderShop(boxId, catalog, ownedKey, equippedKey, effectLabel) {
-  $(boxId).innerHTML = catalog.map((item) => {
-    const owned = state[ownedKey].includes(item.id);
-    const isEquipped = state[equippedKey] === item.id;
-    const canAfford = state.money >= item.cost;
-    return `<div class="fa-shop-card ${owned ? "is-owned" : ""} ${isEquipped ? "is-equipped" : ""}">
-      ${imgOrNothing(`assets/fortress/${ownedKey}/${item.id}.webp`, item.name, "fa-shop-img")}
-      <h3>${item.name}</h3>
-      <span class="fa-shop-cost">${effectLabel(item)}</span>
-      ${owned
-        ? (isEquipped
-            ? `<span class="fa-owned-tag">Equipaggiata</span>`
-            : `<button type="button" class="fa-btn fa-btn-ghost" data-equip="${ownedKey}:${item.id}">Equipaggia</button>`)
-        : `<button type="button" class="fa-btn fa-btn-primary" data-buy="${ownedKey}:${item.id}" ${canAfford ? "" : "disabled"}>Compra · ${item.cost}💰</button>`}
-    </div>`;
-  }).join("");
-}
-
-function buyItem(ownedKey, id, catalog) {
-  const item = catalog.find((i) => i.id === id);
-  if (!item || state[ownedKey].includes(id) || state.money < item.cost) return;
-  state.money -= item.cost;
-  state[ownedKey].push(id);
-  saveState(); renderAll();
-}
-
-function equipItem(equippedKey, id) {
-  state[equippedKey] = id;
-  saveState(); renderAll();
-}
+function renderAll() { renderWardrobe(); }
 
 function bindEvents() {
   document.getElementById("fortress-app").addEventListener("click", (ev) => {
-    const buy = ev.target.closest("[data-buy]");
+    const buy = ev.target.closest("[data-buy-skin]");
     if (buy) {
-      const [key, id] = buy.dataset.buy.split(":");
-      buyItem(key, id, SKIN);
+      state = skinsCore.buySkin(state, SKINS, buy.dataset.buySkin);
+      saveState(); renderWardrobe();
       return;
     }
-    const equip = ev.target.closest("[data-equip]");
+    const equip = ev.target.closest("[data-equip-skin]");
     if (equip) {
-      const [key, id] = equip.dataset.equip.split(":");
-      equipItem("equippedSkinId", id);
+      const skin = skinsCore.findSkin(SKINS, equip.dataset.equipSkin);
+      state = skinsCore.equipSkin(state, SKINS, equip.dataset.equipSkin);
+      saveState(); renderWardrobe();
+      if (skin) notifySkinChanged(skin.characterId);
+      return;
     }
+    const unequip = ev.target.closest("[data-unequip-skin]");
+    if (unequip) {
+      const characterId = unequip.dataset.unequipSkin;
+      state = skinsCore.unequipSkin(state, characterId);
+      saveState(); renderWardrobe();
+      notifySkinChanged(characterId);
+    }
+  });
+
+  $("fa-wardrobe-rarity").addEventListener("change", (ev) => {
+    wardrobeState.rarity = ev.target.value;
+    renderWardrobe();
+  });
+  $("fa-wardrobe-character").addEventListener("change", (ev) => {
+    wardrobeState.characterId = ev.target.value;
+    renderWardrobe();
   });
 }
 
@@ -321,6 +391,7 @@ function bindLibraryEvents() {
 
 loadState();
 bindEvents();
+populateWardrobeFilters();
 populateLibraryFilters();
 bindLibraryEvents();
 renderAll();
