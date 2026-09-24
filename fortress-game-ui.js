@@ -318,13 +318,19 @@
      pulsante ATTACCA: mai una seconda regola di "chi è raggiungibile". */
   function getAttackTargets(state, player) {
     const zone = loop.getZone(state, player.zoneId);
-    const enemies = zone.nodes ? loop.enemiesAtNode(state, zone.id, player.nodeId) : loop.enemiesInZone(state, zone.id);
+    // Enemy Squads V1: non più solo lo stesso nodo, ma tutti i nemici
+    // davvero raggiungibili nel grafo (loop.enemiesReachableFromNode
+    // ricade su enemiesInZone nelle zone legacy: stesso comportamento di
+    // sempre lì). La gittata reale verso ciascuno si deriva qui SOLO per
+    // mostrarla (resolveEncounterRange), mai per decidere la disponibilità.
+    const enemies = loop.enemiesReachableFromNode(state, zone.id, player.nodeId);
     const targets = enemies.map((e) => ({
-      kind: "enemy", id: e.id, archetype: e.archetype, hp: e.hp, maxHp: e.maxHp, shield: e.shield, maxShield: e.maxShield
+      kind: "enemy", id: e.id, archetype: e.archetype, hp: e.hp, maxHp: e.maxHp, shield: e.shield, maxShield: e.maxShield,
+      range: loop.resolveEncounterRange(zone, player.nodeId, e.nodeId)
     }));
     const boss = state.boss;
     if (boss && boss.active && boss.hp > 0 && boss.zoneId === zone.id) {
-      targets.push({ kind: "boss", id: null, archetype: null, hp: boss.hp, maxHp: boss.maxHp, shield: boss.shield, maxShield: boss.maxShield });
+      targets.push({ kind: "boss", id: null, archetype: null, hp: boss.hp, maxHp: boss.maxHp, shield: boss.shield, maxShield: boss.maxShield, range: zone.encounterRange });
     }
     return targets;
   }
@@ -517,6 +523,22 @@
     return `<span class="fa-enemy-marker" title="${ENEMY_NAME[e.archetype] || e.archetype}">${ENEMY_LETTER[e.archetype] || "?"} · ${e.hp}${e.maxShield ? `/🛡${e.shield}` : ""}</span>`;
   }
 
+  /* Enemy Squads V1: più nemici possono stare sullo stesso nodo. Raggruppa
+     per archetipo — un solo nemico di un tipo: marker pieno di sempre
+     (HP/Scudo reali); più di uno: marker compatto "N ×2" (mai N badge
+     sovrapposti illeggibili), col dettaglio nel title al passaggio. */
+  function nodeEnemyMarkersMarkup(enemiesAtThisNode) {
+    const groups = {};
+    enemiesAtThisNode.forEach((e) => { (groups[e.archetype] = groups[e.archetype] || []).push(e); });
+    return Object.keys(groups).sort().map((archetype) => {
+      const list = groups[archetype];
+      if (list.length === 1) return enemyMarkerMarkup(list[0]);
+      const letter = ENEMY_LETTER[archetype] || "?";
+      const title = `${ENEMY_NAME[archetype] || archetype} ×${list.length}: ${list.map((e) => `${e.hp}${e.maxShield ? `/🛡${e.shield}` : ""}`).join(", ")}`;
+      return `<span class="fa-enemy-marker fa-enemy-marker-group" title="${escapeHtml(title)}">${letter} ×${list.length}</span>`;
+    }).join("");
+  }
+
   /* =========================================================================
      ZONE MAGNIFY V1 — vista nodi della zona corrente (solo Forest per ora).
      Riusa l'immagine zona già esistente come background, tokenMarkup ed
@@ -542,7 +564,7 @@
         <div class="fa-node-markers">
           ${chest ? `<span class="fa-node-marker" title="Cassa">🎁</span>` : ""}
           ${hasLoot ? `<span class="fa-node-marker" title="Oggetti a terra">📦</span>` : ""}
-          ${enemies.length ? `<span class="fa-node-marker fa-node-enemies">${enemies.map(enemyMarkerMarkup).join("")}</span>` : ""}
+          ${enemies.length ? `<span class="fa-node-marker fa-node-enemies">${nodeEnemyMarkersMarkup(enemies)}</span>` : ""}
         </div>
         ${tokens ? `<div class="fa-node-tokens">${tokens}</div>` : ""}
       </div>`;
@@ -625,6 +647,19 @@
     return `<p>✅ Sicura</p>`;
   }
 
+  /* Enemy Squads V1: un nemico può muoversi di un nodo invece di attaccare
+     (mai un tiro fisico in quel caso). Mostra un feedback breve e chiaro
+     ("NEMICO SI MUOVE") per l'ultimo step risolto, finché non se ne prepara
+     un altro — coerente col resto della Guided Turn UI, nessun controllo
+     manuale aggiunto. */
+  function enemyStepFeedbackMarkup(dir, state) {
+    const last = dir.lastStepResult;
+    if (!last || last.type !== "move") return "";
+    const enemy = loop.getEnemy(state, last.enemyId);
+    const label = enemy ? (ENEMY_NAME[enemy.archetype] || "Nemico") : "Nemico";
+    return `<div class="fa-enemy-move-banner"><strong>${escapeHtml(label).toUpperCase()} SI MUOVE</strong><span>Si avvicina di un nodo</span></div>`;
+  }
+
   function actionButtonMarkup(a) {
     const cls = a.id === "fine_turno" ? "is-end-turn" : (a.id === "rianima" ? "is-rianima" : (a.id === "attacca" ? "is-primary" : ""));
     const targetAttr = a.targetId ? ` data-target="${a.targetId}"` : "";
@@ -655,6 +690,7 @@
     if (dir.directorPhase === "enemy-phase") {
       panel.innerHTML = `<div class="fa-panel-round">ROUND ${state.round}</div>
         <div class="fa-panel-section"><h4>Fase Nemici</h4>
+        ${enemyStepFeedbackMarkup(dir, state)}
         ${dir.awaitingRoll ? "<p>In attesa dei dadi fisici...</p>" : `<button type="button" class="fa-btn fa-btn-primary" id="fa-enemy-continue">CONTINUA</button>`}</div>`;
       return;
     }
@@ -909,8 +945,9 @@
     if (attackFlow.step === "target") {
       // Solo se ci sono davvero più bersagli validi (Guided Turn UI: un
       // bersaglio unico è già stato auto-selezionato da handlePlayerAction,
-      // questa schermata non compare nemmeno). Node Graph: solo i nemici
-      // raggiungibili dal nodo corrente (getAttackTargets), mai l'intera zona.
+      // questa schermata non compare nemmeno). Enemy Squads V1: non più solo
+      // lo stesso nodo, ma tutti i nemici raggiungibili nel grafo
+      // (getAttackTargets), ciascuno con la propria distanza reale.
       const targets = getAttackTargets(state, player);
       const cards = targets.map((t) => {
         const label = t.kind === "boss" ? "👑 BOSS" : (ENEMY_NAME[t.archetype] || t.archetype);
@@ -919,6 +956,7 @@
           <span class="fa-target-card-stats">
             <span>❤️ ${t.hp}/${t.maxHp}</span>
             ${t.maxShield ? `<span>🛡️ ${t.shield}/${t.maxShield}</span>` : ""}
+            ${t.range ? `<span class="fa-target-card-range">${RANGE_LABELS[t.range].toUpperCase()}</span>` : ""}
           </span>
         </button>`;
       }).join("");

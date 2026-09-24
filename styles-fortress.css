@@ -275,7 +275,8 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-node-marker {
   font-size: 13px; background: rgba(0,0,0,.55); border: 1px solid var(--fa-line); border-radius: 8px; padding: 1px 4px;
 }
-.fa-node-marker.fa-node-enemies { display: flex; gap: 3px; padding: 1px; background: transparent; border: none; }
+.fa-node-marker.fa-node-enemies { display: flex; gap: 3px; padding: 1px; background: transparent; border: none; flex-wrap: wrap; }
+.fa-enemy-marker-group { font-weight: 800; border-color: var(--fa-gold); }
 .fa-node-tokens { display: flex; gap: 2px; }
 .fa-node-tokens .fa-token { width: auto; min-width: 0; }
 .fa-node-tokens .fa-token span { display: none; } /* nome sempre nel pannello di turno, qui solo l'avatar */
@@ -348,6 +349,14 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 }
 .fa-ko-banner strong { display: block; font-size: 15px; color: #ff8f9c; }
 
+/* ---- Enemy Squads V1: feedback "NEMICO SI MUOVE" in Fase Nemici ---- */
+.fa-enemy-move-banner {
+  border: 1px solid var(--fa-steel); background: rgba(255,255,255,.05); border-radius: 12px;
+  padding: 10px 12px; text-align: center; margin-bottom: 4px;
+}
+.fa-enemy-move-banner strong { display: block; font-size: 14px; }
+.fa-enemy-move-banner span { font-size: 12px; color: var(--fa-muted); }
+
 /* =========================================================================
    ATTACCO A DADI FISICI / ANNUNCI
    ========================================================================= */
@@ -371,7 +380,8 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-target-card:hover { border-color: var(--fa-steel); }
 .fa-target-card.is-boss { border-color: var(--fa-blood-bright); background: linear-gradient(160deg, rgba(181,48,63,.25), rgba(0,0,0,.3)); }
 .fa-target-card-name { font-weight: 800; font-size: 15px; }
-.fa-target-card-stats { display: flex; gap: 10px; font-size: 13px; color: var(--fa-muted); white-space: nowrap; }
+.fa-target-card-stats { display: flex; gap: 10px; font-size: 13px; color: var(--fa-muted); white-space: nowrap; align-items: center; }
+.fa-target-card-range { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 10px; background: rgba(255,255,255,.08); color: var(--fa-ink); }
 
 .fa-weapon-card {
   font-family: var(--fa-font-body); cursor: pointer; text-align: left;

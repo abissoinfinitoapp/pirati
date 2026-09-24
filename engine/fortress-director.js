@@ -256,7 +256,7 @@
     const zone = loop.getZone(state, player.zoneId);
     const actions = [];
 
-    // Node Graph (Zone Magnify V1, oggi solo Forest): RIANIMA/ATTACCA/APRI
+    // Node Graph (Zone Magnify V1, oggi solo Forest): RIANIMA/APRI
     // CASSA/AIUTA/SCAMBIA richiedono di essere sullo stesso nodo, non solo
     // nella stessa zona. Il Party resta zona-level (Battlefield/queue
     // invariati, vedi isBattlefield/buildRoundPlayerQueue): qui si restringe
@@ -270,7 +270,12 @@
       actions.push({ id: "rianima", label: "RIANIMA " + koCompanion.name, targetId: koCompanion.id });
     }
     const bossHere = state.boss && state.boss.active && state.boss.hp > 0 && state.boss.zoneId === zone.id;
-    const enemiesHere = hasNodeGraph ? loop.enemiesAtNode(state, zone.id, player.nodeId) : loop.enemiesInZone(state, zone.id);
+    // ATTACCA invece è node-DISTANCE-aware, non più solo same-node (Enemy
+    // Squads V1): un nemico su un nodo diverso ma raggiungibile nel grafo va
+    // benissimo, la gittata reale la deriva loop.previewPlayerAttack/
+    // declarePlayerAttack. Zone legacy/nodeId assente: invariato, l'intera
+    // zona (enemiesReachableFromNode ricade su enemiesInZone).
+    const enemiesHere = loop.enemiesReachableFromNode(state, zone.id, player.nodeId);
     if (!player.actedThisRound && (enemiesHere.length > 0 || bossHere)) {
       actions.push({ id: "attacca", label: "ATTACCA" });
     }

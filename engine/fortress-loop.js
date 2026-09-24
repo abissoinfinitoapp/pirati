@@ -286,19 +286,20 @@
     const enemy = getEnemy(state, enemyId);
     if (!player || !enemy) throw new Error("Giocatore o nemico inesistente");
     const zone = getZone(state, player.zoneId);
+    const encounterRange = resolveEncounterRange(zone, player.nodeId, enemy.nodeId);
     const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
     const aiuto = Boolean(state.pendingAiuto[playerId]);
     const effectBonus = (enemy.suppressed ? 1 : 0) + (state.pendingStim[playerId] ? 1 : 0);
 
     const diceCount = combat.computeDiceCount({
-      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange,
       isRangeless, aiuto, effectBonus
     });
-    const rangeMod = combat.rangeModifier(weapon.range, zone.encounterRange, isRangeless);
+    const rangeMod = combat.rangeModifier(weapon.range, encounterRange, isRangeless);
 
     return {
       diceCount, rangeModifier: rangeMod,
-      weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      weaponRange: weapon.range, encounterRange,
       aiuto, effectBonus,
       enemyHp: enemy.hp, enemyMaxHp: enemy.maxHp, enemyShield: enemy.shield, enemyMaxShield: enemy.maxShield
     };
@@ -347,16 +348,24 @@
     const enemy = getEnemy(state, enemyId);
     if (!enemy || enemy.zoneId !== player.zoneId || enemy.hp <= 0) throw new Error("Bersaglio non valido");
     const zone = getZone(state, player.zoneId);
+    // Node Graph: un bersaglio nella stessa zona ma su un nodo irraggiungibile
+    // (grafo disconnesso) resta comunque rifiutato — "stessa zona" non basta
+    // più da sola a garantire che l'attacco sia davvero possibile.
+    if (zone.nodes && player.nodeId != null && enemy.nodeId != null
+      && getNodeDistance(zone, player.nodeId, enemy.nodeId) == null) {
+      throw new Error("Bersaglio non raggiungibile da qui");
+    }
+    const encounterRange = resolveEncounterRange(zone, player.nodeId, enemy.nodeId);
     const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
     const aiuto = Boolean(state.pendingAiuto[playerId]);
     const effectBonus = (enemy.suppressed ? 1 : 0) + (state.pendingStim[playerId] ? 1 : 0);
     enemy.suppressed = false; // consumato ORA, alla dichiarazione, prima di qualunque dado
     const targetBelowHalfHp = enemy.hp < enemy.maxHp / 2;
     const diceCount = combat.computeDiceCount({
-      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange: zone.encounterRange,
+      baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange,
       isRangeless, aiuto, effectBonus
     });
-    return { kind: "player-vs-enemy", playerId, enemyId, weapon, encounterRange: zone.encounterRange, aiuto, effectBonus, targetBelowHalfHp, diceCount };
+    return { kind: "player-vs-enemy", playerId, enemyId, weapon, encounterRange, aiuto, effectBonus, targetBelowHalfHp, diceCount };
   }
 
   /* Loot alla morte di UN nemico, idempotente (§7 punto 7): un nemico produce
@@ -681,6 +690,62 @@
     return state.enemies.filter((e) => e.hp > 0).sort((a, b) => (a.id < b.id ? -1 : 1)).map((e) => e.id);
   }
 
+  /* Multi-node Encounter V1 — decisione nemica dentro un Node Graph,
+     SEMPRE deterministica (mai random):
+       1. bersagli = candidates (già filtrati: active, stessa zona);
+       2. raggiungibili = quelli con un nodeId a distanza risolvibile;
+       3. "può attaccare da qui" dipende dal profilo:
+          - melee (attackProfile.range === "vicino", oggi solo aggressivo):
+            solo se un bersaglio è già sullo STESSO nodo — altrimenti si
+            avvicina, non spara da lontano "a caso";
+          - ranged/altro (medio/lontano): qualunque bersaglio raggiungibile
+            va bene, resta fermo e attacca (mai avanza inutilmente);
+       4. se nessun bersaglio è attaccabile da qui ma ne esiste uno
+          raggiungibile, un solo passo (firstNodeStepToward) verso il più
+          vicino: mai un tiro fisico, mai un secondo movimento;
+       5. parità di distanza: pickTarget (stessa rotazione già usata sopra),
+          mai una scelta casuale;
+       6. nessun bersaglio raggiungibile: idle (nodo irraggiungibile gestito
+          esplicitamente, mai un crash). */
+  function prepareNodeEnemyStep(state, enemy, zone, candidates) {
+    const weapon = enemy.attackProfile;
+    const isMelee = weapon.range === "vicino";
+
+    const reachable = candidates
+      .map((p) => ({ player: p, distance: getNodeDistance(zone, enemy.nodeId, p.nodeId) }))
+      .filter((c) => c.distance != null);
+    const attackable = isMelee ? reachable.filter((c) => c.distance === 0) : reachable;
+
+    if (attackable.length) {
+      const minDistance = Math.min.apply(null, attackable.map((c) => c.distance));
+      const nearest = attackable.filter((c) => c.distance === minDistance).map((c) => c.player);
+      const target = pickTarget(nearest, enemy.lastTargetId);
+      const encounterRange = resolveEncounterRange(zone, enemy.nodeId, target.nodeId);
+      const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
+      const effectBonus = zone.smokeActive ? -1 : 0; // vedi nota Fumogeno sopra: solo se davvero un attacco
+      zone.smokeActive = false;
+      const diceCount = combat.computeDiceCount({
+        baseDice: weapon.baseDice, weaponRange: weapon.range, encounterRange,
+        isRangeless, aiuto: false, effectBonus
+      });
+      return { type: "attack", enemyId: enemy.id, targetId: target.id, weapon, encounterRange, effectBonus, diceCount };
+    }
+
+    if (reachable.length) {
+      const minDistance = Math.min.apply(null, reachable.map((c) => c.distance));
+      const nearest = reachable.filter((c) => c.distance === minDistance).map((c) => c.player);
+      const target = pickTarget(nearest, enemy.lastTargetId);
+      const step = firstNodeStepToward(zone, enemy.nodeId, target.nodeId);
+      if (step) {
+        const fromNodeId = enemy.nodeId;
+        enemy.nodeId = step;
+        return { type: "move", enemyId: enemy.id, fromNodeId, toNodeId: enemy.nodeId };
+      }
+    }
+
+    return { type: "idle", enemyId: enemy.id };
+  }
+
   /* Prepara UN SOLO nemico della fase, SENZA tirare dadi: stessa identica
      logica di targeting/movimento che prima viveva dentro il forEach di
      resolveEnemyPhase, ma si ferma un istante prima del combat engine.
@@ -694,8 +759,15 @@
 
     const candidates = activePlayersInZone(state, enemy.zoneId);
     if (candidates.length) {
-      const target = pickTarget(candidates, enemy.lastTargetId);
       const zone = getZone(state, enemy.zoneId);
+      // Multi-node Encounter V1: dentro un Node Graph con un nodeId proprio,
+      // il nemico decide ATTACCA oppure MUOVITI DI 1 NODO (mai entrambe,
+      // mai un tiro fisico se si muove — vedi prepareNodeEnemyStep). Zone
+      // legacy o nemico senza nodeId: comportamento invariato, attacca
+      // sempre chi trova nella zona con la gittata di zona.
+      if (zone.nodes && enemy.nodeId != null) return prepareNodeEnemyStep(state, enemy, zone, candidates);
+
+      const target = pickTarget(candidates, enemy.lastTargetId);
       const weapon = enemy.attackProfile;
       const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
       // Fumogeno: -1 dado, congelato QUI (mai ricalcolato dopo un ritiro
@@ -1152,8 +1224,85 @@
   /* =========================================================================
      NODE GRAPH (Zone Magnify V1) — solo per zone con zone.nodes (oggi solo
      Forest). Il catalogo (zone.nodes) resta dato statico, mai mutato: qui si
-     legge soltanto. Lo stato mutabile vive in zone.nodeStates, separato.
+     legge soltanto.
      ========================================================================= */
+
+  /* BFS pura sul grafo nodi di UNA zona — stesso pattern di bfsFrom (sopra,
+     zone-level), qui applicato a zone.nodes invece che a state.zones. Vicini
+     ordinati per id (mai un ordine di iterazione implicito): deterministica.
+     Le coordinate x/y dei nodi (solo visuali) non entrano MAI in questo
+     calcolo — la distanza è sempre "numero di collegamenti". */
+  function nodeBfsFrom(zone, startId) {
+    const dist = { [startId]: 0 };
+    const prev = {};
+    const queue = [startId];
+    while (queue.length) {
+      const cur = queue.shift();
+      const node = zone.nodes.find((n) => n.id === cur);
+      if (!node) continue;
+      const neighbors = Object.values(node.connections || {}).slice().sort();
+      neighbors.forEach((n) => {
+        if (!(n in dist)) { dist[n] = dist[cur] + 1; prev[n] = cur; queue.push(n); }
+      });
+    }
+    return { dist, prev };
+  }
+
+  /* Distanza (numero di collegamenti) tra due nodi della STESSA zona.
+     null = non raggiungibile (grafo disconnesso) o zona senza Node Graph:
+     il chiamante decide sempre esplicitamente il fallback, mai un valore
+     inventato qui. */
+  function getNodeDistance(zone, fromNodeId, toNodeId) {
+    if (!zone || !zone.nodes || fromNodeId == null || toNodeId == null) return null;
+    if (fromNodeId === toNodeId) return 0;
+    const { dist } = nodeBfsFrom(zone, fromNodeId);
+    return Object.prototype.hasOwnProperty.call(dist, toNodeId) ? dist[toNodeId] : null;
+  }
+
+  /* V1 (unica regola, mai coordinate x/y): stesso nodo -> vicino,
+     1 collegamento -> medio, 2+ -> lontano. */
+  function nodeDistanceToRange(distance) {
+    if (distance == null) return null;
+    if (distance === 0) return "vicino";
+    if (distance === 1) return "medio";
+    return "lontano";
+  }
+
+  /* Gittata Encounter di una coppia soggetto/bersaglio: deriva dalla
+     distanza reale nel Node Graph quando ENTRAMBI hanno nodeId in una zona
+     con zone.nodes; altrimenti (boss, zone legacy, entità senza nodeId)
+     resta il comportamento di sempre, zone.encounterRange. Unico punto che
+     decide "quale gittata usare per questo attacco": mai duplicato. */
+  function resolveEncounterRange(zone, subjectNodeId, targetNodeId) {
+    if (zone.nodes && subjectNodeId != null && targetNodeId != null) {
+      const range = nodeDistanceToRange(getNodeDistance(zone, subjectNodeId, targetNodeId));
+      if (range) return range;
+    }
+    return zone.encounterRange;
+  }
+
+  /* Primo passo (un solo nodo) del percorso più breve verso toNodeId,
+     stesso pattern "risali la catena prev" già usato da
+     nearestZoneWithActivePlayer (sotto, livello zona). null se già lì o non
+     raggiungibile: mai un passo inventato. */
+  function firstNodeStepToward(zone, fromNodeId, toNodeId) {
+    if (!zone.nodes || fromNodeId == null || toNodeId == null || fromNodeId === toNodeId) return null;
+    const { dist, prev } = nodeBfsFrom(zone, fromNodeId);
+    if (!Object.prototype.hasOwnProperty.call(dist, toNodeId)) return null;
+    let step = toNodeId;
+    while (prev[step] !== fromNodeId && prev[step] !== undefined) step = prev[step];
+    return step;
+  }
+
+  /* Nemici della zona davvero raggiungibili da un nodo (Node Graph):
+     enemiesInZone filtrata per distanza risolvibile. Zone legacy/nodeId
+     assente: invariato, l'intera zona (stesso comportamento di sempre). */
+  function enemiesReachableFromNode(state, zoneId, nodeId) {
+    const zone = getZone(state, zoneId);
+    const all = enemiesInZone(state, zoneId);
+    if (!zone.nodes || nodeId == null) return all;
+    return all.filter((e) => getNodeDistance(zone, nodeId, e.nodeId) != null);
+  }
 
   /* Assegna deterministicamente le casse REALMENTE generate da
      loot.setupChests (mai un numero deciso qui) agli chestSlot dei nodi,
@@ -1172,20 +1321,23 @@
     zone.chests.forEach((chest, i) => { if (slots[i]) chest.nodeId = slots[i].nodeId; });
   }
 
-  /* Stesso pattern sicuro di ensureInitialEncounter, con scope sul nodo
-     invece che sulla zona: flag "già generato" marcato SUBITO (mai un
-     secondo spawn, anche dopo che il nodo è stato ripulito — mai
-     enemiesAtNode, che tornerebbe a 0 dopo la pulizia). Composizione letta
-     da node.contents[].composition, dato puro del catalogo. */
+  /* Multi-node Encounter V1 — stesso pattern sicuro di ensureInitialEncounter
+     ("già generato" marcato SUBITO, mai un secondo spawn anche dopo la
+     pulizia — mai enemiesInZone/enemiesAtNode, che tornerebbero a 0), ma
+     scope a livello ZONA (zone.encounterSpawned), non più per nodo: resta
+     "1 Encounter per zona" anche quando la sua composizione copre più nodi
+     (zone.encounter.composition, dato puro del catalogo — ogni entry porta
+     già il proprio nodeId). Il trigger resta l'arrivo su UN nodo (entry o
+     moveToNode, invariato): se quel nodo fa parte della composizione,
+     l'intero Encounter nasce in un colpo solo; arrivare su un nodo che non
+     ne fa parte (es. l'entry) non genera nulla. */
   function ensureNodeEncounter(state, zoneId, nodeId) {
     const zone = getZone(state, zoneId);
-    if (!zone || !zone.nodeStates) return;
-    const nodeState = zone.nodeStates[nodeId];
-    if (!nodeState || nodeState.encounterSpawned) return;
-    nodeState.encounterSpawned = true;
-    const node = (zone.nodes || []).find((n) => n.id === nodeId);
-    const encounter = node && (node.contents || []).find((c) => c.type === "encounter");
-    if (encounter) (encounter.composition || []).forEach((e) => spawnEnemy(state, e.archetype, zoneId, nodeId));
+    if (!zone || !zone.encounter || zone.encounterSpawned) return;
+    const composition = zone.encounter.composition || [];
+    if (!composition.some((e) => e.nodeId === nodeId)) return;
+    zone.encounterSpawned = true;
+    composition.forEach((e) => spawnEnemy(state, e.archetype, zoneId, e.nodeId));
   }
 
   /* Unica funzione autorevole per il movimento a nodi, quattro direzioni
@@ -1246,6 +1398,7 @@
     DEFAULT_ENEMY_ARCHETYPES, STORM_TABLE, STORM_DAMAGE,
     createDefaultZoneLayout, createGame,
     getPlayer, getZone, getEnemy, playersInZone, activePlayersInZone, enemiesInZone, enemiesAtNode, activePlayers,
+    getNodeDistance, nodeDistanceToRange, resolveEncounterRange, firstNodeStepToward, enemiesReachableFromNode,
     getActivePartyMembers, isSolo, isInParty,
     landPlayer, allPlayersLanded, beginExploration,
     moveAction, moveToNode, aiutoAction,

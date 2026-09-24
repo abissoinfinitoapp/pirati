@@ -49,20 +49,37 @@
       ring: "esterno", danger: "basso", encounterRange: "lontano", lootTier: "basso",
       layout: { row: 1, col: 2 },
       // Prima zona migrata al Node Graph (Zone Magnify V1): niente più
-      // initialEncounter a livello zona, sostituito dal nodo Encounter sotto.
-      // entryNodeId è dove landPlayer/moveAction posizionano il player.nodeId
-      // quando si entra in Forest (atterraggio o dalla World Map). Nodi:
-      // n01 entry -> n02 bivio (passaggio) -> n03 cassa / n04 Encounter,
-      // così n02 offre una scelta direzionale reale (su/giù), non un corridoio.
+      // initialEncounter a livello zona, sostituito dall'Encounter multi-nodo
+      // sotto. entryNodeId è dove landPlayer/moveAction posizionano il
+      // player.nodeId quando si entra in Forest (atterraggio o dalla World
+      // Map). Nodi: n01 entry -> n02 bivio (passaggio) -> n03 cassa / n04
+      // interno, così n02 offre una scelta direzionale reale (su/giù), non
+      // un corridoio.
       entryNodeId: "forest-n01",
       nodes: [
         { id: "forest-n01", x: 15, y: 50, connections: { right: "forest-n02" } },
         { id: "forest-n02", x: 45, y: 50, connections: { left: "forest-n01", up: "forest-n03", down: "forest-n04" } },
         { id: "forest-n03", x: 45, y: 20, connections: { down: "forest-n02" },
           contents: [{ type: "chestSlot", slot: 0 }] },
-        { id: "forest-n04", x: 45, y: 80, connections: { up: "forest-n02" },
-          contents: [{ type: "encounter", composition: [{ archetype: "normale" }] }] }
+        { id: "forest-n04", x: 45, y: 80, connections: { up: "forest-n02" } }
       ],
+      // Multi-node Encounter V1: UN solo Encounter per la zona (mai due),
+      // ma distribuito su più nodi — ogni entry porta già il proprio nodeId
+      // (vedi engine/fortress-loop.js ensureNodeEncounter). Stessi archetipi
+      // reali di sempre, HP/gittata invariati: qui cambia solo quanti e
+      // dove, mai i numeri di combattimento. Un solo melee (aggressivo,
+      // insegue) vicino al bivio, un cecchino (distanza) + un tank
+      // (resistente) a guardia della cassa, il grosso (normale) in fondo.
+      encounter: {
+        composition: [
+          { archetype: "aggressivo", nodeId: "forest-n02" },
+          { archetype: "normale", nodeId: "forest-n02" },
+          { archetype: "distanza", nodeId: "forest-n03" },
+          { archetype: "resistente", nodeId: "forest-n03" },
+          { archetype: "normale", nodeId: "forest-n04" },
+          { archetype: "normale", nodeId: "forest-n04" }
+        ]
+      },
       connections: ["abandoned-city", "hill-outpost", "ancient-ruins"] },
     { id: "hill-outpost", name: "Hill Outpost", image: "assets/fortress-img/hill-outpost.webp",
       ring: "esterno", danger: "medio", encounterRange: "lontano", lootTier: "medio",
@@ -153,15 +170,18 @@
       initialEncounter: z.initialEncounter || null,
       // Node Graph (Zone Magnify): z.nodes è dato statico del catalogo, mai
       // mutato — qui è solo REFERENZIATO (stesso array), mai clonato/copiato
-      // in modo che l'engine possa leggere connections/contents. nodeStates è
-      // invece lo stato runtime mutabile, separato dalla Map Definition come
-      // richiesto: un flag encounterSpawned per nodo, mai "cleared" salvato
-      // (si deriva sempre da enemiesAtNode). Zone senza z.nodes restano
-      // esattamente come nel commit precedente: nodes/entryNodeId assenti,
-      // nodeStates un oggetto vuoto mai consultato.
+      // in modo che l'engine possa leggere connections/contents. Zone senza
+      // z.nodes restano esattamente come nel commit precedente: nodes/
+      // entryNodeId assenti.
       nodes: z.nodes || null,
       entryNodeId: z.entryNodeId || null,
-      nodeStates: (z.nodes || []).reduce((acc, n) => { acc[n.id] = { encounterSpawned: false }; return acc; }, {}),
+      // Multi-node Encounter V1: z.encounter è dato statico del catalogo
+      // (composizione con nodeId per entry, mai mutata); encounterSpawned è
+      // lo stato runtime mutabile, UN flag per l'intera zona (mai per nodo:
+      // "1 Encounter per zona" anche su più nodi — si deriva sempre da
+      // enemiesInZone se serve sapere "è ripulito", mai "cleared" salvato).
+      encounter: z.encounter || null,
+      encounterSpawned: false,
       initialEncounterSpawned: false,
       chests: [],
       groundLoot: [],
