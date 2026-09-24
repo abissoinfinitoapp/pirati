@@ -27,10 +27,28 @@
     return ` style="grid-row:${layout.row};grid-column:${layout.col};"`;
   }
 
+  /* Pura, testabile in Node: Guided Turn UI — "salta la schermata di scelta
+     se non c'è davvero una scelta da fare" (bersaglio/arma). Riceve solo un
+     array di bersagli già filtrati dal chiamante (mai una regola di chi è
+     un bersaglio valido: quella resta 100% nel Director/loop) e restituisce
+     l'unico elemento se ce n'è uno solo, altrimenti null (serve una scelta). */
+  function pickAutoTarget(targets) {
+    return (targets && targets.length === 1) ? targets[0] : null;
+  }
+
+  /* Stessa idea per l'arma: guarda solo quali slot arma (primary/secondary)
+     sono valorizzati nell'equipaggiamento già risolto dal motore — nessuna
+     nuova regola su cosa renda un'arma "usabile". */
+  function pickAutoWeaponSlot(equipment) {
+    if (!equipment) return null;
+    const slots = ["primary", "secondary"].filter((slot) => equipment[slot]);
+    return slots.length === 1 ? slots[0] : null;
+  }
+
   if (typeof module === "object" && module.exports) {
-    // In Node esponiamo solo la funzione pura sopra, per i test: il resto di
+    // In Node esponiamo solo le funzioni pure sopra, per i test: il resto di
     // questo file è browser-only (window/DOM) e si ferma qui.
-    module.exports = { zoneLayoutStyle };
+    module.exports = { zoneLayoutStyle, pickAutoTarget, pickAutoWeaponSlot };
     return;
   }
 
@@ -68,6 +86,35 @@
   const ENEMY_LETTER = { normale: "N", aggressivo: "A", resistente: "R", distanza: "D", elite: "E" };
   const ENEMY_NAME = { normale: "Normale", aggressivo: "Aggressivo", resistente: "Resistente", distanza: "Distanza", elite: "Elite" };
   const DANGER_STARS = zonesApi.DANGER_STARS;
+  // Massimo HP/Scudo giocatore: nessun campo maxHp/maxShield sul giocatore,
+  // è una costante già cablata nell'engine (usaCuraAction/usaScudoAction
+  // fanno Math.min(10, ...)). Duplicata qui SOLO per mostrarla, mai per
+  // calcolare alcunché: la UI non decide mai un massimo diverso da quello.
+  const PLAYER_MAX_STAT = 10;
+  // Etichetta semplice dello special di un'arma, per la card di scelta arma
+  // (Guided Turn UI): stesso vocabolario special di engine/fortress-combat.js,
+  // solo il testo breve (il dettaglio completo resta nella Libreria Armi di
+  // fortress-army.js, IIFE separata apposta — nessuna variabile condivisa).
+  const WEAPON_SPECIAL_LABEL = {
+    none: null,
+    rangeless: "Gittata universale",
+    ignoreShield: (n) => `Perfora Scudo (${n === 2 ? 2 : 1})`,
+    critOnSix: "Critico sul 6",
+    rerollOnes: "Rilancia gli 1",
+    areaDamage: "Danno ad area",
+    suppress: "Marchia il bersaglio",
+    silent: "Silenzioso",
+    chainStrike: "Colpo in catena",
+    executionerStrike: "Colpo di grazia",
+    silentKill: "Uccisione silenziosa"
+  };
+  function weaponSpecialLabel(weapon) {
+    const special = weapon && weapon.special;
+    if (!special || !special.type) return null;
+    const entry = WEAPON_SPECIAL_LABEL[special.type];
+    if (!entry) return null;
+    return typeof entry === "function" ? entry(special.n) : entry;
+  }
 
   function zoneStars(danger) { return DANGER_STARS[danger] || 1; }
   function zoneCatalogEntry(id) { return ZONES.find((z) => z.id === id); }
@@ -98,8 +145,11 @@
   let scannerMode = false; // in attesa che il giocatore scelga la zona adiacente da scansionare
   let magnifyMode = false; // Zone Magnify V1: vista nodi della zona corrente invece della World Map
   let attackFlow = null;      // { step: "target"|"weapon"|"preview", targetKind, targetId, weapon }
+  let attackActorId = null;   // playerId di chi ha dichiarato l'attacco in corso (Guided Turn UI: serve dopo il CONTINUA per capire se il turno è cambiato)
   let diceSelections = null;  // array di risultati 1-6 in corso di inserimento
   let pendingResult = null;   // esito già risolto dal motore, in attesa del CONTINUA
+  let chestResult = null;     // { weapon, support } appena trovati aprendo una cassa, in attesa di PRENDI/CHIUDI (Guided Turn UI)
+  let turnTransition = null;  // { name, zoneName } — "ORA TOCCA A ..." mostrato quando il turno passa a un altro giocatore (Guided Turn UI, solo presentazione: mai gameState/Director state)
   let eventLog = [];
 
   function isLanding() { return game && !game.dir; }
@@ -233,6 +283,134 @@
   }
 
   /* =========================================================================
+     GUIDED TURN UI — header di turno, bersagli, transizione "ORA TOCCA A...",
+     cassa aperta. Solo presentazione: nessuna nuova regola, legge sempre
+     Director/loop già esistenti (§ istruzioni: "il Director decide, la UI
+     traduce la decisione").
+     ========================================================================= */
+
+  /* Header enorme, sempre in cima al pannello durante il turno di un
+     giocatore: chi gioca, dove si trova, quanta vita/scudo ha. Sostituisce
+     il vecchio "TOCCA A X" testuale con qualcosa di leggibile da un bambino
+     senza dover chiedere al Master. */
+  function buildTurnHeaderMarkup(player, situation) {
+    const character = CHARACTERS.find((c) => c.id === game.playerAvatars[player.id]);
+    const img = character ? characterDisplayImage(character.id, character.image) : "";
+    return `
+      <div class="fa-turn-header">
+        <div class="fa-turn-header-avatar">${imgTag(img, player.name)}</div>
+        <div class="fa-turn-header-info">
+          <div class="fa-turn-header-label">Tocca a</div>
+          <div class="fa-turn-header-name">${escapeHtml(player.name).toUpperCase()}</div>
+          <div class="fa-turn-header-zone">${escapeHtml(situation.zoneName)}</div>
+          <div class="fa-turn-header-stats">
+            <span class="fa-stat-hp">❤️ ${player.hp}/${PLAYER_MAX_STAT}</span>
+            <span class="fa-stat-shield">🛡️ ${player.shield}/${PLAYER_MAX_STAT}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /* Bersagli d'attacco DAVVERO raggiungibili dal punto in cui si trova il
+     giocatore ora: nemici sullo stesso nodo (Node Graph) o della zona intera
+     (zone legacy) + il boss se qui. Riusa le stesse query del Director
+     (loop.enemiesAtNode/enemiesInZone) usate per decidere se mostrare il
+     pulsante ATTACCA: mai una seconda regola di "chi è raggiungibile". */
+  function getAttackTargets(state, player) {
+    const zone = loop.getZone(state, player.zoneId);
+    const enemies = zone.nodes ? loop.enemiesAtNode(state, zone.id, player.nodeId) : loop.enemiesInZone(state, zone.id);
+    const targets = enemies.map((e) => ({
+      kind: "enemy", id: e.id, archetype: e.archetype, hp: e.hp, maxHp: e.maxHp, shield: e.shield, maxShield: e.maxShield
+    }));
+    const boss = state.boss;
+    if (boss && boss.active && boss.hp > 0 && boss.zoneId === zone.id) {
+      targets.push({ kind: "boss", id: null, archetype: null, hp: boss.hp, maxHp: boss.maxHp, shield: boss.shield, maxShield: boss.maxShield });
+    }
+    return targets;
+  }
+
+  /* Confronta chi era il giocatore corrente prima di un'azione con chi lo è
+     dopo: se è cambiato (ed è ancora il turno di un giocatore, non fase
+     nemici/boss/round — quelle hanno già i loro pannelli espliciti), prepara
+     la schermata "ORA TOCCA A ...". Stato SOLO-UI: non tocca mai dir/state. */
+  function checkTurnTransition(beforePlayerId) {
+    const state = game.state, dir = game.dir;
+    if (!dir || dir.directorPhase !== "player-turn") return;
+    const afterId = director.getCurrentPlayerId(state, dir);
+    if (!afterId || afterId === beforePlayerId) return;
+    const p = loop.getPlayer(state, afterId);
+    const zone = loop.getZone(state, p.zoneId);
+    turnTransition = { name: p.name, zoneName: zone.name };
+  }
+
+  function renderTurnTransitionOverlay() {
+    const overlay = $("fa-turn-transition-overlay");
+    if (!turnTransition) { overlay.hidden = true; return; }
+    overlay.hidden = false;
+    $("fa-turn-transition-content").innerHTML = `
+      <div class="fa-transition-label">Ora tocca a</div>
+      <h2>${escapeHtml(turnTransition.name).toUpperCase()}</h2>
+      <p>${escapeHtml(turnTransition.zoneName)}</p>
+      <button type="button" class="fa-btn fa-btn-primary" id="fa-transition-continue">VAI</button>
+    `;
+  }
+
+  function bindTurnTransitionEvents() {
+    $("fa-turn-transition-overlay").addEventListener("click", (ev) => {
+      if (ev.target.id === "fa-transition-continue") { turnTransition = null; render(); }
+    });
+  }
+
+  /* Card di un oggetto appena trovato in una cassa, con scelta esplicita
+     dello slot (mai equip automatico: §27/§18 Loot, invariato). Riusa
+     resolveLootEntry/lootEntryLabel già usati per il log eventi. */
+  function chestItemCardMarkup(entry) {
+    if (!entry) return "";
+    const resolved = resolveLootEntry(entry);
+    if (!resolved) return "";
+    const isWeapon = entry.kind === "weapon";
+    const icon = isWeapon ? "" : (entry.kind === "cura" ? "❤️" : entry.kind === "scudo" ? "🛡️" : "🔧");
+    const img = isWeapon
+      ? `<div class="fa-chest-card-img">${imgTag(resolved.image, resolved.name)}</div>`
+      : `<div class="fa-chest-card-img fa-chest-card-icon">${icon}</div>`;
+    const meta = isWeapon
+      ? `<span class="fa-rarity-tag rarity-${resolved.rarity}">${resolved.rarity}</span><span>POTENZA ${resolved.potenza}</span>`
+      : "";
+    const buttons = isWeapon
+      ? `<button type="button" class="fa-btn fa-btn-primary" data-pickup="${entry.instanceId}" data-pickup-slot="primary">PRENDI · Primary</button>
+         <button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="secondary">PRENDI · Secondary</button>`
+      : `<button type="button" class="fa-btn fa-btn-primary" data-pickup="${entry.instanceId}" data-pickup-slot="${entry.kind}">PRENDI</button>`;
+    return `<div class="fa-chest-card">
+      ${img}
+      <div class="fa-chest-card-name">${escapeHtml(resolved.name)}</div>
+      ${meta ? `<div class="fa-chest-card-meta">${meta}</div>` : ""}
+      <div class="fa-chest-card-actions">${buttons}</div>
+    </div>`;
+  }
+
+  function renderChestOverlay() {
+    const overlay = $("fa-chest-overlay");
+    if (!chestResult) { overlay.hidden = true; return; }
+    overlay.hidden = false;
+    $("fa-chest-content").innerHTML = `
+      <h2>HAI TROVATO</h2>
+      <div class="fa-chest-cards">
+        ${chestItemCardMarkup(chestResult.weapon)}
+        ${chestItemCardMarkup(chestResult.support)}
+      </div>
+      <button type="button" class="fa-btn fa-btn-ghost" id="fa-chest-close">HO FINITO</button>
+    `;
+  }
+
+  function bindChestEvents() {
+    $("fa-chest-overlay").addEventListener("click", (ev) => {
+      if (ev.target.id === "fa-chest-close") { chestResult = null; render(); return; }
+      const btn = ev.target.closest("[data-pickup]");
+      if (btn) { handlePickup(Number(btn.dataset.pickup), btn.dataset.pickupSlot); }
+    });
+  }
+
+  /* =========================================================================
      RENDER — dispatch principale
      ========================================================================= */
   function render() {
@@ -255,6 +433,8 @@
 
     renderPanel();
     renderAttackOverlay();
+    renderChestOverlay();
+    renderTurnTransitionOverlay();
 
     const dir = game.dir;
     if (dir && dir.pendingAnnouncements.length) renderAnnouncementOverlay(dir.pendingAnnouncements[0]);
@@ -379,6 +559,7 @@
       <div class="fa-magnify-bg" style="background-image:url('${zoneDef ? zoneDef.image : ""}')">
         ${nodesMarkup}
       </div>
+      <div class="fa-move-hint ${canMove ? "" : "is-used"}">${canMove ? "PUOI MUOVERTI UNA VOLTA" : "MOVIMENTO USATO"}</div>
       <div class="fa-magnify-controls">
         <div class="fa-dir-row">${dirBtn("up", "↑")}</div>
         <div class="fa-dir-row">${dirBtn("left", "←")}<span class="fa-dir-gap"></span>${dirBtn("right", "→")}</div>
@@ -504,11 +685,9 @@
 
     panel.innerHTML = `
       <div class="fa-panel-round">ROUND ${state.round}</div>
-      <div class="fa-panel-turn">TOCCA A ${escapeHtml(player.name).toUpperCase()}</div>
+      ${buildTurnHeaderMarkup(player, situation)}
 
-      <div class="fa-panel-section"><h4>Posizione</h4><p>${escapeHtml(situation.zoneName)}</p>
-        ${situation.nodeId ? `<button type="button" class="fa-btn fa-btn-ghost" id="fa-magnify-toggle">${magnifyMode ? "🗺️ World Map" : "🔍 Vedi la zona"}</button>` : ""}
-      </div>
+      ${situation.nodeId ? `<div class="fa-panel-section"><button type="button" class="fa-btn fa-btn-ghost" id="fa-magnify-toggle">${magnifyMode ? "🗺️ World Map" : "🔍 Vedi la zona"}</button></div>` : ""}
 
       <div class="fa-panel-section">
         <h4>Info zona</h4>
@@ -556,29 +735,47 @@
   function handlePlayerAction(actionId, targetId, chestId, utilityId) {
     const state = game.state, dir = game.dir;
     const playerId = director.getCurrentPlayerId(state, dir);
+    const player = loop.getPlayer(state, playerId);
+    let endsTurn = false;
     switch (actionId) {
       case "sposta": moveMode = true; break;
-      case "attacca": attackFlow = { step: "target" }; break;
-      case "rianima": director.performRianima(state, dir, playerId, targetId); break;
-      case "aiuta": director.performAiuto(state, dir, playerId, targetId); break;
-      case "scambia": director.performScambia(state, dir, playerId, targetId, "primary"); break;
-      case "usa_cura": director.performUsaCura(state, dir, playerId); break;
-      case "usa_scudo": director.performUsaScudo(state, dir, playerId); break;
+      case "attacca": {
+        // Guided Turn UI: bersaglio unico -> selezionato subito, salta la
+        // domanda inutile "CHI VUOI ATTACCARE?" (idem per l'arma sotto).
+        const targets = getAttackTargets(state, player);
+        const autoTarget = pickAutoTarget(targets);
+        if (autoTarget) {
+          attackFlow = { step: "weapon", targetKind: autoTarget.kind, targetId: autoTarget.id };
+          const autoSlot = pickAutoWeaponSlot(player.equipment);
+          if (autoSlot) { attackFlow.weapon = player.equipment[autoSlot]; attackFlow.step = "preview"; }
+        } else {
+          attackFlow = { step: "target" };
+        }
+        break;
+      }
+      case "rianima": director.performRianima(state, dir, playerId, targetId); endsTurn = true; break;
+      case "aiuta": director.performAiuto(state, dir, playerId, targetId); endsTurn = true; break;
+      case "scambia": director.performScambia(state, dir, playerId, targetId, "primary"); endsTurn = true; break;
+      case "usa_cura": director.performUsaCura(state, dir, playerId); endsTurn = true; break;
+      case "usa_scudo": director.performUsaScudo(state, dir, playerId); endsTurn = true; break;
       case "usa_utility": {
         if (utilityId === "scanner") { scannerMode = true; break; }
         const result = director.performUsaUtility(state, dir, playerId, null);
         if (result.type === "fumogeno") pushEvent("Fumogeno lanciato: -1 dado al prossimo attacco nemico qui.");
         if (result.type === "stim") pushEvent("Stim pronto: +1 dado al tuo prossimo attacco.");
+        endsTurn = true;
         break;
       }
       case "apri_cassa": {
         const found = director.performApriCassa(state, dir, playerId, chestId, Math.random);
+        chestResult = found;
         pushEvent(`HAI TROVATO: ${lootEntryLabel(found.weapon)} + ${lootEntryLabel(found.support)}`);
         break;
       }
-      case "fine_turno": director.endPlayerTurn(state, dir, playerId); break;
+      case "fine_turno": director.endPlayerTurn(state, dir, playerId); endsTurn = true; break;
       default: break;
     }
+    if (endsTurn) checkTurnTransition(playerId);
     render();
   }
 
@@ -593,6 +790,13 @@
     if (!resolved) return;
     if (entry.kind === "weapon") director.performEquipFoundWeapon(state, dir, playerId, slot, entry.instanceId, resolved);
     else director.performEquipFoundSupportItem(state, dir, playerId, slot, entry.instanceId, resolved);
+    // Modale cassa aperta (Guided Turn UI): la card appena presa sparisce; a
+    // modale vuoto si chiude da sola (nessuna azione residua da compiere lì).
+    if (chestResult) {
+      if (chestResult.weapon && chestResult.weapon.instanceId === instanceId) chestResult.weapon = null;
+      if (chestResult.support && chestResult.support.instanceId === instanceId) chestResult.support = null;
+      if (!chestResult.weapon && !chestResult.support) chestResult = null;
+    }
     render();
   }
 
@@ -619,6 +823,7 @@
     try {
       const result = director.performUsaUtility(state, dir, playerId, zoneId);
       pushEvent(`SCANNER su ${escapeHtml(zoneNameOf(zoneId))}: ${result.enemyCount} nemici, ${result.chestCount} casse`);
+      checkTurnTransition(playerId);
     } catch (e) {
       pushEvent(e.message);
     }
@@ -692,24 +897,41 @@
     const player = director.getCurrentPlayer(state, dir);
 
     if (attackFlow.step === "target") {
-      const situation = director.getSituation(state, player);
-      const enemyBtns = situation.enemies.map((e) => `<button type="button" class="fa-action-btn" data-target-kind="enemy" data-target-id="${e.id}">
-        ${ENEMY_NAME[e.archetype] || e.archetype} · HP ${e.hp}/${e.maxHp}${e.maxShield ? ` · Scudo ${e.shield}/${e.maxShield}` : ""}
-      </button>`).join("");
-      const bossBtn = situation.bossHere
-        ? `<button type="button" class="fa-action-btn is-primary" data-target-kind="boss">👑 BOSS · HP ${state.boss.hp}/${state.boss.maxHp}${state.boss.maxShield ? ` · Scudo ${state.boss.shield}/${state.boss.maxShield}` : ""}</button>`
-        : "";
-      return `<h2>Scegli il bersaglio</h2><div class="fa-action-list">${enemyBtns}${bossBtn}</div>
+      // Solo se ci sono davvero più bersagli validi (Guided Turn UI: un
+      // bersaglio unico è già stato auto-selezionato da handlePlayerAction,
+      // questa schermata non compare nemmeno). Node Graph: solo i nemici
+      // raggiungibili dal nodo corrente (getAttackTargets), mai l'intera zona.
+      const targets = getAttackTargets(state, player);
+      const cards = targets.map((t) => {
+        const label = t.kind === "boss" ? "👑 BOSS" : (ENEMY_NAME[t.archetype] || t.archetype);
+        return `<button type="button" class="fa-target-card ${t.kind === "boss" ? "is-boss" : ""}" data-target-kind="${t.kind}"${t.id ? ` data-target-id="${t.id}"` : ""}>
+          <span class="fa-target-card-name">${label}</span>
+          <span class="fa-target-card-stats">
+            <span>❤️ ${t.hp}/${t.maxHp}</span>
+            ${t.maxShield ? `<span>🛡️ ${t.shield}/${t.maxShield}</span>` : ""}
+          </span>
+        </button>`;
+      }).join("");
+      return `<h2>CHI VUOI ATTACCARE?</h2><div class="fa-target-cards">${cards}</div>
         <button type="button" class="fa-btn fa-btn-ghost" id="fa-attack-cancel">Annulla</button>`;
     }
 
     if (attackFlow.step === "weapon") {
+      // Idem per l'arma: questa schermata compare solo con due armi valide.
       const slots = ["primary", "secondary"].filter((slot) => player.equipment[slot]);
-      const options = slots.map((slot) => {
+      const cards = slots.map((slot) => {
         const w = player.equipment[slot];
-        return `<button type="button" class="fa-action-btn" data-weapon-slot="${slot}">${escapeHtml(w.name)} · POTENZA ${w.potenza}</button>`;
+        const special = weaponSpecialLabel(w);
+        return `<button type="button" class="fa-weapon-card" data-weapon-slot="${slot}">
+          <span class="fa-weapon-card-img">${imgTag(w.image, w.name)}</span>
+          <span class="fa-weapon-card-info">
+            <span class="fa-weapon-card-name">${escapeHtml(w.name)}</span>
+            <span class="fa-weapon-card-stats">POTENZA ${w.potenza} · ${RANGE_LABELS[w.range].toUpperCase()}</span>
+            ${special ? `<span class="fa-weapon-card-special">${escapeHtml(special)}</span>` : ""}
+          </span>
+        </button>`;
       }).join("");
-      return `<h2>Scegli l'arma</h2><div class="fa-action-list">${options || "<p>Nessuna arma equipaggiata.</p>"}</div>
+      return `<h2>CON QUALE ARMA?</h2><div class="fa-weapon-cards">${cards || "<p>Nessuna arma equipaggiata.</p>"}</div>
         <button type="button" class="fa-btn fa-btn-ghost" id="fa-attack-cancel">Annulla</button>`;
     }
 
@@ -733,6 +955,7 @@
   function commitAttack() {
     const state = game.state, dir = game.dir;
     const playerId = director.getCurrentPlayerId(state, dir);
+    attackActorId = playerId; // per il "ORA TOCCA A..." dopo il CONTINUA sul risultato
     const begin = attackFlow.targetKind === "boss"
       ? director.beginPlayerAttackOnBoss(state, dir, playerId, attackFlow.weapon)
       : director.beginPlayerAttackOnEnemy(state, dir, playerId, attackFlow.targetId, attackFlow.weapon);
@@ -752,7 +975,8 @@
     const n = awaitingRoll.diceCount;
     return `
       <h2>${diceContextTitle(awaitingRoll)}</h2>
-      <p>TIRA ${n} DAD${n > 1 ? "I" : "O"} FISIC${n > 1 ? "I" : "O"}, poi registra i risultati:</p>
+      <div class="fa-attack-dice-count">${"🎲".repeat(n)}</div>
+      <p class="fa-dice-hint">Inserisci qui i risultati dei dadi fisici</p>
       ${buildDiceGroupsMarkup(n, (i) => `DADO ${i + 1}`)}
       <button type="button" class="fa-btn fa-btn-primary" id="fa-confirm-dice" disabled>CONFERMA RISULTATI</button>
     `;
@@ -760,15 +984,21 @@
 
   function buildRerollMarkup(awaitingRoll) {
     const indices = awaitingRoll.pendingRerollIndices;
+    const n = indices.length;
     return `
-      <h2>RITIRA ${indices.length > 1 ? "QUESTI DADI" : "QUESTO DADO"}</h2>
-      <p>È uscito 1: ritira FISICAMENTE ${indices.length > 1 ? "questi dadi" : "questo dado"} e registra il nuovo risultato. Se esce ancora 1, resta 1.</p>
-      ${buildDiceGroupsMarkup(indices.length, (i) => `DADO ${indices[i] + 1} (ritiro)`)}
+      <h2>RITIRA ${n} DAD${n > 1 ? "I" : "O"}</h2>
+      <p>È uscito 1: ritira FISICAMENTE e registra il nuovo risultato. Se esce ancora 1, resta 1.</p>
+      ${buildDiceGroupsMarkup(n, (i) => `DADO ${indices[i] + 1} (ritiro)`)}
       <button type="button" class="fa-btn fa-btn-primary" id="fa-confirm-dice" disabled>CONFERMA RISULTATI</button>
     `;
   }
 
   function diceContextTitle(awaitingRoll) {
+    if (awaitingRoll.actorType === "player") {
+      const player = loop.getPlayer(game.state, awaitingRoll.actorId);
+      const n = awaitingRoll.diceCount;
+      return `${escapeHtml(player.name).toUpperCase()}, TIRA ${n} DAD${n > 1 ? "I" : "O"}`;
+    }
     if (awaitingRoll.actorType === "enemy") {
       const enemy = loop.getEnemy(game.state, awaitingRoll.actorId);
       const target = loop.getPlayer(game.state, awaitingRoll.targetId);
@@ -861,7 +1091,7 @@
       ${r.targetName ? `<p>Bersaglio: <strong>${escapeHtml(r.targetName)}</strong></p>` : ""}
       <div class="fa-result-line">${rolls.join(" + ")}</div>
       <p>Power +${r.weaponPower}</p>
-      <div class="fa-result-total">DANNO ${r.result.total}</div>
+      <div class="fa-result-total">${r.result.total} DANNI!</div>
       <div class="fa-result-stat"><span>Scudo</span><strong>${r.shieldBefore} → ${r.shieldAfter}</strong></div>
       <div class="fa-result-stat"><span>Salute</span><strong>${r.hpBefore} → ${r.hpAfter}</strong></div>
       ${tags.length ? `<div class="fa-result-tags">${tags.map((t) => `<span class="fa-result-tag">${t}</span>`).join("")}</div>` : ""}
@@ -904,9 +1134,15 @@
     $("fa-attack-overlay").addEventListener("click", (ev) => {
       const targetBtn = ev.target.closest("[data-target-kind]");
       if (targetBtn) {
+        const player = director.getCurrentPlayer(game.state, game.dir);
         attackFlow.targetKind = targetBtn.dataset.targetKind;
         attackFlow.targetId = targetBtn.dataset.targetId || null;
-        attackFlow.step = "weapon";
+        // Stessa regola "salta la scelta inutile" applicata anche qui: un
+        // bersaglio andava scelto (erano più di uno), ma se l'arma è unica
+        // non serve comunque chiedere anche quella.
+        const autoSlot = pickAutoWeaponSlot(player.equipment);
+        if (autoSlot) { attackFlow.weapon = player.equipment[autoSlot]; attackFlow.step = "preview"; }
+        else attackFlow.step = "weapon";
         render();
         return;
       }
@@ -940,6 +1176,7 @@
       if (ev.target.id === "fa-attack-continue") {
         pendingResult = null;
         attackFlow = null;
+        if (attackActorId) { checkTurnTransition(attackActorId); attackActorId = null; }
         render();
       }
     });
@@ -972,6 +1209,8 @@
   bindPanelEvents();
   bindAnnouncementEvents();
   bindAttackOverlayEvents();
+  bindTurnTransitionEvents();
+  bindChestEvents();
   window.addEventListener("resize", () => { if (uiMode === "game") drawConnections(); });
 
   render();

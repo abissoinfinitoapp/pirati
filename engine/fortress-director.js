@@ -423,12 +423,17 @@
     return loop.equipFoundSupportItem(state, playerId, slot, groundLootInstanceId, itemObject);
   }
 
+  /* NIENTE auto-avanzamento qui (a differenza delle altre azioni principali):
+     l'apertura consuma comunque actedThisRound (regola invariata, decisa da
+     loop.apriCassaAction), ma il giocatore resta "corrente" finché non preme
+     FINE TURNO. Serve perché l'equip di quanto trovato (performEquipFound*)
+     richiede assertCurrentPlayer — se il turno fosse già passato al prossimo
+     in coda, chi ha aperto la cassa non potrebbe più raccogliere ciò che ha
+     appena trovato nello stesso turno. */
   function performApriCassa(state, dir, playerId, chestId, rng) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    const result = loop.apriCassaAction(state, playerId, chestId, rng);
-    autoAdvanceIfActed(state, dir, playerId);
-    return result;
+    return loop.apriCassaAction(state, playerId, chestId, rng);
   }
 
   /* FINE TURNO: puro Director, nessuna action type nel loop. Il bambino può

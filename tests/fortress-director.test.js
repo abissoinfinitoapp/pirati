@@ -139,6 +139,24 @@ test("APRI CASSA compare solo se la zona ha una cassa non aperta (costruita manu
   assert.equal(director.getAvailableActions(state, p1).some((a) => a.id === "apri_cassa"), false);
 });
 
+test("APRI CASSA non chiude il turno: il giocatore resta corrente e può equipaggiare subito il loot trovato", () => {
+  const { state, dir } = startGame(2);
+  const p1 = loop.getPlayer(state, "p1");
+  loop.getZone(state, "e1").chests = [{ id: "c1", opened: false }];
+
+  const found = director.performApriCassa(state, dir, "p1", "c1", () => 0.1);
+  assert.equal(director.getCurrentPlayerId(state, dir), "p1", "il turno non passa al giocatore successivo aprendo la cassa");
+  assert.equal(p1.actedThisRound, true, "l'azione principale resta comunque consumata (regola invariata)");
+
+  // Ancora "corrente": può equipaggiare subito ciò che ha appena trovato
+  // (performEquipFoundWeapon richiede assertCurrentPlayer).
+  director.performEquipFoundWeapon(state, dir, "p1", "primary", found.weapon.instanceId, { id: found.weapon.weaponId, name: "Test" });
+  assert.equal(p1.equipment.primary.id, found.weapon.weaponId);
+
+  director.endPlayerTurn(state, dir, "p1");
+  assert.equal(director.getCurrentPlayerId(state, dir), "p2", "FINE TURNO chiude davvero il turno, esplicitamente");
+});
+
 test("FINE TURNO è sempre presente, in coda", () => {
   const { state } = startGame(1);
   const actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));

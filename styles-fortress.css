@@ -280,6 +280,12 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-node-tokens .fa-token { width: auto; min-width: 0; }
 .fa-node-tokens .fa-token span { display: none; } /* nome sempre nel pannello di turno, qui solo l'avatar */
 
+.fa-move-hint {
+  text-align: center; margin-top: 10px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+  color: #8fdd9c;
+}
+.fa-move-hint.is-used { color: var(--fa-muted); }
+
 .fa-magnify-controls { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 14px; }
 .fa-dir-row { display: flex; align-items: center; gap: 10px; }
 .fa-dir-gap { width: 44px; }
@@ -299,6 +305,24 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 }
 .fa-panel-round { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--fa-blood-bright); }
 .fa-panel-turn { font-family: var(--fa-font-display); font-size: 20px; }
+
+/* ---- Guided Turn UI: header di turno — deve "vincere" visivamente su
+   tutto il resto del pannello, leggibile da un bambino senza il Master. ---- */
+.fa-turn-header {
+  display: flex; align-items: center; gap: 14px; padding: 14px;
+  background: linear-gradient(160deg, rgba(201,162,74,.16), rgba(0,0,0,.3));
+  border: 2px solid var(--fa-gold); border-radius: 16px;
+}
+.fa-turn-header-avatar img {
+  width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--fa-gold); background: #000;
+}
+.fa-turn-header-info { min-width: 0; }
+.fa-turn-header-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--fa-gold); }
+.fa-turn-header-name { font-family: var(--fa-font-display); font-size: clamp(20px, 5vw, 26px); line-height: 1.1; }
+.fa-turn-header-zone { font-size: 13px; color: var(--fa-muted); margin-top: 2px; }
+.fa-turn-header-stats { display: flex; gap: 12px; margin-top: 6px; font-weight: 800; font-size: 13.5px; }
+.fa-turn-header-stats .fa-stat-hp { color: #ff8f9c; }
+.fa-turn-header-stats .fa-stat-shield { color: #90b9ef; }
 .fa-panel-section { border-top: 1px solid var(--fa-line); padding-top: 12px; }
 .fa-panel-section h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--fa-muted); font-weight: 800; }
 .fa-panel-section p { margin: 2px 0; font-size: 13.5px; }
@@ -333,6 +357,34 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-attack-potenza { font-size: 15px; font-weight: 800; color: var(--fa-gold); margin: 4px 0; }
 .fa-attack-range-row { display: flex; justify-content: center; gap: 16px; font-size: 13px; color: var(--fa-muted); margin-bottom: 10px; }
 .fa-attack-dice-count { font-size: 32px; margin: 10px 0; }
+.fa-dice-hint { font-size: 12px; color: var(--fa-muted); margin: 0 0 14px; }
+
+/* ---- Guided Turn UI: card bersaglio/arma (al posto di semplici bottoni di
+   testo, solo quando serve davvero una scelta: vedi pickAutoTarget/
+   pickAutoWeaponSlot in fortress-game-ui.js). ---- */
+.fa-target-cards, .fa-weapon-cards { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.fa-target-card {
+  font-family: var(--fa-font-body); cursor: pointer; text-align: left;
+  border: 1px solid var(--fa-line); border-radius: 12px; padding: 12px 14px; background: rgba(0,0,0,.3); color: var(--fa-ink);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.fa-target-card:hover { border-color: var(--fa-steel); }
+.fa-target-card.is-boss { border-color: var(--fa-blood-bright); background: linear-gradient(160deg, rgba(181,48,63,.25), rgba(0,0,0,.3)); }
+.fa-target-card-name { font-weight: 800; font-size: 15px; }
+.fa-target-card-stats { display: flex; gap: 10px; font-size: 13px; color: var(--fa-muted); white-space: nowrap; }
+
+.fa-weapon-card {
+  font-family: var(--fa-font-body); cursor: pointer; text-align: left;
+  border: 1px solid var(--fa-line); border-radius: 12px; padding: 10px; background: rgba(0,0,0,.3); color: var(--fa-ink);
+  display: flex; align-items: center; gap: 12px;
+}
+.fa-weapon-card:hover { border-color: var(--fa-steel); }
+.fa-weapon-card-img { width: 52px; height: 52px; flex: 0 0 auto; border-radius: 10px; overflow: hidden; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; }
+.fa-weapon-card-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.fa-weapon-card-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fa-weapon-card-name { font-weight: 800; font-size: 14.5px; }
+.fa-weapon-card-stats { font-size: 12px; color: var(--fa-gold); font-weight: 700; }
+.fa-weapon-card-special { font-size: 11.5px; color: var(--fa-muted); }
 
 .fa-dice-input-group { margin-bottom: 14px; text-align: left; }
 .fa-dice-input-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--fa-muted); margin-bottom: 6px; }
@@ -353,6 +405,27 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 
 .fa-announcement-panel h2 { margin-bottom: 8px; }
 .fa-announcement-panel p { color: var(--fa-muted); font-size: 14.5px; line-height: 1.5; }
+
+/* ---- Guided Turn UI: "ORA TOCCA A ..." tra un giocatore e il successivo ---- */
+.fa-transition-panel { max-width: 380px; }
+.fa-transition-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--fa-gold); margin-bottom: 6px; }
+.fa-transition-panel h2 { font-size: 28px; margin-bottom: 6px; }
+.fa-transition-panel p { color: var(--fa-muted); font-size: 14.5px; margin-bottom: 18px; }
+
+/* ---- Guided Turn UI: cassa aperta, "HAI TROVATO" + PRENDI esplicito ---- */
+.fa-chest-panel { max-width: 460px; }
+.fa-chest-panel h2 { margin-bottom: 16px; }
+.fa-chest-cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.fa-chest-card {
+  border: 1px solid var(--fa-line); border-radius: 14px; padding: 14px; background: rgba(0,0,0,.28);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.fa-chest-card-img { width: 84px; height: 84px; border-radius: 12px; overflow: hidden; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; }
+.fa-chest-card-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.fa-chest-card-icon { font-size: 34px; }
+.fa-chest-card-name { font-weight: 800; font-size: 15px; }
+.fa-chest-card-meta { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--fa-gold); font-weight: 700; }
+.fa-chest-card-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
 @media (max-width: 900px) {
   .fa-library-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
