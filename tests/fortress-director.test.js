@@ -173,12 +173,36 @@ test("performMove attiva il loot ambientale al primo ingresso in una zona", () =
 
 /* ---- annunci: Tempesta e rischio danno ---- */
 
-test("annuncio Tempesta 'warning' generato automaticamente all'inizio del round 4", () => {
+test("annuncio Tempesta 'warning' generato automaticamente all'inizio del round 4, aggregato in un solo storm-batch", () => {
   const { state, dir } = startGame(1);
   while (state.round < 4) playFullRoundNoActions(state, dir);
   assert.equal(state.round, 4);
-  const warning = dir.pendingAnnouncements.find((a) => a.type === "storm-warning");
-  assert.ok(warning, "deve esserci un annuncio di allerta Tempesta per le zone esterne al round 4");
+  const batches = dir.pendingAnnouncements.filter((a) => a.type === "storm-batch");
+  assert.equal(batches.length, 1, "un solo annuncio riepilogativo per round, mai uno per zona");
+  assert.ok(batches[0].payload.warning.length > 0, "deve esserci almeno una zona in warning al round 4");
+});
+
+test("storm-batch raggruppa TUTTE le zone cambiate nello stesso round in un solo annuncio, senza perderne nessuna", () => {
+  // Al round 4 (STORM_TABLE) l'intero ring "esterno" passa a warning nello
+  // STESSO startRound: la mappa di default dei test (newGame) ha 4 zone
+  // esterno (e1..e4). Prima di questo fix sarebbero stati 4 annunci
+  // "storm-warning" consecutivi in coda; ora deve essere UN solo storm-batch
+  // che le contiene tutte e 4, raggruppate sotto "warning".
+  const { state, dir } = startGame(1);
+  while (state.round < 4) playFullRoundNoActions(state, dir);
+  assert.equal(state.round, 4);
+
+  const batches = dir.pendingAnnouncements.filter((a) => a.type === "storm-batch");
+  assert.equal(batches.length, 1, "un solo storm-batch anche con più zone cambiate nello stesso round");
+
+  const esternoZoneIds = state.zones.filter((z) => z.ring === "esterno").map((z) => z.id);
+  const warningIds = batches[0].payload.warning.map((z) => z.zoneId);
+  esternoZoneIds.forEach((id) => {
+    assert.ok(warningIds.includes(id), `la zona ${id} è passata a warning ma manca dal batch`);
+  });
+  assert.equal(warningIds.length, esternoZoneIds.length, "nessuna zona in più/duplicata rispetto a quelle davvero cambiate");
+  assert.equal(batches[0].payload.storm.length, 0);
+  assert.equal(batches[0].payload.eliminated.length, 0);
 });
 
 test("avviso di rischio danno Tempesta: solo se la zona è davvero in Tempesta in questo round", () => {

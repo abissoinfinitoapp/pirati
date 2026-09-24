@@ -666,16 +666,25 @@
     const zonesBefore = state.zones.map((z) => ({ id: z.id, stormState: z.stormState }));
     loop.startRound(state, rng);
 
+    /* Tempesta: un solo annuncio "storm-batch" per round, mai uno per zona
+       (regola invariata: loop.startRound/STORM_TABLE/STORM_DAMAGE restano
+       l'unica fonte di verità di QUANDO una zona cambia stato — qui il
+       Director osserva soltanto la differenza prima/dopo, come già faceva,
+       e la raggruppa per stato invece di accodare N modali consecutive).
+       Solo le zone il cui stato è DAVVERO cambiato compaiono, mai l'intera
+       mappa: niente perdita di zone rispetto al comportamento precedente,
+       solo un'aggregazione della presentazione. */
+    const stormChanges = { warning: [], storm: [], eliminated: [] };
     state.zones.forEach((z) => {
       const before = zonesBefore.find((b) => b.id === z.id);
-      if (before && before.stormState !== z.stormState) {
-        const type = z.stormState === "warning" ? "storm-warning"
-          : z.stormState === "storm" ? "storm-arrived"
-          : z.stormState === "eliminated" ? "storm-eliminated"
-          : null;
-        if (type) dir.pendingAnnouncements.push({ type, payload: { zoneId: z.id, zoneName: z.name } });
-      }
+      if (!before || before.stormState === z.stormState) return;
+      if (z.stormState === "warning") stormChanges.warning.push({ zoneId: z.id, zoneName: z.name });
+      else if (z.stormState === "storm") stormChanges.storm.push({ zoneId: z.id, zoneName: z.name });
+      else if (z.stormState === "eliminated") stormChanges.eliminated.push({ zoneId: z.id, zoneName: z.name });
     });
+    if (stormChanges.warning.length || stormChanges.storm.length || stormChanges.eliminated.length) {
+      dir.pendingAnnouncements.push({ type: "storm-batch", payload: stormChanges });
+    }
     if (!bossActiveBefore && state.boss && state.boss.active) {
       dir.pendingAnnouncements.push({ type: "boss-activated", payload: {} });
     }

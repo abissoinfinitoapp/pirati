@@ -854,11 +854,21 @@
      ANNUNCI DEL DIRECTOR — coda FIFO, un annuncio alla volta, consumato solo
      quando il Master preme PROSEGUI (mai saltato automaticamente).
      ========================================================================= */
+  /* Un solo annuncio "storm-batch" per round (mai uno per zona): raggruppa
+     per stato (warning/storm/eliminated) solo le zone il cui stato è
+     davvero cambiato in QUESTO round — il Director le ha già filtrate,
+     qui solo la presentazione. */
+  function stormBatchBody(payload) {
+    const lines = [];
+    (payload.warning || []).forEach((z) => lines.push(`<span class="fa-storm-batch-line">⚠️ ${escapeHtml(z.zoneName)} — IN ARRIVO</span>`));
+    (payload.storm || []).forEach((z) => lines.push(`<span class="fa-storm-batch-line">🌩️ ${escapeHtml(z.zoneName)} — TEMPESTA</span>`));
+    (payload.eliminated || []).forEach((z) => lines.push(`<span class="fa-storm-batch-line">☠️ ${escapeHtml(z.zoneName)} — ELIMINATA</span>`));
+    return `<span class="fa-storm-batch-list">${lines.join("")}</span>`;
+  }
+
   const ANNOUNCEMENT_TEXT = {
     "round-start": (p) => ({ title: `ROUND ${p.round}`, body: "" }),
-    "storm-warning": (p) => ({ title: "⚠️ ATTENZIONE", body: `La Tempesta investirà presto ${escapeHtml(zoneNameOf(p.zoneId))}.` }),
-    "storm-arrived": (p) => ({ title: "🌪️ LA TEMPESTA È ARRIVATA", body: `${escapeHtml(zoneNameOf(p.zoneId))} è ora in Tempesta.` }),
-    "storm-eliminated": (p) => ({ title: "🌪️ ZONA INGHIOTTITA", body: `${escapeHtml(zoneNameOf(p.zoneId))} non è più raggiungibile.` }),
+    "storm-batch": (p) => ({ title: "🌪️ LA TEMPESTA AVANZA", body: stormBatchBody(p) }),
     "boss-activated": () => ({ title: "👑 IL BOSS SI RISVEGLIA", body: "Central Fortress è ora attiva." }),
     ko: (p) => ({ title: `${escapeHtml((p.playerName || "").toUpperCase())} È A TERRA`, body: "Un compagno nella stessa zona può rianimarlo." }),
     eliminated: (p) => ({ title: `${escapeHtml((p.playerName || "").toUpperCase())} ELIMINATO`, body: "Nessuno lo ha salvato in tempo." }),

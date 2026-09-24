@@ -406,6 +406,10 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-announcement-panel h2 { margin-bottom: 8px; }
 .fa-announcement-panel p { color: var(--fa-muted); font-size: 14.5px; line-height: 1.5; }
 
+/* ---- Tempesta: un solo riepilogo per round, zone raggruppate per stato ---- */
+.fa-storm-batch-list { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.fa-storm-batch-line { font-size: 14.5px; font-weight: 700; }
+
 /* ---- Guided Turn UI: "ORA TOCCA A ..." tra un giocatore e il successivo ---- */
 .fa-transition-panel { max-width: 380px; }
 .fa-transition-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--fa-gold); margin-bottom: 6px; }
