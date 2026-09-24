@@ -107,6 +107,9 @@
   const playersInZone = (state, zoneId) => state.players.filter((p) => p.zoneId === zoneId);
   const activePlayersInZone = (state, zoneId) => playersInZone(state, zoneId).filter((p) => p.status === "active");
   const enemiesInZone = (state, zoneId) => state.enemies.filter((e) => e.zoneId === zoneId && e.hp > 0);
+  // Node Graph: filtro fine per interazioni node-local (ATTACCA in Forest).
+  // enemiesInZone resta l'unica lettura di Battlefield/Enemy phase, invariata.
+  const enemiesAtNode = (state, zoneId, nodeId) => state.enemies.filter((e) => e.zoneId === zoneId && e.nodeId === nodeId && e.hp > 0);
   const activePlayers = (state) => state.players.filter((p) => p.status === "active");
 
   function pushLog(state, text) {
@@ -124,6 +127,7 @@
     // (es. la mappa di default usata dai test) risolvono a "boss" (0 casse):
     // vedi loot.resolveLootTierBucket.
     loot.setupChests(zoneList, players.length);
+    zoneList.forEach(assignChestsToNodeSlots); // no-op sulle zone senza nodes[]
     return {
       phase: "atterraggio",
       round: 0,
@@ -131,6 +135,7 @@
       players: players.map((p) => ({
         id: p.id, name: p.name, status: "active",
         zoneId: null,
+        nodeId: null, // Node Graph (Zone Magnify): valido solo se zoneId ha zone.nodes; null altrove
         hp: 10, shield: 10,
         koRoundsRemaining: null, koSinceRound: null,
         movedThisRound: false, actedThisRound: false,
@@ -162,7 +167,7 @@
     if (!player || !zone) throw new Error("Giocatore o zona inesistente");
     if (zone.ring !== "esterno") throw new Error("Si può atterrare solo in una zona esterna");
     player.zoneId = zoneId;
-    ensureInitialEncounter(state, zoneId);
+    enterZone(state, player, zone);
     const lootFound = enterZoneAmbient(state, zone, rng);
     return { player, lootFound };
   }
@@ -181,8 +186,9 @@
      zone.groundLoot, con un instanceId run-level per distinguere due copie
      identiche presenti insieme nella stessa zona (§15). Unico punto che
      scrive su groundLoot: ogni fonte di loot passa sempre da qui. */
-  function pushGroundLoot(state, zone, descriptor) {
+  function pushGroundLoot(state, zone, descriptor, nodeId) {
     const entry = Object.assign({ instanceId: loot.nextGroundLootInstanceId(state.lootRegistry) }, descriptor);
+    if (nodeId) entry.nodeId = nodeId; // Node Graph: solo chi lo passa esplicitamente (oggi solo apriCassaAction)
     zone.groundLoot.push(entry);
     return entry;
   }
@@ -219,12 +225,30 @@
     }
     player.zoneId = targetZoneId;
     player.movedThisRound = true;
-    // Stessa funzione condivisa con landPlayer: sia "un solo incontro
-    // iniziale" sia "un solo loot ambientale per zona" vivono in un'unica
-    // implementazione, mai duplicate tra atterraggio e movimento.
-    ensureInitialEncounter(state, targetZoneId);
+    // Stessa funzione condivisa con landPlayer: sia "l'ingresso zona" (Node
+    // Graph o incontro iniziale legacy) sia "un solo loot ambientale per
+    // zona" vivono in un'unica implementazione, mai duplicate tra atterraggio
+    // e movimento World.
+    enterZone(state, player, target);
     const lootFound = enterZoneAmbient(state, target, rng);
     return { player, lootFound };
+  }
+
+  /* =========================================================================
+     INGRESSO ZONA — unico punto usato da landPlayer/moveAction. Se la zona ha
+     un Node Graph (zone.nodes, oggi solo Forest) posiziona il player
+     sull'entry node e processa i SUOI contenuti (ensureNodeEncounter): MAI
+     ensureInitialEncounter in questo caso, per evitare un doppio spawn
+     zona+nodo. Zone senza zone.nodes restano bit-per-bit come nel commit
+     precedente: nodeId torna a null, ensureInitialEncounter zona-level. */
+  function enterZone(state, player, zone) {
+    if (zone.nodes && zone.entryNodeId) {
+      player.nodeId = zone.entryNodeId;
+      ensureNodeEncounter(state, zone.id, zone.entryNodeId);
+    } else {
+      player.nodeId = null;
+      ensureInitialEncounter(state, zone.id);
+    }
   }
 
   /* =========================================================================
@@ -544,11 +568,17 @@
     const zone = getZone(state, player.zoneId);
     const chest = zone.chests.find((c) => c.id === chestId);
     if (!chest || chest.opened) throw new Error("Cassa non disponibile");
+    // Node Graph: una cassa con nodeId (assegnata da assignChestsToNodeSlots)
+    // si apre solo da quel nodo — chest.nodeId è assente sulle zone legacy,
+    // quindi questo controllo è naturalmente no-op lì.
+    if (chest.nodeId && chest.nodeId !== player.nodeId) throw new Error("Cassa non raggiungibile da qui");
     chest.opened = true;
     const roll = rng || Math.random;
     const found = loot.rollChestLoot(zone.danger, roll, state.lootRegistry);
-    const weaponEntry = pushGroundLoot(state, zone, found.weapon);
-    const supportEntry = pushGroundLoot(state, zone, found.support);
+    // Il groundLoot della cassa eredita il nodeId della cassa stessa (§9): non
+    // deve comparire/essere raccoglibile da un altro nodo della stessa zona.
+    const weaponEntry = pushGroundLoot(state, zone, found.weapon, chest.nodeId);
+    const supportEntry = pushGroundLoot(state, zone, found.support, chest.nodeId);
     player.actedThisRound = true;
     pushLog(state, `${player.name} apre una cassa in ${zone.name}: ${lootDescriptorLabel(found.weapon)} + ${lootDescriptorLabel(found.support)}`);
     return { weapon: weaponEntry, support: supportEntry };
@@ -566,7 +596,10 @@
     const player = getPlayer(state, playerId);
     if (!player || player.status !== "active") throw new Error("Giocatore non attivo");
     const zone = getZone(state, player.zoneId);
-    const idx = zone.groundLoot.findIndex((g) => g.instanceId === groundLootInstanceId);
+    // Node Graph: un'entry con nodeId (es. il drop di una cassa, §9) si può
+    // raccogliere solo dallo stesso nodo. Entry senza nodeId (comportamento
+    // legacy, es. loot ambientale) restano raccoglibili da tutta la zona.
+    const idx = zone.groundLoot.findIndex((g) => g.instanceId === groundLootInstanceId && (g.nodeId == null || g.nodeId === player.nodeId));
     if (idx === -1 || zone.groundLoot[idx].kind !== "weapon") throw new Error("Arma non trovata a terra in questa zona");
     if (zone.groundLoot[idx].weaponId !== weaponObject.id) throw new Error("L'arma risolta non corrisponde al loot a terra");
     zone.groundLoot.splice(idx, 1);
@@ -584,7 +617,7 @@
     const player = getPlayer(state, playerId);
     if (!player || player.status !== "active") throw new Error("Giocatore non attivo");
     const zone = getZone(state, player.zoneId);
-    const idx = zone.groundLoot.findIndex((g) => g.instanceId === groundLootInstanceId);
+    const idx = zone.groundLoot.findIndex((g) => g.instanceId === groundLootInstanceId && (g.nodeId == null || g.nodeId === player.nodeId));
     if (idx === -1 || zone.groundLoot[idx].kind !== slot) throw new Error("Oggetto non trovato a terra in questa zona");
     if (zone.groundLoot[idx].itemId !== itemObject.id) throw new Error("L'oggetto risolto non corrisponde al loot a terra");
     zone.groundLoot.splice(idx, 1);
@@ -1086,11 +1119,11 @@
     checkVictoryOrDefeat(state);
   }
 
-  function spawnEnemy(state, archetype, zoneId) {
+  function spawnEnemy(state, archetype, zoneId, nodeId) {
     const def = DEFAULT_ENEMY_ARCHETYPES[archetype];
     const id = archetype + "_" + Math.random().toString(36).slice(2, 8);
     state.enemies.push({
-      id, archetype, zoneId, hp: def.hp, maxHp: def.hp,
+      id, archetype, zoneId, nodeId: nodeId || null, hp: def.hp, maxHp: def.hp,
       shield: def.shield || 0, maxShield: def.shield || 0,
       attackProfile: def.attackProfile, lastTargetId: null,
       suppressed: false, lootResolved: false
@@ -1114,6 +1147,68 @@
     if (!zone || zone.initialEncounterSpawned) return;
     zone.initialEncounterSpawned = true;
     (zone.initialEncounter || []).forEach((e) => spawnEnemy(state, e.archetype, zoneId));
+  }
+
+  /* =========================================================================
+     NODE GRAPH (Zone Magnify V1) — solo per zone con zone.nodes (oggi solo
+     Forest). Il catalogo (zone.nodes) resta dato statico, mai mutato: qui si
+     legge soltanto. Lo stato mutabile vive in zone.nodeStates, separato.
+     ========================================================================= */
+
+  /* Assegna deterministicamente le casse REALMENTE generate da
+     loot.setupChests (mai un numero deciso qui) agli chestSlot dei nodi,
+     nell'ordine slot crescente. Zone senza zone.nodes: no-op. Se una zona
+     avesse più casse che slot, le eccedenti restano senza nodeId (mai perse:
+     restano aperte/raccoglibili a livello zona, comportamento legacy) — per
+     Forest oggi lootTier "basso" produce sempre esattamente 1 cassa, uguale
+     al numero di chestSlot disponibili. */
+  function assignChestsToNodeSlots(zone) {
+    if (!zone.nodes) return;
+    const slots = [];
+    zone.nodes.forEach((n) => (n.contents || []).forEach((c) => {
+      if (c.type === "chestSlot") slots.push({ nodeId: n.id, slot: c.slot });
+    }));
+    slots.sort((a, b) => a.slot - b.slot);
+    zone.chests.forEach((chest, i) => { if (slots[i]) chest.nodeId = slots[i].nodeId; });
+  }
+
+  /* Stesso pattern sicuro di ensureInitialEncounter, con scope sul nodo
+     invece che sulla zona: flag "già generato" marcato SUBITO (mai un
+     secondo spawn, anche dopo che il nodo è stato ripulito — mai
+     enemiesAtNode, che tornerebbe a 0 dopo la pulizia). Composizione letta
+     da node.contents[].composition, dato puro del catalogo. */
+  function ensureNodeEncounter(state, zoneId, nodeId) {
+    const zone = getZone(state, zoneId);
+    if (!zone || !zone.nodeStates) return;
+    const nodeState = zone.nodeStates[nodeId];
+    if (!nodeState || nodeState.encounterSpawned) return;
+    nodeState.encounterSpawned = true;
+    const node = (zone.nodes || []).find((n) => n.id === nodeId);
+    const encounter = node && (node.contents || []).find((c) => c.type === "encounter");
+    if (encounter) (encounter.composition || []).forEach((e) => spawnEnemy(state, e.archetype, zoneId, nodeId));
+  }
+
+  /* Unica funzione autorevole per il movimento a nodi, quattro direzioni
+     fisse. La destinazione viene ESCLUSIVAMENTE da currentNode.connections
+     (mai calcolata altrimenti), il target deve esistere nella stessa zona.
+     Stesso movedThisRound di moveAction (World): nessun budget separato, un
+     solo movimento per round in totale, world o nodo che sia. */
+  function moveToNode(state, playerId, direction) {
+    const player = getPlayer(state, playerId);
+    if (!player || player.status !== "active") throw new Error("Giocatore non attivo");
+    if (player.movedThisRound) throw new Error("Movimento già usato in questo round");
+    const zone = getZone(state, player.zoneId);
+    if (!zone || !zone.nodes) throw new Error("La zona corrente non ha un Node Graph");
+    const currentNode = zone.nodes.find((n) => n.id === player.nodeId);
+    if (!currentNode) throw new Error("Nodo corrente inesistente");
+    const targetNodeId = currentNode.connections && currentNode.connections[direction];
+    if (!targetNodeId) throw new Error("Nessun collegamento in quella direzione");
+    const targetNode = zone.nodes.find((n) => n.id === targetNodeId);
+    if (!targetNode) throw new Error("Nodo di destinazione inesistente");
+    player.nodeId = targetNodeId;
+    player.movedThisRound = true;
+    ensureNodeEncounter(state, zone.id, targetNodeId);
+    return { player };
   }
 
   /* =========================================================================
@@ -1150,10 +1245,10 @@
   return {
     DEFAULT_ENEMY_ARCHETYPES, STORM_TABLE, STORM_DAMAGE,
     createDefaultZoneLayout, createGame,
-    getPlayer, getZone, getEnemy, playersInZone, activePlayersInZone, enemiesInZone, activePlayers,
+    getPlayer, getZone, getEnemy, playersInZone, activePlayersInZone, enemiesInZone, enemiesAtNode, activePlayers,
     getActivePartyMembers, isSolo, isInParty,
     landPlayer, allPlayersLanded, beginExploration,
-    moveAction, aiutoAction,
+    moveAction, moveToNode, aiutoAction,
     previewPlayerAttack, declarePlayerAttack, resolvePlayerAttackFromRolls, attackEnemyAction,
     previewBossAttack, declareBossAttack, resolveBossAttackFromRolls, attackBossAction,
     rianimaAction, scambiaAction, usaCuraAction, usaScudoAction, usaUtilityAction, interagisciAction, apriCassaAction,
@@ -1162,6 +1257,7 @@
     getEnemyPhaseOrder, prepareEnemyStep, resolveEnemyStepFromRolls, resolveEnemyStep, resolveEnemyPhase,
     prepareBossStep, resolveBossStepFromRolls, resolveBossStep, resolveBossPhase,
     startRound, endRound, activateBoss, spawnEnemy, ensureInitialEncounter,
+    ensureNodeEncounter, assignChestsToNodeSlots,
     checkVictoryOrDefeat, applyDamage, applyDamageToPlayer, applyDamageToEnemy, setPlayerKO
   };
 });

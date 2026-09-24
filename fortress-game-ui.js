@@ -96,6 +96,7 @@
   let setupError = null;
   let moveMode = false;
   let scannerMode = false; // in attesa che il giocatore scelga la zona adiacente da scansionare
+  let magnifyMode = false; // Zone Magnify V1: vista nodi della zona corrente invece della World Map
   let attackFlow = null;      // { step: "target"|"weapon"|"preview", targetKind, targetId, weapon }
   let diceSelections = null;  // array di risultati 1-6 in corso di inserimento
   let pendingResult = null;   // esito già risolto dal motore, in attesa del CONTINUA
@@ -239,7 +240,19 @@
     $("fa-game-screen").hidden = uiMode !== "game";
     if (uiMode === "setup") { renderSetup(); return; }
 
-    renderMap();
+    const state = game.state;
+    const currentPlayer = isLanding() ? null : director.getCurrentPlayer(state, game.dir);
+    const currentZone = currentPlayer ? loop.getZone(state, currentPlayer.zoneId) : null;
+    // SPOSTATI/Scanner scelgono la destinazione su una tile della World Map:
+    // mentre sono attivi si torna sempre alla vista World, indipendentemente
+    // dalla preferenza Magnify (che resta invariata e riprende dopo).
+    const showMagnify = Boolean(magnifyMode && currentZone && currentZone.nodes && !moveMode && !scannerMode);
+
+    $("fa-map-wrap").hidden = showMagnify;
+    $("fa-magnify-wrap").hidden = !showMagnify;
+    if (showMagnify) $("fa-magnify-wrap").innerHTML = renderMagnify(state, currentPlayer);
+    else renderMap();
+
     renderPanel();
     renderAttackOverlay();
 
@@ -322,6 +335,75 @@
 
   function enemyMarkerMarkup(e) {
     return `<span class="fa-enemy-marker" title="${ENEMY_NAME[e.archetype] || e.archetype}">${ENEMY_LETTER[e.archetype] || "?"} · ${e.hp}${e.maxShield ? `/🛡${e.shield}` : ""}</span>`;
+  }
+
+  /* =========================================================================
+     ZONE MAGNIFY V1 — vista nodi della zona corrente (solo Forest per ora).
+     Riusa l'immagine zona già esistente come background, tokenMarkup ed
+     enemyMarkerMarkup già usati dalla World Map: nessuna nuova immagine,
+     nessuna nuova primitiva di rendering, solo coordinate percentuali invece
+     che griglia CSS. Le azioni (ATTACCA/APRI CASSA/...) restano nel pannello
+     di turno esistente, già node-aware lato Director: qui c'è SOLO la mappa.
+     ========================================================================= */
+  function renderMagnify(state, player) {
+    const zone = loop.getZone(state, player.zoneId);
+    const zoneDef = zoneCatalogEntry(zone.id);
+    const nodes = zone.nodes || [];
+
+    const nodesMarkup = nodes.map((n) => {
+      const isCurrent = player.nodeId === n.id;
+      const enemies = loop.enemiesAtNode(state, zone.id, n.id);
+      const chest = (zone.chests || []).find((c) => c.nodeId === n.id && !c.opened);
+      const hasLoot = (zone.groundLoot || []).some((g) => g.nodeId === n.id);
+      const tokens = state.players.filter((p) => p.zoneId === zone.id && p.nodeId === n.id && p.status !== "eliminated")
+        .map((p) => tokenMarkup(p, player)).join("");
+      return `<div class="fa-node ${isCurrent ? "is-current" : ""}" style="left:${n.x}%;top:${n.y}%;">
+        <div class="fa-node-dot"></div>
+        <div class="fa-node-markers">
+          ${chest ? `<span class="fa-node-marker" title="Cassa">🎁</span>` : ""}
+          ${hasLoot ? `<span class="fa-node-marker" title="Oggetti a terra">📦</span>` : ""}
+          ${enemies.length ? `<span class="fa-node-marker fa-node-enemies">${enemies.map(enemyMarkerMarkup).join("")}</span>` : ""}
+        </div>
+        ${tokens ? `<div class="fa-node-tokens">${tokens}</div>` : ""}
+      </div>`;
+    }).join("");
+
+    const currentNode = nodes.find((n) => n.id === player.nodeId);
+    const canMove = !player.movedThisRound;
+    const dirBtn = (direction, symbol) => {
+      const target = canMove && currentNode && currentNode.connections && currentNode.connections[direction];
+      return `<button type="button" class="fa-dir-btn" data-dir="${direction}" ${target ? "" : "disabled"} aria-label="${direction}">${symbol}</button>`;
+    };
+
+    return `
+      <div class="fa-magnify-bg" style="background-image:url('${zoneDef ? zoneDef.image : ""}')">
+        ${nodesMarkup}
+      </div>
+      <div class="fa-magnify-controls">
+        <div class="fa-dir-row">${dirBtn("up", "↑")}</div>
+        <div class="fa-dir-row">${dirBtn("left", "←")}<span class="fa-dir-gap"></span>${dirBtn("right", "→")}</div>
+        <div class="fa-dir-row">${dirBtn("down", "↓")}</div>
+      </div>
+    `;
+  }
+
+  function handleMoveNode(direction) {
+    const state = game.state, dir = game.dir;
+    const playerId = director.getCurrentPlayerId(state, dir);
+    try {
+      director.performMoveNode(state, dir, playerId, direction);
+    } catch (e) {
+      pushEvent(e.message);
+    }
+    render();
+  }
+
+  function bindMagnifyEvents() {
+    $("fa-magnify-wrap").addEventListener("click", (ev) => {
+      const btn = ev.target.closest(".fa-dir-btn");
+      if (!btn || btn.disabled) return;
+      handleMoveNode(btn.dataset.dir);
+    });
   }
 
   function drawConnections() {
@@ -424,7 +506,9 @@
       <div class="fa-panel-round">ROUND ${state.round}</div>
       <div class="fa-panel-turn">TOCCA A ${escapeHtml(player.name).toUpperCase()}</div>
 
-      <div class="fa-panel-section"><h4>Posizione</h4><p>${escapeHtml(situation.zoneName)}</p></div>
+      <div class="fa-panel-section"><h4>Posizione</h4><p>${escapeHtml(situation.zoneName)}</p>
+        ${situation.nodeId ? `<button type="button" class="fa-btn fa-btn-ghost" id="fa-magnify-toggle">${magnifyMode ? "🗺️ World Map" : "🔍 Vedi la zona"}</button>` : ""}
+      </div>
 
       <div class="fa-panel-section">
         <h4>Info zona</h4>
@@ -441,7 +525,7 @@
         <ul class="fa-situation-list">
           ${situation.enemies.length ? `<li>${situation.enemies.length} nemici</li>` : ""}
           ${situation.bossHere ? `<li>👑 Il Boss è qui</li>` : ""}
-          ${situation.companions.map((c) => `<li>${escapeHtml(c.name)}${c.status === "ko" ? " (KO)" : ""} è qui</li>`).join("")}
+          ${situation.companions.map((c) => `<li>${escapeHtml(c.name)}${c.status === "ko" ? " (KO)" : ""} ${c.sameNode ? "è qui" : "è nella zona, ma non qui vicino"}</li>`).join("")}
           ${situation.openChests.length ? `<li>${situation.openChests.length} cassa/e</li>` : ""}
           ${(!situation.enemies.length && !situation.bossHere && !situation.companions.length && !situation.openChests.length) ? "<li>Nessuno nei paraggi.</li>" : ""}
         </ul>
@@ -521,6 +605,7 @@
       if (btn.id === "fa-end-round") { director.resolveEndOfRound(game.state, game.dir, Math.random); render(); return; }
       if (btn.id === "fa-move-cancel") { moveMode = false; render(); return; }
       if (btn.id === "fa-scanner-cancel") { scannerMode = false; render(); return; }
+      if (btn.id === "fa-magnify-toggle") { magnifyMode = !magnifyMode; render(); return; }
       if (btn.dataset.pickup) { handlePickup(Number(btn.dataset.pickup), btn.dataset.pickupSlot); return; }
       const actionId = btn.dataset.action;
       if (actionId) handlePlayerAction(actionId, btn.dataset.target, btn.dataset.chest, btn.dataset.utility);
@@ -556,7 +641,7 @@
     const playerId = director.getCurrentPlayerId(state, dir);
     const outcome = director.performMove(state, dir, playerId, zoneId, Math.random);
     moveMode = false;
-    if (outcome.lootFound) pushEvent(`HAI TROVATO: ${lootLabel(outcome.lootFound)}`);
+    if (outcome.lootFound) pushEvent(`HAI TROVATO: ${lootEntryLabel(outcome.lootFound)}`);
     render();
   }
 
@@ -883,6 +968,7 @@
 
   bindSetupEvents();
   bindMapEvents();
+  bindMagnifyEvents();
   bindPanelEvents();
   bindAnnouncementEvents();
   bindAttackOverlayEvents();

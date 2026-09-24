@@ -192,15 +192,27 @@
     return {
       zoneId: zone.id, zoneName: zone.name, danger: zone.danger,
       encounterRange: zone.encounterRange, stormState: zone.stormState,
+      nodeId: player.nodeId, // Node Graph (Zone Magnify): null nelle zone legacy
       enemies: loop.enemiesInZone(state, zone.id).map((e) => ({
         id: e.id, archetype: e.archetype, hp: e.hp, maxHp: e.maxHp, shield: e.shield, maxShield: e.maxShield
       })),
       bossHere: Boolean(boss && boss.active && boss.hp > 0 && boss.zoneId === zone.id),
+      // sameNode: SOLO informativo (mai letto da Party/Director/azioni, che
+      // restano invariati). Nelle zone senza Node Graph è sempre true (stesso
+      // testo "è qui" di sempre); nelle zone con Node Graph distingue chi è
+      // fisicamente vicino da chi è solo nella stessa zona, perché il testo
+      // non deve suggerire una prossimità che AIUTA/SCAMBIA/RIANIMA già oggi
+      // non permettono.
       companions: loop.playersInZone(state, zone.id).filter((p) => p.id !== player.id).map((p) => ({
-        id: p.id, name: p.name, status: p.status
+        id: p.id, name: p.name, status: p.status,
+        sameNode: !zone.nodes || p.nodeId === player.nodeId
       })),
       openChests: (zone.chests || []).filter((c) => !c.opened).map((c) => ({ id: c.id })),
-      groundLoot: (zone.groundLoot || []).slice()
+      // Node Graph: un'entry con nodeId (es. drop di una cassa) è visibile
+      // solo dallo stesso nodo del giocatore — mai dall'altra parte della
+      // zona. Entry senza nodeId (loot ambientale, comportamento legacy)
+      // restano visibili in tutta la zona.
+      groundLoot: (zone.groundLoot || []).filter((g) => g.nodeId == null || g.nodeId === player.nodeId)
     };
   }
 
@@ -244,12 +256,22 @@
     const zone = loop.getZone(state, player.zoneId);
     const actions = [];
 
-    const koCompanion = loop.playersInZone(state, zone.id).find((p) => p.status === "ko");
+    // Node Graph (Zone Magnify V1, oggi solo Forest): RIANIMA/ATTACCA/APRI
+    // CASSA/AIUTA/SCAMBIA richiedono di essere sullo stesso nodo, non solo
+    // nella stessa zona. Il Party resta zona-level (Battlefield/queue
+    // invariati, vedi isBattlefield/buildRoundPlayerQueue): qui si restringe
+    // SOLO la disponibilità di queste azioni. Zone senza zone.nodes: stesso
+    // comportamento zona-level di sempre, zero cambiamenti.
+    const hasNodeGraph = Boolean(zone.nodes);
+    const sameSpot = (otherNodeId) => !hasNodeGraph || otherNodeId === player.nodeId;
+
+    const koCompanion = loop.playersInZone(state, zone.id).find((p) => p.status === "ko" && sameSpot(p.nodeId));
     if (koCompanion && !player.actedThisRound) {
       actions.push({ id: "rianima", label: "RIANIMA " + koCompanion.name, targetId: koCompanion.id });
     }
     const bossHere = state.boss && state.boss.active && state.boss.hp > 0 && state.boss.zoneId === zone.id;
-    if (!player.actedThisRound && (loop.enemiesInZone(state, zone.id).length > 0 || bossHere)) {
+    const enemiesHere = hasNodeGraph ? loop.enemiesAtNode(state, zone.id, player.nodeId) : loop.enemiesInZone(state, zone.id);
+    if (!player.actedThisRound && (enemiesHere.length > 0 || bossHere)) {
       actions.push({ id: "attacca", label: "ATTACCA" });
     }
     if (!player.movedThisRound && zone.connections.some((id) => {
@@ -259,10 +281,10 @@
       actions.push({ id: "sposta", label: "SPOSTATI" });
     }
     if (!player.actedThisRound) {
-      const openChest = (zone.chests || []).find((c) => !c.opened);
+      const openChest = (zone.chests || []).find((c) => !c.opened && sameSpot(c.nodeId));
       if (openChest) actions.push({ id: "apri_cassa", label: "APRI CASSA", chestId: openChest.id });
 
-      const activeCompanion = loop.playersInZone(state, zone.id).find((p) => p.id !== player.id && p.status === "active");
+      const activeCompanion = loop.playersInZone(state, zone.id).find((p) => p.id !== player.id && p.status === "active" && sameSpot(p.nodeId));
       if (activeCompanion) actions.push({ id: "aiuta", label: "AIUTA " + activeCompanion.name, targetId: activeCompanion.id });
       if (activeCompanion) actions.push({ id: "scambia", label: "SCAMBIA con " + activeCompanion.name, targetId: activeCompanion.id });
 
@@ -315,6 +337,15 @@
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
     return loop.moveAction(state, playerId, targetZoneId, rng);
+  }
+
+  /* Movimento a nodi (Zone Magnify V1): stesso movedThisRound di performMove,
+     mai un budget separato. Non fa mai avanzare la coda (come performMove):
+     il giocatore può ancora agire dopo essersi mosso. */
+  function performMoveNode(state, dir, playerId, direction) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    return loop.moveToNode(state, playerId, direction);
   }
 
   /* Chiamata alla fine di ogni azione principale immediata (mai per il
@@ -667,7 +698,7 @@
     getCurrentPlayerId, getCurrentPlayer,
     getSituation, getReachableZones, getAvailableActions, getStormRisk, hasActiveBoss,
     buildAttackPreview, buildBossAttackPreview,
-    performMove, performRianima, performAiuto, performScambia,
+    performMove, performMoveNode, performRianima, performAiuto, performScambia,
     performUsaCura, performUsaScudo, performUsaUtility,
     performEquipFoundWeapon, performEquipFoundSupportItem, performApriCassa,
     endPlayerTurn,

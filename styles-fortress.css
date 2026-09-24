@@ -256,6 +256,41 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 }
 
 /* =========================================================================
+   ZONE MAGNIFY V1 — vista nodi (solo Forest per ora). Stesso wrap/bordo
+   della World Map (.fa-map-wrap), coordinate dei nodi in percentuale.
+   ========================================================================= */
+.fa-magnify-wrap {
+  position: relative; background: var(--fa-panel); border: 1px solid var(--fa-line); border-radius: 18px; padding: 16px;
+}
+.fa-magnify-bg {
+  position: relative; aspect-ratio: 4/3; border-radius: 14px; overflow: hidden;
+  background-size: cover; background-position: center; border: 2px solid var(--fa-line);
+}
+.fa-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fa-node-dot {
+  width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,.5); border: 2px solid var(--fa-ink);
+}
+.fa-node.is-current .fa-node-dot { border-color: var(--fa-gold); background: rgba(201,162,74,.55); box-shadow: 0 0 0 4px rgba(201,162,74,.3); }
+.fa-node-markers { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
+.fa-node-marker {
+  font-size: 13px; background: rgba(0,0,0,.55); border: 1px solid var(--fa-line); border-radius: 8px; padding: 1px 4px;
+}
+.fa-node-marker.fa-node-enemies { display: flex; gap: 3px; padding: 1px; background: transparent; border: none; }
+.fa-node-tokens { display: flex; gap: 2px; }
+.fa-node-tokens .fa-token { width: auto; min-width: 0; }
+.fa-node-tokens .fa-token span { display: none; } /* nome sempre nel pannello di turno, qui solo l'avatar */
+
+.fa-magnify-controls { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 14px; }
+.fa-dir-row { display: flex; align-items: center; gap: 10px; }
+.fa-dir-gap { width: 44px; }
+.fa-dir-btn {
+  width: 44px; height: 44px; border-radius: 12px; font-size: 18px; font-weight: 800;
+  background: var(--fa-panel); border: 1px solid var(--fa-line); color: var(--fa-ink); cursor: pointer;
+}
+.fa-dir-btn:hover:not(:disabled) { filter: brightness(1.2); border-color: var(--fa-gold); }
+.fa-dir-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+/* =========================================================================
    PANNELLO DI TURNO
    ========================================================================= */
 .fa-turn-panel {
