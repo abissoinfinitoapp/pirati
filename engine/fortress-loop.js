@@ -62,7 +62,7 @@
      ========================================================================= */
   const TYPE_DEFAULT_RANGE = { citta: "vicino", bosco: "lontano", deposito: "medio" };
 
-  function makeZone({ id, name, type, ring, connections, danger, encounterRange }) {
+  function makeZone({ id, name, type, ring, connections, danger, encounterRange, initialEncounter }) {
     return {
       id, name, type, ring,
       connections: connections.slice(),
@@ -70,6 +70,13 @@
       encounterRange: encounterRange || TYPE_DEFAULT_RANGE[type] || "medio",
       stormState: "sicura",
       ambientLootClaimed: false,
+      // initialEncounter: composizione dati puri (mai deciso qui) dell'incontro
+      // iniziale della zona, es. [{ archetype: "normale" }]. null/assente =
+      // nessun incontro. initialEncounterSpawned è il flag runtime "già
+      // generato" (vedi ensureInitialEncounter): mai enemies.length, che
+      // tornerebbe a 0 dopo la pulizia causando un respawn involontario.
+      initialEncounter: initialEncounter || null,
+      initialEncounterSpawned: false,
       chests: [],
       groundLoot: [],
       smokeActive: false,
@@ -155,6 +162,7 @@
     if (!player || !zone) throw new Error("Giocatore o zona inesistente");
     if (zone.ring !== "esterno") throw new Error("Si può atterrare solo in una zona esterna");
     player.zoneId = zoneId;
+    ensureInitialEncounter(state, zoneId);
     const lootFound = enterZoneAmbient(state, zone, rng);
     return { player, lootFound };
   }
@@ -211,8 +219,10 @@
     }
     player.zoneId = targetZoneId;
     player.movedThisRound = true;
-    // Stessa funzione condivisa con landPlayer: "un solo loot ambientale per zona",
-    // mai una seconda implementazione della regola.
+    // Stessa funzione condivisa con landPlayer: sia "un solo incontro
+    // iniziale" sia "un solo loot ambientale per zona" vivono in un'unica
+    // implementazione, mai duplicate tra atterraggio e movimento.
+    ensureInitialEncounter(state, targetZoneId);
     const lootFound = enterZoneAmbient(state, target, rng);
     return { player, lootFound };
   }
@@ -1089,6 +1099,24 @@
   }
 
   /* =========================================================================
+     INCONTRO INIZIALE — al massimo UNA volta per zona, alla prima entrata di
+     un giocatore (atterraggio o movimento, stessa funzione per entrambi).
+     Mai un secondo spawn, anche dopo che la zona è stata ripulita: il flag
+     initialEncounterSpawned (mai enemies.length, che dopo la pulizia torna a
+     0) è marcato SUBITO, prima di spawnare, così due chiamate ravvicinate
+     (es. due giocatori che atterrano di fila) non generano un doppione. La
+     composizione (quali archetipi, quanti) è dato puro di zone.initialEncounter
+     dal catalogo mappa: l'engine si limita a eseguirla, zero know-how di
+     quale mappa/zona sia. I rinforzi (endRound) restano l'unico meccanismo
+     successivo, invariato: qui si risolve solo la nascita del primo gruppo. */
+  function ensureInitialEncounter(state, zoneId) {
+    const zone = getZone(state, zoneId);
+    if (!zone || zone.initialEncounterSpawned) return;
+    zone.initialEncounterSpawned = true;
+    (zone.initialEncounter || []).forEach((e) => spawnEnemy(state, e.archetype, zoneId));
+  }
+
+  /* =========================================================================
      PARTY — mai una struttura persistita: si deriva sempre da zoneId+status.
      getActivePartyMembers è lo stesso alias di activePlayersInZone (nessuna
      seconda implementazione): 1 solo attivo nella zona = "solo", 2+ = "party".
@@ -1133,7 +1161,7 @@
     bfsFrom, nearestZoneWithActivePlayer, pickTarget,
     getEnemyPhaseOrder, prepareEnemyStep, resolveEnemyStepFromRolls, resolveEnemyStep, resolveEnemyPhase,
     prepareBossStep, resolveBossStepFromRolls, resolveBossStep, resolveBossPhase,
-    startRound, endRound, activateBoss, spawnEnemy,
+    startRound, endRound, activateBoss, spawnEnemy, ensureInitialEncounter,
     checkVictoryOrDefeat, applyDamage, applyDamageToPlayer, applyDamageToEnemy, setPlayerKO
   };
 });

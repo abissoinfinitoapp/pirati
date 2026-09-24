@@ -30,40 +30,56 @@
   /* layout: posizione della tile nella griglia della mappa (riga/colonna,
      1-based). Puro dato di presentazione per la UI — mai letto dall'engine,
      mai un nome di zona nel CSS (vedi fortress-game-ui.js/styles-fortress.css):
-     una mappa futura porta semplicemente le proprie coordinate qui. */
+     una mappa futura porta semplicemente le proprie coordinate qui.
+
+     initialEncounter: composizione (dati puri) dell'incontro che l'engine
+     genera alla prima entrata di un giocatore nella zona (vedi
+     engine/fortress-loop.js ensureInitialEncounter) — mai più di una volta
+     per zona, mai rigenerato dopo la pulizia. Assente = nessun incontro.
+     Scelta MVP: 1× "normale" per ciascuna delle 8 zone non-centrali;
+     central-fortress ne resta priva (dominio del Boss, sistema indipendente):
+     valore facilmente ribilanciabile qui, mai nell'engine. */
   const ZONES = [
     { id: "abandoned-city", name: "Abandoned City", image: "assets/fortress-img/abandoned-city.webp",
       ring: "esterno", danger: "medio", encounterRange: "vicino", lootTier: "medio",
       layout: { row: 3, col: 1 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["forest", "frontier-camp", "industrial-zone"] },
     { id: "forest", name: "Forest", image: "assets/fortress-img/forest.webp",
       ring: "esterno", danger: "basso", encounterRange: "lontano", lootTier: "basso",
       layout: { row: 1, col: 2 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["abandoned-city", "hill-outpost", "ancient-ruins"] },
     { id: "hill-outpost", name: "Hill Outpost", image: "assets/fortress-img/hill-outpost.webp",
       ring: "esterno", danger: "medio", encounterRange: "lontano", lootTier: "medio",
       layout: { row: 3, col: 3 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["forest", "frontier-camp", "military-base"] },
     { id: "frontier-camp", name: "Frontier Camp", image: "assets/fortress-img/frontier-camp.webp",
       ring: "esterno", danger: "basso", encounterRange: "medio", lootTier: "basso/medio",
       layout: { row: 5, col: 2 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["hill-outpost", "abandoned-city", "supply-depot"] },
 
     { id: "industrial-zone", name: "Industrial Zone", image: "assets/fortress-img/industrial-zone.webp",
       ring: "interno", danger: "alto", encounterRange: "medio", lootTier: "alto",
       layout: { row: 4, col: 1 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["abandoned-city", "ancient-ruins", "supply-depot", "central-fortress"] },
     { id: "ancient-ruins", name: "Ancient Ruins", image: "assets/fortress-img/ancient-ruins.webp",
       ring: "interno", danger: "medio", encounterRange: "lontano", lootTier: "medio/alto",
       layout: { row: 2, col: 2 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["forest", "industrial-zone", "military-base", "central-fortress"] },
     { id: "military-base", name: "Military Base", image: "assets/fortress-img/military-base.webp",
       ring: "interno", danger: "alto", encounterRange: "vicino", lootTier: "alto",
       layout: { row: 4, col: 3 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["hill-outpost", "ancient-ruins", "supply-depot", "central-fortress"] },
     { id: "supply-depot", name: "Supply Depot", image: "assets/fortress-img/supply-depot.webp",
       ring: "interno", danger: "medio", encounterRange: "medio", lootTier: "alto",
       layout: { row: 4, col: 2 },
+      initialEncounter: [{ archetype: "normale" }],
       connections: ["frontier-camp", "military-base", "industrial-zone", "central-fortress"] },
 
     { id: "central-fortress", name: "Central Fortress", image: "assets/fortress-img/central-fortress.webp",
@@ -120,6 +136,8 @@
       lootTier: z.lootTier, // legge SOLO loot.setupChests(): mai il danger, mai l'id della zona
       stormState: "sicura",
       ambientLootClaimed: false,
+      initialEncounter: z.initialEncounter || null,
+      initialEncounterSpawned: false,
       chests: [],
       groundLoot: [],
       smokeActive: false,
