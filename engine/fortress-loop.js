@@ -121,7 +121,11 @@
       })),
       zones: zoneList,
       enemies: [],
-      boss: bossConfig ? { active: false, hp: 0, maxHp: 0, shield: 0, maxShield: 0, config: bossConfig, phaseIndex: 0, roundsSinceActivation: 0, zoneId: "centro", lastTargetId: null, suppressed: false, noiseTracker: combat.createNoiseTracker() } : null,
+      // zoneId viene SEMPRE dalla configurazione mappa/boss (bossConfig.zoneId):
+      // l'engine non conosce alcun nome di zona reale. Il default "centro"
+      // resta solo per compatibilità con i test che usano ancora
+      // createDefaultZoneLayout() senza specificare zoneId esplicitamente.
+      boss: bossConfig ? { active: false, hp: 0, maxHp: 0, shield: 0, maxShield: 0, config: bossConfig, phaseIndex: 0, roundsSinceActivation: 0, zoneId: bossConfig.zoneId || "centro", lastTargetId: null, suppressed: false, noiseTracker: combat.createNoiseTracker() } : null,
       pendingAiuto: {}, // playerId aiutato -> true, consumato dal suo prossimo attacco, azzerato a inizio round
       log: [],
       winner: null
@@ -836,7 +840,11 @@
     state.round += 1;
     applyStormTransition(state, state.round);
     eliminatePlayersInNewlyEliminatedZones(state, state.round);
-    if (state.round === 10 && state.boss && !state.boss.active) activateBoss(state);
+    // Round di attivazione dalla configurazione (bossConfig.activationRound):
+    // default 10 solo per compatibilità con i bossConfig di test che non lo
+    // specificano. La Tempesta (STORM_TABLE) resta comunque fissa: per Map 01
+    // activationRound=10 coincide non a caso con "interno eliminato".
+    if (state.boss && !state.boss.active && state.round === (state.boss.config.activationRound || 10)) activateBoss(state);
     state.players.forEach((p) => { p.movedThisRound = false; p.actedThisRound = false; });
     state.pendingAiuto = {};
   }

@@ -57,16 +57,13 @@ test("isBattlefield: nemici presenti ma nessun giocatore attivo -> false", () =>
 test("isBattlefield: Boss attivo/vivo lì -> true anche senza nemici del catalogo", () => {
   const state = loop.createGame({
     players: makePlayers(1),
-    bossConfig: { activationRound: 1, hpPerPlayer: 10, phases: [{ threshold: 1, attackProfile: WEAPON }] }
+    bossConfig: { zoneId: "e1", activationRound: 1, hpPerPlayer: 10, phases: [{ threshold: 1, attackProfile: WEAPON }] }
   });
   state.players.forEach((p) => { p.zoneId = null; });
   land(state, "p1", "e1");
   loop.beginExploration(state, () => 0.99);
   loop.activateBoss(state);
-  // zoneId del boss di default (HEAD): "centro". Il giocatore viene mosso lì
-  // direttamente (bypassando il movimento) solo per testare isBattlefield.
-  loop.getPlayer(state, "p1").zoneId = "centro";
-  assert.equal(director.isBattlefield(state, "centro"), true);
+  assert.equal(director.isBattlefield(state, "e1"), true);
 });
 
 /* =========================================================================

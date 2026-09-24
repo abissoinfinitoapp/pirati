@@ -17,6 +17,23 @@
 (function () {
   "use strict";
 
+  /* Pura, testabile in Node: converte il layout {row,col} di una zona in uno
+     style CSS inline per posizionarla nella griglia. Non conosce e non deve
+     mai conoscere QUALI id di zona esistono — solo coordinate numeriche.
+     Questo è ciò che rende il posizionamento indipendente dai nomi di Map 01
+     (vedi styles-fortress.css, che ora non ha più selettori per id). */
+  function zoneLayoutStyle(layout) {
+    if (!layout || !Number.isFinite(layout.row) || !Number.isFinite(layout.col)) return "";
+    return ` style="grid-row:${layout.row};grid-column:${layout.col};"`;
+  }
+
+  if (typeof module === "object" && module.exports) {
+    // In Node esponiamo solo la funzione pura sopra, per i test: il resto di
+    // questo file è browser-only (window/DOM) e si ferma qui.
+    module.exports = { zoneLayoutStyle };
+    return;
+  }
+
   const loop = window.FORTRESS_LOOP;
   const director = window.FORTRESS_DIRECTOR;
   const combat = window.FORTRESS_COMBAT;
@@ -140,7 +157,10 @@
   function startGameFromSetup(activePlayers) {
     const players = activePlayers.map((p, i) => ({ id: "p" + (i + 1), name: p.name.trim() || ("Giocatore " + (i + 1)) }));
     const zones = zonesApi.buildLoopZones(combat);
+    // zoneId/activationRound sono la configurazione di QUESTA mappa (Map 01):
+    // l'engine non li assume mai, li riceve sempre da qui.
     const bossConfig = {
+      zoneId: "central-fortress", activationRound: 10,
       hpPerPlayer: 50, shield: 10, summonEvery: 3, summonArchetype: "normale",
       phases: [
         { threshold: 1.0, attackProfile: { baseDice: 2, power: 4, range: "medio", special: { type: "none" } } },
@@ -247,7 +267,7 @@
     const bossHere = Boolean(boss && boss.active && boss.hp > 0 && boss.zoneId === zoneDef.id);
 
     return `<button type="button" class="fa-zone-tile ${zoneDef.ring === "centro" ? "is-central" : ""} ${isCurrent ? "is-current" : ""} ${selectable ? "is-selectable" : ""} ${dimmed ? "is-dimmed" : ""} ${stormClass}"
-        data-zone="${zoneDef.id}" ${selectable ? "" : "disabled"}>
+        data-zone="${zoneDef.id}" ${selectable ? "" : "disabled"}${zoneLayoutStyle(zoneDef.layout)}>
       ${imgTag(zoneDef.image, zoneDef.name, "fa-zone-img")}
       ${stormBadge ? `<span class="fa-zone-storm-badge">${stormBadge}</span>` : ""}
       <div class="fa-zone-body">
