@@ -10,6 +10,7 @@ _png-originali/
 assets/maps/
 assets/**/*.png
 *.chn
+*.zip
 
 # Documenti di progettazione interni — non vanno nel repo
 quest_json/
