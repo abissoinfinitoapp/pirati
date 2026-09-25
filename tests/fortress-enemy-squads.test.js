@@ -254,6 +254,9 @@ test("nessun bersaglio raggiungibile (grafo disconnesso): idle, mai un crash", (
 test("Enemy Phase: un nemico che si muove non genera awaitingRoll e il Director passa al successivo da solo", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
+  // La Forest ora materializza subito il proprio Encounter all'ingresso.
+  // Questo test isola i due nemici custom che deve esercitare.
+  loop.enemiesInZone(state, "forest").forEach((e) => { e.hp = 0; });
   const mover = loop.spawnEnemy(state, "aggressivo", "forest", "forest-n04");
   const shooter = loop.spawnEnemy(state, "distanza", "forest", "forest-n03");
   placeAt(state, "p1", "forest-n01");
@@ -278,8 +281,9 @@ test("Enemy Phase: un nemico che si muove non genera awaitingRoll e il Director 
 test("Battlefield resta zone-level anche con l'Encounter sparso su 3 nodi", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
-  assert.equal(director.isBattlefield(state, "forest"), false);
-  loop.moveToNode(state, "p1", "right"); // spawna i 6 nemici su n02/n03/n04
-  assert.equal(director.isBattlefield(state, "forest"), true);
+  assert.equal(director.isBattlefield(state, "forest"), true, "l'Encounter è già visibile appena si entra nella zona");
   assert.equal(loop.enemiesInZone(state, "forest").length, 6);
+  loop.moveToNode(state, "p1", "right");
+  assert.equal(director.isBattlefield(state, "forest"), true);
+  assert.equal(loop.enemiesInZone(state, "forest").length, 6, "il movimento non duplica l'Encounter");
 });

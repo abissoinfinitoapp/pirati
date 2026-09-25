@@ -247,9 +247,12 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 
 .fa-zone-enemies { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
 .fa-enemy-marker {
-  display: flex; align-items: center; gap: 2px; font-size: 8.5px; font-weight: 800;
+  display: flex; align-items: center; gap: 3px; font-size: 8.5px; font-weight: 800;
   background: rgba(0,0,0,.55); border: 1px solid var(--fa-blood-bright); border-radius: 8px; padding: 2px 5px; color: var(--fa-ink);
 }
+.fa-enemy-marker-icon { filter: saturate(1.1); }
+.fa-enemy-marker-code { color: #fff; }
+.fa-enemy-marker-stats { color: var(--fa-ink); }
 .fa-boss-marker {
   display: flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 800;
   background: rgba(181,48,63,.35); border: 1px solid var(--fa-blood-bright); border-radius: 8px; padding: 3px 6px; margin-top: 4px; color: #fff;
@@ -280,6 +283,27 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-node-tokens { display: flex; gap: 2px; }
 .fa-node-tokens .fa-token { width: auto; min-width: 0; }
 .fa-node-tokens .fa-token span { display: none; } /* nome sempre nel pannello di turno, qui solo l'avatar */
+.fa-node-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--fa-line);
+  border-radius: 12px;
+  background: rgba(0,0,0,.18);
+  font-size: 11px;
+}
+.fa-node-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.22);
+}
+.fa-node-legend strong { color: var(--fa-gold); }
 
 .fa-move-hint {
   text-align: center; margin-top: 10px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
@@ -329,9 +353,20 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-panel-section p { margin: 2px 0; font-size: 13.5px; }
 .fa-situation-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--fa-muted); }
 .fa-inventory-line { font-size: 12.5px; color: var(--fa-muted); }
-.fa-groundloot-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 0; border-bottom: 1px solid var(--fa-line); font-size: 12.5px; }
+.fa-groundloot-panel {
+  border: 1px solid rgba(201,162,74,.35);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(201,162,74,.07);
+}
+.fa-groundloot-panel h4 { color: var(--fa-gold); }
+.fa-groundloot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--fa-line); font-size: 12.5px; }
 .fa-groundloot-row:last-child { border-bottom: 0; }
-.fa-groundloot-row button { padding: 4px 8px; font-size: 11.5px; }
+.fa-groundloot-row button { padding: 6px 10px; font-size: 11.5px; }
+.fa-groundloot-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fa-groundloot-item strong { font-size: 12.5px; }
+.fa-groundloot-item small { font-size: 10.5px; color: var(--fa-muted); }
+.fa-groundloot-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .fa-action-list { display: flex; flex-direction: column; gap: 8px; }
 .fa-action-btn {
@@ -407,9 +442,16 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 
 .fa-reroll-die { font-size: 40px; text-align: center; margin: 10px 0; }
 
-.fa-result-line { font-size: 22px; font-weight: 800; text-align: center; margin: 6px 0; }
-.fa-result-total { font-size: 30px; font-weight: 900; color: var(--fa-gold); text-align: center; margin: 8px 0; }
-.fa-result-stat { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-top: 1px solid var(--fa-line); }
+.fa-result-heading { font-size: 22px; line-height: 1.2; margin-bottom: 14px; }
+.fa-result-roll-block { text-align: center; padding: 10px 12px; border: 1px solid var(--fa-line); border-radius: 12px; background: rgba(255,255,255,.035); }
+.fa-result-roll-label { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .07em; color: var(--fa-muted); }
+.fa-result-line { font-size: 26px; font-weight: 900; text-align: center; margin: 5px 0 2px; }
+.fa-result-power { font-size: 12.5px; font-weight: 800; color: var(--fa-muted); }
+.fa-result-total { font-size: 25px; line-height: 1.2; font-weight: 900; text-align: center; margin: 14px 0 10px; padding: 10px 12px; border-radius: 12px; }
+.fa-result-total.is-outgoing { color: var(--fa-gold); background: rgba(201,162,74,.1); border: 1px solid rgba(201,162,74,.35); }
+.fa-result-total.is-incoming { color: #ff8f9c; background: rgba(181,48,63,.16); border: 1px solid rgba(181,48,63,.55); }
+.fa-result-stat { display: flex; justify-content: space-between; gap: 14px; font-size: 14px; padding: 8px 0; border-top: 1px solid var(--fa-line); }
+.fa-result-stat span { color: var(--fa-muted); }
 .fa-result-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0; }
 .fa-result-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 4px 10px; border-radius: 20px; background: rgba(181,48,63,.25); border: 1px solid var(--fa-blood-bright); color: #ff8f9c; }
 
@@ -461,4 +503,145 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
   .fa-detail-stats { grid-template-columns: 1fr; }
   .fa-setup-avatar-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
   .fa-dice-input-buttons { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* =========================================================================
+   WEAPON CLARITY — loadout iniziale + arma prima del bersaglio
+   ========================================================================= */
+.fa-setup-loadout { margin-top: 12px; border-top: 1px solid var(--fa-line); padding-top: 12px; }
+.fa-setup-loadout > label { display: block; margin-bottom: 7px; font-size: 11px; font-weight: 900; color: var(--fa-gold); text-transform: uppercase; letter-spacing: .08em; }
+.fa-setup-loadout select { width: 100%; background: rgba(0,0,0,.3); border: 1px solid var(--fa-line); color: var(--fa-ink); border-radius: 10px; padding: 9px 11px; font: inherit; font-weight: 800; }
+.fa-setup-loadout-preview { display: flex; align-items: center; gap: 10px; margin-top: 9px; padding: 8px 10px; border: 1px solid var(--fa-line); border-radius: 11px; background: rgba(0,0,0,.22); }
+.fa-setup-loadout-preview > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fa-setup-loadout-preview strong { font-size: 13.5px; }
+.fa-setup-loadout-preview small { font-size: 11px; color: var(--fa-muted); }
+.fa-setup-loadout-img { width: 46px; height: 46px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: rgba(0,0,0,.32); overflow: hidden; }
+.fa-setup-loadout-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.fa-setup-loadout-hint { display: block; margin-top: 7px; color: var(--fa-muted); font-size: 10.5px; line-height: 1.35; }
+
+.fa-selected-weapon { display: flex; align-items: center; gap: 11px; text-align: left; margin: 10px 0; padding: 10px 12px; border: 1px solid var(--fa-gold); border-radius: 12px; background: rgba(201,162,74,.10); }
+.fa-selected-weapon > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.fa-selected-weapon small { font-size: 9.5px; font-weight: 900; letter-spacing: .08em; color: var(--fa-gold); }
+.fa-selected-weapon strong { font-size: 15px; margin: 1px 0 2px; }
+.fa-selected-weapon em { font-size: 11.5px; font-style: normal; color: var(--fa-muted); }
+.fa-selected-weapon-img { width: 52px; height: 52px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: rgba(0,0,0,.35); overflow: hidden; }
+.fa-selected-weapon-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.fa-target-help { margin: 4px 0 12px; color: var(--fa-muted); font-size: 11.5px; line-height: 1.4; }
+.fa-target-card-dice { color: var(--fa-gold); font-size: 12px; white-space: nowrap; }
+.fa-target-card.dice-1 .fa-target-card-dice { color: var(--fa-blood-bright); }
+.fa-target-card.dice-3 { border-color: rgba(201,162,74,.65); }
+
+/* =========================================================================
+   ACTION HUB — centro decisionale locale accanto al movimento
+   ========================================================================= */
+.fa-magnify-command-row {
+  display: grid;
+  grid-template-columns: minmax(150px, .7fr) minmax(0, 1.7fr);
+  gap: 14px;
+  align-items: start;
+  margin-top: 12px;
+}
+.fa-movement-hub {
+  border: 1px solid var(--fa-line);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(0,0,0,.18);
+}
+.fa-movement-hub .fa-move-hint { margin-top: 0; }
+.fa-movement-hub .fa-magnify-controls { margin-top: 10px; }
+.fa-action-hub {
+  border: 1px solid var(--fa-line);
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(160deg, rgba(201,162,74,.08), rgba(0,0,0,.25));
+  min-width: 0;
+}
+.fa-action-hub.is-flow { border-color: rgba(201,162,74,.55); }
+.fa-action-hub-kicker {
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--fa-gold);
+  margin-bottom: 3px;
+}
+.fa-action-hub h2,
+.fa-action-hub h3 { margin: 0 0 9px; }
+.fa-action-hub h2 { font-size: 18px; }
+.fa-action-hub h3 { font-size: 15px; }
+.fa-action-hub-subtitle {
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: var(--fa-gold);
+  margin-bottom: 4px;
+}
+.fa-action-hub-weapon-help {
+  font-size: 11px;
+  color: var(--fa-muted);
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+.fa-action-hub-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 7px;
+}
+.fa-action-hub-list .fa-action-btn {
+  padding: 10px 11px;
+  font-size: 13px;
+  min-height: 42px;
+}
+.fa-action-hub-list .fa-action-btn.is-primary,
+.fa-action-hub-list .fa-action-btn.is-rianima,
+.fa-action-hub-list .fa-action-btn.is-end-turn { grid-column: 1 / -1; }
+.fa-action-hub-loadout { margin-bottom: 10px; }
+.fa-action-hub-weapons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 9px;
+}
+.fa-action-hub-weapon {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px minmax(0,1fr) auto;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+  font-size: 11px;
+  padding: 8px 10px;
+  border: 1px solid var(--fa-line);
+  border-radius: 10px;
+  background: rgba(0,0,0,.22);
+  color: var(--fa-text);
+}
+.fa-action-hub-weapon.is-selected {
+  border-color: var(--fa-gold);
+  background: rgba(201,162,74,.12);
+  box-shadow: inset 0 0 0 1px rgba(201,162,74,.16);
+}
+.fa-action-hub-weapon b { color: var(--fa-gold); }
+.fa-action-hub-weapon strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fa-action-hub-weapon em { font-style: normal; color: var(--fa-muted); font-weight: 800; white-space: nowrap; }
+.fa-action-hub .fa-panel-section { padding-top: 9px; margin-top: 8px; }
+.fa-action-hub .fa-groundloot-row { align-items: flex-start; }
+.fa-action-hub .fa-groundloot-row button { padding: 6px 8px; }
+.fa-action-hub .fa-target-cards,
+.fa-action-hub .fa-weapon-cards { margin: 9px 0; gap: 7px; }
+.fa-action-hub .fa-target-card,
+.fa-action-hub .fa-weapon-card { padding: 9px 10px; }
+.fa-action-hub .fa-attack-weapon-img { width: 78px; height: 78px; margin-bottom: 7px; }
+.fa-action-hub .fa-attack-dice-count { font-size: 24px; margin: 7px 0; }
+.fa-action-hub .fa-chest-cards { gap: 8px; margin-bottom: 9px; }
+.fa-action-hub .fa-chest-card { padding: 9px; }
+.fa-action-hub .fa-chest-card-img { width: 58px; height: 58px; }
+.fa-panel-hub-note { opacity: .7; }
+
+@media (max-width: 540px) {
+  .fa-magnify-command-row { grid-template-columns: 1fr; }
+  .fa-movement-hub { padding: 9px; }
+  .fa-action-hub-list { grid-template-columns: 1fr 1fr; }
+  .fa-target-card { align-items: flex-start; }
+  .fa-target-card-stats { flex-wrap: wrap; justify-content: flex-end; white-space: normal; }
 }

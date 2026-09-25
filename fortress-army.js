@@ -22,24 +22,77 @@ const SKINS = window.FORTRESS_SKINS || [];
 const SKIN_RARITY_ORDER = (window.FORTRESS_SKINS_CATALOG && window.FORTRESS_SKINS_CATALOG.RARITY_ORDER) || [];
 const CHARACTERS_FOR_SKINS = window.FORTRESS_CHARACTERS || [];
 const skinsCore = window.FORTRESS_SKINS_CORE;
+const arsenalCore = window.FORTRESS_ARSENAL_CORE;
 
 /* --- stato: solo Guardaroba (monete/skin possedute/equipaggiata per personaggio) ---
    "money" è una fixture DEV isolata (nessuna economia reale collegata):
    serve solo a testare acquisto -> possesso -> equip delle skin. */
-let state = skinsCore.defaultState();
+function defaultAppState() {
+  return Object.assign({}, skinsCore.defaultState(), { arsenalByCharacter: {} });
+}
+
+let state = defaultAppState();
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
     const saved = JSON.parse(raw);
-    state = Object.assign(skinsCore.defaultState(), saved);
-  } catch (e) { /* salvataggio corrotto: si riparte da zero */ }
+    state = Object.assign(defaultAppState(), saved);
+    if (!state.arsenalByCharacter || typeof state.arsenalByCharacter !== "object") state.arsenalByCharacter = {};
+  } catch (e) { state = defaultAppState(); /* salvataggio corrotto: si riparte da zero */ }
 }
 
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
 }
+
+/* =========================================================================
+   ARSENALE PER PERSONAGGIO — persistenza locale minima.
+   Il core resta puro; qui salviamo solo ID scoperti/sbloccati. Lo starter non
+   ha bisogno di essere "sbloccato": la UI di setup lo rende sempre disponibile.
+   Questa API serve sia alla futura schermata Arsenale sia, da subito, alla
+   scelta dell'arma di partenza in fortress-game-ui.js.
+   ========================================================================= */
+function characterArsenalState(characterId) {
+  if (!arsenalCore || !characterId) return { discoveredWeaponIds: [], unlockedWeaponIds: [] };
+  const stored = state.arsenalByCharacter && state.arsenalByCharacter[characterId];
+  return stored || arsenalCore.createArsenalState();
+}
+
+function writeCharacterArsenalState(characterId, next) {
+  if (!characterId || !next) return next;
+  state = Object.assign({}, state, {
+    arsenalByCharacter: Object.assign({}, state.arsenalByCharacter || {}, { [characterId]: next })
+  });
+  saveState();
+  window.dispatchEvent(new CustomEvent("fortress-arsenal-changed", { detail: { characterId } }));
+  return next;
+}
+
+window.FORTRESS_ARSENAL_API = {
+  getState(characterId) {
+    const a = characterArsenalState(characterId);
+    return {
+      discoveredWeaponIds: (a.discoveredWeaponIds || []).slice(),
+      unlockedWeaponIds: (a.unlockedWeaponIds || []).slice()
+    };
+  },
+  getUnlockedWeaponIds(characterId) {
+    return (characterArsenalState(characterId).unlockedWeaponIds || []).slice();
+  },
+  getStatus(characterId, weaponId) {
+    return arsenalCore ? arsenalCore.getWeaponCollectionStatus(characterArsenalState(characterId), weaponId) : "sconosciuta";
+  },
+  discoverWeapon(characterId, weaponId) {
+    if (!arsenalCore) return characterArsenalState(characterId);
+    return writeCharacterArsenalState(characterId, arsenalCore.discoverWeapon(characterArsenalState(characterId), weaponId));
+  },
+  unlockWeapon(characterId, weaponId) {
+    if (!arsenalCore) return characterArsenalState(characterId);
+    return writeCharacterArsenalState(characterId, arsenalCore.unlockWeapon(characterArsenalState(characterId), weaponId));
+  }
+};
 
 /* --- helper --- */
 const $ = (id) => document.getElementById(id);

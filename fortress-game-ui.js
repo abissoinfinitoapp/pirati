@@ -45,10 +45,106 @@
     return slots.length === 1 ? slots[0] : null;
   }
 
+  function getEquippedWeaponSlots(equipment) {
+    if (!equipment) return [];
+    return ["primary", "secondary"].filter((slot) => equipment[slot]);
+  }
+
+  function resolvePreferredWeaponSlot(equipment, preferredSlot) {
+    const slots = getEquippedWeaponSlots(equipment);
+    if (!slots.length) return null;
+    if (preferredSlot && slots.includes(preferredSlot)) return preferredSlot;
+    return slots.includes("primary") ? "primary" : slots[0];
+  }
+
+  function buildAttackFlowFromSelectedSlot(equipment, targets, preferredSlot) {
+    const resolvedSlot = resolvePreferredWeaponSlot(equipment, preferredSlot);
+    if (!resolvedSlot) return { step: "weapon" };
+    const weapon = equipment[resolvedSlot];
+    const autoTarget = pickAutoTarget(targets);
+    if (autoTarget) return {
+      step: "preview", weaponSlot: resolvedSlot, weapon, targetKind: autoTarget.kind, targetId: autoTarget.id || null
+    };
+    return { step: "target", weaponSlot: resolvedSlot, weapon };
+  }
+
+  /* L'ordine decisionale corretto e' arma -> bersaglio: la gittata
+     dell'arma deve essere nota PRIMA di scegliere chi attaccare. Questa
+     funzione pura costruisce solo lo stato UI iniziale, senza decidere
+     quali bersagli siano validi (arrivano gia' filtrati dal motore). */
+  function buildInitialAttackFlow(equipment, targets) {
+    const autoSlot = pickAutoWeaponSlot(equipment);
+    if (!autoSlot) return { step: "weapon" };
+    const weapon = equipment[autoSlot];
+    const autoTarget = pickAutoTarget(targets);
+    if (autoTarget) return {
+      step: "preview", weapon, targetKind: autoTarget.kind, targetId: autoTarget.id || null
+    };
+    return { step: "target", weapon };
+  }
+
+  /* Starter sempre disponibile + sole armi realmente SBLOCCATE
+     nell'Arsenale. Nessuna arma della Libreria diventa utilizzabile per
+     magia: gli id sconosciuti vengono ignorati e lo starter e' deduplicato. */
+  function getStartingWeaponChoices(catalog, starterId, unlockedIds) {
+    const byId = new Map((catalog || []).map((w) => [w.id, w]));
+    const ids = [starterId].concat(Array.isArray(unlockedIds) ? unlockedIds : []);
+    const seen = new Set();
+    return ids.reduce((out, id) => {
+      if (!id || seen.has(id) || !byId.has(id)) return out;
+      seen.add(id); out.push(byId.get(id)); return out;
+    }, []);
+  }
+
+  /* Action Hub mobile-first: decide SOLO quale vista UI locale mostrare.
+     Nessuna regola di gioco: attacco/cassa hanno precedenza sulla lista azioni. */
+  function getActionHubMode(uiState) {
+    if (uiState && uiState.attackFlow) return "attack";
+    if (uiState && uiState.chestResult) return "chest";
+    return "actions";
+  }
+
+  /* Il piccolo hub vive accanto al movimento solo nella vista Node Graph e
+     durante un vero turno giocatore. SPOSTATI/Scanner riportano volutamente
+     alla World Map, quindi in quei due modi l'hub locale non è attivo. */
+  function shouldUseActionHub(ctx) {
+    return Boolean(ctx && ctx.magnifyMode && ctx.nodeId && ctx.directorPhase === "player-turn" && !ctx.moveMode && !ctx.scannerMode);
+  }
+
+  /* Pura, testabile in Node: trasforma l'esito già risolto dal motore in una
+     sequenza narrativa esplicita. Non calcola danni e non decide KO: serve
+     solo a evitare il vecchio riepilogo ambiguo "8 DANNI!", chiarendo
+     sempre CHI attacca, CHI subisce e a cosa appartengono le statistiche. */
+  function buildCombatResultView(result) {
+    const actorType = result && result.actorType;
+    const attackerName = String((result && result.attackerName) || (actorType === "player" ? "Giocatore" : actorType === "boss" ? "Boss" : "Nemico"));
+    const targetName = String((result && result.targetName) || "Bersaglio");
+    const total = Number(result && result.total) || 0;
+    const shieldBefore = Number(result && result.shieldBefore) || 0;
+    const shieldAfter = Number(result && result.shieldAfter) || 0;
+    const ignoreShieldN = Number(result && result.ignoreShieldN) || 0;
+    const isPlayerAttack = actorType === "player";
+
+    return {
+      heading: `${attackerName.toUpperCase()} ATTACCA ${targetName.toUpperCase()}`,
+      rollLabel: isPlayerAttack ? "I TUOI DADI" : actorType === "boss" ? "TIRO DEL BOSS" : "TIRO DEL NEMICO",
+      powerLabel: isPlayerAttack ? "POWER ARMA" : actorType === "boss" ? "POWER BOSS" : "POWER NEMICO",
+      damageLabel: isPlayerAttack
+        ? `HAI INFLITTO ${total} DANNI`
+        : `${targetName.toUpperCase()} SUBISCE ${total} DANNI`,
+      shieldLabel: `🛡️ Scudo ${targetName}`,
+      healthLabel: `❤️ Salute ${targetName}`,
+      // 0 → 0 non aggiunge informazione. Se invece uno special ignora uno
+      // scudo esistente, mostrarlo invariato aiuta a capire dove è passato
+      // il danno (la tag "IGNORATO LO SCUDO" spiega il perché).
+      showShield: shieldBefore !== shieldAfter || (shieldBefore > 0 && ignoreShieldN > 0)
+    };
+  }
+
   if (typeof module === "object" && module.exports) {
     // In Node esponiamo solo le funzioni pure sopra, per i test: il resto di
     // questo file è browser-only (window/DOM) e si ferma qui.
-    module.exports = { zoneLayoutStyle, pickAutoTarget, pickAutoWeaponSlot };
+    module.exports = { zoneLayoutStyle, pickAutoTarget, pickAutoWeaponSlot, getEquippedWeaponSlots, resolvePreferredWeaponSlot, buildInitialAttackFlow, buildAttackFlowFromSelectedSlot, getStartingWeaponChoices, getActionHubMode, shouldUseActionHub, buildCombatResultView };
     return;
   }
 
@@ -61,6 +157,7 @@
   const ARMI = window.FORTRESS_ARMI || [];
   const ITEMS = window.FORTRESS_ITEMS;
   const loot = window.FORTRESS_LOOT;
+  const arsenalApi = window.FORTRESS_ARSENAL_API || null;
   /* Guardaroba (skin cosmetiche): solo lettura, solo per scegliere quale
      immagine mostrare. Nessuna logica di gioco arriva da qui. */
   const skinsApi = window.FORTRESS_SKINS_API;
@@ -121,14 +218,28 @@
   function zoneNameOf(id) { const z = zoneCatalogEntry(id); return z ? z.name : id; }
 
   /* =========================================================================
-     ARMA INIZIALE — fissa per tutti (§3), mai comprata/scelta/registrata come
-     trovata: assegnata direttamente allo slot primary, MAI attraverso
-     loop.equipFoundWeapon (quindi non entra mai in collectedWeaponIds).
+     LOADOUT INIZIALE — scelta preparatoria dall'Arsenale.
+     Lo starter e' sempre disponibile; le altre scelte devono essere realmente
+     sbloccate per l'avatar scelto. L'assegnazione e' diretta allo slot primary:
+     non passa da equipFoundWeapon, quindi NON conta come arma trovata nella run.
+     Secondary parte vuoto: resta importante trovare armi durante la partita.
      ========================================================================= */
-  function applyStarterEquipment(state) {
-    const weapon = ARMI.find((w) => w.id === loot.STARTER_WEAPON_ID);
-    if (!weapon) return;
-    state.players.forEach((p) => { p.equipment.primary = weapon; });
+  function startingChoicesForSetupPlayer(setupPlayer) {
+    const unlocked = setupPlayer && setupPlayer.avatarId && arsenalApi
+      ? arsenalApi.getUnlockedWeaponIds(setupPlayer.avatarId)
+      : [];
+    return getStartingWeaponChoices(ARMI, loot.STARTER_WEAPON_ID, unlocked);
+  }
+
+  function applyStartingEquipment(state, activePlayers) {
+    state.players.forEach((p, i) => {
+      const setupPlayer = activePlayers[i];
+      const choices = startingChoicesForSetupPlayer(setupPlayer);
+      const selectedId = setupPlayer && setupPlayer.startingWeaponId;
+      const weapon = choices.find((w) => w.id === selectedId) || choices[0] || null;
+      p.equipment.primary = weapon;
+      p.equipment.secondary = null;
+    });
   }
 
   /* =========================================================================
@@ -143,8 +254,9 @@
   let setupError = null;
   let moveMode = false;
   let scannerMode = false; // in attesa che il giocatore scelga la zona adiacente da scansionare
-  let magnifyMode = false; // Zone Magnify V1: vista nodi della zona corrente invece della World Map
-  let attackFlow = null;      // { step: "target"|"weapon"|"preview", targetKind, targetId, weapon }
+  let magnifyMode = true; // Zone Magnify V1: vista nodi della zona corrente invece della World Map
+  let actionHubWeaponSlot = "primary"; // stato solo-UI: una sola arma attiva per volta nel piccolo hub locale
+  let attackFlow = null;      // { step: "target"|"weapon"|"preview", weaponSlot, targetKind, targetId, weapon }
   let attackActorId = null;   // playerId di chi ha dichiarato l'attacco in corso (Guided Turn UI: serve dopo il CONTINUA per capire se il turno è cambiato)
   let diceSelections = null;  // array di risultati 1-6 in corso di inserimento
   let pendingResult = null;   // esito già risolto dal motore, in attesa del CONTINUA
@@ -161,7 +273,7 @@
 
   function ensureSetupPlayers() {
     if (!setupPlayers) {
-      setupPlayers = Array.from({ length: MAX_PLAYERS }, (_, i) => ({ name: "Giocatore " + (i + 1), avatarId: null }));
+      setupPlayers = Array.from({ length: MAX_PLAYERS }, (_, i) => ({ name: "Giocatore " + (i + 1), avatarId: null, startingWeaponId: null }));
     }
   }
 
@@ -181,13 +293,31 @@
           ${imgTag(c.image, c.name)}<span>${escapeHtml(c.name)}</span>
         </button>`;
       }).join("");
+
+      let loadout = "";
+      if (p.avatarId) {
+        const choices = startingChoicesForSetupPlayer(p);
+        if (!choices.some((w) => w.id === p.startingWeaponId)) p.startingWeaponId = choices.length ? choices[0].id : null;
+        const selectedWeapon = choices.find((w) => w.id === p.startingWeaponId) || choices[0];
+        const options = choices.map((w) => `<option value="${w.id}" ${w.id === p.startingWeaponId ? "selected" : ""}>${escapeHtml(w.name)} · ${RANGE_LABELS[w.range]}</option>`).join("");
+        loadout = `<div class="fa-setup-loadout">
+          <label>ARMA DI PARTENZA</label>
+          <select data-start-weapon data-player-index="${i}">${options}</select>
+          ${selectedWeapon ? `<div class="fa-setup-loadout-preview">
+            <span class="fa-setup-loadout-img">${imgTag(selectedWeapon.image, selectedWeapon.name)}</span>
+            <span><strong>${escapeHtml(selectedWeapon.name)}</strong><small>📏 ${RANGE_LABELS[selectedWeapon.range].toUpperCase()} · 🎲 ${selectedWeapon.baseDice} base · POWER +${selectedWeapon.power}</small></span>
+          </div>` : ""}
+          ${choices.length === 1 ? `<small class="fa-setup-loadout-hint">Sblocca altre armi nell'Arsenale per poterle scegliere a inizio partita.</small>` : ""}
+        </div>`;
+      }
       return `<div class="fa-setup-player-row">
         <input type="text" value="${escapeHtml(p.name)}" data-player-index="${i}" maxlength="18">
         <div class="fa-setup-avatar-grid">${avatars}</div>
+        ${loadout}
       </div>`;
     }).join("");
 
-    const allAvatarsChosen = setupPlayers.slice(0, setupCount).every((p) => p.avatarId);
+    const allAvatarsChosen = setupPlayers.slice(0, setupCount).every((p) => p.avatarId && p.startingWeaponId);
 
     $("fa-setup-body").innerHTML = `
       ${countSelect}
@@ -220,7 +350,7 @@
       ]
     };
     const state = loop.createGame({ players, zones, bossConfig });
-    applyStarterEquipment(state);
+    applyStartingEquipment(state, activePlayers);
 
     const playerAvatars = {};
     players.forEach((p, i) => { playerAvatars[p.id] = activePlayers[i].avatarId; });
@@ -240,7 +370,7 @@
     const state = game.state;
     const player = state.players[game.landingIndex];
     const { lootFound } = loop.landPlayer(state, player.id, zoneId, Math.random);
-    if (lootFound) pushEvent(`${player.name}: HAI TROVATO ${lootEntryLabel(lootFound)}`);
+    if (lootFound) pushEvent(`${player.name}: A TERRA — ${lootEntryLabel(lootFound)}`);
     game.landingIndex += 1;
 
     if (loop.allPlayersLanded(state)) {
@@ -270,12 +400,12 @@
     const rows = groundLoot.map((entry) => {
       const label = escapeHtml(lootEntryLabel(entry));
       const buttons = entry.kind === "weapon"
-        ? `<button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="primary">→ Primary</button>
-           <button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="secondary">→ Secondary</button>`
-        : `<button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="${entry.kind}">Raccogli</button>`;
-      return `<div class="fa-groundloot-row"><span>${label}</span>${buttons}</div>`;
+        ? `<div class="fa-groundloot-actions"><button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="primary">RACCOGLI · PRIMARY</button>
+           <button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="secondary">RACCOGLI · SECONDARY</button></div>`
+        : `<button type="button" class="fa-btn fa-btn-primary" data-pickup="${entry.instanceId}" data-pickup-slot="${entry.kind}">RACCOGLI</button>`;
+      return `<div class="fa-groundloot-row"><span class="fa-groundloot-item"><strong>📦 ${label}</strong><small>Non è ancora nel tuo inventario.</small></span>${buttons}</div>`;
     }).join("");
-    return `<div class="fa-panel-section"><h4>A terra</h4>${rows}</div>`;
+    return `<div class="fa-panel-section fa-groundloot-panel"><h4>A TERRA · PUOI RACCOGLIERE</h4>${rows}</div>`;
   }
   function pushEvent(text) {
     eventLog.unshift(text);
@@ -396,7 +526,9 @@
 
   function renderChestOverlay() {
     const overlay = $("fa-chest-overlay");
-    if (!chestResult) { overlay.hidden = true; return; }
+    const player = game && game.dir ? director.getCurrentPlayer(game.state, game.dir) : null;
+    const inHub = player && shouldUseActionHub({ magnifyMode, nodeId: player.nodeId, directorPhase: game.dir.directorPhase, moveMode, scannerMode });
+    if (!chestResult || inHub) { overlay.hidden = true; return; }
     overlay.hidden = false;
     $("fa-chest-content").innerHTML = `
       <h2>HAI TROVATO</h2>
@@ -520,7 +652,8 @@
   }
 
   function enemyMarkerMarkup(e) {
-    return `<span class="fa-enemy-marker" title="${ENEMY_NAME[e.archetype] || e.archetype}">${ENEMY_LETTER[e.archetype] || "?"} · ${e.hp}${e.maxShield ? `/🛡${e.shield}` : ""}</span>`;
+    const name = ENEMY_NAME[e.archetype] || e.archetype;
+    return `<span class="fa-enemy-marker" title="Nemico ${escapeHtml(name)}"><span class="fa-enemy-marker-icon">👾</span><span class="fa-enemy-marker-code">${ENEMY_LETTER[e.archetype] || "?"}</span><span class="fa-enemy-marker-stats">${e.hp}${e.maxShield ? `/🛡${e.shield}` : ""}</span></span>`;
   }
 
   /* Enemy Squads V1: più nemici possono stare sullo stesso nodo. Raggruppa
@@ -535,7 +668,7 @@
       if (list.length === 1) return enemyMarkerMarkup(list[0]);
       const letter = ENEMY_LETTER[archetype] || "?";
       const title = `${ENEMY_NAME[archetype] || archetype} ×${list.length}: ${list.map((e) => `${e.hp}${e.maxShield ? `/🛡${e.shield}` : ""}`).join(", ")}`;
-      return `<span class="fa-enemy-marker fa-enemy-marker-group" title="${escapeHtml(title)}">${letter} ×${list.length}</span>`;
+      return `<span class="fa-enemy-marker fa-enemy-marker-group" title="${escapeHtml(title)}"><span class="fa-enemy-marker-icon">👾</span><span class="fa-enemy-marker-code">${letter}</span><span class="fa-enemy-marker-stats">×${list.length}</span></span>`;
     }).join("");
   }
 
@@ -543,10 +676,68 @@
      ZONE MAGNIFY V1 — vista nodi della zona corrente (solo Forest per ora).
      Riusa l'immagine zona già esistente come background, tokenMarkup ed
      enemyMarkerMarkup già usati dalla World Map: nessuna nuova immagine,
-     nessuna nuova primitiva di rendering, solo coordinate percentuali invece
-     che griglia CSS. Le azioni (ATTACCA/APRI CASSA/...) restano nel pannello
-     di turno esistente, già node-aware lato Director: qui c'è SOLO la mappa.
+     nessuna nuova regola. Sotto la mappa vive ora l'Action Hub: movimento,
+     raccolta, uso oggetti e sequenza arma→bersaglio restano nello stesso
+     centro decisionale, particolarmente importante su telefono.
      ========================================================================= */
+  function syncActionHubWeaponSlot(player) {
+    const resolved = resolvePreferredWeaponSlot(player && player.equipment, actionHubWeaponSlot);
+    actionHubWeaponSlot = resolved || "primary";
+    return resolved;
+  }
+
+  function actionHubWeaponStrip(player) {
+    const activeSlot = syncActionHubWeaponSlot(player);
+    const rows = getEquippedWeaponSlots(player && player.equipment).map((slot) => {
+      const w = player.equipment[slot];
+      const slotLabel = slot === "primary" ? "P" : "S";
+      const selected = slot === activeSlot;
+      return `<button type="button" class="fa-action-hub-weapon ${selected ? "is-selected" : ""}" data-action-hub-weapon-slot="${slot}" aria-pressed="${selected ? "true" : "false"}"><b>${slotLabel}</b><strong>${escapeHtml(w.name)}</strong><em>📏 ${RANGE_LABELS[w.range].toUpperCase()}</em></button>`;
+    }).join("");
+    return rows ? `<div class="fa-action-hub-loadout"><div class="fa-action-hub-subtitle">ARMA ATTIVA</div><div class="fa-action-hub-weapon-help">Scegline una: <strong>ATTACCA</strong> userà solo l'arma evidenziata.</div><div class="fa-action-hub-weapons">${rows}</div></div>` : "";
+  }
+
+  function renderNodeLegend() {
+    return `<div class="fa-node-legend" aria-label="Legenda nodi">
+      <span><strong>🎁</strong> Cassa</span>
+      <span><strong>📦</strong> Oggetti</span>
+      <span><strong>👾</strong> Nemici</span>
+      <span><strong>N</strong> Normale</span>
+      <span><strong>A</strong> Aggressivo</span>
+      <span><strong>R</strong> Resistente</span>
+      <span><strong>D</strong> Distanza</span>
+      <span><strong>E</strong> Elite</span>
+    </div>`;
+  }
+
+  function renderActionHub(state, player) {
+    const dir = game.dir;
+    if (!shouldUseActionHub({ magnifyMode, nodeId: player && player.nodeId, directorPhase: dir && dir.directorPhase, moveMode, scannerMode })) return "";
+
+    const mode = getActionHubMode({ attackFlow, chestResult });
+    if (mode === "attack") {
+      return `<section class="fa-action-hub is-flow" aria-label="Azioni del turno">${buildAttackFlowMarkup()}</section>`;
+    }
+    if (mode === "chest") {
+      return `<section class="fa-action-hub is-flow" aria-label="Oggetti trovati">
+        <div class="fa-action-hub-kicker">CASSA APERTA</div>
+        <h3>HAI TROVATO</h3>
+        <div class="fa-chest-cards">${chestItemCardMarkup(chestResult.weapon)}${chestItemCardMarkup(chestResult.support)}</div>
+        <button type="button" class="fa-btn fa-btn-ghost" id="fa-chest-close">HO FINITO</button>
+      </section>`;
+    }
+
+    const situation = director.getSituation(state, player);
+    const actions = director.getAvailableActions(state, player);
+    return `<section class="fa-action-hub" aria-label="Azioni del turno">
+      <div class="fa-action-hub-kicker">TOCCA A ${escapeHtml(player.name).toUpperCase()}</div>
+      ${actionHubWeaponStrip(player)}
+      <h3>COSA PUOI FARE QUI</h3>
+      ${groundLootMarkup(situation.groundLoot)}
+      <div class="fa-action-list fa-action-hub-list">${actions.map(actionButtonMarkup).join("")}</div>
+    </section>`;
+  }
+
   function renderMagnify(state, player) {
     const zone = loop.getZone(state, player.zoneId);
     const zoneDef = zoneCatalogEntry(zone.id);
@@ -581,11 +772,17 @@
       <div class="fa-magnify-bg" style="background-image:url('${zoneDef ? zoneDef.image : ""}')">
         ${nodesMarkup}
       </div>
-      <div class="fa-move-hint ${canMove ? "" : "is-used"}">${canMove ? "PUOI MUOVERTI UNA VOLTA" : "MOVIMENTO USATO"}</div>
-      <div class="fa-magnify-controls">
-        <div class="fa-dir-row">${dirBtn("up", "↑")}</div>
-        <div class="fa-dir-row">${dirBtn("left", "←")}<span class="fa-dir-gap"></span>${dirBtn("right", "→")}</div>
-        <div class="fa-dir-row">${dirBtn("down", "↓")}</div>
+      ${renderNodeLegend()}
+      <div class="fa-magnify-command-row">
+        <div class="fa-movement-hub">
+          <div class="fa-move-hint ${canMove ? "" : "is-used"}">${canMove ? "PUOI MUOVERTI UNA VOLTA" : "MOVIMENTO USATO"}</div>
+          <div class="fa-magnify-controls">
+            <div class="fa-dir-row">${dirBtn("up", "↑")}</div>
+            <div class="fa-dir-row">${dirBtn("left", "←")}<span class="fa-dir-gap"></span>${dirBtn("right", "→")}</div>
+            <div class="fa-dir-row">${dirBtn("down", "↓")}</div>
+          </div>
+        </div>
+        ${renderActionHub(state, player)}
       </div>
     `;
   }
@@ -603,9 +800,22 @@
 
   function bindMagnifyEvents() {
     $("fa-magnify-wrap").addEventListener("click", (ev) => {
-      const btn = ev.target.closest(".fa-dir-btn");
-      if (!btn || btn.disabled) return;
-      handleMoveNode(btn.dataset.dir);
+      const dirBtn = ev.target.closest(".fa-dir-btn");
+      if (dirBtn) { if (!dirBtn.disabled) handleMoveNode(dirBtn.dataset.dir); return; }
+
+      const activeWeaponBtn = ev.target.closest("[data-action-hub-weapon-slot]");
+      if (activeWeaponBtn) { actionHubWeaponSlot = activeWeaponBtn.dataset.actionHubWeaponSlot; render(); return; }
+
+      if (handleAttackChoiceEvent(ev)) return;
+
+      if (ev.target.id === "fa-chest-close") { chestResult = null; render(); return; }
+      const pickupBtn = ev.target.closest("[data-pickup]");
+      if (pickupBtn) { handlePickup(Number(pickupBtn.dataset.pickup), pickupBtn.dataset.pickupSlot); return; }
+
+      const actionBtn = ev.target.closest("[data-action]");
+      if (actionBtn) {
+        handlePlayerAction(actionBtn.dataset.action, actionBtn.dataset.target, actionBtn.dataset.chest, actionBtn.dataset.utility);
+      }
     });
   }
 
@@ -714,10 +924,15 @@
     if (!player) { panel.innerHTML = ""; return; }
     const situation = director.getSituation(state, player);
     const stormRisk = director.getStormRisk(state, player);
+    const inActionHub = shouldUseActionHub({ magnifyMode, nodeId: situation.nodeId, directorPhase: dir.directorPhase, moveMode, scannerMode });
     const actions = (attackFlow || moveMode || scannerMode) ? [] : director.getAvailableActions(state, player);
     const stars = zoneStars(situation.danger);
     const equip = player.equipment;
-    const equipLine = (label, item) => `<span>${label}: ${item ? escapeHtml(item.name) : "—"}</span>`;
+    const equipLine = (label, item) => {
+      if (!item) return `<span>${label}: —</span>`;
+      const weaponMeta = item.range ? ` · 📏 ${RANGE_LABELS[item.range].toUpperCase()}${Number.isFinite(item.baseDice) ? ` · 🎲 ${item.baseDice}` : ""}` : "";
+      return `<span>${label}: <strong>${escapeHtml(item.name)}</strong>${weaponMeta}</span>`;
+    };
 
     panel.innerHTML = `
       <div class="fa-panel-round">ROUND ${state.round}</div>
@@ -757,14 +972,14 @@
         <div class="fa-inventory-line">${equipLine("Utility", equip.utility)}</div>
       </div>
 
-      ${groundLootMarkup(situation.groundLoot)}
+      ${inActionHub ? "" : groundLootMarkup(situation.groundLoot)}
 
-      <div class="fa-panel-section">
+      ${inActionHub ? `<div class="fa-panel-section fa-panel-hub-note"><h4>Azioni</h4><p>Usa il pannello azioni sotto la mappa.</p></div>` : `<div class="fa-panel-section">
         <h4>Cosa vuoi fare?</h4>
         <div class="fa-action-list">${(moveMode || scannerMode) ? `<p>Scegli una zona evidenziata sulla mappa.</p>` : actions.map(actionButtonMarkup).join("")}</div>
         ${moveMode ? `<button type="button" class="fa-btn fa-btn-ghost" id="fa-move-cancel">Annulla spostamento</button>` : ""}
         ${scannerMode ? `<button type="button" class="fa-btn fa-btn-ghost" id="fa-scanner-cancel">Annulla Scanner</button>` : ""}
-      </div>
+      </div>`}
     `;
   }
 
@@ -776,17 +991,11 @@
     switch (actionId) {
       case "sposta": moveMode = true; break;
       case "attacca": {
-        // Guided Turn UI: bersaglio unico -> selezionato subito, salta la
-        // domanda inutile "CHI VUOI ATTACCARE?" (idem per l'arma sotto).
         const targets = getAttackTargets(state, player);
-        const autoTarget = pickAutoTarget(targets);
-        if (autoTarget) {
-          attackFlow = { step: "weapon", targetKind: autoTarget.kind, targetId: autoTarget.id };
-          const autoSlot = pickAutoWeaponSlot(player.equipment);
-          if (autoSlot) { attackFlow.weapon = player.equipment[autoSlot]; attackFlow.step = "preview"; }
-        } else {
-          attackFlow = { step: "target" };
-        }
+        const inHub = shouldUseActionHub({ magnifyMode, nodeId: player.nodeId, directorPhase: dir.directorPhase, moveMode, scannerMode });
+        attackFlow = inHub
+          ? buildAttackFlowFromSelectedSlot(player.equipment, targets, actionHubWeaponSlot)
+          : buildInitialAttackFlow(player.equipment, targets);
         break;
       }
       case "rianima": director.performRianima(state, dir, playerId, targetId); endsTurn = true; break;
@@ -805,7 +1014,7 @@
       case "apri_cassa": {
         const found = director.performApriCassa(state, dir, playerId, chestId, Math.random);
         chestResult = found;
-        pushEvent(`HAI TROVATO: ${lootEntryLabel(found.weapon)} + ${lootEntryLabel(found.support)}`);
+        pushEvent(`CASSA APERTA — a terra: ${lootEntryLabel(found.weapon)} + ${lootEntryLabel(found.support)}`);
         break;
       }
       case "fine_turno": director.endPlayerTurn(state, dir, playerId); endsTurn = true; break;
@@ -826,6 +1035,7 @@
     if (!resolved) return;
     if (entry.kind === "weapon") director.performEquipFoundWeapon(state, dir, playerId, slot, entry.instanceId, resolved);
     else director.performEquipFoundSupportItem(state, dir, playerId, slot, entry.instanceId, resolved);
+    pushEvent(`${player.name}: RACCOLTO — ${lootEntryLabel(entry)}`);
     // Modale cassa aperta (Guided Turn UI): la card appena presa sparisce; a
     // modale vuoto si chiude da sola (nessuna azione residua da compiere lì).
     if (chestResult) {
@@ -882,7 +1092,7 @@
     const playerId = director.getCurrentPlayerId(state, dir);
     const outcome = director.performMove(state, dir, playerId, zoneId, Math.random);
     moveMode = false;
-    if (outcome.lootFound) pushEvent(`HAI TROVATO: ${lootEntryLabel(outcome.lootFound)}`);
+    if (outcome.lootFound) pushEvent(`${loop.getPlayer(state, playerId).name}: A TERRA — ${lootEntryLabel(outcome.lootFound)}`);
     render();
   }
 
@@ -943,24 +1153,33 @@
     const player = director.getCurrentPlayer(state, dir);
 
     if (attackFlow.step === "target") {
-      // Solo se ci sono davvero più bersagli validi (Guided Turn UI: un
-      // bersaglio unico è già stato auto-selezionato da handlePlayerAction,
-      // questa schermata non compare nemmeno). Enemy Squads V1: non più solo
-      // lo stesso nodo, ma tutti i nemici raggiungibili nel grafo
-      // (getAttackTargets), ciascuno con la propria distanza reale.
+      const weapon = attackFlow.weapon;
       const targets = getAttackTargets(state, player);
       const cards = targets.map((t) => {
         const label = t.kind === "boss" ? "👑 BOSS" : (ENEMY_NAME[t.archetype] || t.archetype);
-        return `<button type="button" class="fa-target-card ${t.kind === "boss" ? "is-boss" : ""}" data-target-kind="${t.kind}"${t.id ? ` data-target-id="${t.id}"` : ""}>
+        const preview = t.kind === "boss"
+          ? director.buildBossAttackPreview(state, player.id, weapon)
+          : director.buildAttackPreview(state, player.id, t.id, weapon);
+        const diceWord = preview.diceCount === 1 ? "DADO" : "DADI";
+        return `<button type="button" class="fa-target-card ${t.kind === "boss" ? "is-boss" : ""} dice-${preview.diceCount}" data-target-kind="${t.kind}"${t.id ? ` data-target-id="${t.id}"` : ""}>
           <span class="fa-target-card-name">${label}</span>
           <span class="fa-target-card-stats">
             <span>❤️ ${t.hp}/${t.maxHp}</span>
             ${t.maxShield ? `<span>🛡️ ${t.shield}/${t.maxShield}</span>` : ""}
-            ${t.range ? `<span class="fa-target-card-range">${RANGE_LABELS[t.range].toUpperCase()}</span>` : ""}
+            <span class="fa-target-card-range">📏 ${RANGE_LABELS[preview.encounterRange].toUpperCase()}</span>
+            <strong class="fa-target-card-dice">🎲 ${preview.diceCount} ${diceWord}</strong>
           </span>
         </button>`;
       }).join("");
-      return `<h2>CHI VUOI ATTACCARE?</h2><div class="fa-target-cards">${cards}</div>
+      const canChangeWeapon = ["primary", "secondary"].filter((slot) => player.equipment[slot]).length > 1;
+      return `<h2>CHI VUOI ATTACCARE?</h2>
+        <div class="fa-selected-weapon">
+          <span class="fa-selected-weapon-img">${imgTag(weapon.image, weapon.name)}</span>
+          <span><small>ARMA SCELTA</small><strong>${escapeHtml(weapon.name)}</strong><em>📏 GITTATA ${RANGE_LABELS[weapon.range].toUpperCase()} · 🎲 ${weapon.baseDice} base</em></span>
+        </div>
+        <p class="fa-target-help">La distanza cambia quanti dadi tirerai. Scegli il bersaglio guardando il numero di dadi.</p>
+        <div class="fa-target-cards">${cards}</div>
+        ${canChangeWeapon ? `<button type="button" class="fa-btn fa-btn-ghost" id="fa-attack-change-weapon">↔ CAMBIA ARMA</button>` : ""}
         <button type="button" class="fa-btn fa-btn-ghost" id="fa-attack-cancel">Annulla</button>`;
     }
 
@@ -974,7 +1193,7 @@
           <span class="fa-weapon-card-img">${imgTag(w.image, w.name)}</span>
           <span class="fa-weapon-card-info">
             <span class="fa-weapon-card-name">${escapeHtml(w.name)}</span>
-            <span class="fa-weapon-card-stats">POTENZA ${w.potenza} · ${RANGE_LABELS[w.range].toUpperCase()}</span>
+            <span class="fa-weapon-card-stats">📏 ${RANGE_LABELS[w.range].toUpperCase()} · 🎲 ${w.baseDice} base · POWER +${w.power} · POTENZA ${w.potenza}</span>
             ${special ? `<span class="fa-weapon-card-special">${escapeHtml(special)}</span>` : ""}
           </span>
         </button>`;
@@ -1093,11 +1312,14 @@
   function buildPendingResult(outcome, aw, preSnapshot) {
     const state = game.state;
     if (aw.actorType === "player") {
+      const attacker = loop.getPlayer(state, aw.actorId);
       const weapon = aw.prepared.weapon;
       const after = snapshotTargetAfter(aw);
-      const targetName = aw.targetKind === "boss" ? "Boss" : (loop.getEnemy(state, aw.targetId).archetype ? ENEMY_NAME[loop.getEnemy(state, aw.targetId).archetype] : "Nemico");
+      const enemy = aw.targetKind === "boss" ? null : loop.getEnemy(state, aw.targetId);
+      const targetName = aw.targetKind === "boss" ? "Boss" : (enemy && enemy.archetype ? ENEMY_NAME[enemy.archetype] : "Nemico");
       return {
-        title: aw.targetKind === "boss" ? "Attacco al Boss" : "Attacco",
+        actorType: "player",
+        attackerName: attacker ? attacker.name : "Giocatore",
         targetName,
         weaponPower: weapon.power,
         result: outcome.result,
@@ -1108,8 +1330,10 @@
       };
     }
     const target = loop.getPlayer(state, outcome.targetId);
+    const enemy = aw.actorType === "enemy" ? loop.getEnemy(state, aw.actorId) : null;
     return {
-      title: aw.actorType === "boss" ? "Il Boss attacca" : `${ENEMY_NAME[loop.getEnemy(state, aw.actorId) ? loop.getEnemy(state, aw.actorId).archetype : ""] || "Un nemico"} attacca`,
+      actorType: aw.actorType,
+      attackerName: aw.actorType === "boss" ? "Boss" : (enemy && enemy.archetype ? ENEMY_NAME[enemy.archetype] : "Nemico"),
       targetName: target.name,
       weaponPower: aw.prepared.weapon.power,
       result: outcome.result,
@@ -1134,14 +1358,27 @@
     if (r.result.secondaryHits && r.result.secondaryHits.length) tags.push("COLPO AD AREA");
     if (r.result.appliesSuppressMarker) tags.push("BERSAGLIO MARCHIATO");
 
+    const view = buildCombatResultView({
+      actorType: r.actorType,
+      attackerName: r.attackerName,
+      targetName: r.targetName,
+      total: r.result.total,
+      shieldBefore: r.shieldBefore,
+      shieldAfter: r.shieldAfter,
+      ignoreShieldN: r.result.ignoreShieldN || 0
+    });
+    const directionClass = r.actorType === "player" ? "is-outgoing" : "is-incoming";
+
     return `
-      <h2>${r.title}</h2>
-      ${r.targetName ? `<p>Bersaglio: <strong>${escapeHtml(r.targetName)}</strong></p>` : ""}
-      <div class="fa-result-line">${rolls.join(" + ")}</div>
-      <p>Power +${r.weaponPower}</p>
-      <div class="fa-result-total">${r.result.total} DANNI!</div>
-      <div class="fa-result-stat"><span>Scudo</span><strong>${r.shieldBefore} → ${r.shieldAfter}</strong></div>
-      <div class="fa-result-stat"><span>Salute</span><strong>${r.hpBefore} → ${r.hpAfter}</strong></div>
+      <h2 class="fa-result-heading">${escapeHtml(view.heading)}</h2>
+      <div class="fa-result-roll-block">
+        <div class="fa-result-roll-label">🎲 ${escapeHtml(view.rollLabel)}</div>
+        <div class="fa-result-line">${rolls.join(" + ")}</div>
+        <div class="fa-result-power">${escapeHtml(view.powerLabel)} +${r.weaponPower}</div>
+      </div>
+      <div class="fa-result-total ${directionClass}">💥 ${escapeHtml(view.damageLabel)}</div>
+      ${view.showShield ? `<div class="fa-result-stat"><span>${escapeHtml(view.shieldLabel)}</span><strong>${r.shieldBefore} → ${r.shieldAfter}</strong></div>` : ""}
+      <div class="fa-result-stat"><span>${escapeHtml(view.healthLabel)}</span><strong>${r.hpBefore} → ${r.hpAfter}</strong></div>
       ${tags.length ? `<div class="fa-result-tags">${tags.map((t) => `<span class="fa-result-tag">${t}</span>`).join("")}</div>` : ""}
       ${r.fallen ? `<div class="fa-ko-banner"><strong>${r.fallenLabel}</strong></div>` : ""}
       <button type="button" class="fa-btn fa-btn-primary" id="fa-attack-continue">CONTINUA</button>
@@ -1171,39 +1408,59 @@
       return;
     }
     if (attackFlow) {
-      overlay.hidden = false;
-      $("fa-attack-content").innerHTML = buildAttackFlowMarkup();
-      return;
+      const player = director.getCurrentPlayer(game.state, game.dir);
+      const inHub = player && shouldUseActionHub({ magnifyMode, nodeId: player.nodeId, directorPhase: game.dir.directorPhase, moveMode, scannerMode });
+      if (!inHub) {
+        overlay.hidden = false;
+        $("fa-attack-content").innerHTML = buildAttackFlowMarkup();
+        return;
+      }
     }
     overlay.hidden = true;
   }
 
+  function handleAttackChoiceEvent(ev) {
+    const targetBtn = ev.target.closest("[data-target-kind]");
+    if (targetBtn && attackFlow) {
+      attackFlow.targetKind = targetBtn.dataset.targetKind;
+      attackFlow.targetId = targetBtn.dataset.targetId || null;
+      attackFlow.step = "preview";
+      render();
+      return true;
+    }
+    const weaponBtn = ev.target.closest("[data-weapon-slot]");
+    if (weaponBtn && attackFlow) {
+      const player = director.getCurrentPlayer(game.state, game.dir);
+      actionHubWeaponSlot = weaponBtn.dataset.weaponSlot;
+      attackFlow.weaponSlot = actionHubWeaponSlot;
+      attackFlow.weapon = player.equipment[actionHubWeaponSlot];
+      const targets = getAttackTargets(game.state, player);
+      const autoTarget = pickAutoTarget(targets);
+      if (autoTarget) {
+        attackFlow.targetKind = autoTarget.kind;
+        attackFlow.targetId = autoTarget.id || null;
+        attackFlow.step = "preview";
+      } else {
+        attackFlow.targetKind = null;
+        attackFlow.targetId = null;
+        attackFlow.step = "target";
+      }
+      render();
+      return true;
+    }
+    if (ev.target.id === "fa-attack-change-weapon") {
+      attackFlow = { step: "weapon", weaponSlot: actionHubWeaponSlot };
+      render();
+      return true;
+    }
+    if (ev.target.id === "fa-attack-roll") { commitAttack(); return true; }
+    if (ev.target.id === "fa-attack-cancel") { attackFlow = null; render(); return true; }
+    return false;
+  }
+
   function bindAttackOverlayEvents() {
     $("fa-attack-overlay").addEventListener("click", (ev) => {
-      const targetBtn = ev.target.closest("[data-target-kind]");
-      if (targetBtn) {
-        const player = director.getCurrentPlayer(game.state, game.dir);
-        attackFlow.targetKind = targetBtn.dataset.targetKind;
-        attackFlow.targetId = targetBtn.dataset.targetId || null;
-        // Stessa regola "salta la scelta inutile" applicata anche qui: un
-        // bersaglio andava scelto (erano più di uno), ma se l'arma è unica
-        // non serve comunque chiedere anche quella.
-        const autoSlot = pickAutoWeaponSlot(player.equipment);
-        if (autoSlot) { attackFlow.weapon = player.equipment[autoSlot]; attackFlow.step = "preview"; }
-        else attackFlow.step = "weapon";
-        render();
-        return;
-      }
-      const weaponBtn = ev.target.closest("[data-weapon-slot]");
-      if (weaponBtn) {
-        const player = director.getCurrentPlayer(game.state, game.dir);
-        attackFlow.weapon = player.equipment[weaponBtn.dataset.weaponSlot];
-        attackFlow.step = "preview";
-        render();
-        return;
-      }
-      if (ev.target.id === "fa-attack-roll") { commitAttack(); return; }
-      if (ev.target.id === "fa-attack-cancel") { attackFlow = null; render(); return; }
+      if (handleAttackChoiceEvent(ev)) return;
 
       const dieBtn = ev.target.closest("[data-die]");
       if (dieBtn) {
@@ -1239,6 +1496,7 @@
       if (avatarBtn && !avatarBtn.disabled) {
         const i = Number(avatarBtn.dataset.playerIndex);
         setupPlayers[i].avatarId = avatarBtn.dataset.avatarId;
+        setupPlayers[i].startingWeaponId = null;
         renderSetup();
         return;
       }
@@ -1246,6 +1504,12 @@
     });
     $("fa-setup-screen").addEventListener("change", (ev) => {
       if (ev.target.id === "fa-setup-count-select") { setupCount = Number(ev.target.value); renderSetup(); return; }
+      const weaponSelect = ev.target.closest("select[data-start-weapon]");
+      if (weaponSelect) {
+        setupPlayers[Number(weaponSelect.dataset.playerIndex)].startingWeaponId = weaponSelect.value;
+        renderSetup();
+        return;
+      }
       const input = ev.target.closest("input[data-player-index]");
       if (input) setupPlayers[Number(input.dataset.playerIndex)].name = input.value;
     });

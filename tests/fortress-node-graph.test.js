@@ -33,7 +33,7 @@ function newLegacyGame(n, encounterOnE1) {
 function resetMove(state, playerId) { loop.getPlayer(state, playerId).movedThisRound = false; }
 
 /* =========================================================================
-   1-2. Landing su Forest: entry node, nessuno spawn automatico
+   1-2. Landing su Forest: entry node + Encounter visibile subito
    ========================================================================= */
 test("Forest: l'atterraggio posiziona nodeId sull'entryNodeId della zona", () => {
   const state = newForestGame(1);
@@ -43,10 +43,11 @@ test("Forest: l'atterraggio posiziona nodeId sull'entryNodeId della zona", () =>
   assert.equal(zone.entryNodeId, "forest-n01");
 });
 
-test("Forest: l'entry node non contiene un Encounter -> nessuno spawn automatico all'atterraggio", () => {
+test("Forest: l'Encounter multi-nodo viene generato subito all'atterraggio per valorizzare la mappa", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
-  assert.equal(loop.enemiesInZone(state, "forest").length, 0);
+  assert.equal(loop.enemiesInZone(state, "forest").length, 6);
+  assert.equal(loop.getZone(state, "forest").encounterSpawned, true);
 });
 
 /* =========================================================================
@@ -119,12 +120,12 @@ test("muoversi e poi compiere l'azione principale nello stesso round sono entram
    9-10. Multi-node Encounter V1: spawn una volta (tutta la composizione,
    su più nodi), nessun respawn dopo la pulizia.
    ========================================================================= */
-test("l'Encounter multi-nodo genera l'intera composizione al primo arrivo su un nodo che ne fa parte", () => {
+test("l'Encounter multi-nodo genera l'intera composizione una sola volta appena si entra nella Forest", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
-  assert.equal(loop.enemiesInZone(state, "forest").length, 0, "l'entry node non fa parte della composizione");
-  loop.moveToNode(state, "p1", "right"); // forest-n02: primo nodo della composizione
-  assert.equal(loop.enemiesInZone(state, "forest").length, 6, "i 6 nemici nascono tutti insieme, non solo quelli di n02");
+  assert.equal(loop.enemiesInZone(state, "forest").length, 6, "i 6 nemici devono essere visibili subito sui loro nodi");
+  loop.moveToNode(state, "p1", "right");
+  assert.equal(loop.enemiesInZone(state, "forest").length, 6, "muoversi non deve duplicare l'Encounter");
   assert.equal(loop.getZone(state, "forest").encounterSpawned, true);
 });
 
@@ -132,7 +133,7 @@ test("tornare su un nodo dell'Encounter già ripulito non lo rigenera", () => {
   const state = newForestGame(2);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   loop.landPlayer(state, "p2", "forest", () => 0.99);
-  loop.moveToNode(state, "p1", "right"); // spawna l'intero Encounter (6 nemici)
+  assert.equal(loop.enemiesInZone(state, "forest").length, 6);
   loop.enemiesInZone(state, "forest").forEach((e) => { e.hp = 0; }); // tutti ripuliti
   assert.equal(loop.enemiesInZone(state, "forest").length, 0);
 
@@ -146,7 +147,6 @@ test("tornare su un nodo dell'Encounter già ripulito non lo rigenera", () => {
 test("ogni nemico dell'Encounter riceve zoneId e il proprio nodeId dalla composizione", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
-  loop.moveToNode(state, "p1", "right");
   const enemies = loop.enemiesInZone(state, "forest");
   assert.equal(enemies.length, 6);
   enemies.forEach((e) => {
@@ -158,7 +158,6 @@ test("ogni nemico dell'Encounter riceve zoneId e il proprio nodeId dalla composi
 test("enemiesAtNode filtra per nodo, enemiesInZone resta a livello zona (6 nemici su 3 nodi)", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
-  loop.moveToNode(state, "p1", "right");
   assert.equal(loop.enemiesAtNode(state, "forest", "forest-n02").length, 2);
   assert.equal(loop.enemiesAtNode(state, "forest", "forest-n03").length, 2);
   assert.equal(loop.enemiesAtNode(state, "forest", "forest-n04").length, 2);
@@ -173,7 +172,7 @@ test("ATTACCA compare anche per un giocatore su un nodo diverso, purché il nemi
   const state = newForestGame(2);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   loop.landPlayer(state, "p2", "forest", () => 0.99);
-  loop.moveToNode(state, "p1", "right"); // p1 su forest-n02: spawna l'Encounter
+  loop.moveToNode(state, "p1", "right"); // p1 su forest-n02: Encounter già visibile dall'ingresso
   const p1Actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
   const p2Actions = director.getAvailableActions(state, loop.getPlayer(state, "p2")); // p2 resta su forest-n01 (entry)
   assert.ok(p1Actions.some((a) => a.id === "attacca"), "p1 è sul nodo dei nemici");
@@ -200,7 +199,7 @@ test("isBattlefield resta zoneId-level: vero per l'intera Forest, non solo per i
   const state = newForestGame(2);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   loop.landPlayer(state, "p2", "forest", () => 0.99);
-  assert.equal(director.isBattlefield(state, "forest"), false, "nessun nemico ancora generato");
+  assert.equal(director.isBattlefield(state, "forest"), true, "i nemici sono già presenti sui nodi appena si entra");
   loop.moveToNode(state, "p1", "right");
   resetMove(state, "p1");
   loop.moveToNode(state, "p1", "down");

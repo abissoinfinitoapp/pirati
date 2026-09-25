@@ -1327,15 +1327,13 @@
      scope a livello ZONA (zone.encounterSpawned), non più per nodo: resta
      "1 Encounter per zona" anche quando la sua composizione copre più nodi
      (zone.encounter.composition, dato puro del catalogo — ogni entry porta
-     già il proprio nodeId). Il trigger resta l'arrivo su UN nodo (entry o
-     moveToNode, invariato): se quel nodo fa parte della composizione,
-     l'intero Encounter nasce in un colpo solo; arrivare su un nodo che non
-     ne fa parte (es. l'entry) non genera nulla. */
+     già il proprio nodeId). L'intero Encounter viene generato appena si entra
+     nella zona Node Graph: in questo modo la mappa locale mostra subito i
+     pericoli reali sui nodi, senza marker cosmetici o nemici fantasma. */
   function ensureNodeEncounter(state, zoneId, nodeId) {
     const zone = getZone(state, zoneId);
     if (!zone || !zone.encounter || zone.encounterSpawned) return;
     const composition = zone.encounter.composition || [];
-    if (!composition.some((e) => e.nodeId === nodeId)) return;
     zone.encounterSpawned = true;
     composition.forEach((e) => spawnEnemy(state, e.archetype, zoneId, e.nodeId));
   }
