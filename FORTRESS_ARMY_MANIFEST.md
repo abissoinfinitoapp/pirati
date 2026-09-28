@@ -961,3 +961,12 @@ Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore es
 - I player normali vengono assegnati agli slot `players` usando `nodeId`.
 - I player nascosti vengono esclusi completamente dal pool `players` e renderizzati sugli slot `shelter` usando `hiddenNodeId` come fonte visiva ufficiale.
 - Nessuna modifica alla logica del rifugio, al movimento, al combat o al Director.
+
+
+## 2026-09-28 — Ground loot support clarity V28
+- Corretto il caso ambiguo Cura/Scudo/Utility nell'Action Hub.
+- Se lo slot supporto è libero il comando resta `RACCOGLI`.
+- Se nello slot c'è un oggetto diverso il comando diventa `SOSTITUISCI` e la UI dichiara quale oggetto verrà lasciato a terra.
+- Se il giocatore possiede già lo stesso oggetto, il pulsante di raccolta non viene mostrato e compare `GIÀ NEL TUO INVENTARIO`; una copia duplicata resta correttamente a terra.
+- Cure e scudi mostrano l'effetto sintetico, distinguendo ad esempio `Medikit` (+6 HP) da `Kit Medico` (cura completa).
+- Nessuna modifica all'economia di loot o agli slot inventario.

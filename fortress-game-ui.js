@@ -645,6 +645,13 @@
     return entry.kind === "weapon" ? `${resolved.name} (${resolved.rarity})` : resolved.name;
   }
 
+  function supportItemEffectLabel(item) {
+    if (!item) return "";
+    if (item.kind === "cura") return item.full ? "CURA COMPLETA" : `+${item.amount || 0} HP`;
+    if (item.kind === "scudo") return item.full ? "SCUDO COMPLETO" : `+${item.amount || 0} SCUDO`;
+    return "";
+  }
+
   /* Un'arma a terra è UNA sola arma: i due pulsanti non rappresentano due
      raccolte, ma la scelta dello slot in cui equipaggiarla. La UI lo dice
      esplicitamente per non confondere inventario e raccolta. */
@@ -656,19 +663,28 @@
       const owner = entry.ownerPlayerId ? loop.getPlayer(game.state, entry.ownerPlayerId) : null;
       const assignedToOther = Boolean(owner && currentPlayer && owner.id !== currentPlayer.id);
       const assignedToCurrent = Boolean(owner && currentPlayer && owner.id === currentPlayer.id);
+      const currentSupport = (!isWeapon && currentPlayer && currentPlayer.equipment) ? currentPlayer.equipment[entry.kind] : null;
+      const sameSupportAlreadyEquipped = Boolean(currentSupport && resolved && currentSupport.id === resolved.id);
+      const replacingSupport = Boolean(currentSupport && resolved && currentSupport.id !== resolved.id);
+      const effect = !isWeapon ? supportItemEffectLabel(resolved) : "";
       let buttons = "";
       if (!assignedToOther) {
-        buttons = isWeapon
-          ? `<div class="fa-groundloot-actions"><button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="primary">EQUIPAGGIA COME PRIMARIA</button>
-             <button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="secondary">EQUIPAGGIA COME SECONDARIA</button></div>`
-          : `<button type="button" class="fa-btn fa-btn-primary" data-pickup="${entry.instanceId}" data-pickup-slot="${entry.kind}">RACCOGLI</button>`;
+        if (isWeapon) {
+          buttons = `<div class="fa-groundloot-actions"><button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="primary">EQUIPAGGIA COME PRIMARIA</button>
+             <button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="secondary">EQUIPAGGIA COME SECONDARIA</button></div>`;
+        } else if (sameSupportAlreadyEquipped) {
+          buttons = `<span class="fa-groundloot-owned">✅ GIÀ NEL TUO INVENTARIO</span>`;
+        } else {
+          buttons = `<button type="button" class="fa-btn fa-btn-primary" data-pickup="${entry.instanceId}" data-pickup-slot="${entry.kind}">${replacingSupport ? "SOSTITUISCI" : "RACCOGLI"}</button>`;
+        }
       }
       let help;
       if (assignedToOther) help = `<small>🎯 ASSEGNATO A <strong>${escapeHtml(owner.name)}</strong>. Solo lui può raccoglierlo; dopo potrete scambiarlo.</small>`;
-      else if (assignedToCurrent) help = `<small>🎯 ASSEGNATO A TE. ${isWeapon ? "Scegli in quale slot equipaggiarlo." : "Raccoglilo per metterlo nel tuo inventario."}</small>`;
-      else help = isWeapon
-        ? `<small>È una sola arma: scegli in quale slot equipaggiarla. In combattimento userai l'arma selezionata in <strong>ARMA ATTIVA</strong>.</small>`
-        : `<small>Non è ancora nel tuo inventario.</small>`;
+      else if (isWeapon && assignedToCurrent) help = `<small>🎯 ASSEGNATO A TE. Scegli in quale slot equipaggiarlo.</small>`;
+      else if (isWeapon) help = `<small>È una sola arma: scegli in quale slot equipaggiarla. In combattimento userai l'arma selezionata in <strong>ARMA ATTIVA</strong>.</small>`;
+      else if (sameSupportAlreadyEquipped) help = `<small>${effect ? `<strong>${escapeHtml(effect)}</strong> · ` : ""}Hai già ${escapeHtml(resolved.name)} nello slot ${escapeHtml(entry.kind.toUpperCase())}. Questa è un'altra copia e resta a terra.</small>`;
+      else if (replacingSupport) help = `<small>${effect ? `<strong>${escapeHtml(effect)}</strong> · ` : ""}Hai già <strong>${escapeHtml(currentSupport.name)}</strong>. Se prendi ${escapeHtml(resolved.name)}, ${escapeHtml(currentSupport.name)} resterà a terra.</small>`;
+      else help = `<small>${effect ? `<strong>${escapeHtml(effect)}</strong> · ` : ""}Slot ${escapeHtml(entry.kind.toUpperCase())} libero: raccoglilo nel tuo inventario.</small>`;
       const inspect = isWeapon ? `<button type="button" class="fa-weapon-inspect" data-inspect-weapon="${entry.weaponId}" aria-label="Vedi dettagli di ${label}" title="Vedi arma">🔍</button>` : "";
       return `<div class="fa-groundloot-row ${assignedToOther ? "is-assigned-other" : ""}"><span class="fa-groundloot-item"><strong>📦 ${label}</strong>${inspect}${help}</span>${buttons}</div>`;
     }).join("");
