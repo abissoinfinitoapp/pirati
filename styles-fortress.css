@@ -875,7 +875,7 @@ body.fa-game-active .fa-header { display:none; }
 .fa-utility-panel { width:min(980px,94vw); max-height:90vh; overflow:hidden; display:flex; flex-direction:column; }
 .fa-utility-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .fa-utility-head h2 { margin:0; }
-.fa-utility-grid { display:grid; grid-template-columns:repeat(6,minmax(100px,1fr)); gap:8px; margin-bottom:12px; }
+.fa-utility-grid { display:grid; grid-template-columns:repeat(4,minmax(100px,1fr)); gap:8px; margin-bottom:12px; }
 .fa-utility-tile { min-height:78px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:6px; border:1px solid var(--fa-line); border-radius:14px; background:rgba(255,255,255,.035); color:var(--fa-ink); font:inherit; font-weight:900; cursor:pointer; font-size:22px; }
 .fa-utility-tile span { font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
 .fa-utility-tile.is-active { border-color:var(--fa-gold); background:rgba(201,162,74,.11); color:var(--fa-gold); }
@@ -1875,4 +1875,312 @@ body.fa-game-active .fa-header { display:none; }
     transform: translateX(-50%) scale(.42) !important;
     transform-origin: center bottom !important;
   }
+}
+\n\n/* ==========================================================================\n   FORTRESS ARMY — UTILITÀ / SCHEDE GIOCATORE V19\n   ========================================================================== */\n.fa-player-summary-grid {\n  display:grid;\n  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));\n  gap:12px;\n}\n.fa-player-summary-card {\n  min-width:0;\n  display:grid;\n  grid-template-columns:92px minmax(0,1fr);\n  gap:12px;\n  align-items:end;\n  padding:12px;\n  border:1px solid var(--fa-line);\n  border-radius:16px;\n  background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(0,0,0,.18));\n  color:var(--fa-ink);\n  text-align:left;\n  cursor:pointer;\n  font:inherit;\n}\n.fa-player-summary-card:hover { border-color:var(--fa-gold); }\n.fa-player-summary-figure { height:120px; display:flex; align-items:flex-end; justify-content:center; overflow:visible; }\n.fa-player-summary-figure img { max-width:88px; max-height:116px; object-fit:contain; object-position:center bottom; filter:drop-shadow(0 5px 5px rgba(0,0,0,.65)); }\n.fa-player-summary-body { min-width:0; }\n.fa-player-summary-character { color:var(--fa-gold); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }\n.fa-player-summary-body h3 { margin:3px 0 6px; font-size:18px; }\n.fa-player-summary-body p { margin:5px 0; color:var(--fa-muted); font-size:12px; }\n.fa-player-summary-vitals { display:flex; gap:8px; flex-wrap:wrap; font-size:12px; font-weight:900; }\n.fa-player-summary-arsenal { margin-top:8px; font-size:11px; line-height:1.35; }\n.fa-player-summary-status { display:inline-flex; margin-top:7px; padding:3px 7px; border-radius:999px; background:rgba(201,162,74,.12); color:var(--fa-gold); font-size:9px; font-weight:900; letter-spacing:.08em; }\n.fa-player-sheet { min-width:0; }\n.fa-player-sheet-back { margin-bottom:10px; }\n.fa-player-sheet-hero {\n  min-height:300px;\n  display:grid;\n  grid-template-columns:minmax(180px,320px) minmax(0,1fr);\n  gap:24px;\n  align-items:center;\n  padding:18px 20px;\n  border:1px solid var(--fa-line);\n  border-radius:18px;\n  background:radial-gradient(circle at 22% 80%,rgba(201,162,74,.12),transparent 34%),rgba(255,255,255,.025);\n}\n.fa-player-sheet-figure { height:270px; display:flex; align-items:flex-end; justify-content:center; }\n.fa-player-sheet-figure img { max-width:240px; max-height:265px; object-fit:contain; object-position:center bottom; filter:drop-shadow(0 10px 9px rgba(0,0,0,.72)); }\n.fa-player-sheet-head h2 { margin:2px 0 10px; font-size:clamp(28px,5vw,52px); line-height:.95; }\n.fa-player-sheet-head > p { color:var(--fa-muted); }\n.fa-player-sheet-vitals { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }\n.fa-player-sheet-vitals span { padding:7px 10px; border:1px solid var(--fa-line); border-radius:10px; background:rgba(0,0,0,.2); font-weight:900; }\n.fa-player-sheet-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:12px; margin-top:12px; }\n.fa-player-sheet-section { min-width:0; padding:16px; border:1px solid var(--fa-line); border-radius:16px; background:rgba(255,255,255,.025); }\n.fa-player-sheet-section h3 { margin:0 0 12px; }\n.fa-player-arsenal-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }\n.fa-player-arsenal-stats span { display:flex; flex-direction:column; align-items:center; padding:10px; border:1px solid var(--fa-line); border-radius:12px; background:rgba(0,0,0,.18); }\n.fa-player-arsenal-stats b { font-size:24px; color:var(--fa-gold); }\n.fa-player-arsenal-stats small { color:var(--fa-muted); text-transform:uppercase; font-size:9px; font-weight:900; }\n.fa-player-weapon-list { display:flex; flex-wrap:wrap; gap:6px; max-height:180px; overflow:auto; }\n.fa-player-weapon-chip { padding:5px 7px; border-radius:8px; background:rgba(201,162,74,.1); border:1px solid rgba(201,162,74,.24); font-size:10px; font-weight:800; }\n.fa-player-sheet-empty { color:var(--fa-muted); font-size:12px; }\n.fa-player-sheet-row { display:grid; grid-template-columns:92px minmax(0,1fr); gap:10px; padding:9px 0; border-bottom:1px solid var(--fa-line); }\n.fa-player-sheet-row:last-child { border-bottom:0; }\n.fa-player-sheet-row span { color:var(--fa-muted); text-transform:uppercase; font-size:10px; font-weight:900; }\n.fa-player-sheet-row strong { min-width:0; overflow-wrap:anywhere; }\n@media (max-width:700px) {\n  .fa-player-summary-grid { grid-template-columns:1fr; }\n  .fa-player-summary-card { grid-template-columns:72px minmax(0,1fr); padding:9px; }\n  .fa-player-summary-figure { height:92px; }\n  .fa-player-summary-figure img { max-width:68px; max-height:90px; }\n  .fa-player-sheet-hero { min-height:0; grid-template-columns:105px minmax(0,1fr); gap:12px; padding:12px; }\n  .fa-player-sheet-figure { height:150px; }\n  .fa-player-sheet-figure img { max-width:105px; max-height:148px; }\n  .fa-player-sheet-head h2 { font-size:28px; }\n  .fa-player-sheet-grid { grid-template-columns:1fr; }\n  .fa-player-arsenal-stats b { font-size:20px; }\n}\n
+
+/* ==========================================================================
+   FORTRESS ARMY — PLAYER PROFILE CARD V20
+   Scheda compatta, leggibile e realmente strutturata per il Master.
+   ========================================================================== */
+.fa-player-sheet-v20 { max-width:1100px; margin:0 auto; }
+.fa-player-profile-card {
+  border:1px solid var(--fa-line);
+  border-radius:20px;
+  overflow:hidden;
+  background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.24));
+  box-shadow:0 18px 44px rgba(0,0,0,.24);
+}
+.fa-player-profile-header {
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:16px 20px; border-bottom:1px solid var(--fa-line);
+  background:rgba(0,0,0,.16);
+}
+.fa-player-profile-character { color:var(--fa-gold); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; }
+.fa-player-profile-header h2 { margin:3px 0 0; font-size:28px; line-height:1; }
+.fa-player-profile-status { padding:6px 10px; border-radius:999px; background:rgba(201,162,74,.12); color:var(--fa-gold); font-size:10px; font-weight:900; letter-spacing:.08em; white-space:nowrap; }
+.fa-player-profile-main { display:grid; grid-template-columns:minmax(220px,36%) minmax(0,64%); min-height:390px; }
+.fa-player-profile-figure {
+  position:relative; display:flex; align-items:flex-end; justify-content:center;
+  min-height:390px; padding:24px 14px 0; overflow:hidden;
+  border-right:1px solid var(--fa-line);
+  background:radial-gradient(circle at 50% 72%,rgba(201,162,74,.13),transparent 37%);
+}
+.fa-player-profile-figure::after { content:""; position:absolute; left:50%; bottom:15px; width:120px; height:25px; transform:translateX(-50%); border-radius:50%; background:rgba(0,0,0,.28); filter:blur(3px); }
+.fa-player-profile-figure img { position:relative; z-index:1; max-width:250px; max-height:350px; width:auto; height:auto; object-fit:contain; object-position:center bottom; filter:drop-shadow(0 10px 10px rgba(0,0,0,.7)); }
+.fa-player-profile-info { min-width:0; padding:18px; display:flex; flex-direction:column; gap:14px; }
+.fa-player-profile-vitals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.fa-player-profile-vitals span { min-width:0; display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:5px; align-items:center; padding:10px 12px; border:1px solid var(--fa-line); border-radius:12px; background:rgba(0,0,0,.18); }
+.fa-player-profile-vitals b { font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fa-player-profile-vitals small { grid-column:2; color:var(--fa-muted); font-size:9px; font-weight:800; text-transform:uppercase; }
+.fa-player-profile-block { min-width:0; padding:13px; border:1px solid var(--fa-line); border-radius:14px; background:rgba(255,255,255,.02); }
+.fa-player-profile-block-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.fa-player-profile-block-head h3 { margin:0; font-size:15px; }
+.fa-player-profile-block-head > span { color:var(--fa-muted); font-size:10px; font-weight:800; }
+.fa-player-arsenal-stats-compact { margin-bottom:9px; }
+.fa-player-arsenal-stats-compact span { padding:8px 6px; }
+.fa-player-arsenal-stats-compact b { font-size:20px; }
+.fa-player-weapon-list-compact { max-height:86px; }
+.fa-player-equipment-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.fa-player-equipment-grid .fa-player-sheet-row { border:1px solid var(--fa-line); border-radius:10px; padding:9px 10px; grid-template-columns:76px minmax(0,1fr); background:rgba(0,0,0,.12); }
+.fa-player-profile-footer { display:grid; grid-template-columns:minmax(0,1fr) 190px; gap:12px; padding:0 18px 18px; }
+.fa-player-profile-inventory { margin:0; }
+.fa-player-inventory-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.fa-player-inventory-pill { min-width:0; padding:9px 10px; border:1px solid var(--fa-line); border-radius:10px; background:rgba(0,0,0,.13); }
+.fa-player-inventory-pill span { display:block; margin-bottom:3px; color:var(--fa-muted); font-size:9px; font-weight:900; text-transform:uppercase; }
+.fa-player-inventory-pill strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.fa-player-profile-skin { display:flex; flex-direction:column; justify-content:center; padding:14px; border:1px solid var(--fa-line); border-radius:14px; background:rgba(201,162,74,.06); }
+.fa-player-profile-skin span { color:var(--fa-muted); font-size:9px; font-weight:900; text-transform:uppercase; }
+.fa-player-profile-skin strong { margin-top:4px; color:var(--fa-gold); font-size:15px; }
+@media (max-width:700px) {
+  .fa-player-profile-header { padding:12px 14px; }
+  .fa-player-profile-header h2 { font-size:22px; }
+  .fa-player-profile-main { grid-template-columns:130px minmax(0,1fr); min-height:0; }
+  .fa-player-profile-figure { min-height:255px; padding:12px 8px 0; }
+  .fa-player-profile-figure img { max-width:125px; max-height:235px; }
+  .fa-player-profile-info { padding:10px; gap:9px; }
+  .fa-player-profile-vitals { grid-template-columns:1fr 1fr; }
+  .fa-player-profile-vitals span:last-child { grid-column:1 / -1; }
+  .fa-player-profile-block { padding:10px; }
+  .fa-player-equipment-grid { grid-template-columns:1fr; }
+  .fa-player-profile-footer { grid-template-columns:1fr; padding:0 10px 10px; gap:9px; }
+  .fa-player-inventory-row { grid-template-columns:1fr; }
+  .fa-player-weapon-list-compact { max-height:70px; }
+}
+
+
+/* ==========================================================================
+   FORTRESS ARMY — PLAYER SELECTOR V21
+   Anteprima Utilità: selettore visivo compatto, dettaglio nella scheda interna.
+   ========================================================================== */
+.fa-player-summary-grid {
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(92px,1fr)) !important;
+  gap:10px !important;
+  align-items:start;
+}
+.fa-player-selector-card {
+  min-width:0;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:3px;
+  padding:8px 6px 9px;
+  border:1px solid var(--fa-line);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
+  color:var(--fa-ink);
+  cursor:pointer;
+  font:inherit;
+  text-align:center;
+  transition:border-color .15s ease, transform .15s ease, background .15s ease;
+}
+.fa-player-selector-card:hover,
+.fa-player-selector-card:focus-visible {
+  border-color:var(--fa-gold);
+  background:rgba(201,162,74,.08);
+  transform:translateY(-2px);
+  outline:none;
+}
+.fa-player-selector-image {
+  width:64px;
+  height:72px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  overflow:hidden;
+}
+.fa-player-selector-image img {
+  display:block;
+  max-width:58px;
+  max-height:68px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  object-position:center bottom;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.65));
+}
+.fa-player-selector-fallback {
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:2px solid var(--fa-steel);
+  background:#171b20;
+  font-weight:900;
+}
+.fa-player-selector-card > strong {
+  width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+  line-height:1.1;
+}
+.fa-player-selector-card > small {
+  width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--fa-muted);
+  font-size:8px;
+  text-transform:uppercase;
+  font-weight:800;
+}
+.fa-player-selector-status {
+  margin-top:2px;
+  padding:2px 5px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  color:var(--fa-muted);
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+.fa-player-selector-status.is-active {
+  background:rgba(201,162,74,.12);
+  color:var(--fa-gold);
+}
+@media (max-width:700px) {
+  .fa-player-summary-grid {
+    grid-template-columns:repeat(auto-fill,minmax(78px,1fr)) !important;
+    gap:7px !important;
+  }
+  .fa-player-selector-card { padding:6px 4px 7px; border-radius:11px; }
+  .fa-player-selector-image { width:54px; height:60px; }
+  .fa-player-selector-image img { max-width:48px; max-height:56px; }
+  .fa-player-selector-card > strong { font-size:10px; }
+  .fa-player-selector-card > small { font-size:7px; }
+}
+
+/* ==========================================================================
+   FORTRESS ARMY — TACTICAL MAP ZOOM V1
+   Zoom/pan solo visuale: gameplay, nodi e tactical slot restano invariati.
+   ========================================================================== */
+.fa-tactical-map-toolbar {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  margin:0 0 8px;
+}
+.fa-map-zoom-btn,
+.fa-map-focus-btn,
+.fa-map-reset-btn {
+  min-width:34px;
+  height:34px;
+  padding:0 10px;
+  border:1px solid var(--fa-line);
+  border-radius:9px;
+  background:rgba(0,0,0,.28);
+  color:var(--fa-ink);
+  font-weight:900;
+  cursor:pointer;
+}
+.fa-map-focus-btn { color:#fff; border-color:rgba(201,162,74,.65); }
+.fa-map-zoom-btn:disabled { opacity:.35; cursor:not-allowed; }
+.fa-map-zoom-label {
+  min-width:48px;
+  text-align:center;
+  font-size:11px;
+  font-weight:900;
+  color:var(--fa-gold);
+}
+.fa-tactical-map-viewport {
+  position:relative;
+  width:100%;
+  aspect-ratio:4/3;
+  overflow:hidden;
+  border:2px solid var(--fa-line);
+  border-radius:14px;
+  background:#090b0d;
+  touch-action:none;
+  cursor:grab;
+  overscroll-behavior:contain;
+}
+.fa-tactical-map-viewport:active { cursor:grabbing; }
+.fa-tactical-map-viewport .fa-magnify-bg {
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  aspect-ratio:auto;
+  border:0;
+  border-radius:0;
+  transform:none;
+  user-select:none;
+}
+.fa-tactical-map-viewport .fa-magnify-bg img { user-select:none; -webkit-user-drag:none; }
+
+@media (max-width:700px) {
+  .fa-magnify-wrap { padding:10px; }
+  .fa-tactical-map-toolbar { justify-content:center; gap:5px; }
+  .fa-map-zoom-btn,
+  .fa-map-focus-btn,
+  .fa-map-reset-btn { height:32px; min-width:32px; padding:0 8px; }
+  .fa-map-zoom-label { min-width:42px; font-size:10px; }
+}
+
+
+/* ==========================================================================
+   FORTRESS ARMY — TACTICAL MAP ZOOM V24 · marker compensation
+   V23 ridimensiona realmente la scena per mantenere nitida la mappa.
+   I nodi e gli slot tattici vengono scalati dello stesso fattore, così player,
+   nemici, mezzi, strutture e oggetti conservano la scala relativa alla mappa.
+   ========================================================================== */
+.fa-tactical-map-viewport .fa-magnify-bg .fa-node {
+  transform: translate(-50%, -50%) scale(var(--fa-tactical-content-scale, 1));
+  transform-origin: center center;
+}
+.fa-tactical-map-viewport .fa-magnify-bg .fa-tactical-render-anchor {
+  transform: translate(-50%, -50%) scale(var(--fa-tactical-content-scale, 1));
+  transform-origin: center center;
+}
+
+/* ========================================================================== 
+   FORTRESS ARMY — TACTICAL NODE TAP MOVE V25
+   I soli nodi raggiungibili nel turno del player ON diventano target touch.
+   La hit-area è più ampia del cerchio visivo; pan/pinch restano separati.
+   ========================================================================== */
+.fa-tactical-map-viewport .fa-node.is-move-target {
+  z-index: 12;
+}
+.fa-tactical-map-viewport .fa-node-move-target {
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  border-color: #9ee8ff;
+  background: rgba(26, 117, 148, .72);
+  box-shadow: 0 0 0 4px rgba(68, 199, 244, .28), 0 0 14px rgba(68, 199, 244, .72);
+  animation: fa-node-move-pulse 1.15s ease-in-out infinite alternate;
+}
+.fa-tactical-map-viewport .fa-node-move-target::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+}
+.fa-tactical-map-viewport .fa-node-move-target:active {
+  transform: scale(.88);
+}
+@keyframes fa-node-move-pulse {
+  from { box-shadow: 0 0 0 3px rgba(68, 199, 244, .22), 0 0 8px rgba(68, 199, 244, .48); }
+  to   { box-shadow: 0 0 0 6px rgba(68, 199, 244, .16), 0 0 18px rgba(68, 199, 244, .85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fa-tactical-map-viewport .fa-node-move-target { animation: none; }
+}
+
+
+/* FORTRESS ARMY — SHELTER PLAYER ANCHOR V26
+   Un player nascosto usa lo slot shelter del nodo senza cambiare nodeId. */
+.fa-tactical-render-anchor.is-player.is-sheltered-player {
+  z-index: 9;
 }

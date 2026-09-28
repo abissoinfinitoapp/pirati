@@ -1,0 +1,11 @@
+const fs = require('fs');
+const assert = require('assert');
+const ui = fs.readFileSync(require.resolve('../fortress-game-ui.js'), 'utf8');
+const css = fs.readFileSync(require.resolve('../styles-fortress.css'), 'utf8');
+assert(ui.includes('scene.style.setProperty("--fa-tactical-content-scale", String(magnifyView.scale))'));
+assert(css.includes('.fa-tactical-map-viewport .fa-magnify-bg .fa-node'));
+assert(css.includes('.fa-tactical-map-viewport .fa-magnify-bg .fa-tactical-render-anchor'));
+assert(css.includes('scale(var(--fa-tactical-content-scale, 1))'));
+assert(ui.includes('scene.style.width = `${magnifyView.scale * 100}%`'));
+assert(!ui.includes('scene.style.transform = `translate3d'));
+console.log('fortress-tactical-map-marker-scale: 6/6 OK');

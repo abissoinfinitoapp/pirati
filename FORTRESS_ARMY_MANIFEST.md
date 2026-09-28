@@ -890,10 +890,74 @@ Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore es
 - Evidenziazione giocatore attivo, KO e stato nascosto sono preservati. Se l'asset tattico non carica, resta disponibile il fallback all'avatar classico.
 - Asset: `automate`, `cat`, `duck`, `ghost`, `icekron`, `omalma`, `pandax`, `robotron`, `skulldrome`, `travis`.
 
-## 2026-09-28 — Tactical player forced scale V18
-- Corretto il V17: la scala desktop non era stata applicata al selettore effettivo.
-- Aggiunta in fondo assoluto a `styles-fortress.css` una regola forzata per `.fa-tactical-player`.
-- Desktop: `translateX(-50%) scale(.58) !important`.
-- Mobile/touch: `translateX(-50%) scale(.42) !important`.
-- `transform-origin: center bottom` conserva l'ancoraggio dei piedi sullo slot.
-- Nessuna modifica a mostri, mezzi, strutture, slot o coordinate.
+
+## 2026-09-28 — Utilità / Schede Giocatore V19
+- `UTILITÀ` apre ora direttamente la sezione `GIOCATORI`.
+- Nuova card sintetica per ogni player: personaggio, HP, Scudo, zona/nodo, stato e contatori Arsenale.
+- Click sulla card apre la scheda completa con render isometrico grande, skin equipaggiata, Arsenale permanente e loadout della run.
+- I dati Arsenale arrivano esclusivamente da `FORTRESS_ARSENAL_API`; nessuna duplicazione di stato.
+- Nessuna modifica a combat, loop, Director o Gift Machine.
+
+
+## 2026-09-28 — PLAYER PROFILE CARD V20
+- Rifatta la scheda dettaglio giocatore in Utilità come card compatta e strutturata.
+- Desktop: personaggio contenuto a sinistra, dati/stato/arsenale/equipaggiamento a destra.
+- Footer separato per inventario e skin.
+- Mobile: layout compatto a due colonne con sezioni impilate dove necessario.
+- Nessuna modifica a dati arsenale, combat, loop o Gift Machine.
+
+
+## 2026-09-28 — Player selector V21
+- L'anteprima `UTILITÀ → GIOCATORI` è stata ridotta a un selettore visuale compatto.
+- Ogni voce mostra miniatura personaggio, nome, personaggio e stato essenziale.
+- Rimossi dall'anteprima HP/scudo/posizione/arsenale: restano nella scheda interna completa V20.
+- Click sulla miniatura apre direttamente la scheda giocatore.
+
+## 2026-09-28 — Tactical Map Zoom V22
+- Aggiunto viewport visuale per la Zone/Tactical Map senza modificare coordinate, nodi o gameplay.
+- Zoom manuale: `1x`–`2.5x`, controlli `− / +`, rotellina mouse e pinch su touch.
+- Pan manuale con trascinamento quando la mappa è zoomata.
+- Pulsante `🎯 ON`: centra il giocatore attivo e porta la vista a `1.6x` solo su comando esplicito.
+- Pulsante `↺`: ritorna alla vista completa `1x`.
+- Nessun focus automatico al cambio turno; lo stato è solo UI e viene resettato cambiando zona.
+
+
+## 2026-09-28 — Tactical Map Zoom V23 (sharp zoom)
+- Sostituito lo zoom GPU `transform: scale(...)` con ridimensionamento reale della scena (`width/height` percentuali).
+- Pan applicato tramite `left/top`; nessuna scala CSS dell'intero layer.
+- Rimosso `will-change: transform` dalla scena tattica per evitare rasterizzazione preventiva.
+- Focus manuale `🎯 ON`, pinch, wheel, pan e limiti 1×–2.5× restano invariati.
+- Il focus calcola ora la posizione dal size base della scena, mantenendo il giocatore centrato anche dopo zoom precedenti.
+- Nessuna modifica a coordinate, tactical slot o gameplay.
+
+
+## 2026-09-28 — Tactical Map Zoom V24 (marker compensation)
+- Mantenuto lo sharp zoom V23 basato su `width/height` reali della scena.
+- `applyMagnifyView()` espone `--fa-tactical-content-scale` con il livello di zoom corrente.
+- `.fa-node` e `.fa-tactical-render-anchor` scalano dello stesso fattore della mappa.
+- Player, nemici, mezzi, strutture, casse, loot e marker mantengono quindi la stessa proporzione visiva durante zoom/focus.
+- Nessuna modifica a coordinate, tactical slots, focus manuale o gameplay.
+
+
+## 2026-09-28 — Tactical node tap movement V25
+- I nodi direttamente collegati al nodo corrente diventano selezionabili sulla Tactical Map durante il turno del player ON.
+- Il tap riusa `handleMoveNode()` e quindi `director.performMoveNode()`: nessuna seconda logica di movimento.
+- Dopo che il movimento del round è stato consumato, i nodi non sono più target interattivi.
+- Aggiunto stato visivo/glow solo sui nodi raggiungibili e hit-area touch più ampia del punto visivo.
+- Pan e pinch impostano una breve soppressione del tap per evitare movimenti accidentali dopo un trascinamento.
+- Il pulsante direzionale esistente resta disponibile come alternativa.
+
+
+## 2026-09-28 — Shelter tactical player anchor V26
+- I giocatori con `hiddenInShelter === true` non usano più uno slot `players` nella Tactical Map.
+- Restano logicamente sullo stesso `nodeId`, ma vengono renderizzati sullo slot `shelter` del nodo.
+- Quando escono dal rifugio tornano automaticamente nel normale pool di slot `players`.
+- Se lo slot `shelter` non è disponibile, resta attivo il fallback precedente.
+- Nessuna modifica a movimento, distanze o combat.
+
+
+## 2026-09-28 — Shelter visual binding V27
+- Fix rendering immediato di `NASCONDITI` dopo un movimento.
+- I player normali vengono assegnati agli slot `players` usando `nodeId`.
+- I player nascosti vengono esclusi completamente dal pool `players` e renderizzati sugli slot `shelter` usando `hiddenNodeId` come fonte visiva ufficiale.
+- Nessuna modifica alla logica del rifugio, al movimento, al combat o al Director.

@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles-fortress.css?v=9">
+  <link rel="stylesheet" href="styles-fortress.css">
   <script src="catalog/fortress-armi.js"></script>
   <script src="catalog/fortress-items.js"></script>
   <script src="catalog/fortress-characters.js"></script>
@@ -120,7 +120,8 @@
       <button type="button" class="fa-btn fa-btn-ghost" id="fa-utility-close">✕ Chiudi</button>
     </header>
     <div class="fa-utility-grid">
-      <button type="button" class="fa-utility-tile is-active" data-utility-tab="sessione">🎯<span>Sessione</span></button>
+      <button type="button" class="fa-utility-tile is-active" data-utility-tab="giocatori">👤<span>Giocatori</span></button>
+      <button type="button" class="fa-utility-tile" data-utility-tab="sessione">🎯<span>Sessione</span></button>
       <button type="button" class="fa-utility-tile" data-utility-tab="inventario">🎒<span>Inventario</span></button>
       <button type="button" class="fa-utility-tile" data-utility-tab="armi">🔫<span>Armi</span></button>
       <button type="button" class="fa-utility-tile" data-utility-tab="cosmetici">🎭<span>Cosmetici</span></button>
@@ -129,7 +130,8 @@
       <button type="button" class="fa-utility-tile" data-utility-tab="regali">🎁<span>Regali</span></button>
     </div>
     <div class="fa-utility-content">
-      <section data-utility-panel="sessione" class="fa-utility-pane is-active"><div id="fa-utility-session"></div></section>
+      <section data-utility-panel="giocatori" class="fa-utility-pane is-active"><div id="fa-utility-players"></div></section>
+      <section data-utility-panel="sessione" class="fa-utility-pane"><div id="fa-utility-session"></div></section>
       <section data-utility-panel="inventario" class="fa-utility-pane"><div id="fa-utility-inventory"></div></section>
       <section data-utility-panel="armi" class="fa-utility-pane">
         <div class="fa-utility-card fa-utility-weapons-card">

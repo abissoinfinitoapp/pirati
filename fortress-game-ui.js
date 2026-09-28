@@ -349,6 +349,15 @@
   let moveMode = false;
   let scannerMode = false; // legacy UI flag mantenuto solo per compatibilità; Scanner ora agisce localmente sulle casse
   let magnifyMode = true; // Zone Magnify V1: vista nodi della zona corrente invece della World Map
+  // Tactical Map Zoom V1 — solo stato UI. Nessuna coordinata del gameplay viene modificata.
+  let magnifyView = { zoneId:null, scale:1, x:0, y:0 };
+  const magnifyPointers = new Map();
+  let magnifyDragStart = null;
+  let magnifyPinchStart = null;
+  let magnifySuppressNodeClickUntil = 0;
+  const MAGNIFY_MIN_SCALE = 1;
+  const MAGNIFY_MAX_SCALE = 2.5;
+  const MAGNIFY_FOCUS_SCALE = 1.6;
   let actionHubWeaponSlot = "primary"; // stato solo-UI: una sola arma attiva per volta nel piccolo hub locale
   let launchFlow = null;      // { mode: "initial"|"move", playerId, zoneId } — D6 fisico prima di entrare in zona
   let attackFlow = null;      // { step: "target"|"weapon"|"preview", weaponSlot, targetKind, targetId, weapon }
@@ -365,6 +374,7 @@
   let presenceOpen = false;
   let savedSession = null;
   let mapEditorState = { zoneId: null, draft: null, selectedNodeId: null, connectMode: false, connectFromId: null, dirty: false, status: "", drag: null, suppressClick: false, tacticalMode: false, anchorDraft: null, selectedAnchor: null, anchorDrag: null };
+  let utilitySelectedPlayerId = null; // solo UI: scheda giocatore aperta in Utilità
   let giftMachineFlow = null; // { participantIds, index, step, roll, reward, seenWeaponIds } · step: handoff | roll | armed | animating | reward | slot | done
   let giftRiveInstance = null;
   let giftRiveTrigger = null;
@@ -1225,6 +1235,128 @@
     });
   }
 
+  function tacticalCharacterAssetForPlayer(player) {
+    const characterId = game && game.playerAvatars ? game.playerAvatars[player.id] : null;
+    return characterId ? (TACTICAL_PLAYER_ASSETS[characterId] || "") : "";
+  }
+
+  function utilityPlayerStatus(player) {
+    if (player.present === false) return "ASSENTE";
+    if (player.status === "ko") return "KO";
+    if (player.status === "eliminated") return "ELIMINATO";
+    if (player.hiddenInShelter) return "NASCOSTO";
+    return "ATTIVO";
+  }
+
+  function utilityArsenalData(player) {
+    const characterId = game && game.playerAvatars ? game.playerAvatars[player.id] : null;
+    const a = characterId && arsenalApi ? arsenalApi.getState(characterId) : { discoveredWeaponIds: [], unlockedWeaponIds: [] };
+    const unlockedIds = Array.isArray(a.unlockedWeaponIds) ? a.unlockedWeaponIds : [];
+    const discoveredIds = Array.isArray(a.discoveredWeaponIds) ? a.discoveredWeaponIds : [];
+    const unlockedWeapons = unlockedIds.map((id) => ARMI.find((w) => w.id === id)).filter(Boolean);
+    return { discovered: discoveredIds.length, unlocked: unlockedIds.length, total: ARMI.length, unlockedWeapons };
+  }
+
+  function utilityPlayerCardMarkup(player) {
+    const characterId = game && game.playerAvatars ? game.playerAvatars[player.id] : null;
+    const character = CHARACTERS.find((c) => c.id === characterId);
+    const asset = tacticalCharacterAssetForPlayer(player);
+    const status = utilityPlayerStatus(player);
+    return `<button type="button" class="fa-player-selector-card" data-player-sheet="${escapeHtml(player.id)}" aria-label="Apri scheda di ${escapeHtml(player.name)}">
+      <span class="fa-player-selector-image">${asset ? `<img src="${escapeHtml(asset)}" alt="${escapeHtml(character ? character.name : player.name)}" draggable="false">` : `<span class="fa-player-selector-fallback">${escapeHtml((player.name || "?").slice(0,1).toUpperCase())}</span>`}</span>
+      <strong>${escapeHtml(player.name)}</strong>
+      <small>${escapeHtml(character ? character.name : (characterId || "Giocatore"))}</small>
+      <span class="fa-player-selector-status ${status === "ATTIVO" ? "is-active" : ""}">${escapeHtml(status)}</span>
+    </button>`;
+  }
+
+
+  function utilityPlayerSheetMarkup(player) {
+    const characterId = game && game.playerAvatars ? game.playerAvatars[player.id] : null;
+    const character = CHARACTERS.find((c) => c.id === characterId);
+    const asset = tacticalCharacterAssetForPlayer(player);
+    const arsenal = utilityArsenalData(player);
+    const eq = player.equipment || {};
+    const zone = player.zoneId ? loop.getZone(game.state, player.zoneId) : null;
+    const skin = skinsApi && characterId && skinsApi.getEquippedSkin ? skinsApi.getEquippedSkin(characterId) : null;
+    const nodeLabel = player.nodeId ? player.nodeId.replace(/^.*-n/, "N") : "—";
+    const inventoryItem = (label, item, icon) => `<div class="fa-player-inventory-pill"><span>${icon} ${label}</span><strong>${item ? escapeHtml(item.name) : "—"}</strong></div>`;
+    const equipRow = (label, item) => `<div class="fa-player-sheet-row"><span>${label}</span><strong>${item ? escapeHtml(item.name) : "—"}</strong></div>`;
+    const unlockedList = arsenal.unlockedWeapons.length
+      ? arsenal.unlockedWeapons.map((w) => `<span class="fa-player-weapon-chip">${escapeHtml(w.name)}</span>`).join("")
+      : `<span class="fa-player-sheet-empty">Nessuna arma ancora sbloccata.</span>`;
+
+    return `<div class="fa-player-sheet fa-player-sheet-v20">
+      <button type="button" class="fa-btn fa-btn-ghost fa-player-sheet-back" data-player-sheet-back>← Tutti i giocatori</button>
+      <div class="fa-player-profile-card">
+        <header class="fa-player-profile-header">
+          <div>
+            <span class="fa-player-profile-character">${escapeHtml(character ? character.name : (characterId || "Giocatore"))}</span>
+            <h2>${escapeHtml(player.name)}</h2>
+          </div>
+          <span class="fa-player-profile-status">${utilityPlayerStatus(player)}</span>
+        </header>
+
+        <div class="fa-player-profile-main">
+          <div class="fa-player-profile-figure">
+            ${asset ? `<img src="${escapeHtml(asset)}" alt="${escapeHtml(player.name)}" draggable="false">` : ""}
+          </div>
+
+          <div class="fa-player-profile-info">
+            <div class="fa-player-profile-vitals">
+              <span>❤️ <b>${player.hp}/${PLAYER_MAX_STAT}</b><small>Vita</small></span>
+              <span>🛡️ <b>${player.shield}/${PLAYER_MAX_STAT}</b><small>Scudo</small></span>
+              <span>📍 <b>${escapeHtml(zone ? zone.name : "—")}</b><small>${escapeHtml(nodeLabel)}</small></span>
+            </div>
+
+            <section class="fa-player-profile-block">
+              <div class="fa-player-profile-block-head"><h3>🔫 Arsenale</h3><span>${arsenal.total} totali</span></div>
+              <div class="fa-player-arsenal-stats fa-player-arsenal-stats-compact">
+                <span><b>${arsenal.discovered}</b><small>Scoperte</small></span>
+                <span><b>${arsenal.unlocked}</b><small>Sbloccate</small></span>
+                <span><b>${[eq.primary, eq.secondary].filter(Boolean).length}</b><small>Equipaggiate</small></span>
+              </div>
+              <div class="fa-player-weapon-list fa-player-weapon-list-compact">${unlockedList}</div>
+            </section>
+
+            <section class="fa-player-profile-block">
+              <div class="fa-player-profile-block-head"><h3>🎒 Equipaggiamento run</h3></div>
+              <div class="fa-player-equipment-grid">
+                ${equipRow("Primaria", eq.primary)}
+                ${equipRow("Secondaria", eq.secondary)}
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="fa-player-profile-footer">
+          <section class="fa-player-profile-block fa-player-profile-inventory">
+            <div class="fa-player-profile-block-head"><h3>Inventario</h3></div>
+            <div class="fa-player-inventory-row">
+              ${inventoryItem("Cura", eq.cura, "❤️")}
+              ${inventoryItem("Scudo", eq.scudo, "🛡️")}
+              ${inventoryItem("Utility", eq.utility, "🎒")}
+            </div>
+          </section>
+          <section class="fa-player-profile-skin">
+            <span>🎭 Skin</span>
+            <strong>${escapeHtml(skin ? skin.name : "Base")}</strong>
+          </section>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderUtilityPlayers() {
+    const host = $("fa-utility-players");
+    if (!host || !game || !game.state) return;
+    const players = game.state.players.filter((p) => p.present !== false || p.status !== "eliminated");
+    const selected = utilitySelectedPlayerId ? players.find((p) => p.id === utilitySelectedPlayerId) : null;
+    host.innerHTML = selected
+      ? utilityPlayerSheetMarkup(selected)
+      : `<div class="fa-player-summary-grid">${players.map(utilityPlayerCardMarkup).join("")}</div>`;
+  }
+
   function renderUtilityContent() {
     if (!game.state || uiMode !== "game") return;
     const state = game.state, dir = game.dir;
@@ -1233,6 +1365,7 @@
     const inventory = $("fa-utility-inventory");
     const progress = $("fa-utility-progress");
     const gifts = $("fa-utility-gifts");
+    renderUtilityPlayers();
     if (!player) {
       if (session) session.innerHTML = `<div class="fa-utility-card"><p>Nessun giocatore attivo.</p></div>`;
       if (inventory) inventory.innerHTML = `<div class="fa-utility-card"><p>Nessun inventario disponibile.</p></div>`;
@@ -1291,7 +1424,7 @@
     if (tab === "armi") embedLibraryInUtility();
   }
 
-  function openUtility(tab = "sessione") {
+  function openUtility(tab = "giocatori") {
     const overlay = $("fa-utility-overlay");
     if (!overlay) return;
     overlay.hidden = false;
@@ -1306,7 +1439,7 @@
   function bindShellEvents() {
     const screen = $("fa-game-screen");
     if (screen) screen.addEventListener("click", (ev) => {
-      if (ev.target.closest("#fa-shell-utility")) { openUtility("sessione"); return; }
+      if (ev.target.closest("#fa-shell-utility")) { openUtility("giocatori"); return; }
       if (ev.target.closest("#fa-shell-world")) {
         moveMode = false; scannerMode = false; magnifyMode = !magnifyMode; render(); return;
       }
@@ -1319,8 +1452,14 @@
         return;
       }
       if (ev.target.closest("#fa-start-gift-machine")) { startGiftMachine(); return; }
+      const playerSheet = ev.target.closest("[data-player-sheet]");
+      if (playerSheet) { utilitySelectedPlayerId = playerSheet.dataset.playerSheet; renderUtilityPlayers(); return; }
+      if (ev.target.closest("[data-player-sheet-back]")) { utilitySelectedPlayerId = null; renderUtilityPlayers(); return; }
       const tile = ev.target.closest("[data-utility-tab]");
-      if (tile) { setUtilityTab(tile.dataset.utilityTab); return; }
+      if (tile) {
+        if (tile.dataset.utilityTab !== "giocatori") utilitySelectedPlayerId = null;
+        setUtilityTab(tile.dataset.utilityTab); return;
+      }
     });
   }
 
@@ -1339,8 +1478,10 @@
 
     $("fa-map-wrap").hidden = showMagnify;
     $("fa-magnify-wrap").hidden = !showMagnify;
-    if (showMagnify) $("fa-magnify-wrap").innerHTML = renderMagnify(state, currentPlayer);
-    else renderMap();
+    if (showMagnify) {
+      $("fa-magnify-wrap").innerHTML = renderMagnify(state, currentPlayer);
+      requestAnimationFrame(applyMagnifyView);
+    } else renderMap();
 
     renderPanel();
     renderShellBar(currentPlayer);
@@ -1733,15 +1874,137 @@
     return `<img class="fa-map-object-img ${cls}" src="${escapeHtml(src)}" alt="${escapeHtml(alt || "")}" draggable="false">`;
   }
 
+  function clampMagnifyScale(value) {
+    return Math.max(MAGNIFY_MIN_SCALE, Math.min(MAGNIFY_MAX_SCALE, Number(value) || 1));
+  }
+
+  function resetMagnifyView(zoneId = null) {
+    magnifyView = { zoneId:zoneId || null, scale:1, x:0, y:0 };
+    magnifyPointers.clear();
+    magnifyDragStart = null;
+    magnifyPinchStart = null;
+    magnifySuppressNodeClickUntil = 0;
+  }
+
+  function ensureMagnifyZone(zoneId) {
+    if (String(magnifyView.zoneId || "") !== String(zoneId || "")) resetMagnifyView(zoneId);
+  }
+
+  function magnifyDom() {
+    const wrap = $("fa-magnify-wrap");
+    if (!wrap) return { wrap:null, viewport:null, scene:null };
+    return { wrap, viewport:wrap.querySelector(".fa-tactical-map-viewport"), scene:wrap.querySelector(".fa-magnify-bg") };
+  }
+
+  function constrainMagnifyView(viewport, scene, view = magnifyView) {
+    if (!viewport || !scene) return view;
+    const scale = clampMagnifyScale(view.scale);
+    const vw = viewport.clientWidth || 0, vh = viewport.clientHeight || 0;
+    const sw = scene.offsetWidth || vw, sh = scene.offsetHeight || vh;
+    const minX = Math.min(0, vw - sw);
+    const minY = Math.min(0, vh - sh);
+    return {
+      zoneId:view.zoneId,
+      scale,
+      x:Math.max(minX, Math.min(0, Number(view.x) || 0)),
+      y:Math.max(minY, Math.min(0, Number(view.y) || 0))
+    };
+  }
+
+  function applyMagnifyView() {
+    const { viewport, scene, wrap } = magnifyDom();
+    if (!viewport || !scene) return;
+    magnifyView.scale = clampMagnifyScale(magnifyView.scale);
+    scene.style.width = `${magnifyView.scale * 100}%`;
+    scene.style.height = `${magnifyView.scale * 100}%`;
+    scene.style.transform = "none";
+    // V24: la scena cresce realmente per mantenere nitido il background;
+    // i marker ricevono lo stesso fattore per conservare la scala relativa.
+    scene.style.setProperty("--fa-tactical-content-scale", String(magnifyView.scale));
+    magnifyView = constrainMagnifyView(viewport, scene, magnifyView);
+    scene.style.left = `${magnifyView.x}px`;
+    scene.style.top = `${magnifyView.y}px`;
+    const label = wrap && wrap.querySelector("[data-map-zoom-label]");
+    if (label) label.textContent = `${Math.round(magnifyView.scale * 100)}%`;
+    const minus = wrap && wrap.querySelector('[data-map-zoom="out"]');
+    const plus = wrap && wrap.querySelector('[data-map-zoom="in"]');
+    if (minus) minus.disabled = magnifyView.scale <= MAGNIFY_MIN_SCALE + .001;
+    if (plus) plus.disabled = magnifyView.scale >= MAGNIFY_MAX_SCALE - .001;
+  }
+
+  function setMagnifyView(next) {
+    magnifyView = Object.assign({}, magnifyView, next || {});
+    applyMagnifyView();
+  }
+
+  function zoomMagnifyBy(delta, clientX = null, clientY = null) {
+    const { viewport, scene } = magnifyDom();
+    if (!viewport || !scene) return;
+    const rect = viewport.getBoundingClientRect();
+    const cx = clientX == null ? rect.width / 2 : clientX - rect.left;
+    const cy = clientY == null ? rect.height / 2 : clientY - rect.top;
+    const oldScale = magnifyView.scale;
+    const nextScale = clampMagnifyScale(oldScale + delta);
+    if (Math.abs(nextScale - oldScale) < .001) return;
+    const sceneX = (cx - magnifyView.x) / oldScale;
+    const sceneY = (cy - magnifyView.y) / oldScale;
+    setMagnifyView({ scale:nextScale, x:cx - sceneX * nextScale, y:cy - sceneY * nextScale });
+  }
+
+  function focusMagnifyOnCurrentPlayer() {
+    const { viewport, scene } = magnifyDom();
+    if (!viewport || !scene) return;
+    const active = scene.querySelector(".fa-tactical-player.is-current");
+    const anchor = active && active.closest(".fa-tactical-render-anchor");
+    const fallbackNode = scene.querySelector(".fa-node.is-current");
+    const target = anchor || fallbackNode;
+    if (!target) return;
+    const leftPct = parseFloat(target.style.left);
+    const topPct = parseFloat(target.style.top);
+    if (!Number.isFinite(leftPct) || !Number.isFinite(topPct)) return;
+    const scale = MAGNIFY_FOCUS_SCALE;
+    const baseWidth = scene.offsetWidth / Math.max(magnifyView.scale, .001);
+    const baseHeight = scene.offsetHeight / Math.max(magnifyView.scale, .001);
+    const targetX = baseWidth * leftPct / 100;
+    const targetY = baseHeight * topPct / 100;
+    setMagnifyView({
+      scale,
+      x:viewport.clientWidth / 2 - targetX * scale,
+      y:viewport.clientHeight / 2 - targetY * scale
+    });
+  }
+
+  function magnifyDistance(a, b) {
+    return Math.hypot((b.clientX || 0) - (a.clientX || 0), (b.clientY || 0) - (a.clientY || 0));
+  }
+
+  function magnifyCenter(a, b, viewportRect) {
+    return {
+      x:((a.clientX + b.clientX) / 2) - viewportRect.left,
+      y:((a.clientY + b.clientY) / 2) - viewportRect.top
+    };
+  }
+
   function renderMagnify(state, player) {
     const zone = loop.getZone(state, player.zoneId);
+    ensureMagnifyZone(zone.id);
     const zoneDef = zoneCatalogEntry(zone.id);
     const nodes = zone.nodes || [];
+    const currentNode = nodes.find((n) => n.id === player.nodeId);
+    const isPlayerTurn = game.dir && game.dir.directorPhase === "player-turn";
+    const canMove = isPlayerTurn && !player.movedThisRound;
+    const moveDirectionByNodeId = new Map(
+      currentNode && currentNode.connections
+        ? Object.entries(currentNode.connections).filter(([, targetId]) => targetId).map(([direction, targetId]) => [String(targetId), String(direction)])
+        : []
+    );
 
     const anchoredParts = [];
     const nodesMarkup = nodes.map((n) => {
       const isCurrent = player.nodeId === n.id;
       const isSafeEntry = Boolean(zone.entryNodeId && n.id === zone.entryNodeId);
+      const moveDirection = canMove ? moveDirectionByNodeId.get(String(n.id)) : null;
+      const isMoveTarget = Boolean(moveDirection && !isCurrent);
       const enemies = loop.enemiesAtNode(state, zone.id, n.id);
       const chest = (zone.chests || []).find((c) => c.nodeId === n.id && !c.opened);
       const hasLoot = (zone.groundLoot || []).some((g) => g.nodeId === n.id);
@@ -1750,7 +2013,20 @@
         ? zone.operationalStructure : null;
       const partyBoostEvent = loop.getPartyBoostEvent ? loop.getPartyBoostEvent(state, zone.id) : null;
       const boostHere = partyBoostEvent && partyBoostEvent.nodeId === n.id ? partyBoostEvent : null;
-      const nodePlayers = state.players.filter((p) => p.present !== false && p.zoneId === zone.id && p.nodeId === n.id && p.status !== "eliminated");
+      const regularPlayersAtNode = state.players.filter((p) =>
+        p.present !== false &&
+        p.zoneId === zone.id &&
+        p.status !== "eliminated" &&
+        !p.hiddenInShelter &&
+        p.nodeId === n.id
+      );
+      const shelteredPlayersAtNode = state.players.filter((p) =>
+        p.present !== false &&
+        p.zoneId === zone.id &&
+        p.status !== "eliminated" &&
+        p.hiddenInShelter &&
+        String(p.hiddenNodeId || p.nodeId || "") === String(n.id)
+      );
       const vehicle = isSafeEntry && zone.vehicleVisit && zone.vehicleVisit.active && zone.vehicleVisit.vehicle ? zone.vehicleVisit.vehicle : null;
 
       const entryAnchor = runtimeNodeAnchor(zone.id, n.id, "entry");
@@ -1788,17 +2064,32 @@
         else fallbackEnemies.push(e);
       });
       const fallbackPlayers = [];
-      const playerAnchors = runtimeEntityAnchors(zone.id, n.id, "players", nodePlayers);
-      nodePlayers.forEach((p) => {
+      // Un player nascosto non appartiene più al pool grafico `players`:
+      // hiddenNodeId è la fonte ufficiale della sua posizione visiva finché
+      // resta nel rifugio. Questo evita che un NASCONDITI appena eseguito
+      // conservi il vecchio slot player dopo un movimento nello stesso turno.
+      const regularPlayers = regularPlayersAtNode;
+      const shelteredPlayers = shelteredPlayersAtNode;
+      const playerAnchors = runtimeEntityAnchors(zone.id, n.id, "players", regularPlayers);
+      const shelterPlayerAnchors = runtimeEntityAnchors(zone.id, n.id, "shelter", shelteredPlayers);
+
+      regularPlayers.forEach((p) => {
         const a = playerAnchors.get(String(p.id));
         if (a) anchoredParts.push(anchoredMarkup(a, tacticalPlayerMarkup(p, player), "is-player"));
         else fallbackPlayers.push(p);
       });
+      shelteredPlayers.forEach((p) => {
+        const a = shelterPlayerAnchors.get(String(p.id));
+        if (a) anchoredParts.push(anchoredMarkup(a, tacticalPlayerMarkup(p, player), "is-player is-sheltered-player"));
+        else fallbackPlayers.push(p);
+      });
       const tokens = fallbackPlayers.map((p) => tokenMarkup(p, player)).join("");
 
-      return `<div class="fa-node ${isCurrent ? "is-current" : ""} ${isSafeEntry ? "is-safe-entry" : ""}" style="left:${n.x}%;top:${n.y}%;">
+      return `<div class="fa-node ${isCurrent ? "is-current" : ""} ${isSafeEntry ? "is-safe-entry" : ""} ${isMoveTarget ? "is-move-target" : ""}" style="left:${n.x}%;top:${n.y}%;">
         ${!entryAnchor ? safeHtml : ""}
-        <div class="fa-node-dot"></div>
+        ${isMoveTarget
+          ? `<button type="button" class="fa-node-dot fa-node-move-target" data-node-move-dir="${escapeHtml(moveDirection)}" data-node-move-id="${escapeHtml(n.id)}" aria-label="Spostati su ${escapeHtml(String(n.id).split("-").pop().toUpperCase())}" title="Tocca per spostarti"></button>`
+          : `<div class="fa-node-dot"></div>`}
         <div class="fa-node-markers">
           ${!chestAnchor ? chestHtml : ""}
           ${!lootAnchor ? lootHtml : ""}
@@ -1813,9 +2104,6 @@
       </div>`;
     }).join("");
 
-    const currentNode = nodes.find((n) => n.id === player.nodeId);
-    const isPlayerTurn = game.dir && game.dir.directorPhase === "player-turn";
-    const canMove = isPlayerTurn && !player.movedThisRound;
     const connectionBaseDir = (key) => {
       const m = String(key || "").match(/^(left|right|up|down)/);
       return m ? m[1] : "right";
@@ -1831,9 +2119,18 @@
     const moveButtons = moveConnections.map(([key,targetId]) => `<button type="button" class="fa-dir-btn fa-node-link-btn" data-dir="${escapeHtml(key)}" ${canMove ? "" : "disabled"} aria-label="Vai a ${escapeHtml(connectionTargetLabel(targetId))}"><span>${connectionArrow(key)}</span><b>${escapeHtml(connectionTargetLabel(targetId))}</b></button>`).join("");
 
     return `
-      <div class="fa-magnify-bg" style="background-image:url('${zoneDef ? zoneDef.image : ""}')">
-        ${nodesMarkup}
-        ${anchoredParts.join("")}
+      <div class="fa-tactical-map-toolbar" aria-label="Controlli mappa tattica">
+        <button type="button" class="fa-map-zoom-btn" data-map-zoom="out" aria-label="Riduci zoom">−</button>
+        <span class="fa-map-zoom-label" data-map-zoom-label>${Math.round(magnifyView.scale * 100)}%</span>
+        <button type="button" class="fa-map-zoom-btn" data-map-zoom="in" aria-label="Aumenta zoom">＋</button>
+        <button type="button" class="fa-map-focus-btn" data-map-focus-player title="Centra e ingrandisci il giocatore ON">🎯 ON</button>
+        <button type="button" class="fa-map-reset-btn" data-map-reset title="Vista completa">↺</button>
+      </div>
+      <div class="fa-tactical-map-viewport">
+        <div class="fa-magnify-bg" style="background-image:url('${zoneDef ? zoneDef.image : ""}');left:${magnifyView.x}px;top:${magnifyView.y}px;width:${magnifyView.scale * 100}%;height:${magnifyView.scale * 100}%;transform:none">
+          ${nodesMarkup}
+          ${anchoredParts.join("")}
+        </div>
       </div>
       ${renderNodeLegend()}
       <div class="fa-magnify-command-row">
@@ -1862,6 +2159,18 @@
 
   function bindMagnifyEvents() {
     $("fa-magnify-wrap").addEventListener("click", (ev) => {
+      const zoomBtn = ev.target.closest("[data-map-zoom]");
+      if (zoomBtn) { zoomMagnifyBy(zoomBtn.dataset.mapZoom === "in" ? .25 : -.25); return; }
+      if (ev.target.closest("[data-map-focus-player]")) { focusMagnifyOnCurrentPlayer(); return; }
+      if (ev.target.closest("[data-map-reset]")) { resetMagnifyView(magnifyView.zoneId); applyMagnifyView(); return; }
+
+      const nodeMove = ev.target.closest("[data-node-move-dir]");
+      if (nodeMove) {
+        if (Date.now() < magnifySuppressNodeClickUntil) return;
+        handleMoveNode(nodeMove.dataset.nodeMoveDir);
+        return;
+      }
+
       const dirBtn = ev.target.closest(".fa-dir-btn");
       if (dirBtn) { if (!dirBtn.disabled) handleMoveNode(dirBtn.dataset.dir); return; }
 
@@ -1962,6 +2271,79 @@
         handlePlayerAction(actionBtn.dataset.action, actionBtn.dataset.target, actionBtn.dataset.chest, actionBtn.dataset.utility);
       }
     });
+    const magnifyWrap = $("fa-magnify-wrap");
+    magnifyWrap.addEventListener("wheel", (ev) => {
+      const viewport = ev.target.closest(".fa-tactical-map-viewport");
+      if (!viewport) return;
+      ev.preventDefault();
+      zoomMagnifyBy(ev.deltaY < 0 ? .15 : -.15, ev.clientX, ev.clientY);
+    }, { passive:false });
+
+    magnifyWrap.addEventListener("pointerdown", (ev) => {
+      const viewport = ev.target.closest(".fa-tactical-map-viewport");
+      if (!viewport || ev.target.closest("button,input,select,a")) return;
+      if (ev.pointerType === "mouse" && ev.button !== 0) return;
+      magnifyPointers.set(ev.pointerId, { clientX:ev.clientX, clientY:ev.clientY });
+      try { viewport.setPointerCapture(ev.pointerId); } catch (_) {}
+      const rect = viewport.getBoundingClientRect();
+      if (magnifyPointers.size === 1) {
+        magnifyDragStart = { pointerId:ev.pointerId, clientX:ev.clientX, clientY:ev.clientY, x:magnifyView.x, y:magnifyView.y, moved:false };
+        magnifyPinchStart = null;
+      } else if (magnifyPointers.size === 2) {
+        const pts = Array.from(magnifyPointers.values());
+        const center = magnifyCenter(pts[0], pts[1], rect);
+        magnifyPinchStart = {
+          distance:Math.max(1, magnifyDistance(pts[0], pts[1])),
+          scale:magnifyView.scale,
+          sceneX:(center.x - magnifyView.x) / magnifyView.scale,
+          sceneY:(center.y - magnifyView.y) / magnifyView.scale
+        };
+        magnifyDragStart = null;
+      }
+    });
+
+    magnifyWrap.addEventListener("pointermove", (ev) => {
+      if (!magnifyPointers.has(ev.pointerId)) return;
+      magnifyPointers.set(ev.pointerId, { clientX:ev.clientX, clientY:ev.clientY });
+      const { viewport } = magnifyDom();
+      if (!viewport) return;
+      ev.preventDefault();
+      if (magnifyPointers.size >= 2 && magnifyPinchStart) {
+        magnifySuppressNodeClickUntil = Date.now() + 350;
+        const pts = Array.from(magnifyPointers.values()).slice(0,2);
+        const rect = viewport.getBoundingClientRect();
+        const center = magnifyCenter(pts[0], pts[1], rect);
+        const scale = clampMagnifyScale(magnifyPinchStart.scale * magnifyDistance(pts[0], pts[1]) / magnifyPinchStart.distance);
+        setMagnifyView({
+          scale,
+          x:center.x - magnifyPinchStart.sceneX * scale,
+          y:center.y - magnifyPinchStart.sceneY * scale
+        });
+      } else if (magnifyPointers.size === 1 && magnifyDragStart && magnifyDragStart.pointerId === ev.pointerId) {
+        const dragDistance = Math.hypot(ev.clientX - magnifyDragStart.clientX, ev.clientY - magnifyDragStart.clientY);
+        if (dragDistance > 6) {
+          magnifyDragStart.moved = true;
+          magnifySuppressNodeClickUntil = Date.now() + 350;
+        }
+        setMagnifyView({
+          x:magnifyDragStart.x + ev.clientX - magnifyDragStart.clientX,
+          y:magnifyDragStart.y + ev.clientY - magnifyDragStart.clientY
+        });
+      }
+    });
+
+    const endMagnifyPointer = (ev) => {
+      if (!magnifyPointers.has(ev.pointerId)) return;
+      magnifyPointers.delete(ev.pointerId);
+      magnifyPinchStart = null;
+      if (magnifyPointers.size === 1) {
+        const [pointerId, pt] = magnifyPointers.entries().next().value;
+        magnifyDragStart = { pointerId, clientX:pt.clientX, clientY:pt.clientY, x:magnifyView.x, y:magnifyView.y, moved:true };
+      } else magnifyDragStart = null;
+    };
+    magnifyWrap.addEventListener("pointerup", endMagnifyPointer);
+    magnifyWrap.addEventListener("pointercancel", endMagnifyPointer);
+
     $("fa-magnify-wrap").addEventListener("change", (ev) => {
       const roleSelect = ev.target.closest("[data-vehicle-role]");
       if (!roleSelect || !vehicleFlow) return;

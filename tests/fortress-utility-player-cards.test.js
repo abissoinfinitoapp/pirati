@@ -1,0 +1,13 @@
+const fs = require("fs");
+const assert = require("assert");
+const path = require("path");
+const html = fs.readFileSync(path.join(__dirname,"..","fortress-army.html"),"utf8");
+const js = fs.readFileSync(path.join(__dirname,"..","fortress-game-ui.js"),"utf8");
+const css = fs.readFileSync(path.join(__dirname,"..","styles-fortress.css"),"utf8");
+assert(html.includes('data-utility-tab="giocatori"'));
+assert(html.includes('id="fa-utility-players"'));
+assert(js.includes('function utilityPlayerSheetMarkup'));
+assert(js.includes('arsenalApi.getState(characterId)'));
+assert(js.includes('openUtility("giocatori")'));
+assert(css.includes('.fa-player-sheet-figure img'));
+console.log("fortress utility player cards: 6/6");
