@@ -1,0 +1,59 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "hill-outpost",
+  "entryNodeId": "hill-outpost-n01",
+  "nodes": [
+    {
+      "id": "hill-outpost-n01",
+      "x": 45.34,
+      "y": 83.33
+    },
+    {
+      "id": "hill-outpost-n02",
+      "x": 77.16,
+      "y": 72.95
+    },
+    {
+      "id": "hill-outpost-n03",
+      "x": 29.06,
+      "y": 38.17
+    },
+    {
+      "id": "hill-outpost-n04",
+      "x": 73.72,
+      "y": 22.16
+    },
+    {
+      "id": "hill-outpost-n05",
+      "x": 48.45,
+      "y": 7.88
+    }
+  ],
+  "edges": [
+    [
+      "hill-outpost-n01",
+      "hill-outpost-n02"
+    ],
+    [
+      "hill-outpost-n01",
+      "hill-outpost-n03"
+    ],
+    [
+      "hill-outpost-n02",
+      "hill-outpost-n03"
+    ],
+    [
+      "hill-outpost-n02",
+      "hill-outpost-n04"
+    ],
+    [
+      "hill-outpost-n03",
+      "hill-outpost-n04"
+    ],
+    [
+      "hill-outpost-n04",
+      "hill-outpost-n05"
+    ]
+  ]
+}

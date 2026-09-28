@@ -110,7 +110,7 @@ test("muoversi e poi compiere l'azione principale nello stesso round sono entram
   resetMove(state, "p1");
   loop.moveToNode(state, "p1", "down");  // su forest-n04 (Encounter)
   assert.throws(() => loop.moveToNode(state, "p1", "up"), /Movimento già usato/, "un solo movimento per round");
-  const enemyId = loop.enemiesInZone(state, "forest")[0].id;
+  const enemyId = loop.enemiesAtNode(state, "forest", loop.getPlayer(state, "p1").nodeId)[0].id;
   const outcome = loop.attackEnemyAction(state, "p1", enemyId, { baseDice: 1, range: "medio", power: 1, special: { type: "none" } }, () => 0.99);
   assert.ok(outcome, "l'azione principale resta disponibile dopo essersi mossi");
   assert.equal(loop.getPlayer(state, "p1").actedThisRound, true);
@@ -166,17 +166,37 @@ test("enemiesAtNode filtra per nodo, enemiesInZone resta a livello zona (6 nemic
 });
 
 /* =========================================================================
-   13. ATTACCA: node-distance-aware (Enemy Squads V1), non più solo same-node
+   13. ATTACCA: node-local — l'entry è neutra, il combattimento parte entrando nel nodo nemico
    ========================================================================= */
-test("ATTACCA compare anche per un giocatore su un nodo diverso, purché il nemico sia raggiungibile nel grafo", () => {
+test("l'entry di approdo è neutra anche a livello engine: nessun attacco può partire da lì", () => {
+  const state = newForestGame(1);
+  loop.landPlayer(state, "p1", "forest", () => 0.99);
+  const enemyId = loop.enemiesAtNode(state, "forest", "forest-n02")[0].id;
+  const weapon = { baseDice: 1, range: "medio", power: 1, special: { type: "none" } };
+  assert.throws(() => loop.declarePlayerAttack(state, "p1", enemyId, weapon), /approdo è neutra/);
+});
+
+test("i nemici non possono attaccare né inseguire un giocatore rimasto sull'entry neutra", () => {
+  const state = newForestGame(1);
+  loop.landPlayer(state, "p1", "forest", () => 0.99);
+  const enemy = loop.enemiesAtNode(state, "forest", "forest-n02")[0];
+  const beforeNode = enemy.nodeId;
+  const prepared = loop.prepareEnemyStep(state, enemy.id);
+  assert.equal(prepared.type, "idle");
+  assert.equal(enemy.nodeId, beforeNode, "il nemico non entra nella zona neutra");
+});
+
+test("ATTACCA compare solo quando il giocatore raggiunge davvero il nodo dei nemici", () => {
   const state = newForestGame(2);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   loop.landPlayer(state, "p2", "forest", () => 0.99);
-  loop.moveToNode(state, "p1", "right"); // p1 su forest-n02: Encounter già visibile dall'ingresso
+  let p2Actions = director.getAvailableActions(state, loop.getPlayer(state, "p2"));
+  assert.ok(!p2Actions.some((a) => a.id === "attacca"), "l'entry forest-n01 resta neutra");
+  loop.moveToNode(state, "p1", "right"); // p1 raggiunge forest-n02, occupato dai nemici
   const p1Actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
-  const p2Actions = director.getAvailableActions(state, loop.getPlayer(state, "p2")); // p2 resta su forest-n01 (entry)
-  assert.ok(p1Actions.some((a) => a.id === "attacca"), "p1 è sul nodo dei nemici");
-  assert.ok(p2Actions.some((a) => a.id === "attacca"), "p2 raggiunge i nemici di n02 in un solo collegamento da n01");
+  assert.ok(p1Actions.some((a) => a.id === "attacca"), "ATTACCA compare sul nodo occupato");
+  p2Actions = director.getAvailableActions(state, loop.getPlayer(state, "p2"));
+  assert.ok(!p2Actions.some((a) => a.id === "attacca"), "un compagno ancora sull'entry non può attaccare a distanza tra nodi");
 });
 
 test("ATTACCA non compare se l'unico nemico è su un nodo irraggiungibile (grafo disconnesso)", () => {
@@ -275,18 +295,53 @@ test("raccogliere il loot della cassa richiede di essere sullo stesso nodo", () 
 /* =========================================================================
    19. RIANIMA/SCAMBIA/AIUTA solo stesso nodo in Forest
    ========================================================================= */
-test("AIUTA e SCAMBIA compaiono solo verso un compagno sullo stesso nodo in Forest", () => {
+test("SUPPORTA compare solo nello stesso nodo DURANTE un ingaggio; DAI solo se possiedi un oggetto", () => {
   const state = newForestGame(2);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   loop.landPlayer(state, "p2", "forest", () => 0.99);
-  loop.moveToNode(state, "p1", "right"); // p1 su n02, p2 resta su n01
+
   let actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
+  assert.ok(!actions.some((a) => a.id === "aiuta"), "sul nodo neutro non si supporta un combattimento inesistente");
+  assert.ok(!actions.some((a) => a.id === "scambia"), "senza oggetti posseduti non c'è nulla da dare");
+
+  loop.getPlayer(state, "p1").equipment.primary = { id: "assault_base", name: "Fucile d'Assalto Standard" };
+  actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
+  const giveOnNeutral = actions.find((a) => a.id === "scambia");
+  assert.ok(giveOnNeutral);
+  assert.match(giveOnNeutral.label, /FUCILE D'ASSALTO STANDARD/);
+  assert.ok(!actions.some((a) => a.id === "aiuta"));
+
+  loop.moveToNode(state, "p1", "right"); // p1 su n02, p2 resta su n01
+  actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
   assert.ok(!actions.some((a) => a.id === "aiuta" || a.id === "scambia"), "p2 non è più sullo stesso nodo");
 
-  loop.moveToNode(state, "p2", "right"); // p2 raggiunge p1 su n02
+  loop.moveToNode(state, "p2", "right"); // p2 raggiunge p1 su n02: qui ci sono nemici
   actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
-  assert.ok(actions.some((a) => a.id === "aiuta"));
+  const support = actions.find((a) => a.id === "aiuta");
+  assert.ok(support);
+  assert.match(support.label, /\+1 DADO AL SUO ATTACCO/);
   assert.ok(actions.some((a) => a.id === "scambia"));
+});
+
+test("SUPPORTA è rifiutato dall'engine sul nodo neutro anche se i due giocatori sono insieme", () => {
+  const state = newForestGame(2);
+  loop.landPlayer(state, "p1", "forest", () => 0.99);
+  loop.landPlayer(state, "p2", "forest", () => 0.99);
+  assert.throws(() => loop.aiutoAction(state, "p1", "p2"), /nodo di approdo.*neutro/i);
+});
+
+test("SCAMBIA è rifiutato dall'engine tra nodi diversi e il vecchio oggetto del destinatario cade sul nodo dello scambio", () => {
+  const state = newForestGame(2);
+  loop.landPlayer(state, "p1", "forest", () => 0.99);
+  loop.landPlayer(state, "p2", "forest", () => 0.99);
+  loop.getPlayer(state, "p1").equipment.cura = { id: "medikit", name: "Medikit", kind: "cura", amount: 6, full: false };
+  loop.getPlayer(state, "p2").equipment.cura = { id: "bende", name: "Bende", kind: "cura", amount: 3, full: false };
+  loop.moveToNode(state, "p1", "right");
+  assert.throws(() => loop.scambiaAction(state, "p1", "p2", "cura"), /stesso nodo/);
+  loop.moveToNode(state, "p2", "right");
+  loop.scambiaAction(state, "p1", "p2", "cura");
+  const dropped = loop.getZone(state, "forest").groundLoot.find((g) => g.itemId === "bende");
+  assert.equal(dropped.nodeId, "forest-n02");
 });
 
 test("RIANIMA compare solo se il compagno KO è sullo stesso nodo in Forest", () => {
@@ -299,16 +354,46 @@ test("RIANIMA compare solo se il compagno KO è sullo stesso nodo in Forest", ()
   assert.ok(!actions.some((a) => a.id === "rianima"));
 });
 
+test("Cura/Scudo a statistiche piene: nessuna azione proposta e consumo rifiutato dall'engine", () => {
+  const state = newForestGame(1);
+  loop.landPlayer(state, "p1", "forest", () => 0.99);
+  const p = loop.getPlayer(state, "p1");
+  p.equipment.cura = { id: "bende", name: "Bende", kind: "cura", amount: 3, full: false };
+  p.equipment.scudo = { id: "batteria_scudo", name: "Batteria Scudo", kind: "scudo", amount: 6, full: false };
+  p.hp = 10;
+  p.shield = 10;
+  const actions = director.getAvailableActions(state, p);
+  assert.ok(!actions.some((a) => a.id === "usa_cura"));
+  assert.ok(!actions.some((a) => a.id === "usa_scudo"));
+  assert.throws(() => loop.usaCuraAction(state, "p1"), /Vita già al massimo/);
+  assert.throws(() => loop.usaScudoAction(state, "p1"), /Scudo già al massimo/);
+  assert.equal(p.equipment.cura.id, "bende", "la benda non viene consumata");
+  assert.equal(p.equipment.scudo.id, "batteria_scudo", "la batteria non viene consumata");
+});
+
+test("la Cura torna disponibile appena manca vita", () => {
+  const state = newForestGame(1);
+  loop.landPlayer(state, "p1", "forest", () => 0.99);
+  const p = loop.getPlayer(state, "p1");
+  p.equipment.cura = { id: "bende", name: "Bende", kind: "cura", amount: 3, full: false };
+  p.hp = 9;
+  const actions = director.getAvailableActions(state, p);
+  assert.ok(actions.some((a) => a.id === "usa_cura"));
+});
+
 /* =========================================================================
    20. Comportamento legacy invariato nelle altre zone
    ========================================================================= */
-test("una zona legacy (senza nodes[]) mostra ancora RIANIMA/AIUTA/SCAMBIA/ATTACCA a livello di zona intera", () => {
+test("una zona legacy (senza nodes[]) mantiene ATTACCA/SUPPORTA e mostra DAI solo con inventario", () => {
   const state = newLegacyGame(2, true);
   loop.landPlayer(state, "p1", "e1", () => 0.99);
   loop.landPlayer(state, "p2", "e1", () => 0.99);
-  const actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
+  let actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
   assert.ok(actions.some((a) => a.id === "attacca"));
   assert.ok(actions.some((a) => a.id === "aiuta"));
+  assert.ok(!actions.some((a) => a.id === "scambia"));
+  loop.getPlayer(state, "p1").equipment.cura = { id: "bende", name: "Bende", amount: 3 };
+  actions = director.getAvailableActions(state, loop.getPlayer(state, "p1"));
   assert.ok(actions.some((a) => a.id === "scambia"));
 });
 
@@ -328,6 +413,17 @@ test("Forest (migrata) non innesca mai più ensureInitialEncounter zona-level: n
    22. Testo informativo "Situazione": sameNode distingue vicinanza reale
    nelle zone col Node Graph, senza toccare Party/Director/azioni.
    ========================================================================= */
+test("getSituation: sull'entry neutra non elenca come presenti i nemici sugli altri nodi", () => {
+  const state = newForestGame(1);
+  loop.landPlayer(state, "p1", "forest", () => 0.99);
+  const situation = director.getSituation(state, loop.getPlayer(state, "p1"));
+  assert.equal(situation.enemies.length, 0);
+  assert.equal(situation.openChests.length, 0);
+  loop.moveToNode(state, "p1", "right");
+  const afterMove = director.getSituation(state, loop.getPlayer(state, "p1"));
+  assert.ok(afterMove.enemies.length > 0, "i nemici diventano presenti quando il giocatore raggiunge il loro nodo");
+});
+
 test("getSituation.companions: sameNode è true per un compagno sullo stesso nodo in Forest", () => {
   const state = newForestGame(2);
   loop.landPlayer(state, "p1", "forest", () => 0.99);

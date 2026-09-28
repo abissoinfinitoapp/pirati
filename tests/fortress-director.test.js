@@ -64,11 +64,11 @@ test("ordine giocatori fisso: rispetta l'ordine con cui sono stati creati", () =
   assert.equal(director.getCurrentPlayerId(state, dir), "p1");
 });
 
-test("un giocatore KO viene saltato automaticamente nel turno", () => {
+test("Combat V2: un giocatore KO riceve il proprio turno per il rialzo del destino", () => {
   const { state, dir } = startGame(3);
   loop.getPlayer(state, "p2").status = "ko";
   director.endPlayerTurn(state, dir, "p1");
-  assert.equal(director.getCurrentPlayerId(state, dir), "p3", "p2 è KO: si passa direttamente a p3");
+  assert.equal(director.getCurrentPlayerId(state, dir), "p2", "p2 è KO ma deve poter tirare il D6 del destino");
 });
 
 test("un giocatore eliminato viene saltato automaticamente nel turno", () => {
@@ -155,6 +155,20 @@ test("APRI CASSA non chiude il turno: il giocatore resta corrente e può equipag
 
   director.endPlayerTurn(state, dir, "p1");
   assert.equal(director.getCurrentPlayerId(state, dir), "p2", "FINE TURNO chiude davvero il turno, esplicitamente");
+});
+
+test("Scanner compare solo vicino a una cassa chiusa e porta il chestId locale", () => {
+  const state = loop.createGame({ players: makePlayers(1) });
+  state.players.forEach((p) => { p.zoneId = null; });
+  loop.landPlayer(state, "p1", "e1", () => 0.99);
+  loop.beginExploration(state, () => 0.99);
+  const p = loop.getPlayer(state, "p1");
+  p.equipment.utility = { id: "scanner", name: "Scanner" };
+  assert.equal(director.getAvailableActions(state, p).some((a) => a.utilityId === "scanner"), false);
+  loop.getZone(state, "e1").chests.push({ id: "scan-chest", opened: false });
+  const action = director.getAvailableActions(state, p).find((a) => a.utilityId === "scanner");
+  assert.equal(action.label, "USA SCANNER SULLA CASSA");
+  assert.equal(action.chestId, "scan-chest");
 });
 
 test("FINE TURNO è sempre presente, in coda", () => {
@@ -343,7 +357,7 @@ test("rerollOnes: se il ritiro fisico è ancora 1, resta 1 — nessun secondo ri
   assert.deepEqual(done.result.rolls, [1, 5, 3], "il secondo 1 resta: nessun ulteriore ritiro");
 });
 
-test("attacco nemico da risultati fisici: nessun dado generato dall'app", () => {
+test("attacco nemico V2: prima sceglie la reazione, poi usa solo dadi fisici", () => {
   const { state, dir } = startGame(1);
   loop.getZone(state, "e1").encounterRange = "medio";
   loop.spawnEnemy(state, "normale", "e1");
@@ -351,12 +365,22 @@ test("attacco nemico da risultati fisici: nessun dado generato dall'app", () => 
   assert.equal(dir.directorPhase, "enemy-phase");
 
   const begin = director.beginEnemyRollStep(state, dir);
-  assert.equal(begin.type, "awaiting-roll");
+  assert.equal(begin.type, "awaiting-reaction");
   assert.equal(begin.diceCount, 2); // normale: baseDice 1, medio ideale +1
+  assert.equal(dir.awaitingRoll, null, "finché il giocatore non sceglie, nessun tiro è aperto");
 
-  const outcome = director.submitRoll(state, dir, [3, 3]);
-  assert.equal(outcome.status, "resolved");
-  assert.equal(outcome.result.total, 8); // 3+3+power(2)
+  const chosen = director.chooseEnemyReaction(state, dir, "defend");
+  assert.equal(chosen.type, "awaiting-enemy-roll");
+  assert.equal(chosen.diceCount, 2);
+
+  const enemyRoll = director.submitRoll(state, dir, [3, 3]);
+  assert.equal(enemyRoll.status, "awaiting-reaction-roll");
+  assert.equal(enemyRoll.enemyOutcome.total, 7); // 3+3+power(1)
+  assert.equal(dir.awaitingRoll.actorType, "reaction");
+
+  const defended = director.submitRoll(state, dir, [4]); // -6 danni
+  assert.equal(defended.status, "resolved");
+  assert.equal((defended.hpBefore + defended.shieldBefore) - (defended.hpAfter + defended.shieldAfter), 1);
 });
 
 test("attacco boss da risultati fisici: nessun dado generato dall'app", () => {

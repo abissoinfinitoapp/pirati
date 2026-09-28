@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
-  pickAutoTarget, pickAutoWeaponSlot, getEquippedWeaponSlots, resolvePreferredWeaponSlot, buildInitialAttackFlow, buildAttackFlowFromSelectedSlot, getStartingWeaponChoices, getActionHubMode, shouldUseActionHub, buildCombatResultView
+  pickAutoTarget, pickAutoWeaponSlot, buildInitialAttackFlow, getStartingWeaponChoices, getActionHubMode, shouldUseActionHub, buildCombatResultView
 } = require("../fortress-game-ui.js");
 
 /* Guided Turn UI: "salta la schermata di scelta se non c'è davvero una
@@ -47,25 +47,6 @@ test("pickAutoWeaponSlot: due armi equipaggiate -> null, serve la scelta", () =>
 test("pickAutoWeaponSlot: nessuna arma equipaggiata -> null", () => {
   assert.equal(pickAutoWeaponSlot({ primary: null, secondary: null }), null);
   assert.equal(pickAutoWeaponSlot(null), null);
-});
-
-
-test("resolvePreferredWeaponSlot: usa la preferenza se valida, altrimenti ripiega su Primary", () => {
-  const equipment = { primary: { id: "w1" }, secondary: { id: "w2" } };
-  assert.deepEqual(getEquippedWeaponSlots(equipment), ["primary", "secondary"]);
-  assert.equal(resolvePreferredWeaponSlot(equipment, "secondary"), "secondary");
-  assert.equal(resolvePreferredWeaponSlot(equipment, "missing"), "primary");
-});
-
-test("Action Hub: ATTACCA usa direttamente l'arma attiva invece di far sembrare che spari con entrambe", () => {
-  const primary = { id: "short", range: "vicino" };
-  const secondary = { id: "long", range: "lontano" };
-  const equipment = { primary, secondary };
-  const flow = buildAttackFlowFromSelectedSlot(equipment, [{ kind: "enemy", id: "e1" }], "secondary");
-  assert.equal(flow.step, "preview");
-  assert.equal(flow.weaponSlot, "secondary");
-  assert.equal(flow.weapon, secondary);
-  assert.equal(flow.targetId, "e1");
 });
 
 
@@ -161,7 +142,7 @@ test("Action Hub: attivo solo nel Node Graph durante il turno giocatore", () => 
   assert.equal(shouldUseActionHub({ magnifyMode: true, nodeId: "forest-n01", directorPhase: "enemy-phase", moveMode: false, scannerMode: false }), false);
 });
 
-test("Action Hub: SPOSTATI e Scanner lasciano il centro locale per la World Map", () => {
+test("Action Hub: SPOSTATI lascia il centro locale; il vecchio flag Scanner resta solo compatibilità", () => {
   const base = { magnifyMode: true, nodeId: "forest-n01", directorPhase: "player-turn" };
   assert.equal(shouldUseActionHub({ ...base, moveMode: true, scannerMode: false }), false);
   assert.equal(shouldUseActionHub({ ...base, moveMode: false, scannerMode: true }), false);

@@ -1,0 +1,11 @@
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+const root = path.resolve(__dirname, '..');
+const js = fs.readFileSync(path.join(root, 'fortress-game-ui.js'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'fortress-army.html'), 'utf8');
+assert.match(js, /fa-tactical-enemy-scale/);
+assert.match(js, /transform:scale\(\.52\)/);
+assert.match(js, /anchoredMarkup\(a, tacticalEnemy, "is-enemy"\)/);
+assert.match(html, /fortress-game-ui\.js\?v=20260928-tactical-enemy-v6/);
+console.log('fortress tactical enemy scale v6: 4/4 OK');

@@ -1,0 +1,59 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "central-fortress",
+  "entryNodeId": "central-fortress-n01",
+  "nodes": [
+    {
+      "id": "central-fortress-n01",
+      "x": 51.25,
+      "y": 94.26
+    },
+    {
+      "id": "central-fortress-n02",
+      "x": 50.17,
+      "y": 52.11
+    },
+    {
+      "id": "central-fortress-n03",
+      "x": 26.48,
+      "y": 25.52
+    },
+    {
+      "id": "central-fortress-n04",
+      "x": 74.94,
+      "y": 27.74
+    },
+    {
+      "id": "central-fortress-n05",
+      "x": 49.2,
+      "y": 28.78
+    }
+  ],
+  "edges": [
+    [
+      "central-fortress-n01",
+      "central-fortress-n02"
+    ],
+    [
+      "central-fortress-n02",
+      "central-fortress-n03"
+    ],
+    [
+      "central-fortress-n02",
+      "central-fortress-n04"
+    ],
+    [
+      "central-fortress-n02",
+      "central-fortress-n05"
+    ],
+    [
+      "central-fortress-n03",
+      "central-fortress-n05"
+    ],
+    [
+      "central-fortress-n04",
+      "central-fortress-n05"
+    ]
+  ]
+}

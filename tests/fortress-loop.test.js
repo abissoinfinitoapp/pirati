@@ -103,7 +103,7 @@ test("SCAMBIA consuma l'azione principale del round", () => {
 
 /* ---- rianimazione ---- */
 
-test("RIANIMA richiede la stessa zona e riporta HP 5 / Scudo 0", () => {
+test("Combat V2: RIANIMA richiede la stessa zona, costa 2 HP e riporta il compagno a 3 HP / Scudo 0", () => {
   const state = newGame(2);
   landAll(state, "e1");
   loop.beginExploration(state, () => 0.99);
@@ -111,7 +111,7 @@ test("RIANIMA richiede la stessa zona e riporta HP 5 / Scudo 0", () => {
   loop.setPlayerKO(state, target);
   loop.rianimaAction(state, "p1", "p2");
   assert.equal(target.status, "active");
-  assert.equal(target.hp, 5);
+  assert.equal(target.hp, 3);
   assert.equal(target.shield, 0);
   assert.equal(target.koRoundsRemaining, null);
 });
@@ -125,54 +125,50 @@ test("RIANIMA fallisce se non nella stessa zona", () => {
   assert.throws(() => loop.rianimaAction(state, "p1", "p2"));
 });
 
-/* ---- KO / countdown ---- */
+/* ---- KO / Combat V2: destino, nessun countdown ---- */
 
-test("un giocatore appena andato KO non perde countdown nello stesso round", () => {
-  const state = newGame(1);
-  landAll(state, "e1");
-  loop.beginExploration(state, () => 0.99); // round 1
-  const p = loop.getPlayer(state, "p1");
-  loop.setPlayerKO(state, p); // koSinceRound = 1
-  loop.endRound(state, () => 0.99); // fine round 1: non deve decrementare
-  assert.equal(p.koRoundsRemaining, 3);
-});
-
-test("countdown KO normale: -1 per round successivo", () => {
-  const state = newGame(1);
-  landAll(state, "e1");
-  loop.beginExploration(state, () => 0.99); // round 1
-  const p = loop.getPlayer(state, "p1");
-  loop.setPlayerKO(state, p);
-  loop.endRound(state, () => 0.99); // round 1: nessun decremento (appena KO)
-  loop.startRound(state, () => 0.99); // round 2
-  loop.endRound(state, () => 0.99); // round 2: -1
-  assert.equal(p.koRoundsRemaining, 2);
-});
-
-test("countdown KO in Tempesta: -2 per round (normale + Tempesta)", () => {
-  const state = newGame(1);
-  landAll(state, "e1");
-  loop.beginExploration(state, () => 0.99); // round 1
-  for (let i = 0; i < 4; i++) { loop.endRound(state, () => 0.99); loop.startRound(state, () => 0.99); } // arriva a round 5
-  assert.equal(state.round, 5);
-  loop.getZone(state, "e1").stormState = "storm"; // forziamo per isolare il test dal danno Tempesta stesso
-  const p = loop.getPlayer(state, "p1");
-  loop.setPlayerKO(state, p); // koSinceRound = 5
-  loop.endRound(state, () => 0.99); // fine round 5: appena KO, nessun decremento
-  loop.startRound(state, () => 0.99); // round 6
-  loop.endRound(state, () => 0.99); // fine round 6: -1 normale, -1 perché in storm
-  assert.equal(p.koRoundsRemaining, 1);
-});
-
-test("KO eliminato quando il countdown arriva a 0", () => {
-  const state = newGame(1);
+test("un giocatore KO non ha più countdown di eliminazione", () => {
+  const state = newGame(2);
   landAll(state, "e1");
   loop.beginExploration(state, () => 0.99);
   const p = loop.getPlayer(state, "p1");
   loop.setPlayerKO(state, p);
-  loop.endRound(state, () => 0.99); // round 1: appena ko
-  for (let i = 0; i < 3; i++) { loop.startRound(state, () => 0.99); loop.endRound(state, () => 0.99); }
-  assert.equal(p.status, "eliminated");
+  assert.equal(p.status, "ko");
+  assert.equal(p.koRoundsRemaining, null);
+  loop.endRound(state, () => 0.99);
+  assert.equal(p.status, "ko", "il passare del round non elimina più il KO");
+});
+
+test("un KO resta a terra anche dopo più round finché esiste almeno un compagno attivo", () => {
+  const state = newGame(2);
+  landAll(state, "e1");
+  loop.beginExploration(state, () => 0.99);
+  const p = loop.getPlayer(state, "p1");
+  loop.setPlayerKO(state, p);
+  for (let i = 0; i < 3; i++) { loop.endRound(state, () => 0.99); loop.startRound(state, () => 0.99); }
+  assert.equal(p.status, "ko");
+  assert.equal(p.koRoundsRemaining, null);
+});
+
+test("la Tempesta non accelera più un countdown KO inesistente", () => {
+  const state = newGame(2);
+  landAll(state, "e1");
+  loop.beginExploration(state, () => 0.99);
+  const p = loop.getPlayer(state, "p1");
+  loop.setPlayerKO(state, p);
+  loop.getZone(state, "e1").stormState = "storm";
+  loop.endRound(state, () => 0.99);
+  assert.equal(p.status, "ko");
+  assert.equal(p.koRoundsRemaining, null);
+});
+
+test("se tutti i giocatori sono contemporaneamente KO la run è sconfitta", () => {
+  const state = newGame(2);
+  landAll(state, "e1");
+  loop.beginExploration(state, () => 0.99);
+  state.players.forEach((p) => loop.setPlayerKO(state, p));
+  loop.checkVictoryOrDefeat(state);
+  assert.equal(state.phase, "sconfitta");
 });
 
 /* ---- zona eliminata ---- */
@@ -301,8 +297,8 @@ test("tie-break bersaglio: rotazione deterministica tra candidati a pari distanz
   assert.equal(loop.pickTarget(players, "pC").id, "pA");
 });
 
-test("Elite ha 36 HP e usa areaDamage, entrambi dalla configurazione", () => {
-  assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.elite.hp, 36);
+test("Combat V2: Elite ha 56 HP e usa areaDamage, entrambi dalla configurazione", () => {
+  assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.elite.hp, 56);
   assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.elite.attackProfile.special.type, "areaDamage");
 });
 
@@ -363,11 +359,11 @@ test("l'attacco di un giocatore usa davvero fortress-combat.js (crit verificabil
 
 /* ---- Shield nemici/boss (correzione ignoreShield) ---- */
 
-test("archetipi nemico: shield di configurazione (normale/aggressivo 0, distanza 2, resistente 5, elite 6)", () => {
+test("Combat V2: shield archetipi (normale/aggressivo 0, distanza 2, resistente 4, elite 6)", () => {
   assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.normale.shield, 0);
   assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.aggressivo.shield, 0);
   assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.distanza.shield, 2);
-  assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.resistente.shield, 5);
+  assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.resistente.shield, 4);
   assert.equal(loop.DEFAULT_ENEMY_ARCHETYPES.elite.shield, 6);
 });
 
@@ -377,7 +373,7 @@ test("spawnEnemy inizializza shield/maxShield dall'archetipo", () => {
   loop.beginExploration(state, () => 0.99);
   const id = loop.spawnEnemy(state, "elite", "e1");
   const enemy = loop.getEnemy(state, id);
-  assert.equal(enemy.hp, 36);
+  assert.equal(enemy.hp, 56);
   assert.equal(enemy.shield, 6);
   assert.equal(enemy.maxShield, 6);
 });
@@ -427,11 +423,11 @@ test("un nemico è eliminato solo quando HP <= 0, non quando lo Scudo arriva a 0
   const state = newGame(1);
   landAll(state, "e1");
   loop.beginExploration(state, () => 0.99);
-  const id = loop.spawnEnemy(state, "resistente", "e1"); // hp 20, shield 5
+  const id = loop.spawnEnemy(state, "resistente", "e1"); // hp 16, shield 4
   const enemy = loop.getEnemy(state, id);
-  loop.applyDamageToEnemy(enemy, { total: 5, ignoreShieldN: 0 }); // consuma solo lo Scudo
+  loop.applyDamageToEnemy(enemy, { total: 4, ignoreShieldN: 0 }); // consuma solo lo Scudo
   assert.equal(enemy.shield, 0);
-  assert.equal(enemy.hp, 20);
+  assert.equal(enemy.hp, 16);
   assert.ok(enemy.hp > 0, "resta vivo: lo Scudo a 0 non elimina il nemico");
 });
 
@@ -468,8 +464,8 @@ test("un'arma ignoreShield ha un vantaggio reale sulla stessa arma senza special
   loop.attackEnemyAction(stateB, "p1", idB, weaponPierce, combat.makeQueueRng([1, 1]));
   const enemyB = loop.getEnemy(stateB, idB);
 
-  assert.equal(enemyA.hp, 36, "senza ignoreShield, lo Scudo dell'Elite assorbe tutto: nessun danno alla Salute");
-  assert.equal(enemyB.hp, 34, "con ignoreShield(2), 2 punti bypassano lo Scudo e colpiscono la Salute");
+  assert.equal(enemyA.hp, 56, "senza ignoreShield, lo Scudo dell'Elite assorbe tutto: nessun danno alla Salute");
+  assert.equal(enemyB.hp, 54, "con ignoreShield(2), 2 punti bypassano lo Scudo e colpiscono la Salute");
   assert.ok(enemyB.hp < enemyA.hp, "l'arma con ignoreShield infligge più danno reale sullo stesso nemico protetto");
 });
 
@@ -508,19 +504,19 @@ test("resolveEnemyStep applica il danno di un solo nemico alla volta: lo stato d
   const step1 = loop.resolveEnemyStep(state, order[0], combat.makeQueueRng([3, 3]));
   assert.equal(step1.type, "attack");
   assert.equal(step1.shieldBefore, 10);
-  assert.equal(step1.shieldAfter, 2); // 3+3+power2=8 danni, tutti assorbiti dallo Scudo (10->2)
+  assert.equal(step1.shieldAfter, 3); // Combat V2: 3+3+power1=7 danni, assorbiti dallo Scudo (10->3)
   assert.equal(step1.hpBefore, 10);
   assert.equal(step1.hpAfter, 10, "nessun danno alla Salute: lo Scudo residuo assorbe tutto");
   const playerAfterStep1 = loop.getPlayer(state, step1.targetId);
-  assert.equal(playerAfterStep1.shield, 2);
+  assert.equal(playerAfterStep1.shield, 3);
   assert.equal(playerAfterStep1.hp, 10);
 
   const step2 = loop.resolveEnemyStep(state, order[1], combat.makeQueueRng([3, 3]));
   assert.equal(step2.type, "attack");
-  assert.equal(step2.shieldBefore, 2, "il secondo step parte da dove il primo ha lasciato lo Scudo, non da quello iniziale");
+  assert.equal(step2.shieldBefore, 3, "il secondo step parte da dove il primo ha lasciato lo Scudo, non da quello iniziale");
   assert.equal(step2.shieldAfter, 0);
   assert.equal(step2.hpBefore, 10, "l'HP non deve già riflettere il secondo colpo prima che venga risolto");
-  assert.equal(step2.hpAfter, 4, "8 danni: 2 residui di Scudo + 6 alla Salute");
+  assert.equal(step2.hpAfter, 6, "7 danni: 3 residui di Scudo + 4 alla Salute");
 });
 
 test("resolveEnemyStep su un nemico già a 0 HP o inesistente: skipped, nessun errore", () => {
@@ -730,7 +726,7 @@ test("resolveEnemyStepFromRolls usa il bersaglio già bloccato da prepareEnemySt
   const outcome = loop.resolveEnemyStepFromRolls(state, prepared, [3, 3]);
   assert.equal(outcome.status, "resolved");
   assert.equal(outcome.targetId, "p1");
-  assert.equal(outcome.result.total, 8); // 3+3+power2
+  assert.equal(outcome.result.total, 7); // Combat V2: 3+3+power1
 });
 
 test("resolveBossStepFromRolls usa il bersaglio già bloccato da prepareBossStep", () => {

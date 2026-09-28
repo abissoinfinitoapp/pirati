@@ -2,12 +2,12 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const items = require("../catalog/fortress-items.js");
 
-test("3 Cure, 3 Scudi, 3 Utility, 9 in totale, id univoci", () => {
+test("3 Cure, 3 Scudi, 4 Utility, 10 in totale, id univoci", () => {
   assert.equal(items.CURA.length, 3);
   assert.equal(items.SCUDO.length, 3);
-  assert.equal(items.UTILITY.length, 3);
-  assert.equal(items.ALL.length, 9);
-  assert.equal(new Set(items.ALL.map((i) => i.id)).size, 9);
+  assert.equal(items.UTILITY.length, 4);
+  assert.equal(items.ALL.length, 10);
+  assert.equal(new Set(items.ALL.map((i) => i.id)).size, 10);
 });
 
 test("Cura/Scudo: livello 3 è 'full', livelli 1/2 hanno un amount numerico", () => {
@@ -22,9 +22,9 @@ test("Cura/Scudo: livello 3 è 'full', livelli 1/2 hanno un amount numerico", ()
   });
 });
 
-test("Utility: scanner, fumogeno, stim, nessun livello di qualità", () => {
+test("Utility: scanner, fumogeno, stim e mina, nessun livello di qualità", () => {
   const ids = items.UTILITY.map((i) => i.id).sort();
-  assert.deepEqual(ids, ["fumogeno", "scanner", "stim"]);
+  assert.deepEqual(ids, ["fumogeno", "mina_improvvisata", "scanner", "stim"]);
 });
 
 test("findItem risolve per id, null se sconosciuto", () => {

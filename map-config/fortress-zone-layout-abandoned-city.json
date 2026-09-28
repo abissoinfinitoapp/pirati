@@ -1,0 +1,53 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 1,
+  "zoneId": "abandoned-city",
+  "entryNodeId": "abandoned-city-n01",
+  "nodes": [
+    {
+      "id": "abandoned-city-n01",
+      "x": 20.47,
+      "y": 82.06,
+      "connections": {
+        "right": "abandoned-city-n02"
+      }
+    },
+    {
+      "id": "abandoned-city-n02",
+      "x": 41.33,
+      "y": 55.6,
+      "connections": {
+        "left": "abandoned-city-n01",
+        "up": "abandoned-city-n03",
+        "down": "abandoned-city-n04"
+      }
+    },
+    {
+      "id": "abandoned-city-n03",
+      "x": 35.69,
+      "y": 23.11,
+      "connections": {
+        "down": "abandoned-city-n05",
+        "left": "abandoned-city-n02"
+      }
+    },
+    {
+      "id": "abandoned-city-n04",
+      "x": 62.76,
+      "y": 45.86,
+      "connections": {
+        "up": "abandoned-city-n05",
+        "left": "abandoned-city-n02"
+      }
+    },
+    {
+      "id": "abandoned-city-n05",
+      "x": 66.52,
+      "y": 12.43,
+      "connections": {
+        "up": "abandoned-city-n03",
+        "down": "abandoned-city-n04"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "supply-depot",
+  "entryNodeId": "supply-depot-n01",
+  "nodes": [
+    {
+      "id": "supply-depot-n01",
+      "x": 15.03,
+      "y": 9.15
+    },
+    {
+      "id": "supply-depot-n02",
+      "x": 32,
+      "y": 23.15
+    },
+    {
+      "id": "supply-depot-n03",
+      "x": 52.11,
+      "y": 14.63
+    },
+    {
+      "id": "supply-depot-n04",
+      "x": 46.53,
+      "y": 56.19
+    },
+    {
+      "id": "supply-depot-n05",
+      "x": 83.37,
+      "y": 32.04
+    }
+  ],
+  "edges": [
+    [
+      "supply-depot-n01",
+      "supply-depot-n02"
+    ],
+    [
+      "supply-depot-n02",
+      "supply-depot-n03"
+    ],
+    [
+      "supply-depot-n02",
+      "supply-depot-n04"
+    ],
+    [
+      "supply-depot-n03",
+      "supply-depot-n05"
+    ],
+    [
+      "supply-depot-n04",
+      "supply-depot-n05"
+    ]
+  ]
+}

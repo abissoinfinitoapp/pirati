@@ -1,0 +1,26 @@
+const assert = require('assert');
+const gift = require('../engine/fortress-gift-machine.js');
+const armi = require('../catalog/fortress-armi.js');
+
+assert.strictEqual(gift.assertRoll(1), 1);
+assert.strictEqual(gift.assertRoll(6), 6);
+assert.throws(() => gift.assertRoll(0));
+assert.throws(() => gift.assertRoll(7));
+assert(gift.favorableChance(3) > gift.favorableChance(6), 'Il 3 deve essere più favorevole del 6 per Rara/Epica');
+const reward = gift.drawWeapon(3, () => 0.5, []);
+assert(reward.weapon && reward.weapon.id !== 'assault_base');
+assert(armi.ARMI.some((w) => w.id === reward.weaponId));
+console.log('fortress-gift-machine.test.js: OK');
+const loop = require('../engine/fortress-loop.js');
+const state = loop.createGame({ players:[{id:'p1',name:'Ada'}], zones:[{id:'forest',name:'Forest',danger:'basso',lootTier:null,encounterRange:'vicino',connected:[],chests:[],groundLoot:[],nodes:[{id:'n1',x:50,y:50,connections:{},contents:[]}],entryNodeId:'n1'}], bossConfig:null });
+state.players[0].present = true;
+state.players[0].zoneId = 'forest';
+state.players[0].nodeId = 'n1';
+const chosen = armi.ARMI.find(w=>w.id==='smg_base');
+const previous = state.players[0].equipment.primary;
+const out = loop.collectGiftWeapon(state,'p1','primary',chosen);
+assert.strictEqual(out.weaponId,'smg_base');
+assert.strictEqual(state.players[0].equipment.primary.id,'smg_base');
+assert(state.players[0].collectedWeaponIds.includes('smg_base'));
+if (previous) assert(state.zones.find(z=>z.id==='forest').groundLoot.some(g=>g.weaponId===previous.id));
+console.log('fortress-gift-machine collect: OK');

@@ -2,8 +2,7 @@
    Fortress Army — Catalogo Oggetti di Supporto (Cura, Scudo, Utility).
 
    Nessuna dipendenza dal catalogo Armi. Cura/Scudo hanno 3 livelli di
-   qualità (indice 0/1/2 = Livello 1/2/3), Utility non ha livelli: sono 3
-   oggetti distinti con effetti diversi tra loro.
+   qualità (indice 0/1/2 = Livello 1/2/3), Utility non ha livelli: gli oggetti hanno effetti diversi tra loro.
 
    Compatibile Node (require, per i test) e browser (window.FORTRESS_*).
    ========================================================================= */
@@ -35,7 +34,8 @@
   const UTILITY = [
     { id: "scanner", name: "Scanner", kind: "utility" },
     { id: "fumogeno", name: "Fumogeno", kind: "utility" },
-    { id: "stim", name: "Stim", kind: "utility" }
+    { id: "stim", name: "Stim", kind: "utility" },
+    { id: "mina_improvvisata", name: "Mina Improvvisata", kind: "utility", trapType: "mina", damage: 8 }
   ];
 
   const ALL = CURA.concat(SCUDO, UTILITY);

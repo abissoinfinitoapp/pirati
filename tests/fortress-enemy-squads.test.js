@@ -120,26 +120,28 @@ test("previewPlayerAttack: 2+ collegamenti dal bersaglio -> lontano", () => {
   assert.equal(pv.encounterRange, "lontano");
 });
 
-test("declarePlayerAttack: funziona su un nemico raggiungibile ma su un nodo diverso", () => {
+test("declarePlayerAttack: nel Node Graph richiede lo stesso nodo", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   const enemyId = loop.spawnEnemy(state, "normale", "forest", "forest-n03");
   placeAt(state, "p1", "forest-n02");
   const weapon = { baseDice: 1, range: "medio", power: 1, special: { type: "none" } };
+  assert.throws(() => loop.declarePlayerAttack(state, "p1", enemyId, weapon), /raggiungere il nodo/);
+  placeAt(state, "p1", "forest-n03");
   const declared = loop.declarePlayerAttack(state, "p1", enemyId, weapon);
-  assert.equal(declared.encounterRange, "medio");
+  assert.equal(declared.encounterRange, "vicino");
 });
 
 test("declarePlayerAttack: rifiuta un bersaglio su un nodo davvero irraggiungibile", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   const enemyId = loop.spawnEnemy(state, "normale", "forest", "forest-n03");
-  placeAt(state, "p1", "forest-n01");
+  placeAt(state, "p1", "forest-n04");
   const zone = loop.getZone(state, "forest");
   zone.nodes = zone.nodes.map((n) => Object.assign({}, n, { connections: Object.assign({}, n.connections) }));
-  zone.nodes.find((n) => n.id === "forest-n01").connections = {};
+  zone.nodes.find((n) => n.id === "forest-n04").connections = {};
   const weapon = { baseDice: 1, range: "medio", power: 1, special: { type: "none" } };
-  assert.throws(() => loop.declarePlayerAttack(state, "p1", enemyId, weapon), /raggiungibile/);
+  assert.throws(() => loop.declarePlayerAttack(state, "p1", enemyId, weapon), /raggiungere il nodo/);
 });
 
 test("fallback legacy: una zona senza Node Graph continua a usare encounterRange di zona", () => {
@@ -159,7 +161,7 @@ test("nemico ranged (range !== vicino) attacca da fermo se un bersaglio è raggi
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
   const enemyId = loop.spawnEnemy(state, "distanza", "forest", "forest-n03"); // range: "lontano"
-  placeAt(state, "p1", "forest-n01"); // distanza 2, non adiacente
+  placeAt(state, "p1", "forest-n04"); // distanza 2, non adiacente e fuori dall'entry neutra
   const prepared = loop.prepareEnemyStep(state, enemyId);
   assert.equal(prepared.type, "attack");
   assert.equal(prepared.targetId, "p1");
@@ -194,12 +196,12 @@ test("nemico melee GIA' sullo stesso nodo di un bersaglio attacca (non si sposta
 test("il movimento nemico è sempre di UN solo nodo, mai un salto diretto al bersaglio", () => {
   const state = newForestGame(1);
   loop.landPlayer(state, "p1", "forest", () => 0.99);
-  const enemyId = loop.spawnEnemy(state, "aggressivo", "forest", "forest-n04");
-  placeAt(state, "p1", "forest-n01"); // n04 -> n01 sono a distanza 2 (via n02)
+  const enemyId = loop.spawnEnemy(state, "aggressivo", "forest", "forest-n03");
+  placeAt(state, "p1", "forest-n04"); // n03 -> n04 sono a distanza 2 (via n02), fuori dall'entry neutra
   const prepared = loop.prepareEnemyStep(state, enemyId);
   assert.equal(prepared.type, "move");
-  assert.equal(prepared.toNodeId, "forest-n02", "un solo passo verso n01, non n01 direttamente");
-  assert.notEqual(prepared.toNodeId, "forest-n01");
+  assert.equal(prepared.toNodeId, "forest-n02", "un solo passo verso n04, non n04 direttamente");
+  assert.notEqual(prepared.toNodeId, "forest-n04");
 });
 
 test("scelta del bersaglio deterministica: stesso stato, stesso risultato ogni volta (mai random)", () => {
@@ -257,9 +259,9 @@ test("Enemy Phase: un nemico che si muove non genera awaitingRoll e il Director 
   // La Forest ora materializza subito il proprio Encounter all'ingresso.
   // Questo test isola i due nemici custom che deve esercitare.
   loop.enemiesInZone(state, "forest").forEach((e) => { e.hp = 0; });
-  const mover = loop.spawnEnemy(state, "aggressivo", "forest", "forest-n04");
+  const mover = loop.spawnEnemy(state, "aggressivo", "forest", "forest-n03");
   const shooter = loop.spawnEnemy(state, "distanza", "forest", "forest-n03");
-  placeAt(state, "p1", "forest-n01");
+  placeAt(state, "p1", "forest-n04");
   const dir = director.createDirectorState(state);
   dir.pendingAnnouncements = [];
   dir.directorPhase = "enemy-phase";
@@ -272,7 +274,8 @@ test("Enemy Phase: un nemico che si muove non genera awaitingRoll e il Director 
   assert.equal(dir.enemyPhase.cursor, 1, "il Director avanza da solo, nessun controllo manuale");
 
   const secondStep = director.beginEnemyRollStep(state, dir);
-  assert.equal(secondStep.type, "awaiting-roll", "il ranged, raggiungibile, attacca invece");
+  assert.equal(secondStep.type, "awaiting-reaction", "il ranged raggiungibile apre prima la scelta difensiva del bersaglio");
+  assert.equal(dir.awaitingRoll, null, "il tiro nemico parte solo dopo la scelta di reazione");
 });
 
 /* =========================================================================

@@ -1,0 +1,68 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "industrial-zone",
+  "entryNodeId": "industrial-zone-n01",
+  "nodes": [
+    {
+      "id": "industrial-zone-n01",
+      "x": 34.7,
+      "y": 7.48
+    },
+    {
+      "id": "industrial-zone-n02",
+      "x": 8.69,
+      "y": 30.23
+    },
+    {
+      "id": "industrial-zone-n03",
+      "x": 55.32,
+      "y": 27.16
+    },
+    {
+      "id": "industrial-zone-n04",
+      "x": 64.72,
+      "y": 67.9
+    },
+    {
+      "id": "industrial-zone-n05",
+      "x": 85.83,
+      "y": 36.79
+    },
+    {
+      "id": "industrial-zone-n06",
+      "x": 48.36,
+      "y": 49.7
+    }
+  ],
+  "edges": [
+    [
+      "industrial-zone-n01",
+      "industrial-zone-n02"
+    ],
+    [
+      "industrial-zone-n01",
+      "industrial-zone-n03"
+    ],
+    [
+      "industrial-zone-n02",
+      "industrial-zone-n04"
+    ],
+    [
+      "industrial-zone-n03",
+      "industrial-zone-n05"
+    ],
+    [
+      "industrial-zone-n03",
+      "industrial-zone-n06"
+    ],
+    [
+      "industrial-zone-n04",
+      "industrial-zone-n05"
+    ],
+    [
+      "industrial-zone-n04",
+      "industrial-zone-n06"
+    ]
+  ]
+}

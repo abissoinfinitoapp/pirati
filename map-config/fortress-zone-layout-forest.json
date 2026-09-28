@@ -1,0 +1,46 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "forest",
+  "entryNodeId": "forest-n01",
+  "nodes": [
+    {
+      "id": "forest-n01",
+      "x": 40.02,
+      "y": 88.93
+    },
+    {
+      "id": "forest-n02",
+      "x": 63.66,
+      "y": 56.76
+    },
+    {
+      "id": "forest-n03",
+      "x": 22.6,
+      "y": 58.35
+    },
+    {
+      "id": "forest-n04",
+      "x": 48.53,
+      "y": 26.18
+    }
+  ],
+  "edges": [
+    [
+      "forest-n01",
+      "forest-n02"
+    ],
+    [
+      "forest-n02",
+      "forest-n03"
+    ],
+    [
+      "forest-n02",
+      "forest-n04"
+    ],
+    [
+      "forest-n03",
+      "forest-n04"
+    ]
+  ]
+}

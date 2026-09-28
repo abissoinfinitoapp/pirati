@@ -47,7 +47,10 @@
       directorPhase: "round-announcement",
       pendingAnnouncements: [{ type: "round-start", payload: { round: state.round } }],
       enemyPhase: null,
+      structurePhase: null,
       awaitingRoll: null,
+      pendingReaction: null,
+      teamAttackPending: null,
       lastStepResult: null
     };
   }
@@ -78,7 +81,7 @@
     const zoneOrder = [];
     turnOrder.forEach((playerId) => {
       const player = loop.getPlayer(state, playerId);
-      if (!player || player.status !== "active") return;
+      if (!player || player.present === false || player.status === "eliminated") return;
       if (!membersByZone[player.zoneId]) { membersByZone[player.zoneId] = []; zoneOrder.push(player.zoneId); }
       membersByZone[player.zoneId].push(playerId);
     });
@@ -106,7 +109,7 @@
 
     turnOrder.forEach((playerId) => {
       const player = loop.getPlayer(state, playerId);
-      if (player && player.status === "active" && !placed.has(playerId)) queue.push(playerId);
+      if (player && player.present !== false && player.status !== "eliminated" && !placed.has(playerId)) queue.push(playerId);
     });
 
     return queue;
@@ -130,7 +133,7 @@
   function advanceIndex(state, queue, fromIndex) {
     for (let i = fromIndex; i < queue.length; i++) {
       const player = loop.getPlayer(state, queue[i]);
-      if (player && player.status === "active") return i;
+      if (player && player.present !== false && player.status !== "eliminated") return i;
     }
     return -1;
   }
@@ -151,6 +154,34 @@
     }
     dir.currentPlayerIndex = firstActive;
     dir.directorPhase = "player-turn";
+  }
+
+  /* Presenze runtime: il roster è stabile, ma un bambino può arrivare o andare
+     via durante la missione. Il Director mantiene l'ordine di round senza
+     ricostruirlo: un nuovo presente viene registrato in coda. Se la fase
+     giocatori è già in corso, può giocare in fondo allo stesso round; durante
+     le altre fasi entrerà normalmente dal round successivo. */
+  function registerPresentPlayer(state, dir, playerId) {
+    const player = loop.getPlayer(state, playerId);
+    if (!player || player.present === false) throw new Error("Giocatore non presente");
+    if (!dir.turnOrder.includes(playerId)) dir.turnOrder.push(playerId);
+    if (dir.directorPhase === "player-turn" && !dir.roundPlayerQueue.includes(playerId)) {
+      dir.roundPlayerQueue.push(playerId);
+    }
+    return player;
+  }
+
+  function handlePlayerDeactivated(state, dir, playerId) {
+    if (dir.directorPhase !== "player-turn") return;
+    const currentId = getCurrentPlayerId(state, dir);
+    if (currentId !== playerId) return;
+    const next = advanceIndex(state, dir.roundPlayerQueue, dir.currentPlayerIndex + 1);
+    if (next === -1) {
+      dir.currentPlayerIndex = dir.roundPlayerQueue.length;
+      beginEnemyPhase(state, dir);
+    } else {
+      dir.currentPlayerIndex = next;
+    }
   }
 
   /* =========================================================================
@@ -193,7 +224,7 @@
       zoneId: zone.id, zoneName: zone.name, danger: zone.danger,
       encounterRange: zone.encounterRange, stormState: zone.stormState,
       nodeId: player.nodeId, // Node Graph (Zone Magnify): null nelle zone legacy
-      enemies: loop.enemiesInZone(state, zone.id).map((e) => ({
+      enemies: (zone.nodes ? loop.enemiesAtNode(state, zone.id, player.nodeId) : loop.enemiesInZone(state, zone.id)).map((e) => ({
         id: e.id, archetype: e.archetype, hp: e.hp, maxHp: e.maxHp, shield: e.shield, maxShield: e.maxShield
       })),
       bossHere: Boolean(boss && boss.active && boss.hp > 0 && boss.zoneId === zone.id),
@@ -207,12 +238,14 @@
         id: p.id, name: p.name, status: p.status,
         sameNode: !zone.nodes || p.nodeId === player.nodeId
       })),
-      openChests: (zone.chests || []).filter((c) => !c.opened).map((c) => ({ id: c.id })),
+      openChests: (zone.chests || []).filter((c) => !c.opened && (!zone.nodes || c.nodeId == null || c.nodeId === player.nodeId)).map((c) => ({ id: c.id })),
       // Node Graph: un'entry con nodeId (es. drop di una cassa) è visibile
       // solo dallo stesso nodo del giocatore — mai dall'altra parte della
       // zona. Entry senza nodeId (loot ambientale, comportamento legacy)
       // restano visibili in tutta la zona.
-      groundLoot: (zone.groundLoot || []).filter((g) => g.nodeId == null || g.nodeId === player.nodeId)
+      groundLoot: (zone.groundLoot || []).filter((g) => g.nodeId == null || g.nodeId === player.nodeId),
+      structure: zone.operationalStructure ? { id: zone.operationalStructure.id, name: zone.operationalStructure.name, nodeId: zone.operationalStructure.nodeId, hp: zone.operationalStructure.hp, maxHp: zone.operationalStructure.maxHp, armor: zone.operationalStructure.armor, destroyed: zone.operationalStructure.destroyed, activeTags: zone.operationalStructure.activeTags || [] } : null,
+      vehicle: zone.vehicleVisit && zone.vehicleVisit.vehicle ? { name: zone.vehicleVisit.vehicle.name, integrity: zone.vehicleVisit.vehicle.integrity, maxIntegrity: zone.vehicleVisit.vehicle.maxIntegrity, crew: zone.vehicleVisit.crew, active: zone.vehicleVisit.active } : null
     };
   }
 
@@ -246,7 +279,7 @@
     return Boolean(state.boss && state.boss.active && state.boss.hp > 0);
   }
 
-  /* Ordine richiesto: RIANIMA in evidenza, poi ATTACCA, SPOSTATI, APRI CASSA,
+  /* Ordine richiesto: RIANIMA in evidenza, poi ATTACCA, CAMBIA ZONA, APRI CASSA,
      AIUTA, SCAMBIA, USA OGGETTO; separato, sempre presente, FINE TURNO.
      NOTA: "INTERAGISCI" non è ancora derivabile da un dato di zona reale (non
      esiste oggi un concetto di "punto di interesse" nel modello zona) — non
@@ -255,6 +288,9 @@
   function getAvailableActions(state, player) {
     const zone = loop.getZone(state, player.zoneId);
     const actions = [];
+    if (player.status === "ko") {
+      return [{ id: "destiny_revive", label: "TENTA DI RIALZARTI · TIRA 1 D6" }];
+    }
 
     // Node Graph (Zone Magnify V1, oggi solo Forest): RIANIMA/APRI
     // CASSA/AIUTA/SCAMBIA richiedono di essere sullo stesso nodo, non solo
@@ -265,41 +301,91 @@
     const hasNodeGraph = Boolean(zone.nodes);
     const sameSpot = (otherNodeId) => !hasNodeGraph || otherNodeId === player.nodeId;
 
+    const vehicleCrew = loop.availableVehicleCrew(state, zone.id);
+    const structure = loop.getOperationalStructure(state, zone.id);
+    if (!player.actedThisRound && !player.offensiveSpentThisRound && structure && zone.vehicleVisit && zone.vehicleVisit.vehicle && zone.vehicleVisit.active && player.nodeId === zone.entryNodeId && vehicleCrew.length >= 3) {
+      actions.push({ id: "mezzo_pesante", label: `🚛 USA ${zone.vehicleVisit.vehicle.name.toUpperCase()} · PILOTA + 2 TIRATORI` });
+    }
+    if (!player.actedThisRound && !player.offensiveSpentThisRound && structure && (!zone.nodes || player.nodeId === structure.nodeId) && (player.equipment.primary || player.equipment.secondary)) {
+      actions.push({ id: "demolisci", label: `💥 ATTACCA ${structure.name.toUpperCase()}` });
+    }
+
     const koCompanion = loop.playersInZone(state, zone.id).find((p) => p.status === "ko" && sameSpot(p.nodeId));
     if (koCompanion && !player.actedThisRound) {
-      actions.push({ id: "rianima", label: "RIANIMA " + koCompanion.name, targetId: koCompanion.id });
+      actions.push({ id: "rianima", label: "RIALZA " + koCompanion.name + " · COSTA 2 HP", targetId: koCompanion.id });
     }
     const bossHere = state.boss && state.boss.active && state.boss.hp > 0 && state.boss.zoneId === zone.id;
-    // ATTACCA invece è node-DISTANCE-aware, non più solo same-node (Enemy
-    // Squads V1): un nemico su un nodo diverso ma raggiungibile nel grafo va
-    // benissimo, la gittata reale la deriva loop.previewPlayerAttack/
-    // declarePlayerAttack. Zone legacy/nodeId assente: invariato, l'intera
-    // zona (enemiesReachableFromNode ricade su enemiesInZone).
-    const enemiesHere = loop.enemiesReachableFromNode(state, zone.id, player.nodeId);
-    if (!player.actedThisRound && (enemiesHere.length > 0 || bossHere)) {
+    // Nel Node Graph ATTACCA compare solo quando il giocatore è arrivato
+    // davvero sul nodo occupato dai nemici. L'entry resta quindi neutra:
+    // vedere i nemici sulla mappa non equivale ad averli già ingaggiati.
+    // Zone legacy senza nodes[] mantengono il comportamento zone-level.
+    const enemiesHere = hasNodeGraph
+      ? loop.enemiesAtNode(state, zone.id, player.nodeId)
+      : loop.enemiesInZone(state, zone.id);
+    const onNeutralEntry = hasNodeGraph && zone.entryNodeId && player.nodeId === zone.entryNodeId;
+    if (!player.actedThisRound && !player.offensiveSpentThisRound && !onNeutralEntry && (enemiesHere.length > 0 || bossHere)) {
       actions.push({ id: "attacca", label: "ATTACCA" });
+      actions.push({ id: "attendi", label: "ATTENDI LA SQUADRA" });
     }
     if (!player.movedThisRound && zone.connections.some((id) => {
       const z = loop.getZone(state, id);
       return z.stormState !== "storm" && z.stormState !== "eliminated";
     })) {
-      actions.push({ id: "sposta", label: "SPOSTATI" });
+      actions.push({ id: "sposta", label: "CAMBIA ZONA" });
     }
     if (!player.actedThisRound) {
+      const boostEvent = loop.getPartyBoostEvent ? loop.getPartyBoostEvent(state, zone.id) : null;
+      const boostParty = loop.partyBoostParticipants ? loop.partyBoostParticipants(state, player.id) : [];
+      if (boostEvent && !boostEvent.consumed && (!hasNodeGraph || player.nodeId === boostEvent.nodeId) && boostParty.length >= 2) {
+        actions.push({ id: "party_boost", label: `⚡ PARTY BOOST · ${boostParty.length} GIOCATORI` });
+      }
+      const shelterHere = loop.getShelterAtNode ? loop.getShelterAtNode(state, zone.id, player.nodeId) : null;
+      if (shelterHere && !player.hiddenInShelter) {
+        actions.push({ id: "nasconditi", label: `🏚️ NASCONDITI · ${String(shelterHere.name || "RIPARO").toUpperCase()}` });
+      }
+      if (shelterHere && player.equipment && player.equipment.utility && player.equipment.utility.id === "mina_improvvisata" &&
+          !(shelterHere.trap && shelterHere.trap.armed) && loop.enemiesAtNode(state, zone.id, player.nodeId).length === 0) {
+        actions.push({ id: "piazza_trappola", label: "🪤 PIAZZA MINA IMPROVVISATA" });
+      }
       const openChest = (zone.chests || []).find((c) => !c.opened && sameSpot(c.nodeId));
       if (openChest) actions.push({ id: "apri_cassa", label: "APRI CASSA", chestId: openChest.id });
 
       const activeCompanion = loop.playersInZone(state, zone.id).find((p) => p.id !== player.id && p.status === "active" && sameSpot(p.nodeId));
-      if (activeCompanion) actions.push({ id: "aiuta", label: "AIUTA " + activeCompanion.name, targetId: activeCompanion.id });
-      if (activeCompanion) actions.push({ id: "scambia", label: "SCAMBIA con " + activeCompanion.name, targetId: activeCompanion.id });
+      const engagedHere = !onNeutralEntry && (enemiesHere.length > 0 || bossHere);
+      if (activeCompanion && engagedHere) {
+        actions.push({ id: "aiuta", label: "SUPPORTA " + activeCompanion.name + " · +1 DADO AL SUO ATTACCO", targetId: activeCompanion.id });
+      }
 
-      if (player.equipment.cura) actions.push({ id: "usa_cura", label: "USA CURA" });
-      if (player.equipment.scudo) actions.push({ id: "usa_scudo", label: "USA SCUDO" });
+      const transferableSlots = ["primary", "secondary", "cura", "scudo", "utility"].filter((slot) => player.equipment && player.equipment[slot]);
+      if (activeCompanion && transferableSlots.length) {
+        const onlyItem = transferableSlots.length === 1 ? player.equipment[transferableSlots[0]] : null;
+        const label = onlyItem
+          ? `DAI ${String(onlyItem.name || "OGGETTO").toUpperCase()} A ${activeCompanion.name}`
+          : `DAI UN TUO OGGETTO A ${activeCompanion.name}`;
+        actions.push({ id: "scambia", label, targetId: activeCompanion.id });
+      }
+
+      if (player.equipment.cura && player.hp < 10) {
+        const cura = player.equipment.cura;
+        const effect = cura.full ? "VITA PIENA" : `+${cura.amount || 0} VITA`;
+        actions.push({ id: "usa_cura", label: `USA ${cura.name.toUpperCase()} · ${effect}` });
+      }
+      if (player.equipment.scudo && player.shield < 10) {
+        const scudo = player.equipment.scudo;
+        const effect = scudo.full ? "SCUDO PIENO" : `+${scudo.amount || 0} SCUDO`;
+        actions.push({ id: "usa_scudo", label: `USA ${scudo.name.toUpperCase()} · ${effect}` });
+      }
       // Scanner/Fumogeno/Stim consumano tutti e tre l'azione principale
       // (decisione presa): stesso blocco "!player.actedThisRound" di
       // Cura/Scudo/Aiuta/Scambia/Apri Cassa, nessuna eccezione tra loro.
       if (player.equipment.utility) {
-        actions.push({ id: "usa_utility", label: "USA " + player.equipment.utility.name.toUpperCase(), utilityId: player.equipment.utility.id });
+        const utility = player.equipment.utility;
+        if (utility.id === "scanner") {
+          const scannableChest = (zone.chests || []).find((c) => !c.opened && sameSpot(c.nodeId));
+          if (scannableChest) actions.push({ id: "usa_utility", label: "USA SCANNER SULLA CASSA", utilityId: utility.id, chestId: scannableChest.id });
+        } else if (utility.id !== "mina_improvvisata") {
+          actions.push({ id: "usa_utility", label: "USA " + utility.name.toUpperCase(), utilityId: utility.id });
+        }
       }
     }
 
@@ -338,10 +424,10 @@
      davvero?", poi delegano 1:1 alla funzione del loop corrispondente.
      ========================================================================= */
 
-  function performMove(state, dir, playerId, targetZoneId, rng) {
+  function performMove(state, dir, playerId, targetZoneId, rng, landingRoll) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    return loop.moveAction(state, playerId, targetZoneId, rng);
+    return loop.moveAction(state, playerId, targetZoneId, rng, landingRoll);
   }
 
   /* Movimento a nodi (Zone Magnify V1): stesso movedThisRound di performMove,
@@ -372,10 +458,116 @@
     return result;
   }
 
+  function performDestinyRevive(state, dir, playerId, roll) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    const player = loop.getPlayer(state, playerId);
+    if (!player || player.status !== "ko") throw new Error("Il giocatore corrente non è KO");
+    const result = loop.destinyReviveAction(state, playerId, roll);
+    // Il tentativo, riuscito o fallito, chiude sempre il turno del KO.
+    endPlayerTurn(state, dir, playerId);
+    return result;
+  }
+
+  function beginTeamAttack(state, dir, leaderId, enemyId, participantSpecs) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, leaderId);
+    assertNoAwaitingRoll(dir);
+    if (dir.teamAttackPending) throw new Error("C'è già un attacco di squadra in corso");
+    const declared = loop.declareTeamAttack(state, leaderId, enemyId, participantSpecs);
+    dir.teamAttackPending = declared;
+    return {
+      enemyId,
+      participants: declared.participants.map((p) => ({
+        playerId: p.playerId, playerName: p.playerName, weaponName: p.weapon.name, diceCount: p.diceCount
+      }))
+    };
+  }
+
+  function submitTeamAttackRolls(state, dir, rollsByPlayer, rerollsByPlayer) {
+    if (!dir.teamAttackPending) throw new Error("Nessun attacco di squadra in corso");
+    const declared = dir.teamAttackPending;
+    const result = loop.resolveTeamAttackFromRolls(state, declared, rollsByPlayer, rerollsByPlayer);
+    if (result.status === "needs-reroll") return result;
+    dir.teamAttackPending = null;
+    dir.lastStepResult = result;
+    if (!result.eliminated) {
+      const enemy = loop.getEnemy(state, declared.enemyId);
+      const candidates = declared.participants.map((x) => loop.getPlayer(state, x.playerId)).filter((p) => p && p.present !== false && p.status === "active");
+      const target = enemy ? loop.pickTarget(candidates, enemy.lastTargetId) : null;
+      if (target) startImmediateEnemyResponse(state, dir, declared.enemyId, target.id, declared.leaderId);
+      else autoAdvanceIfActed(state, dir, declared.leaderId);
+    } else {
+      autoAdvanceIfActed(state, dir, declared.leaderId);
+    }
+    return result;
+  }
+
+  function performCombatReaction(state, dir, playerId, incomingDamage, reactionType, roll, retreatNodeId) {
+    if (reactionType === "counter") return loop.markCounterattack(state, playerId);
+    return loop.applyCombatReaction(state, playerId, incomingDamage, reactionType, roll, retreatNodeId);
+  }
+
   function performAiuto(state, dir, playerId, targetId) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
     const result = loop.aiutoAction(state, playerId, targetId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
+  }
+
+  function performAttendiSquadra(state, dir, playerId) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    const result = loop.attendiSquadraAction(state, playerId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
+  }
+
+  function beginStructureAttack(state, dir, playerId, weapon) {
+    assertPlayerTurnPhase(dir); assertCurrentPlayer(state, dir, playerId); assertNoPendingAnnouncements(dir); assertNoAwaitingRoll(dir);
+    const player = loop.getPlayer(state, playerId); const structure = loop.getOperationalStructure(state, player.zoneId);
+    if (!structure) throw new Error("Nessuna struttura operativa");
+    if (!weapon) throw new Error("Scegli un'arma per la demolizione");
+    const diceCount = Math.max(1, Math.min(3, Number(weapon.baseDice) || 1));
+    dir.awaitingRoll = { actorType:"structure-attack", actorId:playerId, zoneId:player.zoneId, weapon, diceCount, rolls:null, pendingRerollIndices:[] };
+    return { type:"awaiting-structure-roll", diceCount, structureId:structure.id };
+  }
+
+  function beginVehicleSalvo(state, dir, initiatorId, pilotId, gunnerIds, targetSpecs) {
+    assertPlayerTurnPhase(dir); assertCurrentPlayer(state, dir, initiatorId); assertNoPendingAnnouncements(dir); assertNoAwaitingRoll(dir);
+    const initiator = loop.getPlayer(state, initiatorId);
+    const pilot = loop.getPlayer(state, pilotId || initiatorId);
+    const gunners = Array.isArray(gunnerIds) ? gunnerIds.slice(0, 2) : [];
+    if (!initiator || !pilot || pilot.zoneId !== initiator.zoneId) throw new Error("Pilota non valido");
+    if (gunners.length !== 2) throw new Error("Servono esattamente 2 tiratori");
+    loop.boardVehicleCrew(state, initiator.zoneId, pilot.id, gunners);
+    const targets = Array.isArray(targetSpecs) ? targetSpecs.slice(0, 2) : [];
+    if (targets.length !== 2) throw new Error("Ogni tiratore deve scegliere un bersaglio");
+    dir.awaitingRoll = { actorType:"vehicle", actorId:initiatorId, zoneId:initiator.zoneId, diceCount:3, targetSpecs:targets, rolls:null, pendingRerollIndices:[] };
+    return { type:"awaiting-vehicle-roll", diceCount:3, pilotId:pilot.id, gunnerIds:gunners, targetSpecs:targets };
+  }
+
+  function performNasconditi(state, dir, playerId) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    const result = loop.hideInShelterAction(state, playerId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
+  }
+
+  function performPiazzaTrappola(state, dir, playerId) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    const result = loop.placeTrapAction(state, playerId);
+    autoAdvanceIfActed(state, dir, playerId);
+    return result;
+  }
+
+  function performPartyBoost(state, dir, playerId, declarations) {
+    assertPlayerTurnPhase(dir);
+    assertCurrentPlayer(state, dir, playerId);
+    const result = loop.resolvePartyBoost(state, playerId, declarations);
     autoAdvanceIfActed(state, dir, playerId);
     return result;
   }
@@ -404,12 +596,12 @@
     return result;
   }
 
-  /* Scanner/Fumogeno/Stim: tutte e tre consumano l'azione principale, oltre
+  /* Scanner/Fumogeno/Stim: queste utility consumano l'azione principale, oltre
      all'oggetto Utility stesso (nessuna eccezione tra loro). */
-  function performUsaUtility(state, dir, playerId, targetZoneId) {
+  function performUsaUtility(state, dir, playerId, targetChestId, rng) {
     assertPlayerTurnPhase(dir);
     assertCurrentPlayer(state, dir, playerId);
-    const result = loop.usaUtilityAction(state, playerId, targetZoneId);
+    const result = loop.usaUtilityAction(state, playerId, targetChestId, rng);
     autoAdvanceIfActed(state, dir, playerId);
     return result;
   }
@@ -503,6 +695,20 @@
   /* Prepara il prossimo nemico della coda della fase nemici SENZA tirare
      dadi: se lo step non richiede dadi (movimento/idle/scartato) è già
      completo, e il Director avanza da solo alla voce successiva. */
+  function startImmediateEnemyResponse(state, dir, enemyId, targetId, resumePlayerId) {
+    const prepared = loop.prepareEnemyResponseToAttacker(state, enemyId, targetId);
+    if (prepared.type !== "attack") {
+      autoAdvanceIfActed(state, dir, resumePlayerId);
+      return prepared;
+    }
+    dir.pendingReaction = {
+      actorType: "enemy", enemyId, targetId, prepared,
+      reactionType: null, retreatNodeId: null, counterWeapon: null, enemyOutcome: null,
+      resumePlayerId: resumePlayerId || null, immediateResponse: true
+    };
+    return { type: "awaiting-reaction", enemyId, targetId, diceCount: prepared.diceCount, immediateResponse: true };
+  }
+
   function beginEnemyRollStep(state, dir) {
     if (dir.directorPhase !== "enemy-phase" || !dir.enemyPhase) throw new Error("Non siamo nella fase nemici");
     assertNoPendingAnnouncements(dir);
@@ -514,18 +720,111 @@
       advanceEnemyCursor(state, dir);
       return prepared;
     }
-    dir.awaitingRoll = {
-      actorType: "enemy", actorId: enemyId, targetKind: "player", targetId: prepared.targetId,
-      diceCount: prepared.diceCount, prepared, rolls: null, pendingRerollIndices: []
+    dir.pendingReaction = {
+      actorType: "enemy", enemyId, targetId: prepared.targetId, prepared,
+      reactionType: null, retreatNodeId: null, counterWeapon: null, enemyOutcome: null,
+      resumePlayerId: null, immediateResponse: false
     };
-    return { type: "awaiting-roll", diceCount: prepared.diceCount, enemyId, targetId: prepared.targetId };
+    return { type: "awaiting-reaction", enemyId, targetId: prepared.targetId, diceCount: prepared.diceCount };
+  }
+
+  function buildAreaReactionQueue(state, pending, enemyOutcome) {
+    const hits = enemyOutcome && Array.isArray(enemyOutcome.secondaryHits) ? enemyOutcome.secondaryHits : [];
+    if (!hits.length) return [];
+    const primary = loop.getPlayer(state, pending.targetId);
+    const enemy = loop.getEnemy(state, pending.enemyId);
+    if (!primary || !enemy) return [];
+    const zone = loop.getZone(state, enemy.zoneId);
+    const others = state.players
+      .filter((p) => p.id !== primary.id && p.present !== false && p.status === "active" && p.zoneId === enemy.zoneId && (!zone.nodes || p.nodeId === enemy.nodeId))
+      .sort((a,b) => a.id < b.id ? -1 : 1);
+    return hits.map((amount, i) => others[i] ? { targetId: others[i].id, amount } : null).filter(Boolean);
+  }
+
+  function finishReactionTarget(state, dir, pending) {
+    const remaining = Array.isArray(pending.areaQueue) ? pending.areaQueue.slice() : [];
+    if (remaining.length) {
+      const next = remaining.shift();
+      dir.awaitingRoll = null;
+      dir.pendingReaction = {
+        actorType: "enemy", enemyId: pending.enemyId, targetId: next.targetId, prepared: pending.prepared,
+        reactionType: null, retreatNodeId: null, counterWeapon: null,
+        enemyOutcome: { status: "resolved", total: next.amount, rolls: [], ignoreShieldN: 0, secondaryHits: [] },
+        fixedIncomingDamage: next.amount, areaQueue: remaining,
+        resumePlayerId: pending.resumePlayerId || null,
+        immediateResponse: Boolean(pending.immediateResponse), isAreaSecondary: true
+      };
+      return { continued: true, targetId: next.targetId, amount: next.amount };
+    }
+    if (pending.immediateResponse) {
+      const respondingEnemy = loop.getEnemy(state, pending.enemyId);
+      if (respondingEnemy) respondingEnemy.respondedThisRound = true;
+    }
+    dir.pendingReaction = null;
+    dir.awaitingRoll = null;
+    if (pending.resumePlayerId) autoAdvanceIfActed(state, dir, pending.resumePlayerId);
+    else advanceEnemyCursor(state, dir);
+    return { continued: false };
+  }
+
+  function chooseEnemyReaction(state, dir, reactionType, options) {
+    const pending = dir.pendingReaction;
+    if (!pending || pending.actorType !== "enemy") throw new Error("Nessun attacco nemico in attesa di reazione");
+    if (!loop.getPlayer(state, pending.targetId) || loop.getPlayer(state, pending.targetId).status !== "active") throw new Error("Bersaglio non più attivo");
+    const opts = options || {};
+    if (!["defend", "dodge", "retreat", "counter", "smoke-retreat"].includes(reactionType)) throw new Error("Reazione sconosciuta");
+    if (reactionType === "smoke-retreat") {
+      const result = loop.fumogenoRetreatAction(state, pending.targetId, opts.retreatNodeId);
+      const enemy = loop.getEnemy(state, pending.enemyId);
+      if (enemy) enemy.lastTargetId = pending.targetId;
+      const outcome = {
+        status: "resolved", type: "attack-reaction", enemyId: pending.enemyId, targetId: pending.targetId,
+        enemyResult: { total: 0, rolls: [], ignoreShieldN: 0 },
+        reaction: { type: "smoke-retreat", roll: null, incomingDamage: 0, damageTaken: 0, escaped: true },
+        hpBefore: loop.getPlayer(state, pending.targetId).hp, hpAfter: loop.getPlayer(state, pending.targetId).hp,
+        shieldBefore: loop.getPlayer(state, pending.targetId).shield, shieldAfter: loop.getPlayer(state, pending.targetId).shield,
+        statusAfter: loop.getPlayer(state, pending.targetId).status, secondaryHits: []
+      };
+      dir.lastStepResult = outcome;
+      const sequence = finishReactionTarget(state, dir, pending);
+      return { type: "resolved-smoke-retreat", outcome, sequence };
+    }
+    if (reactionType === "counter") {
+      if (!opts.weapon) throw new Error("Il contrattacco richiede un'arma");
+      const pv = loop.previewPlayerAttack(state, pending.targetId, pending.enemyId, opts.weapon);
+      pending.reactionType = reactionType;
+      pending.counterWeapon = opts.weapon;
+      pending.counterDiceCount = pv.diceCount;
+    } else {
+      pending.reactionType = reactionType;
+      pending.retreatNodeId = opts.retreatNodeId || null;
+    }
+    if (pending.fixedIncomingDamage != null && pending.enemyOutcome) {
+      if (reactionType === "counter") {
+        dir.awaitingRoll = {
+          actorType: "counter", actorId: pending.targetId, targetKind: "enemy", targetId: pending.enemyId,
+          diceCount: pending.counterDiceCount, prepared: pending.prepared, rolls: null, pendingRerollIndices: []
+        };
+        return { type: "awaiting-counter-roll", diceCount: pending.counterDiceCount, enemyOutcome: pending.enemyOutcome };
+      }
+      dir.awaitingRoll = {
+        actorType: "reaction", actorId: pending.targetId, targetKind: "enemy", targetId: pending.enemyId,
+        diceCount: 1, prepared: pending.prepared, rolls: null, pendingRerollIndices: []
+      };
+      return { type: "awaiting-reaction-roll", diceCount: 1, enemyOutcome: pending.enemyOutcome, reactionType };
+    }
+    dir.awaitingRoll = {
+      actorType: "enemy-pre-reaction", actorId: pending.enemyId, targetKind: "player", targetId: pending.targetId,
+      diceCount: pending.prepared.diceCount, prepared: pending.prepared, rolls: null, pendingRerollIndices: []
+    };
+    return { type: "awaiting-enemy-roll", diceCount: pending.prepared.diceCount };
   }
 
   function advanceEnemyCursor(state, dir) {
     dir.enemyPhase.cursor += 1;
     if (dir.enemyPhase.cursor >= dir.enemyPhase.order.length) {
       dir.enemyPhase = null;
-      beginBossPhase(state, dir);
+      beginStructurePhase(state, dir);
     }
   }
 
@@ -555,6 +854,95 @@
   function submitRoll(state, dir, rolls) {
     if (!dir.awaitingRoll) throw new Error("Nessun tiro in attesa");
     const aw = dir.awaitingRoll;
+
+    if (aw.actorType === "structure") {
+      const outcome=loop.resolveStructureStepFromRolls(state,aw.prepared,rolls); dir.lastStepResult=outcome; dir.awaitingRoll=null;
+      if(outcome.targetKind==="player" && outcome.statusAfter==="ko"){ const p=loop.getPlayer(state,outcome.targetId); dir.pendingAnnouncements.push({type:"ko",payload:{playerId:p.id,playerName:p.name}}); }
+      advanceStructureCursor(state,dir); return outcome;
+    }
+
+    if (aw.actorType === "structure-attack") {
+      const outcome = loop.damageStructureWithWeapon(state, aw.actorId, aw.weapon, rolls);
+      dir.lastStepResult = outcome; dir.awaitingRoll = null;
+      autoAdvanceIfActed(state, dir, aw.actorId);
+      return outcome;
+    }
+
+    if (aw.actorType === "vehicle") {
+      const outcome = loop.resolveVehicleSalvo(state, aw.zoneId, rolls, aw.targetSpecs);
+      dir.lastStepResult = outcome; dir.awaitingRoll = null;
+      autoAdvanceIfActed(state, dir, aw.actorId);
+      return outcome;
+    }
+
+    if (aw.actorType === "enemy-pre-reaction") {
+      const raw = loop.resolvePreparedEnemyOutcomeFromRolls(aw.prepared, rolls);
+      if (raw.status === "needs-reroll") {
+        dir.awaitingRoll.rolls = raw.rolls;
+        dir.awaitingRoll.pendingRerollIndices = raw.rerollIndices;
+        return raw;
+      }
+      dir.pendingReaction.enemyOutcome = raw;
+      const pending = dir.pendingReaction;
+      pending.areaQueue = buildAreaReactionQueue(state, pending, raw);
+      if (pending.reactionType === "counter") {
+        dir.awaitingRoll = {
+          actorType: "counter", actorId: pending.targetId, targetKind: "enemy", targetId: pending.enemyId,
+          diceCount: pending.counterDiceCount, prepared: pending.prepared, rolls: null, pendingRerollIndices: []
+        };
+        return { status: "awaiting-counter-roll", diceCount: pending.counterDiceCount, enemyOutcome: raw };
+      }
+      dir.awaitingRoll = {
+        actorType: "reaction", actorId: pending.targetId, targetKind: "enemy", targetId: pending.enemyId,
+        diceCount: 1, prepared: pending.prepared, rolls: null, pendingRerollIndices: []
+      };
+      return { status: "awaiting-reaction-roll", diceCount: 1, enemyOutcome: raw, reactionType: pending.reactionType };
+    }
+
+    if (aw.actorType === "reaction") {
+      if (!Array.isArray(rolls) || rolls.length !== 1) throw new Error("La reazione richiede esattamente 1 D6");
+      const pending = dir.pendingReaction;
+      const result = loop.applyCombatReaction(
+        state, pending.targetId, pending.enemyOutcome.total, pending.reactionType, rolls[0], pending.retreatNodeId,
+        pending.enemyOutcome.ignoreShieldN || 0
+      );
+      const enemy = loop.getEnemy(state, pending.enemyId);
+      if (enemy) enemy.lastTargetId = pending.targetId;
+      const outcome = {
+        status: "resolved", type: "attack-reaction", enemyId: pending.enemyId, targetId: pending.targetId,
+        enemyResult: pending.enemyOutcome, reaction: result.reaction,
+        hpBefore: result.hpBefore, hpAfter: result.hpAfter,
+        shieldBefore: result.shieldBefore, shieldAfter: result.shieldAfter,
+        statusAfter: result.statusAfter, secondaryHits: []
+      };
+      dir.lastStepResult = outcome;
+      dir.awaitingRoll = null;
+      enqueueKoAnnouncementsFromStep(state, dir, outcome);
+      outcome.sequence = finishReactionTarget(state, dir, pending);
+      return outcome;
+    }
+
+    if (aw.actorType === "counter") {
+      const pending = dir.pendingReaction;
+      const outcome = loop.resolveCounterattackAgainstOutcomeFromRolls(
+        state, pending.prepared, pending.enemyOutcome, pending.counterWeapon, rolls
+      );
+      if (outcome.status === "needs-counter-reroll") {
+        dir.awaitingRoll.rolls = rolls;
+        dir.awaitingRoll.pendingRerollIndices = outcome.detail.rerollIndices;
+        dir.awaitingRoll.counterNeedsReroll = true;
+        return { status: "needs-reroll", rerollIndices: outcome.detail.rerollIndices, rolls };
+      }
+      dir.lastStepResult = outcome;
+      dir.awaitingRoll = null;
+      if (outcome.playerStatusAfter === "ko") {
+        const p = loop.getPlayer(state, outcome.targetId);
+        dir.pendingAnnouncements.push({ type: "ko", payload: { playerId: outcome.targetId, playerName: p ? p.name : outcome.targetId } });
+      }
+      outcome.sequence = finishReactionTarget(state, dir, pending);
+      return outcome;
+    }
+
     const outcome = resolverFor(aw)(state, aw.prepared, rolls);
     return applyRollOutcome(state, dir, outcome);
   }
@@ -566,6 +954,35 @@
       throw new Error("Nessun ritiro in attesa");
     }
     const aw = dir.awaitingRoll;
+    if (aw.actorType === "enemy-pre-reaction") {
+      const raw = loop.resolvePreparedEnemyOutcomeFromRolls(aw.prepared, aw.rolls, rerollValues);
+      if (raw.status === "needs-reroll") return raw;
+      dir.pendingReaction.enemyOutcome = raw;
+      const pending = dir.pendingReaction;
+      if (pending.reactionType === "counter") {
+        dir.awaitingRoll = { actorType: "counter", actorId: pending.targetId, targetKind: "enemy", targetId: pending.enemyId,
+          diceCount: pending.counterDiceCount, prepared: pending.prepared, rolls: null, pendingRerollIndices: [] };
+        return { status: "awaiting-counter-roll", diceCount: pending.counterDiceCount, enemyOutcome: raw };
+      }
+      dir.awaitingRoll = { actorType: "reaction", actorId: pending.targetId, targetKind: "enemy", targetId: pending.enemyId,
+        diceCount: 1, prepared: pending.prepared, rolls: null, pendingRerollIndices: [] };
+      return { status: "awaiting-reaction-roll", diceCount: 1, enemyOutcome: raw, reactionType: pending.reactionType };
+    }
+    if (aw.actorType === "counter" && aw.counterNeedsReroll) {
+      const pending = dir.pendingReaction;
+      const outcome = loop.resolveCounterattackAgainstOutcomeFromRolls(
+        state, pending.prepared, pending.enemyOutcome, pending.counterWeapon, aw.rolls, rerollValues
+      );
+      if (outcome.status === "needs-counter-reroll") return { status: "needs-reroll", rerollIndices: outcome.detail.rerollIndices, rolls: aw.rolls };
+      dir.lastStepResult = outcome;
+      dir.awaitingRoll = null;
+      if (outcome.playerStatusAfter === "ko") {
+        const p = loop.getPlayer(state, outcome.targetId);
+        dir.pendingAnnouncements.push({ type: "ko", payload: { playerId: outcome.targetId, playerName: p ? p.name : outcome.targetId } });
+      }
+      outcome.sequence = finishReactionTarget(state, dir, pending);
+      return outcome;
+    }
     const outcome = resolverFor(aw)(state, aw.prepared, aw.rolls, rerollValues);
     return applyRollOutcome(state, dir, outcome);
   }
@@ -578,6 +995,8 @@
     }
     const actorType = dir.awaitingRoll.actorType;
     const actorId = dir.awaitingRoll.actorId;
+    const targetKind = dir.awaitingRoll.targetKind;
+    const targetId = dir.awaitingRoll.targetId;
     dir.lastStepResult = outcome;
     dir.awaitingRoll = null;
     if (actorType === "enemy") {
@@ -587,9 +1006,13 @@
       enqueueKoAnnouncementsFromStep(state, dir, outcome);
       dir.directorPhase = "end-of-round";
     } else if (actorType === "player") {
-      // Solo ORA che l'attacco è risolto in via definitiva (mai durante un
-      // ritiro fisico pendente) il Director passa al prossimo della queue.
-      autoAdvanceIfActed(state, dir, actorId);
+      // Combat V2: un nemico sopravvissuto risponde immediatamente a chi lo
+      // ha ingaggiato. Il turno avanza solo DOPO la reazione del giocatore.
+      if (targetKind === "enemy" && !outcome.eliminated) {
+        startImmediateEnemyResponse(state, dir, targetId, actorId, actorId);
+      } else {
+        autoAdvanceIfActed(state, dir, actorId);
+      }
     }
     return outcome;
   }
@@ -603,10 +1026,30 @@
     dir.lastStepResult = null;
     const order = loop.getEnemyPhaseOrder(state);
     if (!order.length) {
-      beginBossPhase(state, dir);
+      beginStructurePhase(state, dir);
       return;
     }
     dir.enemyPhase = { order, cursor: 0 };
+  }
+
+  function beginStructurePhase(state, dir) {
+    const order = loop.getStructurePhaseOrder(state);
+    if (!order.length) { dir.structurePhase=null; beginBossPhase(state,dir); return; }
+    dir.directorPhase="structure-phase"; dir.structurePhase={order,cursor:0}; dir.lastStepResult=null;
+  }
+
+  function beginStructureRollStep(state, dir) {
+    if (dir.directorPhase!=="structure-phase" || !dir.structurePhase) throw new Error("Non siamo nella fase strutture");
+    assertNoPendingAnnouncements(dir); assertNoAwaitingRoll(dir);
+    const zoneId=dir.structurePhase.order[dir.structurePhase.cursor]; const prepared=loop.prepareStructureStep(state,zoneId);
+    if (!/^attack-/.test(prepared.type)) { advanceStructureCursor(state,dir); return prepared; }
+    dir.awaitingRoll={actorType:"structure",actorId:prepared.structureId,zoneId,diceCount:prepared.diceCount,targetId:prepared.targetId||null,prepared,rolls:null,pendingRerollIndices:[]};
+    return {type:"awaiting-structure-fire",diceCount:prepared.diceCount,targetName:prepared.targetName,structureName:prepared.structureName};
+  }
+
+  function advanceStructureCursor(state,dir){
+    dir.structurePhase.cursor+=1;
+    if(dir.structurePhase.cursor>=dir.structurePhase.order.length){dir.structurePhase=null;beginBossPhase(state,dir);}
   }
 
   function beginBossPhase(state, dir) {
@@ -712,19 +1155,20 @@
   }
 
   return {
-    createDirectorState,
+    createDirectorState, registerPresentPlayer, handlePlayerDeactivated,
     isBattlefield, buildRoundPlayerQueue,
     getCurrentPlayerId, getCurrentPlayer,
     getSituation, getReachableZones, getAvailableActions, getStormRisk, hasActiveBoss,
     buildAttackPreview, buildBossAttackPreview,
-    performMove, performMoveNode, performRianima, performAiuto, performScambia,
+    performMove, performMoveNode, performRianima, performDestinyRevive, performAiuto, performAttendiSquadra, performNasconditi, performPiazzaTrappola, performPartyBoost, beginStructureAttack, beginVehicleSalvo, performScambia,
+    beginTeamAttack, submitTeamAttackRolls, performCombatReaction,
     performUsaCura, performUsaScudo, performUsaUtility,
     performEquipFoundWeapon, performEquipFoundSupportItem, performApriCassa,
     endPlayerTurn,
     beginPlayerAttackOnEnemy, beginPlayerAttackOnBoss,
-    beginEnemyRollStep, beginBossRollStep,
+    beginEnemyRollStep, startImmediateEnemyResponse, chooseEnemyReaction, beginBossRollStep,
     submitRoll, submitReroll,
-    beginEnemyPhase, beginBossPhase,
+    beginEnemyPhase, beginStructurePhase, beginStructureRollStep, beginBossPhase,
     resolveEndOfRound, acknowledgeAnnouncement
   };
 });

@@ -209,27 +209,43 @@ test("Scudo: stessa logica di Cura, +3/+6/pieno, clamp a 10", () => {
    consumano una sola volta, mai un dado digitale.
    ========================================================================= */
 
-test("Scanner rivela nemici vivi e casse non aperte di una zona adiacente, costa l'azione", () => {
+test("Scanner rivela il contenuto di una cassa chiusa nella posizione del giocatore e costa l'azione", () => {
   const state = newGame(1);
   landAll(state, "e1");
   loop.beginExploration(state, () => 0.99);
-  loop.spawnEnemy(state, "normale", "e2");
-  loop.getZone(state, "e2").chests.push({ id: "cX", opened: false }, { id: "cY", opened: true });
+  loop.getZone(state, "e1").chests.push({ id: "cX", opened: false });
   const p = loop.getPlayer(state, "p1");
   p.equipment.utility = itemsCatalog.findItem("scanner");
-  const result = loop.usaUtilityAction(state, "p1", "e2");
-  assert.equal(result.enemyCount, 1);
-  assert.equal(result.chestCount, 1);
+  const result = loop.usaUtilityAction(state, "p1", "cX", () => 0.25);
+  assert.equal(result.type, "scanner");
+  assert.equal(result.chestId, "cX");
+  assert.ok(result.weapon && result.support);
+  assert.equal(loop.getZone(state, "e1").chests[0].opened, false, "lo Scanner non apre la cassa");
   assert.equal(p.equipment.utility, null);
   assert.equal(p.actedThisRound, true);
 });
 
-test("Scanner rifiuta una zona non adiacente", () => {
+test("Scanner congela il contenuto: aprendo dopo, escono gli stessi oggetti rivelati", () => {
+  const state = newGame(1);
+  landAll(state, "e1");
+  loop.beginExploration(state, () => 0.99);
+  loop.getZone(state, "e1").chests.push({ id: "cX", opened: false });
+  const p = loop.getPlayer(state, "p1");
+  p.equipment.utility = itemsCatalog.findItem("scanner");
+  const scan = loop.usaUtilityAction(state, "p1", "cX", () => 0.25);
+  p.actedThisRound = false; // simula il turno successivo
+  const opened = loop.apriCassaAction(state, "p1", "cX", () => 0.99);
+  assert.equal(opened.weapon.weaponId, scan.weapon.weaponId);
+  assert.equal(opened.support.kind, scan.support.kind);
+  assert.equal(opened.support.itemId, scan.support.itemId);
+});
+
+test("Scanner rifiuta l'uso senza una cassa chiusa bersaglio", () => {
   const state = newGame(1);
   landAll(state, "e1");
   loop.beginExploration(state, () => 0.99);
   loop.getPlayer(state, "p1").equipment.utility = itemsCatalog.findItem("scanner");
-  assert.throws(() => loop.usaUtilityAction(state, "p1", "e3"), "e3 non è adiacente a e1");
+  assert.throws(() => loop.usaUtilityAction(state, "p1", "missing", () => 0.25), /Nessuna cassa chiusa/);
 });
 
 test("Fumogeno: -1 dado (min 1) al PROSSIMO attacco nemico nella zona, consuma l'azione principale", () => {
@@ -323,8 +339,9 @@ test("dopo Scanner non si può fare un'altra azione principale nello stesso turn
   landAll(state, "e1");
   loop.beginExploration(state, () => 0.99);
   const p = loop.getPlayer(state, "p1");
+  loop.getZone(state, "e1").chests.push({ id: "cScan", opened: false });
   p.equipment.utility = itemsCatalog.findItem("scanner");
-  loop.usaUtilityAction(state, "p1", "e2");
+  loop.usaUtilityAction(state, "p1", "cScan", () => 0.25);
   assert.throws(() => loop.interagisciAction(state, "p1"));
 });
 

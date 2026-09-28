@@ -84,14 +84,14 @@ test("riproduce esattamente l'esempio: A1,A2 / B1,B2,B3 / C1 -> A1,B1,C1,A2,B2,B
   assert.deepEqual(queue, ["p1", "p3", "p6", "p2", "p4", "p5"]);
 });
 
-test("un KO non entra mai in coda, anche se fisicamente nel Campo", () => {
+test("Combat V2: un KO resta in coda per poter tentare il rialzo del destino", () => {
   const state = newGame(2);
   land(state, "p1", "e1"); land(state, "p2", "e1");
   loop.beginExploration(state, () => 0.99);
   loop.spawnEnemy(state, "normale", "e1");
   loop.setPlayerKO(state, loop.getPlayer(state, "p2"));
   const queue = director.buildRoundPlayerQueue(state, state.players.map((p) => p.id));
-  assert.deepEqual(queue, ["p1"]);
+  assert.deepEqual(queue, ["p1", "p2"]);
 });
 
 test("nessun Campo -> la coda coincide con turnOrder (comportamento identico a oggi)", () => {
@@ -151,6 +151,7 @@ test("auto-avanzamento dopo un'azione immediata (usa_cura): nessuna FINE TURNO m
   loop.spawnEnemy(state, "normale", "e1");
   const dir = beginAndFreeze(state);
   loop.getPlayer(state, "p1").equipment.cura = { id: "bende", name: "Bende", amount: 3, full: false };
+  loop.getPlayer(state, "p1").hp = 7;
   assert.equal(director.getCurrentPlayerId(state, dir), "p1");
   director.performUsaCura(state, dir, "p1");
   assert.equal(director.getCurrentPlayerId(state, dir), "p2", "dopo l'azione principale si passa da soli al prossimo");
@@ -176,7 +177,7 @@ test("raccogliere da terra NON fa avanzare la coda", () => {
   assert.equal(director.getCurrentPlayerId(state, dir), "p1");
 });
 
-test("auto-avanzamento dopo un attacco a dadi fisici, solo a risoluzione definitiva (mai con awaitingRoll pendente)", () => {
+test("Combat V2: dopo un attacco il turno avanza solo dopo l'eventuale risposta del nemico", () => {
   const state = newGame(2);
   land(state, "p1", "e1"); land(state, "p2", "e1");
   const enemyId = loop.spawnEnemy(state, "normale", "e1");
@@ -188,7 +189,14 @@ test("auto-avanzamento dopo un attacco a dadi fisici, solo a risoluzione definit
 
   const outcome = director.submitRoll(state, dir, [3]);
   assert.equal(outcome.status, "resolved");
-  assert.equal(director.getCurrentPlayerId(state, dir), "p2", "risolto l'attacco, si passa da soli al prossimo");
+  assert.ok(dir.pendingReaction, "il nemico sopravvissuto risponde subito all'attaccante");
+  assert.equal(director.getCurrentPlayerId(state, dir), "p1", "il turno resta al giocatore finché la risposta non è chiusa");
+
+  const start = director.chooseEnemyReaction(state, dir, "defend");
+  const enemyRolls = new Array(start.diceCount).fill(2);
+  director.submitRoll(state, dir, enemyRolls);
+  director.submitRoll(state, dir, [6]); // parata perfetta
+  assert.equal(director.getCurrentPlayerId(state, dir), "p2", "dopo la risposta si passa al prossimo");
 });
 
 test("FINE TURNO resta disponibile per chi rinuncia all'azione principale", () => {
@@ -264,6 +272,7 @@ test("aiuta/scambia/apri_cassa/usa_scudo/usa_utility avanzano tutti la coda in a
 
   // usa_scudo per p2
   loop.getPlayer(state, "p2").equipment.scudo = { id: "mini_scudo", name: "Mini Scudo", amount: 3, full: false };
+  loop.getPlayer(state, "p2").shield = 4;
   director.performUsaScudo(state, dir, "p2");
   assert.equal(dir.directorPhase, "enemy-phase", "erano solo 2 giocatori: la coda finisce qui");
 });

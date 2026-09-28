@@ -1,0 +1,51 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "ancient-ruins",
+  "entryNodeId": "ancient-ruins-n01",
+  "nodes": [
+    {
+      "id": "ancient-ruins-n01",
+      "x": 13.15,
+      "y": 6.93
+    },
+    {
+      "id": "ancient-ruins-n02",
+      "x": 24.54,
+      "y": 36.93
+    },
+    {
+      "id": "ancient-ruins-n03",
+      "x": 55.41,
+      "y": 60.56
+    },
+    {
+      "id": "ancient-ruins-n04",
+      "x": 79.61,
+      "y": 49.45
+    },
+    {
+      "id": "ancient-ruins-n05",
+      "x": 55.92,
+      "y": 12.93
+    }
+  ],
+  "edges": [
+    [
+      "ancient-ruins-n01",
+      "ancient-ruins-n02"
+    ],
+    [
+      "ancient-ruins-n02",
+      "ancient-ruins-n03"
+    ],
+    [
+      "ancient-ruins-n03",
+      "ancient-ruins-n04"
+    ],
+    [
+      "ancient-ruins-n04",
+      "ancient-ruins-n05"
+    ]
+  ]
+}

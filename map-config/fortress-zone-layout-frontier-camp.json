@@ -1,0 +1,63 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "frontier-camp",
+  "entryNodeId": "frontier-camp-n01",
+  "nodes": [
+    {
+      "id": "frontier-camp-n01",
+      "x": 19.08,
+      "y": 71.37
+    },
+    {
+      "id": "frontier-camp-n02",
+      "x": 66.52,
+      "y": 85.44
+    },
+    {
+      "id": "frontier-camp-n03",
+      "x": 49.75,
+      "y": 43.54
+    },
+    {
+      "id": "frontier-camp-n04",
+      "x": 20.39,
+      "y": 27.98
+    },
+    {
+      "id": "frontier-camp-n05",
+      "x": 54.42,
+      "y": 12
+    }
+  ],
+  "edges": [
+    [
+      "frontier-camp-n01",
+      "frontier-camp-n02"
+    ],
+    [
+      "frontier-camp-n01",
+      "frontier-camp-n03"
+    ],
+    [
+      "frontier-camp-n01",
+      "frontier-camp-n04"
+    ],
+    [
+      "frontier-camp-n02",
+      "frontier-camp-n03"
+    ],
+    [
+      "frontier-camp-n03",
+      "frontier-camp-n04"
+    ],
+    [
+      "frontier-camp-n03",
+      "frontier-camp-n05"
+    ],
+    [
+      "frontier-camp-n04",
+      "frontier-camp-n05"
+    ]
+  ]
+}

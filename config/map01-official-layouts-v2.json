@@ -1,0 +1,526 @@
+{
+  "abandoned-city": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "abandoned-city",
+    "entryNodeId": "abandoned-city-n01",
+    "nodes": [
+      {
+        "id": "abandoned-city-n01",
+        "x": 20.47,
+        "y": 82.06
+      },
+      {
+        "id": "abandoned-city-n02",
+        "x": 41.33,
+        "y": 55.6
+      },
+      {
+        "id": "abandoned-city-n03",
+        "x": 35.69,
+        "y": 23.11
+      },
+      {
+        "id": "abandoned-city-n04",
+        "x": 62.76,
+        "y": 45.86
+      },
+      {
+        "id": "abandoned-city-n05",
+        "x": 66.52,
+        "y": 12.43
+      }
+    ],
+    "edges": [
+      [
+        "abandoned-city-n01",
+        "abandoned-city-n02"
+      ],
+      [
+        "abandoned-city-n02",
+        "abandoned-city-n03"
+      ],
+      [
+        "abandoned-city-n02",
+        "abandoned-city-n04"
+      ],
+      [
+        "abandoned-city-n03",
+        "abandoned-city-n05"
+      ],
+      [
+        "abandoned-city-n04",
+        "abandoned-city-n05"
+      ]
+    ]
+  },
+  "ancient-ruins": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "ancient-ruins",
+    "entryNodeId": "ancient-ruins-n01",
+    "nodes": [
+      {
+        "id": "ancient-ruins-n01",
+        "x": 13.15,
+        "y": 6.93
+      },
+      {
+        "id": "ancient-ruins-n02",
+        "x": 24.54,
+        "y": 36.93
+      },
+      {
+        "id": "ancient-ruins-n03",
+        "x": 55.41,
+        "y": 60.56
+      },
+      {
+        "id": "ancient-ruins-n04",
+        "x": 79.61,
+        "y": 49.45
+      },
+      {
+        "id": "ancient-ruins-n05",
+        "x": 55.92,
+        "y": 12.93
+      }
+    ],
+    "edges": [
+      [
+        "ancient-ruins-n01",
+        "ancient-ruins-n02"
+      ],
+      [
+        "ancient-ruins-n02",
+        "ancient-ruins-n03"
+      ],
+      [
+        "ancient-ruins-n03",
+        "ancient-ruins-n04"
+      ],
+      [
+        "ancient-ruins-n04",
+        "ancient-ruins-n05"
+      ]
+    ]
+  },
+  "central-fortress": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "central-fortress",
+    "entryNodeId": "central-fortress-n01",
+    "nodes": [
+      {
+        "id": "central-fortress-n01",
+        "x": 51.25,
+        "y": 94.26
+      },
+      {
+        "id": "central-fortress-n02",
+        "x": 50.17,
+        "y": 52.11
+      },
+      {
+        "id": "central-fortress-n03",
+        "x": 26.48,
+        "y": 25.52
+      },
+      {
+        "id": "central-fortress-n04",
+        "x": 74.94,
+        "y": 27.74
+      },
+      {
+        "id": "central-fortress-n05",
+        "x": 49.2,
+        "y": 28.78
+      }
+    ],
+    "edges": [
+      [
+        "central-fortress-n01",
+        "central-fortress-n02"
+      ],
+      [
+        "central-fortress-n02",
+        "central-fortress-n03"
+      ],
+      [
+        "central-fortress-n02",
+        "central-fortress-n04"
+      ],
+      [
+        "central-fortress-n02",
+        "central-fortress-n05"
+      ],
+      [
+        "central-fortress-n03",
+        "central-fortress-n05"
+      ],
+      [
+        "central-fortress-n04",
+        "central-fortress-n05"
+      ]
+    ]
+  },
+  "forest": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "forest",
+    "entryNodeId": "forest-n01",
+    "nodes": [
+      {
+        "id": "forest-n01",
+        "x": 40.02,
+        "y": 88.93
+      },
+      {
+        "id": "forest-n02",
+        "x": 63.66,
+        "y": 56.76
+      },
+      {
+        "id": "forest-n03",
+        "x": 22.6,
+        "y": 58.35
+      },
+      {
+        "id": "forest-n04",
+        "x": 48.53,
+        "y": 26.18
+      }
+    ],
+    "edges": [
+      [
+        "forest-n01",
+        "forest-n02"
+      ],
+      [
+        "forest-n02",
+        "forest-n03"
+      ],
+      [
+        "forest-n02",
+        "forest-n04"
+      ],
+      [
+        "forest-n03",
+        "forest-n04"
+      ]
+    ]
+  },
+  "frontier-camp": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "frontier-camp",
+    "entryNodeId": "frontier-camp-n01",
+    "nodes": [
+      {
+        "id": "frontier-camp-n01",
+        "x": 19.08,
+        "y": 71.37
+      },
+      {
+        "id": "frontier-camp-n02",
+        "x": 66.52,
+        "y": 85.44
+      },
+      {
+        "id": "frontier-camp-n03",
+        "x": 49.75,
+        "y": 43.54
+      },
+      {
+        "id": "frontier-camp-n04",
+        "x": 20.39,
+        "y": 27.98
+      },
+      {
+        "id": "frontier-camp-n05",
+        "x": 54.42,
+        "y": 12
+      }
+    ],
+    "edges": [
+      [
+        "frontier-camp-n01",
+        "frontier-camp-n02"
+      ],
+      [
+        "frontier-camp-n01",
+        "frontier-camp-n03"
+      ],
+      [
+        "frontier-camp-n01",
+        "frontier-camp-n04"
+      ],
+      [
+        "frontier-camp-n02",
+        "frontier-camp-n03"
+      ],
+      [
+        "frontier-camp-n03",
+        "frontier-camp-n04"
+      ],
+      [
+        "frontier-camp-n03",
+        "frontier-camp-n05"
+      ],
+      [
+        "frontier-camp-n04",
+        "frontier-camp-n05"
+      ]
+    ]
+  },
+  "hill-outpost": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "hill-outpost",
+    "entryNodeId": "hill-outpost-n01",
+    "nodes": [
+      {
+        "id": "hill-outpost-n01",
+        "x": 45.34,
+        "y": 83.33
+      },
+      {
+        "id": "hill-outpost-n02",
+        "x": 77.16,
+        "y": 72.95
+      },
+      {
+        "id": "hill-outpost-n03",
+        "x": 29.06,
+        "y": 38.17
+      },
+      {
+        "id": "hill-outpost-n04",
+        "x": 73.72,
+        "y": 22.16
+      },
+      {
+        "id": "hill-outpost-n05",
+        "x": 48.45,
+        "y": 7.88
+      }
+    ],
+    "edges": [
+      [
+        "hill-outpost-n01",
+        "hill-outpost-n02"
+      ],
+      [
+        "hill-outpost-n01",
+        "hill-outpost-n03"
+      ],
+      [
+        "hill-outpost-n02",
+        "hill-outpost-n03"
+      ],
+      [
+        "hill-outpost-n02",
+        "hill-outpost-n04"
+      ],
+      [
+        "hill-outpost-n03",
+        "hill-outpost-n04"
+      ],
+      [
+        "hill-outpost-n04",
+        "hill-outpost-n05"
+      ]
+    ]
+  },
+  "industrial-zone": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "industrial-zone",
+    "entryNodeId": "industrial-zone-n01",
+    "nodes": [
+      {
+        "id": "industrial-zone-n01",
+        "x": 34.7,
+        "y": 7.48
+      },
+      {
+        "id": "industrial-zone-n02",
+        "x": 8.69,
+        "y": 30.23
+      },
+      {
+        "id": "industrial-zone-n03",
+        "x": 55.32,
+        "y": 27.16
+      },
+      {
+        "id": "industrial-zone-n04",
+        "x": 64.72,
+        "y": 67.9
+      },
+      {
+        "id": "industrial-zone-n05",
+        "x": 85.83,
+        "y": 36.79
+      },
+      {
+        "id": "industrial-zone-n06",
+        "x": 48.36,
+        "y": 49.7
+      }
+    ],
+    "edges": [
+      [
+        "industrial-zone-n01",
+        "industrial-zone-n02"
+      ],
+      [
+        "industrial-zone-n01",
+        "industrial-zone-n03"
+      ],
+      [
+        "industrial-zone-n02",
+        "industrial-zone-n04"
+      ],
+      [
+        "industrial-zone-n03",
+        "industrial-zone-n05"
+      ],
+      [
+        "industrial-zone-n03",
+        "industrial-zone-n06"
+      ],
+      [
+        "industrial-zone-n04",
+        "industrial-zone-n05"
+      ],
+      [
+        "industrial-zone-n04",
+        "industrial-zone-n06"
+      ]
+    ]
+  },
+  "military-base": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "military-base",
+    "entryNodeId": "military-base-n01",
+    "nodes": [
+      {
+        "id": "military-base-n01",
+        "x": 40.83,
+        "y": 94.19
+      },
+      {
+        "id": "military-base-n02",
+        "x": 54.16,
+        "y": 70.71
+      },
+      {
+        "id": "military-base-n03",
+        "x": 18,
+        "y": 38.85
+      },
+      {
+        "id": "military-base-n04",
+        "x": 71.92,
+        "y": 35.74
+      },
+      {
+        "id": "military-base-n05",
+        "x": 10.36,
+        "y": 8.78
+      },
+      {
+        "id": "military-base-n06",
+        "x": 42.31,
+        "y": 18.63
+      }
+    ],
+    "edges": [
+      [
+        "military-base-n01",
+        "military-base-n02"
+      ],
+      [
+        "military-base-n02",
+        "military-base-n03"
+      ],
+      [
+        "military-base-n03",
+        "military-base-n04"
+      ],
+      [
+        "military-base-n03",
+        "military-base-n05"
+      ],
+      [
+        "military-base-n03",
+        "military-base-n06"
+      ],
+      [
+        "military-base-n04",
+        "military-base-n06"
+      ],
+      [
+        "military-base-n05",
+        "military-base-n06"
+      ]
+    ]
+  },
+  "supply-depot": {
+    "format": "fortress-army-zone-layout",
+    "version": 2,
+    "zoneId": "supply-depot",
+    "entryNodeId": "supply-depot-n01",
+    "nodes": [
+      {
+        "id": "supply-depot-n01",
+        "x": 15.03,
+        "y": 9.15
+      },
+      {
+        "id": "supply-depot-n02",
+        "x": 32,
+        "y": 23.15
+      },
+      {
+        "id": "supply-depot-n03",
+        "x": 52.11,
+        "y": 14.63
+      },
+      {
+        "id": "supply-depot-n04",
+        "x": 46.53,
+        "y": 56.19
+      },
+      {
+        "id": "supply-depot-n05",
+        "x": 83.37,
+        "y": 32.04
+      }
+    ],
+    "edges": [
+      [
+        "supply-depot-n01",
+        "supply-depot-n02"
+      ],
+      [
+        "supply-depot-n02",
+        "supply-depot-n03"
+      ],
+      [
+        "supply-depot-n02",
+        "supply-depot-n04"
+      ],
+      [
+        "supply-depot-n03",
+        "supply-depot-n05"
+      ],
+      [
+        "supply-depot-n04",
+        "supply-depot-n05"
+      ]
+    ]
+  }
+}

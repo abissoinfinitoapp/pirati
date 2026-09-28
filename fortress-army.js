@@ -302,14 +302,33 @@ function populateLibraryFilters() {
   ].map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
 }
 
+/* Ricerca globale e tollerante: non solo nome. Normalizza accenti e
+   punteggiatura così "mitraglietta", "smg", "mina prossimita" e termini
+   presenti in descrizione/ruolo trovano la stessa arma. */
+function normalizeLibraryText(value) {
+  return String(value || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function weaponSearchText(w) {
+  const sp = specialInfo(w.special);
+  const categoryLabel = libraryCategories()[w.category] || w.category;
+  const rarityLabel = RARITY_LABELS[w.rarity] || w.rarity;
+  return normalizeLibraryText([
+    w.id, w.name, w.category, categoryLabel, w.rarity, rarityLabel,
+    w.archetype, w.description, w.role, sp.label, sp.text,
+    w.range, w.power, w.potenza
+  ].join(" "));
+}
+
 /* Filtra e ordina SEMPRE su una copia: ARMI (window.FORTRESS_ARMI) non viene
    mai mutato da questa sezione. */
 function getFilteredWeapons() {
-  const q = libraryState.search.trim().toLowerCase();
+  const q = normalizeLibraryText(libraryState.search);
   const filtered = ARMI.filter((w) => {
     if (libraryState.category !== "all" && w.category !== libraryState.category) return false;
     if (libraryState.rarity !== "all" && w.rarity !== libraryState.rarity) return false;
-    if (q && !w.name.toLowerCase().includes(q)) return false;
+    if (q && !weaponSearchText(w).includes(q)) return false;
     return true;
   });
 
@@ -367,11 +386,13 @@ function openWeaponDetail(id) {
       <div><span>Power</span><b>+${w.power}</b></div>
       <div><span>Dadi base</span><b>🎲 ${w.baseDice}</b></div>
       <div><span>Gittata</span><b>📏 ${RANGE_LABELS[w.range] || w.range}</b></div>
+      ${Number.isFinite(w.demolitionBonus) && w.demolitionBonus > 0 ? `<div><span>Demolizione</span><b>💥 +${w.demolitionBonus}</b></div>` : ""}
     </div>
     <div class="fa-detail-special">
       <h3>${sp.label}</h3>
       <p>${sp.text}</p>
     </div>
+    <button type="button" class="fa-btn fa-btn-primary" data-library-focus="${w.id}">VEDI NELL'INDICE ARMI</button>
   `;
   $("fa-weapon-detail").hidden = false;
 }
@@ -380,6 +401,32 @@ function closeWeaponDetail() {
   $("fa-weapon-detail").hidden = true;
   $("fa-weapon-detail-content").innerHTML = "";
 }
+
+function focusWeaponInLibrary(id) {
+  const w = arma(id);
+  if (!w) return;
+  libraryState.search = w.name;
+  libraryState.category = "all";
+  libraryState.rarity = "all";
+  const search = $("fa-library-search"); if (search) search.value = w.name;
+  const category = $("fa-library-category"); if (category) category.value = "all";
+  const rarity = $("fa-library-rarity"); if (rarity) rarity.value = "all";
+  renderLibraryGrid();
+}
+
+window.FORTRESS_LIBRARY_API = {
+  openWeaponDetail,
+  closeWeaponDetail,
+  focusWeaponInLibrary,
+  renderLibraryGrid,
+  resetFilters() {
+    libraryState.search = ""; libraryState.category = "all"; libraryState.rarity = "all";
+    const search = $("fa-library-search"); if (search) search.value = "";
+    const category = $("fa-library-category"); if (category) category.value = "all";
+    const rarity = $("fa-library-rarity"); if (rarity) rarity.value = "all";
+    renderLibraryGrid();
+  }
+};
 
 function openLibrary() {
   $("fa-library").hidden = false;
@@ -428,6 +475,18 @@ function bindLibraryEvents() {
     if (ev.target === $("fa-library")) closeLibrary();
   });
   $("fa-weapon-detail").addEventListener("click", (ev) => {
+    const focus = ev.target.closest("[data-library-focus]");
+    if (focus) {
+      const id = focus.dataset.libraryFocus;
+      closeWeaponDetail();
+      focusWeaponInLibrary(id);
+      if (window.FORTRESS_GAME_UI_API && typeof window.FORTRESS_GAME_UI_API.openUtility === "function") {
+        window.FORTRESS_GAME_UI_API.openUtility("armi");
+      } else {
+        openLibrary();
+      }
+      return;
+    }
     if (ev.target === $("fa-weapon-detail") || ev.target.closest("#fa-weapon-detail-close")) closeWeaponDetail();
   });
 

@@ -91,6 +91,81 @@
   }
 
   /* =========================================================================
+     COMBAT V2 — REAZIONI DIFENSIVE / TEAM ATTACK / RIALZO
+     ========================================================================= */
+  const REACTION_TYPES = ["counter", "defend", "dodge", "retreat"];
+
+  function validateSingleDie(roll) {
+    if (!isValidDie(roll)) throw new Error(`Risultato dado non valido: ${roll} (deve essere 1-6)`);
+    return roll;
+  }
+
+  function resolveDefense(incomingDamage, roll) {
+    validateSingleDie(roll);
+    const damage = Math.max(0, Number(incomingDamage) || 0);
+    const blockByRoll = { 1: 0, 2: 2, 3: 4, 4: 6, 5: 8 };
+    const blocked = roll === 6 ? damage : Math.min(damage, blockByRoll[roll] || 0);
+    return {
+      type: "defend", roll, incomingDamage: damage, blocked,
+      damageTaken: Math.max(0, damage - blocked),
+      perfect: roll === 6
+    };
+  }
+
+  function resolveDodge(incomingDamage, roll) {
+    validateSingleDie(roll);
+    const damage = Math.max(0, Number(incomingDamage) || 0);
+    let damageTaken = damage;
+    if (roll >= 3 && roll <= 4) damageTaken = Math.floor(damage / 2);
+    if (roll >= 5) damageTaken = 0;
+    return {
+      type: "dodge", roll, incomingDamage: damage, damageTaken,
+      success: roll >= 5, partial: roll >= 3 && roll <= 4,
+      freeMove: roll === 6
+    };
+  }
+
+  function resolveRetreat(incomingDamage, roll) {
+    validateSingleDie(roll);
+    const damage = Math.max(0, Number(incomingDamage) || 0);
+    let damageTaken = damage;
+    if (roll >= 3 && roll <= 4) damageTaken = Math.floor(damage / 2);
+    if (roll >= 5) damageTaken = 0;
+    return {
+      type: "retreat", roll, incomingDamage: damage, damageTaken,
+      escaped: roll >= 3, cleanEscape: roll >= 5
+    };
+  }
+
+  function resolveDestinyRevive(roll) {
+    validateSingleDie(roll);
+    if (roll === 1) return { success: false, roll, hp: 0 };
+    return { success: true, roll, hp: roll === 6 ? 4 : 2 };
+  }
+
+  function resolveTeamAttack(contributions) {
+    if (!Array.isArray(contributions) || contributions.length < 2 || contributions.length > 3) {
+      throw new Error("Un attacco di squadra richiede 2 o 3 partecipanti");
+    }
+    const normalized = contributions.map((c, index) => {
+      const total = Number(c && c.total);
+      if (!Number.isFinite(total) || total < 0) throw new Error(`Contributo squadra #${index + 1} non valido`);
+      return {
+        playerId: c.playerId,
+        playerName: c.playerName,
+        weaponName: c.weaponName,
+        rolls: Array.isArray(c.rolls) ? c.rolls.slice() : [],
+        power: Number(c.power) || 0,
+        total
+      };
+    });
+    return {
+      participants: normalized,
+      total: normalized.reduce((sum, c) => sum + c.total, 0)
+    };
+  }
+
+  /* =========================================================================
      RISOLUZIONE DI UN ATTACCO
      ========================================================================= */
 
@@ -279,6 +354,7 @@
     defaultRng, makeQueueRng,
     rangeModifier, clampDice, computeDiceCount, rollDice,
     applyCritOnSix, applyRerollOnes, sumRolls,
+    REACTION_TYPES, resolveDefense, resolveDodge, resolveRetreat, resolveDestinyRevive, resolveTeamAttack,
     resolveAttack,
     isValidDie, validateRolls, pendingRerollIndices, resolveAttackFromRolls,
     createNoiseTracker, registerAttackNoise, checkReinforcements

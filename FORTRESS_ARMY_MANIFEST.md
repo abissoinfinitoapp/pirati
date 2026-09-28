@@ -96,7 +96,7 @@ Guided Turn UI già presente:
 - numero di dadi fisici derivato dalla preview reale del motore;
 - nessun avanzamento mentre `awaitingRoll` è pendente;
 - transizione `ORA TOCCA A ...`;
-- KO saltati correttamente.
+- i KO restano nella queue: al proprio turno tentano il **rialzo del destino** con 1 D6 fisico; non vengono più espulsi da un countdown.
 
 Gli annunci Tempesta simultanei sono aggregati in un solo `storm-batch` invece di una sequenza di modali.
 
@@ -208,13 +208,13 @@ L'Action Hub mostra localmente:
 - nella Forest l'Encounter multi-nodo viene materializzato **subito all'ingresso della zona**, così i nodi pericolosi risultano visibili immediatamente; il player resta comunque sull'entry node sicuro e non vengono creati marker finti;
 - `ATTACCA`;
 - `APRI CASSA`;
-- `RACCOGLI` / scelta slot;
+- armi a terra: `EQUIPAGGIA COME PRIMARIA` / `EQUIPAGGIA COME SECONDARIA` (una sola arma, scelta dello slot esplicita);
 - `USA CURA`;
 - `USA SCUDO`;
 - `USA UTILITY`;
 - `RIANIMA`;
-- `AIUTA`;
-- `SCAMBIA`;
+- `SUPPORTA <giocatore> · +1 DADO AL SUO ATTACCO` solo durante un ingaggio reale sullo stesso nodo;
+- dono tra compagni solo se il giocatore possiede davvero almeno un oggetto; con un solo oggetto il pulsante ne mostra direttamente il nome;
 - `FINE TURNO`;
 - le altre azioni realmente fornite dal Director.
 
@@ -223,6 +223,74 @@ Quando il giocatore è nel piccolo Hub locale, `ATTACCA` usa direttamente l'arma
 Le sequenze **scegli arma → scegli bersaglio → preview** e **cassa → scegli cosa prendere** restano nello stesso Action Hub invece di aprire un pannello lontano. Il modale rimane per il tiro fisico/risultato, dove serve interrompere chiaramente il flusso.
 
 Su schermi stretti l'Hub va sotto il pad di movimento ma resta nello stesso blocco immediatamente sotto la mappa; su viewport più larghe movimento e azioni sono affiancati.
+
+Chiarezza Node Graph: l'azione zone-level `sposta` è presentata come **CAMBIA ZONA** (le frecce restano il movimento interno). Il nodo `entryNodeId` viene marcato visivamente come **ZONA SICURA** con la nota “Qui sei al riparo. Per combattere entra nel nodo dei nemici.”
+
+
+### Chiarezza gameplay — passaggio successivo verificato
+
+- **Atterraggio neutro nel Node Graph**: l'entry node è una vera area sicura/neutra. I nemici della Forest restano visibili sui loro nodi fin dall'ingresso, ma da lì `ATTACCA` non compare e l'engine rifiuta comunque una dichiarazione d'attacco. Anche i nemici ignorano i giocatori rimasti sull'entry: non li attaccano e non li inseguono. L'ingaggio inizia solo quando il giocatore lascia volontariamente l'entry e raggiunge un nodo di combattimento. `Situazione` elenca solo nemici/casse presenti sul nodo corrente nelle zone a nodi.
+- **Dono tra compagni**: il vecchio `SCAMBIA` era fuorviante. Il comando compare solo se il mittente possiede almeno un oggetto cedibile. Se ne possiede uno solo, il pulsante dice direttamente cosa sta per dare (`DAI <NOME OGGETTO> A ...`); con più oggetti apre la scelta tra Primary, Secondary, Cura, Scudo e Utility realmente posseduti. Il loot ancora a terra non è cedibile. Il trasferimento resta a senso unico; se lo slot del destinatario era occupato, il suo vecchio oggetto cade a terra sul nodo dello scambio.
+- **Supporto compagno**: l'ex `AIUTA` non è un generico "combatti insieme". Costa l'azione del helper e assegna **+1 dado al prossimo attacco del compagno**. Perciò non compare sul nodo neutro e l'engine lo rifiuta se non c'è un ingaggio reale sul nodo.
+- **Armi a terra**: i vecchi pulsanti `RACCOGLI · PRIMARY/SECONDARY` erano ambigui. Ora dicono `EQUIPAGGIA COME PRIMARIA/SECONDARIA` e specificano che si tratta di **una sola arma**; una volta equipaggiate due armi, quella usata da `ATTACCA` si sceglie nella sezione `ARMA ATTIVA`.
+- **Cura/Scudo**: le azioni mostrano il nome reale dell'oggetto e l'effetto (`USA KIT MEDICO · VITA PIENA`, `USA MEDIKIT · +6 VITA`, ecc.). `USA ORA` compare solo se la statistica può davvero aumentare: Cura nascosta a 10/10 HP, Scudo nascosto a 10/10 Shield. L'engine applica lo stesso vincolo e rifiuta l'uso a statistica piena senza consumare l'oggetto.
+- **Risultato combattimento**: oltre a danni e transizione `prima → dopo`, il risultato evidenzia lo stato finale. Se subisci: `TI RESTANO ❤️ X/10 · 🛡️ Y/10`; se attacchi: `<BERSAGLIO> ORA HA ❤️ X/max · 🛡️ Y/max`.
+
+## 9B. Combat V2 — baseline implementata 25/09/2026
+
+Combat V2 sostituisce il vecchio scambio passivo di soli danni con **scontro + scelta di reazione**, mantenendo i dadi rigorosamente fisici.
+
+### Bilanciamento nemici
+
+- Normale: `8 HP`, attacco `1d6+1`;
+- Aggressivo: `10 HP`, attacco `2d6+1`;
+- Distanza: `8 HP + 2 Shield`, attacco `1d6+2`;
+- Resistente: `16 HP + 4 Shield`, attacco `1d6+2`, perforante;
+- Elite: `56 HP + 6 Shield`, attacco `2d6+2`, Area.
+
+Ogni istanza nemico riceve un'identità persistente (`Occhio Rosso`, `Mastino`, `Bunker`, `Cerbero`, ecc.); `Normale/Aggressivo/Distanza/Resistente/Elite` sono archetipi, non più nomi mostrati come identità principale.
+
+### Reazioni agli attacchi
+
+Quando un nemico attacca, prima del tiro il bersaglio sceglie:
+
+- **DIFENDITI**: 1 D6; risultati 1–6 bloccano rispettivamente `0/2/4/6/8/tutto`;
+- **SCHIVA**: 1–2 danno pieno, 3–4 metà, 5 zero, 6 zero + movimento gratuito;
+- **RITIRATI**: 1–2 fallisce/danno pieno, 3–4 fuga + metà danno, 5–6 fuga + zero danni;
+- **CONTRATTACCA**: scambio simultaneo di danni e consumo dell'azione offensiva del round;
+- **FUMOGENO**: se posseduto, fuga sicura a `0 danni` verso nodo collegato.
+
+Se il giocatore **inizia** uno scontro e il nemico sopravvive, il nemico risponde immediatamente. Se il nemico viene eliminato dal colpo iniziale non risponde. Un nemico che ha già risposto a un ingaggio viene escluso dalla successiva fase nemici dello stesso round, evitando il doppio attacco gratuito.
+
+L'Elite `areaDamage` non applica più danno secondario automatico: i bersagli secondari sullo stesso nodo ricevono **una reazione separata**, uno alla volta.
+
+### Attacco di squadra
+
+Sul medesimo nodo, massimo **3 giocatori** possono partecipare allo stesso attacco. Il leader usa l'arma attiva; per ogni compagno si sceglie esplicitamente Primary/Secondary. Ogni partecipante tira fisicamente i dadi reali della propria arma. Il totale è la somma dei contributi senza bonus artificiale.
+
+Il riepilogo mostra per ciascun partecipante:
+
+`nome → dadi → POWER → contributo`, più il totale squadra e HP/Shield residui del nemico.
+
+Partecipare consuma l'**azione offensiva** del round, non l'intero turno successivo del compagno. Se il nemico sopravvive risponde una sola volta contro uno dei partecipanti; questo rende il Team Attack più efficiente di una sequenza di attacchi solitari senza renderlo gratuito.
+
+### ATTENDI LA SQUADRA
+
+Su un nodo di combattimento il giocatore può scegliere `ATTENDI LA SQUADRA`: chiude la propria azione/turno, resta esposto alla successiva fase nemici ma **non consuma l'azione offensiva**. Se un compagno arriva più tardi nello stesso round, il giocatore che stava aspettando può ancora essere invitato nell'Attacco di Squadra. Il pannello Party lo marca con `⏳ ATTENDE LA SQUADRA`. All'inizio del round successivo il flag viene azzerato.
+
+### KO / resurrezione
+
+A `0 HP` il giocatore va **KO**, non viene eliminato da un countdown.
+
+- un compagno sullo stesso nodo può `RIALZA <nome> · COSTA 2 HP`; il soccorritore consuma l'azione, perde 2 HP e il KO torna con 3 HP;
+- al proprio turno un KO può tirare **1 D6 del destino**: `1` resta KO, `2–5` torna con 2 HP, `6` torna con 4 HP;
+- se tutti i giocatori sono contemporaneamente KO/eliminati, la run è sconfitta.
+
+Il giocatore tiene anche contributi runtime distinti: `damage / defenses / supports / rescues`. Il pannello squadra sullo stesso nodo mostra HP/Shield, risorse Cura/Scudo/Utility e questi contributi per favorire decisioni cooperative.
+
+Le ricompense persistenti per soglie di `rescues` (consumabile / arma / skin) sono progettate ma **non ancora collegate alla persistenza dell'account**: non vengono simulate in questo snapshot.
+
+Il Boss mantiene ancora il proprio flow legacy dedicato; l'allineamento delle reazioni Combat V2 al Boss è il prossimo pass specifico e non va confuso con il sistema nemici già migrato.
 
 ## 10. Party / inventario / loot
 
@@ -251,6 +319,18 @@ La UI distingue ora esplicitamente tre stati:
 
 Gli eventi ambientali non usano più `HAI TROVATO` per oggetti non raccolti. Le casse usano `CASSA APERTA — a terra: ...` finché gli oggetti restano disponibili ma non equipaggiati.
 
+### Assegnazione loot da combattimento
+
+Il loot lasciato da un nemico eliminato non apre una discussione su chi debba prenderlo:
+
+- eliminazione **in solitaria** → ogni drop è assegnato al giocatore che ha eliminato il nemico;
+- **Attacco di Squadra** → ogni singolo drop viene assegnato dal sistema con una rotazione deterministica tra i partecipanti (`teamLootCursor`); un Elite con arma+supporto può quindi assegnare i due oggetti a due partecipanti diversi;
+- il drop resta fisicamente a terra con `ownerPlayerId` e la UI mostra `ASSEGNATO A <nome>`;
+- soltanto il giocatore assegnatario può raccoglierlo/equipaggiarlo;
+- gli altri possono vederlo ma non prenderlo; dopo la raccolta il proprietario può usare il normale flusso `DAI/SCAMBIA`.
+
+I drop da nemico nel Node Graph conservano anche il `nodeId` del nemico eliminato: non diventano loot raccoglibile da qualunque punto della zona.
+
 Loot:
 
 - cassa = 1 arma + 1 supporto;
@@ -268,7 +348,7 @@ Cure: Bende +3, Medikit +6, Kit Medico full.
 
 Scudi: Mini +3, Batteria +6, Totale full.
 
-Utility: Scanner, Fumogeno, Stim. Tutte consumano Utility + azione principale secondo il blocco già corretto.
+Utility: Scanner, Fumogeno, Stim. **Scanner** ora è locale al Node Graph: compare solo sul nodo di una cassa chiusa, consuma Utility + azione, rivela il contenuto esatto senza aprire la cassa e congela quel contenuto fino all'apertura successiva; non apre più la World Map e non scansiona zone adiacenti. Stim mantiene l'uso attivo; il **Fumogeno** in Combat V2 può anche essere consumato come reazione per una **fuga sicura a 0 danni** verso un nodo collegato.
 
 ## 11. Arsenale permanente
 
@@ -286,8 +366,8 @@ Le armi sbloccate non vengono portate automaticamente nella run successiva: serv
 
 Suite **Fortress-only** nel cumulativo:
 
-- totale: **356 test**;
-- verdi: **352**;
+- totale: **384 test**;
+- verdi: **380**;
 - fallimenti: **4**, tutti dovuti esclusivamente agli asset immagini volutamente omessi dal pacchetto:
   1. file immagini armi mancanti;
   2. directory `assets/fortress/weapons` assente;
@@ -295,8 +375,6 @@ Suite **Fortress-only** nel cumulativo:
   4. immagini zone mancanti.
 
 Test specifici `fortress-game-ui.test.js`: **21/21 verdi**, inclusi i nuovi test su arma attiva e selezione univoca nello Action Hub.
-
-Suite completa del repository copiato (comprende anche Pirati): **440 totali / 436 verdi / 4 asset-only fail**.
 
 Questi numeri descrivono lo snapshot senza immagini; con gli asset reali al loro posto i 4 test devono essere rieseguiti, non marcati come ignorati.
 
@@ -332,19 +410,13 @@ Test:
 
 ## 14. Prossimi blocchi concordati
 
-### A. Verifica browser Action Hub
+### A. Verifica browser Combat V2
 
-Prima cosa nella nuova chat: test mobile/browser reale della nuova disposizione sotto la mappa.
+Playtest prioritario:
 
-Flusso da verificare:
+`ingaggio volontario → ATTACCA solo/team → risposta nemico → DIFESA/SCHIVA/RITIRATA/CONTRATTACCO → risultato HP residui`
 
-`movimento → Action Hub → ATTACCA → arma → bersaglio → dadi → risultato`
-
-e
-
-`movimento → nodo cassa → APRI CASSA → PRENDI → scelta slot`.
-
-La domanda UX è semplice: **il bambino deve guardare un solo punto sotto la mappa per decidere cosa fare.**
+più KO/destino, rialzo compagno e Fumogeno di emergenza. Verificare soprattutto leggibilità mobile e che ogni bambino capisca perché sta tirando ciascun dado.
 
 ### B. Party Boost
 
@@ -384,3 +456,395 @@ Economia personale cosmetica, non ancora implementata. K-Pack personali, saldo v
 - Non cambiare `fortress-combat.js` per problemi puramente UI.
 - Dadi sempre fisici: mai aggiungere RNG digitale al gameplay.
 - Mantenere il Director come fonte delle azioni disponibili; la UI traduce, non reinventa regole.
+
+### Correzione Party V2 — attesa, 2 giocatori e fase nemici locale (25/09/2026)
+- L'Attacco di Squadra resta valido con **2 o 3 giocatori**; 3 e' il massimo, non il minimo.
+- Se il giocatore corrente trova sul proprio nodo un compagno con `waitingForPartyThisRound=true`, l'Action Hub propone direttamente `ATTACCO DI SQUADRA · 2 GIOCATORI` (o 3 se due compagni sono gia' in attesa) e preseleziona i compagni in attesa.
+- `ATTENDI LA SQUADRA` non viene mostrato se, dopo il giocatore corrente, non esiste alcun compagno attivo nella stessa zona capace di raggiungere quel nodo nello stesso round. Evita il caso a 2 giocatori in cui anche il secondo preme ATTENDI senza che nessuno possa piu' arrivare.
+- Il secondo ATTENDI non trasforma automaticamente l'azione in un attacco: attendere significa sempre rinunciare all'attacco corrente e concedere l'iniziativa alla fase nemici.
+- Durante `enemy-phase` la UI mantiene aperta la Node Graph locale usando il bersaglio/reazione o il nemico corrente come focus. I controlli di movimento vengono sostituiti dal banner `FASE NEMICI · RESTATE SUL NODO`, cosi' Difesa/Schivata/Ritirata avvengono senza perdere il contesto visivo dello scontro.
+
+## Persistence V1 + Presenze — 25/09/2026
+
+Implementata la persistenza locale della run e il roster stabile dei bambini.
+
+### Session save
+- `localStorage` key: `fortress-army-active-session-v1`.
+- autosave ad ogni render significativo della partita;
+- salva `state`, `dir`, avatar, landing progress e anche lo stato UI transitorio (dadi in corso, Team Attack, cassa, reazioni, ecc.);
+- al reload il setup mostra `PARTITA IN CORSO` con `CONTINUA PARTITA` / `NUOVA PARTITA`;
+- `NUOVA PARTITA` cancella solo la sessione attiva, non il roster/progressi permanenti.
+
+### Roster stabile
+- `localStorage` key: `fortress-army-roster-v1`;
+- fino a 10 bambini con id stabili `p1..p10`, nome/avatar/loadout conservati;
+- ogni bambino ha presenza `PRESENTE OGGI` indipendente dalla sua identità permanente;
+- minimo 2 presenti per iniziare una nuova run.
+
+### Presenze durante la run
+- pulsante `GESTISCI PRESENZE` durante la partita;
+- `ATTIVA`: il bambino già registrato entra dalla Zona Sicura della zona corrente;
+- se la fase giocatori è in corso viene aggiunto in fondo al round corrente; se arriva durante fase nemici/boss entra dal round successivo;
+- `DISATTIVA`: non viene più scelto come bersaglio, non conta nel Party/turni/tempesta e conserva HP/inventario/progressi della run;
+- la riattivazione non rigenera casse, loot o nemici;
+- `initialPlayerCount` resta invariato, quindi lo scaling iniziale non cambia quando varia la presenza.
+
+### Test
+Suite Fortress snapshot: **388 totali / 384 verdi / 4 asset-only**. I 4 fail restano esclusivamente immagini volutamente omesse dal cumulativo. Nuovi test presenza/persistenza engine: 4/4 verdi.
+
+
+## LANDING ROLL V1 — 25/09/2026
+
+Nuova regola globale di ingresso zona tramite lancio:
+
+- ogni atterraggio iniziale e ogni `CAMBIA ZONA` richiede 1 D6 fisico prima di risolvere l'ingresso;
+- 1–2: `ATTERRAGGIO DISASTROSO`, -4 HP diretti;
+- 3–4: `ATTERRAGGIO OSTILE`, -2 HP diretti;
+- 5–6: `ATTERRAGGIO PERFETTO`, nessun danno;
+- il danno da atterraggio bypassa lo Scudo;
+- il giocatore entra comunque nella zona e, nelle zone Node Graph, compare sull'entry node / Zona Sicura;
+- il tiro e la destinazione in corso sono persistiti tramite `launchFlow`, quindi un refresh non perde il passaggio;
+- `player.launchKitBonus` è già previsto (default 0) e modifica il risultato effettivo con clamp massimo 6; i Kit di Lancio non sono ancora contenuto giocabile;
+- se il danno di atterraggio porta a 0 HP, il giocatore va KO ma resta nella zona di arrivo.
+
+Verifica snapshot: **394 test totali / 390 verdi / 4 asset-only**. I 6 test specifici Landing Roll sono verdi.
+
+## 2026-09-25 — STRUTTURE OPERATIVE + MEZZI PESANTI V1
+
+Pilot iniziale: `forest`, implementazione generica/data-driven.
+
+### Struttura operativa
+- `Forest`: **Accampamento Blindato** sul nodo `forest-n04`.
+- 40 HP, Corazza 3, stato visibile con barra unica.
+- Tag iniziali: `TORRI ATTIVE`, `RADAR ATTIVO`.
+- La struttura entra in una propria `structure-phase` dopo la fase nemici e prima del Boss.
+- Tiro struttura fisico: 2d6 + 2 nel pilot.
+- Se esiste un mezzo pesante occupato lo prende di mira per primo; altrimenti prende di mira un giocatore attivo nella zona.
+- A 0 HP la struttura è distrutta e non agisce più.
+
+### Demolizione
+- La struttura è attaccabile a piedi solo dal proprio nodo.
+- Lanciarazzi/granate/bazooka/cannoni/missili/esplosivi riconosciuti ricevono bonus Demolizione V1 (+5 se l'arma non dichiara un bonus specifico).
+- Le armi possono in futuro dichiarare direttamente `demolitionBonus`.
+- La Corazza della struttura riduce il danno finale.
+
+### Mezzi pesanti temporanei
+- Opportunità di visita, non ownership e non inventario persistente.
+- Richiedono almeno 3 giocatori attivi nella zona.
+- Equipaggio V1: esattamente 1 pilota + 2 tiratori, tutti nella Zona Sicura.
+- Forest ritira a ogni visita con chance 80% tra: Camion Blindato, Ruspa d'Assalto, Autobus Corazzato.
+- Quando la zona torna completamente vuota il mezzo viene eliminato; al ritorno la disponibilità viene ritirata da zero.
+- Salva fisicamente 3 D6: dado 1 pilota, dadi 2-3 tiratori.
+- Pilota 1: -8 Integrità; 2: -5; 5-6: +1 mira ai tiratori.
+- Tiratore: 1-2 manca, 3-4 = 6 danni, 5 = 8, 6 = 10; bonus mezzo Demolizione applicato contro la struttura, poi Corazza.
+- Tutti e tre consumano l'azione offensiva del round.
+
+### Test
+- Suite Fortress: **395 test / 391 verdi / 4 asset-only**.
+- I 4 fail restano esclusivamente gli asset volutamente assenti nello snapshot.
+- Test specifici strutture/mezzi: equipaggio minimo 3, danno pilotaggio, demolizione, reset visita, struttura offensiva e priorità mezzo verificati.
+
+## UI Shell V2 — map-first
+
+- Eliminata la rail laterale permanente durante il normale turno giocatore.
+- Aggiunta shell bar compatta con round, giocatore attivo, HP/scudo, zona, presenze, B-Pack e accessi World Map/Utilità.
+- Mappa/Zone Magnify a piena larghezza; Action Hub resta sotto la mappa come punto unico delle azioni immediate.
+- Il pannello turno legacy resta visibile solo per fasi che richiedono controllo esplicito (atterraggio, enemy/structure/boss phase, reazioni/roll, fine round).
+- Utility modal centralizza Sessione, Inventario, Armi, Cosmetici, Presenze e Progressi/B-Pack.
+- Nessuna modifica alle regole/engine di gioco.
+
+## UI Shell V2.2 — Libreria Armi inline
+- La tab `Armi` del Centro Utilità non apre più la Libreria come overlay separato.
+- I controlli, filtri, conteggio e griglia della Libreria vengono riutilizzati inline nella tab, senza duplicare dati o logica.
+- Alla chiusura del Centro Utilità i nodi DOM della Libreria vengono ripristinati nella loro sede originale, mantenendo compatibilità con il pulsante Libreria esterno.
+- Il dettaglio singola arma continua a usare il modal esistente sopra la UI.
+
+## UI V2.3 — Presenze / Player Cards
+
+La tab `Presenze` della modale Utilità è stata trasformata da elenco tecnico a roster visuale:
+- avatar/skin del giocatore in formato grande;
+- nome e stato PRESENTE/ASSENTE;
+- HP, Scudo, zona corrente e arma primaria;
+- ATTIVA/DISATTIVA direttamente sulla card;
+- gli assenti restano visibili ma attenuati;
+- nessuna nuova authority: usa roster, stato sessione e `setRosterPresence` esistenti.
+
+La tab non richiede più il secondo click `GESTISCI PRESENZE`: entrando in Presenze il roster è subito visibile.
+
+## UI mezzi pesanti — Discovery / Crew Flow (26/09/2026)
+
+Corretto il flusso UX dei mezzi pesanti:
+- il mezzo disponibile è visibile direttamente nel Node Graph, vicino alla Zona Sicura, con nome e Integrità;
+- interagire col mezzo NON apre più immediatamente i dadi;
+- nuovo flusso: mezzo → assegna PILOTA + TIRATORE 1 + TIRATORE 2 → conferma equipaggio → scegli struttura operativa → AVVIA ATTACCO → 3 D6 fisici;
+- i tre ruoli devono essere occupati da giocatori diversi e disponibili nella Zona Sicura;
+- il giocatore che apre il mezzo resta l'iniziatore del turno, ma il ruolo PILOTA può essere assegnato a qualunque membro eleggibile del trio;
+- il flusso UI `vehicleFlow` è incluso nel salvataggio della sessione, quindi un refresh durante la preparazione non perde la selezione;
+- nessuna modifica ai valori di danno, Integrità, Demolizione, corazza o spawn 80%.
+
+Verifica suite snapshot senza asset: 395 test / 391 verdi / 4 asset-only già noti.
+
+## Mezzi pesanti — multi-target per tiratore
+- Ogni tiratore del mezzo sceglie il proprio bersaglio.
+- Bersagli eleggibili: struttura operativa viva + nemici vivi presenti nella zona.
+- I due tiratori possono dividere il fuoco o concentrare entrambi sullo stesso bersaglio.
+- La demolizione si applica solo ai colpi diretti contro la struttura; i nemici usano il normale assorbimento Scudo/HP.
+- L'equipaggio scelto nella UI viene ora passato realmente al Director/engine; non viene più sostituito automaticamente dai primi giocatori disponibili.
+- Un nemico eliminato dal mezzo risolve il loot come ricompensa di squadra dell'equipaggio.
+
+## RIPARI + TRAPPOLE V1 — 26/09/2026
+
+Implementato il primo sistema generico di Ripari/Trappole sopra il Node Graph.
+
+### Ripari temporanei di visita
+- La topologia dei nodi non cambia.
+- La prima entrata in una zona con `shelterOpportunity` genera 0–2 Ripari casuali.
+- Forest pilot: distribuzione V1 20% nessun riparo / 50% un riparo / 30% due ripari.
+- Entry/Zona Sicura e nodo della Struttura Operativa sono esclusi; un nodo cassa o encounter può diventare Riparo.
+- I Ripari sono visibili subito sulla mappa locale con marker `🏚️` e nome.
+- Quando tutti lasciano la zona la visita viene chiusa: Ripari e trappole vengono rimossi; una nuova visita ritira tutto.
+
+### NASCONDITI
+- Disponibile solo sul nodo Riparo.
+- Consuma l'azione principale.
+- Un giocatore nascosto non viene scelto come bersaglio finché esiste almeno un giocatore esposto raggiungibile.
+- Se tutti i bersagli sono nascosti, restano attaccabili ma l'attacco nemico riceve `-1 dado` (clamp Combat V2 invariato).
+- Muoversi o dichiarare un attacco rompe immediatamente lo stato nascosto.
+- Anche la Struttura Operativa preferisce bersagli esposti quando possibile.
+
+### Mina Improvvisata
+- Nuova Utility catalogo: `mina_improvvisata`.
+- Si piazza solo su un Riparo sgombro da nemici e senza un'altra trappola armata.
+- Consuma Utility + azione principale.
+- Scatta quando il primo nemico entra nel nodo durante il proprio movimento.
+- V1: 8 danni fissi, poi la mina viene consumata.
+- Se elimina il nemico, il normale loot death viene risolto e assegnato al proprietario della trappola.
+- UI: marker `🪤` sul nodo e feedback esplicito nella fase nemici quando la trappola scatta.
+
+### Test
+Suite Fortress snapshot: **404 test / 400 verdi / 4 asset-only**.
+I 4 fallimenti restano esclusivamente gli asset volutamente omessi (armi/personaggi/zone).
+Nuovi test Ripari/Trappole: generazione 0–2, reset visita, targeting nascosto/esposto, malus -1 dado, piazzamento/consumo mina, trigger su movimento, API Director e rottura stealth all'attacco.
+
+
+## UI — Tactical map visibility
+- Regola fissata: tutti gli elementi tattici generati sono visibili subito nel Node Graph.
+- Ripari, casse, loot, nemici, trappole e mezzi restano visibili come già implementato.
+- Aggiunto marker persistente della Struttura Operativa sul proprio nodo con HP/corazza.
+- La casualità determina cosa esiste nella visita, non se il Party riesce a vederlo sulla mappa.
+
+## Weapon Index / Loot Inspector V2 — 26/09/2026
+- Ricerca Libreria Armi globale su nome, id, categoria, rarità, archetipo, descrizione, ruolo, special, gittata, power/potenza; normalizza accenti e punteggiatura.
+- `Mina di Prossimità`, `mitraglietta` e sinonimi/categorie diventano ricercabili correttamente.
+- Le armi a terra mostrano 🔍 per aprire il dettaglio arma senza raccoglierla.
+- Il dettaglio arma mostra statistiche complete e `VEDI NELL'INDICE ARMI`, che apre Utilità > Armi già focalizzata su quella voce.
+- Nessuna modifica alla generazione loot o alle statistiche di combattimento.
+
+## Party Boost V1 — 26/09/2026
+
+- Forest pilota: `partyBoostOpportunity.chance = 0.6`.
+- Una sola opportunità per visita; il marker `⚡ PARTY BOOST` è visibile sul Node Graph appena generato.
+- Il nodo non può coincidere con Zona Sicura o Struttura Operativa.
+- Attivazione possibile con almeno 2 giocatori attivi sullo stesso nodo.
+- Tutti i membri del Party presenti sul nodo dichiarano un numero 1–6 e tirano 1 D6 fisico.
+- 0 successi: nessun bonus, evento consumato.
+- 1 successo: PARTY BOOST, `+1 dado` al prossimo Attacco di Squadra.
+- 2+ successi: BIG BOOST, `+1 dado` ai prossimi 2 Attacchi di Squadra.
+- Il bonus usa `effectBonus` del Combat esistente ed è sempre clampato al massimo di 3 dadi per arma.
+- Il bonus non si applica ad attacchi individuali né ai mezzi.
+- Una carica viene consumata solo quando l'Attacco di Squadra viene realmente risolto.
+- L'evento e le cariche si azzerano quando la visita della zona si chiude completamente.
+- UI: flow `scelta numeri -> tiro fisico -> risultato`, persistito nel session save.
+- Test dedicati: spawn, 1 carica, BIG BOOST 2 cariche, applicazione/consumo sul Team Attack.
+- Suite snapshot senza asset: 405 test / 401 verdi / 4 asset-only fail noti.
+
+---
+
+## 26/09/2026 — Map 01 MVP / Zone Director V1
+
+La logica Node Graph validata sulla Forest è stata estesa alle altre sette zone esplorative senza duplicare engine per zona.
+
+Nuovo cervello centrale:
+- `engine/fortress-zone-director.js`
+- profili riutilizzabili: wilderness, urban, highground, frontier, industrial, ruins, military, depot
+- template topologici riutilizzabili: fork4, diamond5, corridor5, cross5, loop5, split6
+- materializzazione automatica di node id, collegamenti, chest slot, Encounter e nodo struttura
+- validazione dei riferimenti del grafo e dei contenuti
+
+`catalog/fortress-zones.js` è ora principalmente una dichiarazione dati della Map 01.
+
+Zone Node Graph attive:
+- Abandoned City — 5 nodi / Centro Radio Fortificato
+- Forest — 4 nodi / Accampamento Blindato (pilot originale invariato)
+- Hill Outpost — 5 nodi / Radar di Vetta
+- Frontier Camp — 5 nodi / Torre di Frontiera
+- Industrial Zone — 6 nodi / Generatore Corazzato
+- Ancient Ruins — 5 nodi / Sigillo Meccanico Antico
+- Military Base — 6 nodi / Centro Comando Blindato / Elite nell'Encounter
+- Supply Depot — 5 nodi / Deposito Munizioni Corazzato
+
+Ogni zona esplorativa usa le stesse feature engine generiche quando abilitate dai dati:
+- Safe Entry
+- Encounter multi-nodo
+- casse / ground loot
+- ripari + trappole
+- Party Boost
+- mezzi pesanti
+- struttura operativa
+- Enemy Phase node-aware
+
+`central-fortress` resta volutamente speciale e continua a usare il flusso Boss/finale esistente.
+
+World Map: la rete delle 9 zone è interamente raggiungibile da ogni zona esterna. Il movimento reale Forest → Ancient Ruins → Central Fortress è coperto da test runtime.
+
+Test aggiunti: `tests/fortress-zone-director.test.js`.
+Suite corrente code-only: 412 test, 408 verdi, 4 fallimenti asset-only già noti (immagini armi, directory weapons, immagini personaggi, immagini zone omesse dallo snapshot).
+
+## Node Layout Editor V1 — 26/09/2026
+
+Aggiunto un editor Master separato dal gameplay:
+
+- accesso diretto dall'header con `EDITOR MAPPE`;
+- selezione di tutte le 9 zone, anche se non raggiungibili nel flusso corrente;
+- trascinamento dei nodi sulla mappa con coordinate percentuali;
+- scelta permanente dell'Entry Node;
+- creazione/rimozione collegamenti tra nodi;
+- Central Fortress, che non aveva Node Graph, può ricevere un layout base da 5 nodi;
+- `SALVA LAYOUT` persiste gli override in `localStorage` (`fortress-army-node-layouts-v1`) e li ricarica automaticamente;
+- se una partita è già in corso, il layout salvato viene sincronizzato anche nello stato runtime senza consumare round o azioni;
+- il contenuto dinamico resta responsabilità del Zone Director: il layout non duplica regole di encounter/loot/ripari/mezzi/Party Boost.
+
+Nuove funzioni pure in `engine/fortress-zone-director.js`:
+`cloneNodeLayout`, `applyNodeLayout`, `inferConnectionDirection`, `toggleNodeConnection`, `createTemplateLayout`.
+
+Suite dopo l'editor: 415 test totali / 411 verdi / 4 asset-only già noti.
+
+## Map 01 — Layout nodi ufficiali (26/09/2026)
+
+I layout disegnati manualmente nell'Editor Mappe sono ora integrati come configurazione ufficiale per tutte le 9 zone di Map 01.
+
+- coordinate e collegamenti non dipendono più dal localStorage;
+- il formato canonico portabile è `fortress-army-zone-layout` V2 con `edges` liberi;
+- `abandoned-city` originale V1 è stato convertito automaticamente in V2;
+- `central-fortress` ora possiede il proprio Node Graph a 5 nodi, mantenendo invariata la logica Boss/finale;
+- il Zone Director converte gli `edges` V2 nel grafo runtime e conserva i metadati di contenuto dei nodi (casse/Encounter/strutture);
+- copia JSON normalizzata: `config/map01-official-layouts-v2.json`.
+
+Verifica specifica Zone Director/layout: 12/12 verde. La suite storica contiene ancora test che codificano la vecchia geometria Forest (direzioni/distanze fisse): quei test vanno resi data-driven e non indicano un errore dei nuovi layout.
+
+## Macchina Regali Rive V1 — 27/09/2026
+
+- Asset Rive: `assets/fortress/rive/macchinario_regali.riv`.
+- Integrazione runtime Web Canvas via `@rive-app/canvas`.
+- State Machine candidata: `regalo` (fallback `State Machine 1`), trigger `next`.
+- Accesso: Utilità → `🎁 Regali`; dopo vittoria compare anche `🎁 VAI ALLA MACCHINA REGALI`.
+- Loop premio: handoff esplicito `TOCCA A <NOME>` → 1 D6 fisico → trigger Rive → reveal arma reale → `RACCOGLI` → giocatore successivo.
+- Ogni bambino presente riceve un tentativo nel giro.
+- Il risultato 3 ha la probabilità più alta di Rara/Epica; il 6 non garantisce la rarità migliore.
+- Le armi arrivano dal catalogo reale e la starter è esclusa dai premi.
+- Se Primary/Secondary sono entrambi occupati, `RACCOGLI` chiede quale sostituire; l'arma vecchia torna a terra usando la stessa economia loot della run.
+- Test mirati Macchina Regali + Inventory + Game UI: 53/53 verdi.
+- La suite completa mantiene i fallimenti baseline già noti legati agli asset omessi e ai test storici che codificano la vecchia geometria Forest dopo l'introduzione dei layout ufficiali modificabili.
+
+## Tactical Slot Editor V2 — 28/09/2026
+
+Evoluto il precedente sistema di Tactical Anchors senza modificare le regole del Node Graph.
+
+Architettura:
+- i nodi principali restano gli unici nodi di gameplay per movimento, distanza, encounter e AI;
+- ogni nodo principale può possedere un numero libero di **slot tattici** grafici per `players`, `enemies`, `vehicle`, `structure`, `chest`, `loot`, `shelter`, `trap`, `boost`, `entry`;
+- ogni slot ha un ID persistente (`<nodeId>-<type>-NN`), `parentNodeId`, tipo e coordinate percentuali indipendenti;
+- gli slot possono essere trascinati liberamente su tutta la scena: il legame al nodo padre è logico e non impone prossimità geometrica;
+- nell'editor, quando un nodo principale è selezionato, linee tratteggiate mostrano la relazione padre → slot senza alterare i collegamenti di movimento;
+- tutte le categorie possono avere più slot, così una scena può predisporre più posti per nemici, giocatori, loot, mezzi o strutture.
+
+Determinismo runtime:
+- giocatori e nemici non vengono più associati agli slot in base all'indice dell'array;
+- l'assegnazione usa l'ID stabile dell'entità e conserva l'occupazione precedente finché l'entità resta sul nodo;
+- se un nemico viene eliminato, gli altri token mantengono il proprio slot e lo slot liberato torna disponibile;
+- se gli slot disponibili sono meno dei token, gli elementi eccedenti usano il rendering fallback già esistente.
+
+Compatibilità/persistenza:
+- storage tactical anchors portato a V2;
+- i vecchi anchor V1 vengono normalizzati automaticamente nel nuovo formato senza perdere le coordinate;
+- import JSON V1/V3 con vecchi `anchors` resta supportato;
+- export layout portato a config V4 con slot persistenti incorporati nei nodi.
+
+File modificati:
+- `fortress-game-ui.js`
+- `styles-fortress.css`
+- `tests/fortress-tactical-slots.test.js` (nuovo)
+- `FORTRESS_ARMY_MANIFEST.md`
+
+Verifica mirata:
+- sintassi `fortress-game-ui.js`: OK;
+- test Tactical Slots + Zone Layout: 9/9 verdi;
+- i test specifici verificano migrazione V1 → V2, ID slot stabili, indipendenza dall'ordine array, mantenimento dello slot dei superstiti e fallback quando i token superano gli slot.
+
+Nota suite completa del pacchetto ricevuto:
+- alcuni test asset falliscono perché nello ZIP consegnato non è presente la cartella `assets/fortress/...`;
+- alcuni test storici `fortress-node-graph.test.js` assumono direzioni nominali non più coincidenti con gli attuali layout ufficiali e risultano già disallineati; nessun engine Node Graph è stato modificato in questo intervento.
+
+### 2026-09-28 — Tactical layout sizing
+- Ridotti i marker degli slot tattici nell'editor da 28px a 18px per aumentare la precisione di piazzamento.
+- Nella vista tattica i token giocatore vengono renderizzati al 50% della dimensione precedente tramite `transform: scale(.5)` sul contenuto, mantenendo invariata la coordinata centrale dello slot.
+- Nessuna modifica a movimento, assegnazione deterministica degli slot o dimensioni dei token nelle altre viste UI.
+- Ridotta solo la resa dei mostri/nemici nella vista tattica a `scale(.6)` rispetto alla dimensione precedente, per allinearli meglio alla scala ambientale degli alberi.
+- Mezzi e strutture restano invariati; coordinate, slot e logica deterministica non cambiano.
+
+
+## Tactical Enemy Scale V5
+- Riduzione applicata direttamente a `.fa-enemy-visual` nella vista tattica: 34×34 px.
+- Strutture e mezzi invariati; riferimento struttura standard 76×62 px.
+- Rimossa la dipendenza da `transform: scale(.6)` sul marker completo.
+
+
+### Tactical enemy scale V6 — 28/09/2026
+- Correzione effettiva della scala nemici nella Zone Magnify/tactical map.
+- Il marker nemico tattico completo viene scalato inline a `0.52`, quindi sprite, nome e HP si riducono insieme.
+- Strutture, mezzi, player, slot e coordinate restano invariati.
+- `fortress-army.html` forza il refresh di `fortress-game-ui.js` con query version per evitare cache del vecchio renderer.
+
+
+### Tactical enemy sizing V7
+- Rimossa la scala del marker tattico introdotta nelle prove precedenti.
+- La dimensione approvata in browser viene applicata direttamente a `.fa-enemy-visual`: `width: 39px; height: 58px`.
+- Mezzi, strutture, player, slot e coordinate restano invariati.
+
+
+### 2026-09-28 — Tactical enemy size V8
+- Corretto override responsive: `.fa-enemy-visual` resta `39px × 58px` anche sotto 700px.
+- Aggiunto cache-busting a `styles-fortress.css?v=8` in `fortress-army.html` per evitare CSS obsoleto in browser.
+- Nessuna modifica a strutture, mezzi, player, slot o logica gameplay.
+
+
+## Tactical enemy sizing V9
+- Corretto il ridimensionamento dei mostri: `width: 39px`, altezza non più forzata a 58px.
+- `.fa-enemy-map-img` usa `height:auto` per mantenere il rapporto originale dello sprite.
+- Rimossa anche la forzatura `58px` nel breakpoint mobile.
+
+### Tactical enemy force override
+- Aggiunta in fondo a `styles-fortress.css` una regola finale specifica per `.fa-tactical-render-anchor.is-enemy`.
+- Desktop: marker nemico `scale(.58)`.
+- Mobile <=700px: marker nemico `scale(.42)`.
+- `.fa-enemy-visual` forzato a `width:39px` con `!important`.
+- Nessuna modifica a strutture, mezzi, player, slot o coordinate.
+
+
+### Tactical enemy desktop size V11 — 28/09/2026
+- Desktop: `.fa-enemy-visual` portato a `width:50px` come misura approvata in browser.
+- Mobile <=700px: mantenuta la misura precedente `width:39px` e `scale(.42)`.
+- Strutture, mezzi, player, slot e coordinate invariati.
+
+
+### Tactical enemy device breakpoint V12 — 28/09/2026
+- Corretto il breakpoint mobile: non dipende più solo dalla larghezza viewport.
+- Desktop, anche con finestra <=700px, mantiene `.fa-enemy-visual` a `50px` e `scale(.58)`.
+- La variante mobile (`39px`, `scale(.42)`) si applica solo a dispositivi touch/coarse pointer con viewport <=700px.
+- Strutture, mezzi, player, slot e coordinate invariati.
+
+### Tactical visual sizing V13
+- Desktop enemy tactical width fixed to 45px.
+- Vehicle map sprites reduced by ~20%: desktop 70x53px, mobile 58x43px.
+- Mobile enemy sizing remains unchanged (39px with the existing touch-device scale).
+

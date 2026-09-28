@@ -1,0 +1,68 @@
+{
+  "format": "fortress-army-zone-layout",
+  "version": 2,
+  "zoneId": "military-base",
+  "entryNodeId": "military-base-n01",
+  "nodes": [
+    {
+      "id": "military-base-n01",
+      "x": 40.83,
+      "y": 94.19
+    },
+    {
+      "id": "military-base-n02",
+      "x": 54.16,
+      "y": 70.71
+    },
+    {
+      "id": "military-base-n03",
+      "x": 18,
+      "y": 38.85
+    },
+    {
+      "id": "military-base-n04",
+      "x": 71.92,
+      "y": 35.74
+    },
+    {
+      "id": "military-base-n05",
+      "x": 10.36,
+      "y": 8.78
+    },
+    {
+      "id": "military-base-n06",
+      "x": 42.31,
+      "y": 18.63
+    }
+  ],
+  "edges": [
+    [
+      "military-base-n01",
+      "military-base-n02"
+    ],
+    [
+      "military-base-n02",
+      "military-base-n03"
+    ],
+    [
+      "military-base-n03",
+      "military-base-n04"
+    ],
+    [
+      "military-base-n03",
+      "military-base-n05"
+    ],
+    [
+      "military-base-n03",
+      "military-base-n06"
+    ],
+    [
+      "military-base-n04",
+      "military-base-n06"
+    ],
+    [
+      "military-base-n05",
+      "military-base-n06"
+    ]
+  ]
+}
