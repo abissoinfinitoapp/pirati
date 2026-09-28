@@ -209,10 +209,33 @@
     return assigned;
   }
 
+  /* Layout ufficiali incorporati nel progetto.
+     Sono la baseline versionata: il localStorage può sovrascriverli solo dopo
+     un esplicito Salva Layout dall'editor. */
+  const OFFICIAL_ZONE_LAYOUTS = Object.freeze({
+    forest: {"format":"fortress-army-zone-layout","version":4,"zoneId":"forest","entryNodeId":"forest-n01","nodes":[{"id":"forest-n01","x":40.02,"y":88.93,"anchors":{"players":[{"id":"forest-n01-players-01","parentNodeId":"forest-n01","type":"players","x":28.532110194487252,"y":81.18352754258456},{"id":"forest-n01-players-02","parentNodeId":"forest-n01","type":"players","x":50.13742346324616,"y":67.4487409137544},{"id":"forest-n01-players-03","parentNodeId":"forest-n01","type":"players","x":29.798442651512282,"y":86.33763222467333},{"id":"forest-n01-players-04","parentNodeId":"forest-n01","type":"players","x":46.33027898594015,"y":85.469241516895},{"id":"forest-n01-players-05","parentNodeId":"forest-n01","type":"players","x":39.08257167133215,"y":83.75495665377977},{"id":"forest-n01-players-06","parentNodeId":"forest-n01","type":"players","x":47.43472008045233,"y":76.76091103326706},{"id":"forest-n01-players-07","parentNodeId":"forest-n01","type":"players","x":33.76146832657082,"y":82.64384441238806},{"id":"forest-n01-players-08","parentNodeId":"forest-n01","type":"players","x":50.18323338127585,"y":84.43287031991142},{"id":"forest-n01-players-09","parentNodeId":"forest-n01","type":"players","x":40.76452407385281,"y":78.67559315450082},{"id":"forest-n01-players-10","parentNodeId":"forest-n01","type":"players","x":36.48318114092198,"y":77.5962264581425}],"vehicle":[{"id":"forest-n01-vehicle-01","parentNodeId":"forest-n01","type":"vehicle","x":44.49606764981257,"y":64.00752597384982}],"chest":[{"id":"forest-n01-chest-01","parentNodeId":"forest-n01","type":"chest","x":39.78593180343685,"y":76.32638649158395}],"loot":[{"id":"forest-n01-loot-01","parentNodeId":"forest-n01","type":"loot","x":56.60550132502975,"y":59.05654478116391}],"shelter":[{"id":"forest-n01-shelter-01","parentNodeId":"forest-n01","type":"shelter","x":59.848836706766384,"y":72.84557115463983}],"boost":[{"id":"forest-n01-boost-01","parentNodeId":"forest-n01","type":"boost","x":44.587158442004956,"y":82.7708302255663}]}},{"id":"forest-n02","x":63.8,"y":57.16,"anchors":{"enemies":[{"id":"forest-n02-enemies-01","parentNodeId":"forest-n02","type":"enemies","x":61.956023736860075,"y":52.845568770454044},{"id":"forest-n02-enemies-02","parentNodeId":"forest-n02","type":"enemies","x":70.75125749231526,"y":49.72387484141759},{"id":"forest-n02-enemies-03","parentNodeId":"forest-n02","type":"enemies","x":65.11681371826498,"y":37.66038803827195},{"id":"forest-n02-enemies-04","parentNodeId":"forest-n02","type":"enemies","x":50.64131997988691,"y":49.93551787875947},{"id":"forest-n02-enemies-05","parentNodeId":"forest-n02","type":"enemies","x":82.11177116731811,"y":53.37467091424125},{"id":"forest-n02-enemies-06","parentNodeId":"forest-n02","type":"enemies","x":87.28813463360024,"y":82.05191555477323},{"id":"forest-n02-enemies-07","parentNodeId":"forest-n02","type":"enemies","x":75.83600741338091,"y":79.03604337147304},{"id":"forest-n02-enemies-08","parentNodeId":"forest-n02","type":"enemies","x":77.34768438161737,"y":45.33234289714268},{"id":"forest-n02-enemies-09","parentNodeId":"forest-n02","type":"enemies","x":57.46679016849456,"y":61.57572712217059},{"id":"forest-n02-enemies-10","parentNodeId":"forest-n02","type":"enemies","x":37.99816634511023,"y":46.231812181926905},{"id":"forest-n02-enemies-11","parentNodeId":"forest-n02","type":"enemies","x":58.199729984440864,"y":33.110119047619044},{"id":"forest-n02-enemies-12","parentNodeId":"forest-n02","type":"enemies","x":46.01465665743234,"y":42.739751906622026},{"id":"forest-n02-enemies-13","parentNodeId":"forest-n02","type":"enemies","x":52.8401331368829,"y":40.83498557408651},{"id":"forest-n02-enemies-14","parentNodeId":"forest-n02","type":"enemies","x":61.36051996584576,"y":75.54398230143956},{"id":"forest-n02-enemies-15","parentNodeId":"forest-n02","type":"enemies","x":87.19652108838376,"y":64.37996194476173}],"shelter":[{"id":"forest-n02-shelter-01","parentNodeId":"forest-n02","type":"shelter","x":57.69583346780009,"y":46.91964467366537}],"chest":[{"id":"forest-n02-chest-01","parentNodeId":"forest-n02","type":"chest","x":91.68574836590638,"y":53.16303253173829}],"loot":[{"id":"forest-n02-loot-01","parentNodeId":"forest-n02","type":"loot","x":95.76271783537632,"y":30.729168483189174}],"trap":[{"id":"forest-n02-trap-01","parentNodeId":"forest-n02","type":"trap","x":68.27759740882698,"y":32.26355779738653}],"vehicle":[{"id":"forest-n02-vehicle-01","parentNodeId":"forest-n02","type":"vehicle","x":85.95969104663962,"y":39.30059705461775}]}},{"id":"forest-n03","x":22.6,"y":58.35,"anchors":{"enemies":[{"id":"forest-n03-enemies-01","parentNodeId":"forest-n03","type":"enemies","x":15.277142140525982,"y":57.50165507906959},{"id":"forest-n03-enemies-02","parentNodeId":"forest-n03","type":"enemies","x":4.420521836742435,"y":42.89847805386498},{"id":"forest-n03-enemies-03","parentNodeId":"forest-n03","type":"enemies","x":37.311042738036534,"y":45.914352280753},{"id":"forest-n03-enemies-04","parentNodeId":"forest-n03","type":"enemies","x":30.48556940400743,"y":26.65509201231457},{"id":"forest-n03-enemies-05","parentNodeId":"forest-n03","type":"enemies","x":25.26340231053853,"y":16.390544573465984}],"shelter":[{"id":"forest-n03-shelter-01","parentNodeId":"forest-n03","type":"shelter","x":19.85799239952942,"y":68.03075801758538}],"chest":[{"id":"forest-n03-chest-01","parentNodeId":"forest-n03","type":"chest","x":22.514889009715013,"y":47.29001646950131}],"loot":[{"id":"forest-n03-loot-01","parentNodeId":"forest-n03","type":"loot","x":47.06825331790064,"y":42.4222883724031}],"trap":[{"id":"forest-n03-trap-01","parentNodeId":"forest-n03","type":"trap","x":33.279889477439184,"y":39.35350974400838}],"structure":[{"id":"forest-n03-structure-01","parentNodeId":"forest-n03","type":"structure","x":5.199266852586238,"y":30.464616616566975}],"vehicle":[{"id":"forest-n03-vehicle-01","parentNodeId":"forest-n03","type":"vehicle","x":22.59713721532272,"y":74.35151672363281}]}},{"id":"forest-n04","x":48.53,"y":26.18,"anchors":{"enemies":[{"id":"forest-n04-enemies-01","parentNodeId":"forest-n04","type":"enemies","x":27.09573926871845,"y":19.141865684872585},{"id":"forest-n04-enemies-02","parentNodeId":"forest-n04","type":"enemies","x":48.52761300626204,"y":30.182208591037327},{"id":"forest-n04-enemies-03","parentNodeId":"forest-n04","type":"enemies","x":44.82363653371788,"y":8.295304434640068},{"id":"forest-n04-enemies-04","parentNodeId":"forest-n04","type":"enemies","x":17.567568842738428,"y":9.406414940243675},{"id":"forest-n04-enemies-05","parentNodeId":"forest-n04","type":"enemies","x":24.576272412621922,"y":5.75562250046503},{"id":"forest-n04-enemies-06","parentNodeId":"forest-n04","type":"enemies","x":87.37975446965962,"y":25.96726372128441},{"id":"forest-n04-enemies-07","parentNodeId":"forest-n04","type":"enemies","x":37.17361298394747,"y":30.411705743698846},{"id":"forest-n04-enemies-08","parentNodeId":"forest-n04","type":"enemies","x":71.80486044362647,"y":18.665675208682107},{"id":"forest-n04-enemies-09","parentNodeId":"forest-n04","type":"enemies","x":78.08062419756368,"y":21.787367321196058},{"id":"forest-n04-enemies-10","parentNodeId":"forest-n04","type":"enemies","x":42.258362905013115,"y":22.686842055547803},{"id":"forest-n04-enemies-11","parentNodeId":"forest-n04","type":"enemies","x":94.98396181055743,"y":34.00959014892578},{"id":"forest-n04-enemies-12","parentNodeId":"forest-n04","type":"enemies","x":93.70133443246941,"y":21.73446110316685},{"id":"forest-n04-enemies-13","parentNodeId":"forest-n04","type":"enemies","x":69.28538415126559,"y":37.501656668526785},{"id":"forest-n04-enemies-14","parentNodeId":"forest-n04","type":"enemies","x":55.542830228833814,"y":31.41699654715402},{"id":"forest-n04-enemies-15","parentNodeId":"forest-n04","type":"enemies","x":62.780577098022846,"y":38.82440476190476}],"chest":[{"id":"forest-n04-chest-01","parentNodeId":"forest-n04","type":"chest","x":55.9092969913855,"y":10.782076517740885}],"loot":[{"id":"forest-n04-loot-01","parentNodeId":"forest-n04","type":"loot","x":65.94136707942774,"y":16.496364048549104}],"shelter":[{"id":"forest-n04-shelter-01","parentNodeId":"forest-n04","type":"shelter","x":40.10535966604683,"y":12.528108869280134}],"trap":[{"id":"forest-n04-trap-01","parentNodeId":"forest-n04","type":"trap","x":34.333486137907485,"y":23.004302978515625}],"structure":[{"id":"forest-n04-structure-01","parentNodeId":"forest-n04","type":"structure","x":97.09115513149403,"y":27.448745000930057}],"boost":[{"id":"forest-n04-boost-01","parentNodeId":"forest-n04","type":"boost","x":56.41319979886917,"y":21.628635951450892}],"vehicle":[{"id":"forest-n04-vehicle-01","parentNodeId":"forest-n04","type":"vehicle","x":60.4901503958104,"y":10.358795892624627}]}}],"edges":[["forest-n01","forest-n02"],["forest-n02","forest-n03"],["forest-n02","forest-n04"],["forest-n03","forest-n04"]]}
+  });
+
+  function officialZoneConfig(zoneId) {
+    const config = OFFICIAL_ZONE_LAYOUTS[String(zoneId || "")];
+    return config ? JSON.parse(JSON.stringify(config)) : null;
+  }
+
+  function tacticalLayoutFromPortableConfig(config) {
+    if (!config || !config.zoneId) return null;
+    const out = { version:2, zoneId:String(config.zoneId), nodes:{} };
+    (config.nodes || []).forEach((node) => {
+      if (!node || !node.id || !node.anchors || typeof node.anchors !== "object") return;
+      const normalized = normalizeTacticalNodeSlots(String(node.id), node.anchors);
+      if (Object.keys(normalized).length) out.nodes[String(node.id)] = normalized;
+    });
+    return out;
+  }
+
   if (typeof module === "object" && module.exports) {
     // In Node esponiamo solo le funzioni pure sopra, per i test: il resto di
     // questo file è browser-only (window/DOM) e si ferma qui.
-    module.exports = { zoneLayoutStyle, pickAutoTarget, pickAutoWeaponSlot, getEquippedWeaponSlots, resolvePreferredWeaponSlot, buildInitialAttackFlow, buildAttackFlowFromSelectedSlot, getStartingWeaponChoices, getActionHubMode, shouldUseActionHub, buildCombatResultView, tacticalSlotId, normalizeTacticalNodeSlots, assignTacticalSlots };
+    module.exports = { zoneLayoutStyle, pickAutoTarget, pickAutoWeaponSlot, getEquippedWeaponSlots, resolvePreferredWeaponSlot, buildInitialAttackFlow, buildAttackFlowFromSelectedSlot, getStartingWeaponChoices, getActionHubMode, shouldUseActionHub, buildCombatResultView, tacticalSlotId, normalizeTacticalNodeSlots, assignTacticalSlots, officialZoneConfig, tacticalLayoutFromPortableConfig };
     return;
   }
 
@@ -1411,6 +1434,37 @@
     </div>`;
   }
 
+  const TACTICAL_PLAYER_ASSETS = Object.freeze({
+    automate: "assets/fortress-img/tactical-characters/automate.webp",
+    cat: "assets/fortress-img/tactical-characters/cat.webp",
+    duck: "assets/fortress-img/tactical-characters/duck.webp",
+    ghost: "assets/fortress-img/tactical-characters/ghost.webp",
+    icekron: "assets/fortress-img/tactical-characters/icekron.webp",
+    omalma: "assets/fortress-img/tactical-characters/omalma.webp",
+    pandax: "assets/fortress-img/tactical-characters/pandax.webp",
+    robotron: "assets/fortress-img/tactical-characters/robotron.webp",
+    skulldrome: "assets/fortress-img/tactical-characters/skulldrome.webp",
+    travis: "assets/fortress-img/tactical-characters/travis.webp"
+  });
+
+  /* Miniatura tattica: lo slot rappresenta il punto a terra. L'immagine viene
+     quindi appoggiata con i piedi sullo slot invece di essere centrata come
+     il vecchio token circolare. Le altre UI continuano a usare tokenMarkup(). */
+  function tacticalPlayerMarkup(player, currentPlayer) {
+    const characterId = game && game.playerAvatars ? game.playerAvatars[player.id] : null;
+    const character = CHARACTERS.find((c) => c.id === characterId);
+    const isCurrent = Boolean(currentPlayer && currentPlayer.id === player.id);
+    const isKo = player.status === "ko";
+    const tacticalImg = characterId ? TACTICAL_PLAYER_ASSETS[characterId] : "";
+    const fallbackImg = character ? characterDisplayImage(character.id, character.image) : "";
+    return `<div class="fa-tactical-player ${isCurrent ? "is-current" : ""} ${isKo ? "is-ko" : ""} ${player.hiddenInShelter ? "is-hidden" : ""}">
+      <span class="fa-tactical-player-ring" aria-hidden="true"></span>
+      ${tacticalImg ? `<img class="fa-tactical-player-img" src="${escapeHtml(tacticalImg)}" alt="${escapeHtml(player.name)}" draggable="false" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">` : ""}
+      ${fallbackImg ? `<img class="fa-tactical-player-fallback" src="${escapeHtml(fallbackImg)}" alt="${escapeHtml(player.name)}" draggable="false" style="display:${tacticalImg ? "none" : "block"}">` : `<span class="fa-tactical-player-initial">${escapeHtml((player.name || "?").slice(0,1).toUpperCase())}</span>`}
+      <span class="fa-tactical-player-name">${escapeHtml(player.name)}${isKo ? " · KO" : ""}${player.hiddenInShelter ? " · 🫥" : ""}</span>
+    </div>`;
+  }
+
   function enemyMarkerMarkup(e) {
     const type = ENEMY_NAME[e.archetype] || e.archetype;
     const name = e.name || type;
@@ -1730,17 +1784,14 @@
       const enemyAnchors = runtimeEntityAnchors(zone.id, n.id, "enemies", enemies);
       enemies.forEach((e) => {
         const a = enemyAnchors.get(String(e.id));
-        if (a) {
-          anchoredParts.push(anchoredMarkup(a, enemyMarkerMarkup(e), "is-enemy"));
-        } else {
-          fallbackEnemies.push(e);
-        }
+        if (a) anchoredParts.push(anchoredMarkup(a, enemyMarkerMarkup(e), "is-enemy"));
+        else fallbackEnemies.push(e);
       });
       const fallbackPlayers = [];
       const playerAnchors = runtimeEntityAnchors(zone.id, n.id, "players", nodePlayers);
       nodePlayers.forEach((p) => {
         const a = playerAnchors.get(String(p.id));
-        if (a) anchoredParts.push(anchoredMarkup(a, tokenMarkup(p, player), "is-player"));
+        if (a) anchoredParts.push(anchoredMarkup(a, tacticalPlayerMarkup(p, player), "is-player"));
         else fallbackPlayers.push(p);
       });
       const tokens = fallbackPlayers.map((p) => tokenMarkup(p, player)).join("");
@@ -3158,8 +3209,7 @@
     { key:"loot", label:"LOOT", icon:"✨" },
     { key:"shelter", label:"RIPARO", icon:"🛖" },
     { key:"trap", label:"TRAPPOLA", icon:"🪤" },
-    { key:"boost", label:"BOOST", icon:"⚡" },
-    { key:"entry", label:"ENTRY", icon:"🟢" }
+    { key:"boost", label:"BOOST", icon:"⚡" }
   ];
   const runtimeTacticalAssignments = new Map();
 
@@ -3186,9 +3236,16 @@
     } catch (e) { return {}; }
   }
 
+  function officialTacticalAnchorsForZone(zoneId) {
+    const config = officialZoneConfig(zoneId);
+    return tacticalLayoutFromPortableConfig(config) || emptyTacticalAnchorLayout(zoneId);
+  }
+
   function tacticalAnchorsForZone(zoneId) {
     const all = readStoredTacticalAnchors();
-    return JSON.parse(JSON.stringify(all[zoneId] || emptyTacticalAnchorLayout(zoneId)));
+    const hasSaved = Object.prototype.hasOwnProperty.call(all, zoneId);
+    const source = hasSaved ? all[zoneId] : officialTacticalAnchorsForZone(zoneId);
+    return JSON.parse(JSON.stringify(source || emptyTacticalAnchorLayout(zoneId)));
   }
 
   function storeTacticalAnchors(layout) {
@@ -3269,7 +3326,9 @@
 
   function runtimeAnchorLayout(zoneId) {
     const all = readStoredTacticalAnchors();
-    return all[zoneId] || null;
+    if (Object.prototype.hasOwnProperty.call(all, zoneId)) return all[zoneId];
+    const official = officialTacticalAnchorsForZone(zoneId);
+    return official && Object.keys(official.nodes || {}).length ? official : null;
   }
 
   function runtimeNodeSlots(zoneId, nodeId, type) {
@@ -3296,6 +3355,34 @@
   function anchoredMarkup(anchor, html, cls = "") {
     if (!anchor || !html) return "";
     return `<div class="fa-tactical-render-anchor ${cls}" data-tactical-slot-id="${escapeHtml(anchor.id || "")}" style="left:${Number(anchor.x)}%;top:${Number(anchor.y)}%">${html}</div>`;
+  }
+
+  function runtimeLayoutFromPortableConfig(config) {
+    if (!config || !config.zoneId) throw new Error("Config ufficiale mancante");
+    const layout = {
+      version: 1,
+      zoneId: String(config.zoneId),
+      entryNodeId: config.entryNodeId || null,
+      nodes: (config.nodes || []).map((n) => ({ id:String(n.id), x:Number(n.x), y:Number(n.y), connections:{} }))
+    };
+    portableConfigEdges(config).forEach(([a,b]) => zoneDirectorApi.toggleNodeConnection(layout, String(a), String(b)));
+    return layout;
+  }
+
+  function applyOfficialZoneLayouts() {
+    Object.keys(OFFICIAL_ZONE_LAYOUTS).forEach((zoneId) => {
+      const zone = ZONES.find((z) => z.id === zoneId);
+      if (!zone) return;
+      try {
+        const config = officialZoneConfig(zoneId);
+        validatePortableMapConfig(config, zoneId);
+        const layout = runtimeLayoutFromPortableConfig(config);
+        zoneDirectorApi.applyNodeLayout(zone, layout);
+        BASE_MAP_LAYOUTS[zoneId] = zoneDirectorApi.cloneNodeLayout(zone);
+      } catch (e) {
+        console.warn("[Fortress Army] Layout ufficiale ignorato", zoneId, e.message);
+      }
+    });
   }
 
   function readStoredMapLayouts() {
@@ -3594,7 +3681,10 @@
         mapEditorState.connectMode = !mapEditorState.connectMode; mapEditorState.connectFromId = null; mapEditorState.status = mapEditorState.connectMode ? "Scegli il primo nodo." : "Modifica collegamenti disattivata."; renderMapEditor(); return;
       }
       if (ev.target.id === "fa-map-editor-reset") {
-        const base = BASE_MAP_LAYOUTS[mapEditorState.zoneId]; mapEditorState.draft = JSON.parse(JSON.stringify(base)); mapEditorState.selectedNodeId = null; mapEditorState.connectFromId = null; mapEditorState.dirty = true; mapEditorState.status = "Layout originale ripristinato. Premi Salva Layout per renderlo permanente."; renderMapEditor(); return;
+        const base = BASE_MAP_LAYOUTS[mapEditorState.zoneId];
+        mapEditorState.draft = JSON.parse(JSON.stringify(base));
+        if (OFFICIAL_ZONE_LAYOUTS[mapEditorState.zoneId]) mapEditorState.anchorDraft = officialTacticalAnchorsForZone(mapEditorState.zoneId);
+        mapEditorState.selectedNodeId = null; mapEditorState.selectedAnchor = null; mapEditorState.connectFromId = null; mapEditorState.dirty = true; mapEditorState.status = "Layout ufficiale ripristinato. Premi Salva Layout per renderlo permanente su questo dispositivo."; renderMapEditor(); return;
       }
       if (ev.target.id === "fa-map-editor-export") {
         try { exportCurrentMapConfig(); } catch (e) { mapEditorState.status = e.message; renderMapEditor(); }
@@ -3717,6 +3807,7 @@
     });
   }
 
+  applyOfficialZoneLayouts();
   loadSavedMapLayouts();
   loadRoster();
   ensureSetupPlayers();

@@ -1451,7 +1451,7 @@
           mai una scelta casuale;
        6. nessun bersaglio raggiungibile: idle (nodo irraggiungibile gestito
           esplicitamente, mai un crash). */
-  function prepareNodeEnemyStep(state, enemy, zone, candidates) {
+  function prepareNodeEnemyStep(state, enemy, zone, candidates, rotationTargetId) {
     const weapon = enemy.attackProfile;
     const isMelee = weapon.range === "vicino";
 
@@ -1471,7 +1471,7 @@
     if (attackable.length) {
       const minDistance = Math.min.apply(null, attackable.map((c) => c.distance));
       const nearest = attackable.filter((c) => c.distance === minDistance).map((c) => c.player);
-      const target = pickTarget(nearest, enemy.lastTargetId);
+      const target = pickTarget(nearest, rotationTargetId || enemy.lastTargetId);
       const encounterRange = resolveEncounterRange(zone, enemy.nodeId, target.nodeId);
       const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
       const effectBonus = (zone.smokeActive ? -1 : 0) + (target.hiddenInShelter ? -1 : 0); // riparo: se tutti sono nascosti resta attaccabile ma con -1 dado
@@ -1486,7 +1486,7 @@
     if (reachable.length) {
       const minDistance = Math.min.apply(null, reachable.map((c) => c.distance));
       const nearest = reachable.filter((c) => c.distance === minDistance).map((c) => c.player);
-      const target = pickTarget(nearest, enemy.lastTargetId);
+      const target = pickTarget(nearest, rotationTargetId || enemy.lastTargetId);
       const step = firstNodeStepToward(zone, enemy.nodeId, target.nodeId);
       if (step) {
         const fromNodeId = enemy.nodeId;
@@ -1506,7 +1506,7 @@
      resolveEnemyStepFromRolls: mai un secondo pickTarget dopo aver preso i
      dadi fisici. Se l'id non esiste più o l'enemy è già a 0 HP (snapshot
      dell'ordine ormai stale), nessun errore: "skipped". */
-  function prepareEnemyStep(state, enemyId) {
+  function prepareEnemyStep(state, enemyId, rotationTargetId) {
     const enemy = getEnemy(state, enemyId);
     if (!enemy || enemy.hp <= 0) return { type: "skipped", enemyId };
 
@@ -1518,9 +1518,9 @@
       // mai un tiro fisico se si muove — vedi prepareNodeEnemyStep). Zone
       // legacy o nemico senza nodeId: comportamento invariato, attacca
       // sempre chi trova nella zona con la gittata di zona.
-      if (zone.nodes && enemy.nodeId != null) return prepareNodeEnemyStep(state, enemy, zone, candidates);
+      if (zone.nodes && enemy.nodeId != null) return prepareNodeEnemyStep(state, enemy, zone, candidates, rotationTargetId);
 
-      const target = pickTarget(candidates, enemy.lastTargetId);
+      const target = pickTarget(candidates, rotationTargetId || enemy.lastTargetId);
       const weapon = enemy.attackProfile;
       const isRangeless = Boolean(weapon.special && weapon.special.type === "rangeless");
       // Fumogeno: -1 dado, congelato QUI (mai ricalcolato dopo un ritiro

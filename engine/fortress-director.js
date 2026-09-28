@@ -47,6 +47,8 @@
       directorPhase: "round-announcement",
       pendingAnnouncements: [{ type: "round-start", payload: { round: state.round } }],
       enemyPhase: null,
+      lastEnemyPhaseActorId: null,
+      lastEnemyPhaseTargetId: null,
       structurePhase: null,
       awaitingRoll: null,
       pendingReaction: null,
@@ -714,12 +716,13 @@
     assertNoPendingAnnouncements(dir);
     assertNoAwaitingRoll(dir);
     const enemyId = dir.enemyPhase.order[dir.enemyPhase.cursor];
-    const prepared = loop.prepareEnemyStep(state, enemyId);
+    const prepared = loop.prepareEnemyStep(state, enemyId, dir.lastEnemyPhaseTargetId);
     if (prepared.type !== "attack") {
       dir.lastStepResult = prepared;
       advanceEnemyCursor(state, dir);
       return prepared;
     }
+    dir.lastEnemyPhaseTargetId = prepared.targetId;
     dir.pendingReaction = {
       actorType: "enemy", enemyId, targetId: prepared.targetId, prepared,
       reactionType: null, retreatNodeId: null, counterWeapon: null, enemyOutcome: null,
@@ -821,11 +824,16 @@
   }
 
   function advanceEnemyCursor(state, dir) {
-    dir.enemyPhase.cursor += 1;
-    if (dir.enemyPhase.cursor >= dir.enemyPhase.order.length) {
-      dir.enemyPhase = null;
-      beginStructurePhase(state, dir);
-    }
+    if (!dir.enemyPhase) return;
+    const actedEnemyId = dir.enemyPhase.order[dir.enemyPhase.cursor] || null;
+    if (actedEnemyId) dir.lastEnemyPhaseActorId = actedEnemyId;
+
+    // Test con bambini 28/09/2026: la fase nemici deve restare breve.
+    // Un solo nemico agisce per fase (attacco, movimento o idle), poi si passa
+    // immediatamente alla fase successiva. La rotazione dell'attaccante viene
+    // conservata in lastEnemyPhaseActorId e ripresa alla fase nemici seguente.
+    dir.enemyPhase = null;
+    beginStructurePhase(state, dir);
   }
 
   /* Prepara l'attacco del boss SENZA tirare dadi. */
@@ -1024,10 +1032,19 @@
   function beginEnemyPhase(state, dir) {
     dir.directorPhase = "enemy-phase";
     dir.lastStepResult = null;
-    const order = loop.getEnemyPhaseOrder(state);
+    let order = loop.getEnemyPhaseOrder(state);
     if (!order.length) {
       beginStructurePhase(state, dir);
       return;
+    }
+
+    // Rotazione deterministica dell'attaccante: la nuova fase riparte dal
+    // nemico successivo a quello che ha agito l'ultima volta, senza random.
+    if (dir.lastEnemyPhaseActorId) {
+      const lastIndex = order.indexOf(dir.lastEnemyPhaseActorId);
+      if (lastIndex >= 0 && order.length > 1) {
+        order = order.slice(lastIndex + 1).concat(order.slice(0, lastIndex + 1));
+      }
     }
     dir.enemyPhase = { order, cursor: 0 };
   }

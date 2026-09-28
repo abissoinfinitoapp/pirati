@@ -848,3 +848,52 @@ Nota suite completa del pacchetto ricevuto:
 - Vehicle map sprites reduced by ~20%: desktop 70x53px, mobile 58x43px.
 - Mobile enemy sizing remains unchanged (39px with the existing touch-device scale).
 
+
+### Official Forest layout V14 — 28/09/2026
+- Il layout `forest` esportato dall'editor è ora la baseline ufficiale incorporata nel progetto (`fortress-army-zone-layout`, V4).
+- `forest-n01` resta l'entry node ufficiale; 4 nodi principali e 4 collegamenti vengono applicati all'avvio prima degli eventuali override locali.
+- Gli slot tattici ufficiali vengono usati come fallback runtime/editor quando non esiste un layout tattico salvato in `localStorage`.
+- Forest ufficiale contiene 68 slot tattici: 10 player, 35 enemy, 4 vehicle, 4 chest, 4 loot, 4 shelter, 3 trap, 2 boost, 2 structure.
+- `ENTRY +` rimosso dai Tactical Slots: l'entry è solo una proprietà del nodo principale (`entryNodeId`).
+- `Ripristina` nell'editor riporta Forest alla baseline ufficiale, inclusi gli slot tattici; un successivo `Salva Layout` può ancora creare un override locale esplicito.
+- Nessuna modifica a combat, Director, movimento o regole di distanza.
+
+File modificati:
+- `fortress-game-ui.js`
+- `tests/fortress-official-forest-layout.test.js` (nuovo)
+- `FORTRESS_ARMY_MANIFEST.md`
+
+Verifica:
+- sintassi `fortress-game-ui.js`: OK;
+- test ufficializzazione Forest: OK;
+- test Tactical Slots esistenti: 5/5 verdi;
+- test UI puri esistenti: 19/19 verdi.
+
+## Fase Nemici breve + rotazione equa — test bambini 28/09/2026
+
+Feedback da sessione reale con 3 bambini: un giocatore è rimasto sul nodo di approdo, uno ha avanzato e uno si è nascosto. Nella fase nemici tutti i mostri disponibili concentravano gli attacchi sul solo giocatore esposto, allungando eccessivamente l'attesa prima del cambio fase.
+
+Regola aggiornata:
+- nella `enemy-phase` del Director **agisce un solo nemico**; dopo la sua azione la fase nemici termina immediatamente e il flusso prosegue verso strutture/Boss/fine round;
+- l'attaccante ruota deterministicamente tra una fase nemici e la successiva tramite `lastEnemyPhaseActorId`, senza RNG;
+- il bersaglio usa una rotazione condivisa di fase (`lastEnemyPhaseTargetId`) quando più giocatori sono equivalenti/validi, evitando che nemici differenti ripartano tutti dal primo giocatore della lista;
+- restano valide le regole esistenti di ingaggio: nodo `entryNodeId` neutro, distanza/range del Node Graph, riparo/nascondersi e giocatori non attivi esclusi;
+- le risposte immediate dopo un attacco iniziato dal giocatore restano separate e non consumano la singola azione della successiva `enemy-phase`;
+- dadi sempre fisici e sistema reazioni invariato.
+
+Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore esposto + giocatore nascosto + due mostri`. Suite `fortress-loop + fortress-director + nuovo test`: 87/87 verdi.
+
+## 2026-09-28 — Tactical Player Miniatures V1
+- Nella vista tattica i giocatori non usano più il token/avatar circolare: vengono renderizzati con i 10 nuovi WEBP dedicati in `assets/fortress-img/tactical-characters/`.
+- Lo slot tattico resta la coordinata deterministica del giocatore e ora rappresenta il punto a terra: la miniatura viene ancorata con i piedi sullo slot.
+- Setup, header e World Map compatta continuano a usare gli avatar/token già esistenti; la modifica riguarda solo la Tactical Map.
+- Evidenziazione giocatore attivo, KO e stato nascosto sono preservati. Se l'asset tattico non carica, resta disponibile il fallback all'avatar classico.
+- Asset: `automate`, `cat`, `duck`, `ghost`, `icekron`, `omalma`, `pandax`, `robotron`, `skulldrome`, `travis`.
+
+## 2026-09-28 — Tactical player forced scale V18
+- Corretto il V17: la scala desktop non era stata applicata al selettore effettivo.
+- Aggiunta in fondo assoluto a `styles-fortress.css` una regola forzata per `.fa-tactical-player`.
+- Desktop: `translateX(-50%) scale(.58) !important`.
+- Mobile/touch: `translateX(-50%) scale(.42) !important`.
+- `transform-origin: center bottom` conserva l'ancoraggio dei piedi sullo slot.
+- Nessuna modifica a mostri, mezzi, strutture, slot o coordinate.

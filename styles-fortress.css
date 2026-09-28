@@ -1741,3 +1741,138 @@ body.fa-game-active .fa-header { display:none; }
     max-width: 39px !important;
   }
 }
+
+/* ==========================================================================\n   FORTRESS ARMY — TACTICAL PLAYER MINIATURES V1\n   Lo slot è il punto di appoggio a terra: i piedi della miniatura coincidono\n   con la coordinata editor. World map/header/setup mantengono i token classici.\n   ========================================================================== */
+.fa-tactical-render-anchor.is-player {
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+.fa-tactical-render-anchor.is-player .fa-tactical-player {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 58px;
+  height: 68px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.fa-tactical-player-ring {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 30px;
+  height: 11px;
+  transform: translateX(-50%);
+  border: 2px solid rgba(238,238,238,.88);
+  border-radius: 50%;
+  background: rgba(14,18,20,.28);
+  box-shadow: 0 2px 6px rgba(0,0,0,.65);
+  z-index: 0;
+}
+.fa-tactical-player-img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 52px;
+  height: 64px;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,.75));
+}
+.fa-tactical-player-fallback {
+  position: relative;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 3px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--fa-steel);
+  background: #000;
+}
+.fa-tactical-player-initial {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 3px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #171b20;
+  border: 2px solid var(--fa-steel);
+  color: #fff;
+  font-weight: 900;
+}
+.fa-tactical-player-name {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: calc(100% + 2px);
+  transform: translateX(-50%);
+  padding: 1px 4px;
+  border-radius: 5px;
+  background: rgba(0,0,0,.68);
+  color: #fff;
+  font-size: 8px;
+  line-height: 1.15;
+  font-weight: 900;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+.fa-tactical-player.is-current .fa-tactical-player-ring {
+  border-color: var(--fa-gold);
+  box-shadow: 0 0 0 3px rgba(201,162,74,.24), 0 2px 6px rgba(0,0,0,.65);
+}
+.fa-tactical-player.is-ko .fa-tactical-player-img,
+.fa-tactical-player.is-ko .fa-tactical-player-fallback {
+  filter: grayscale(.75) brightness(.72) drop-shadow(0 3px 3px rgba(0,0,0,.75));
+}
+.fa-tactical-player.is-hidden {
+  opacity: .68;
+}
+/* Disattiva la vecchia riduzione del token circolare: il nuovo renderer usa
+   .fa-tactical-player e non deve ereditare quella trasformazione. */
+.fa-tactical-render-anchor.is-player .fa-token {
+  transform: none;
+}
+
+@media (max-width: 700px) and (hover: none) and (pointer: coarse) {
+  .fa-tactical-render-anchor.is-player .fa-tactical-player {
+    width: 44px;
+    height: 52px;
+  }
+  .fa-tactical-player-img {
+    width: 40px;
+    height: 50px;
+  }
+  .fa-tactical-player-ring {
+    width: 24px;
+    height: 9px;
+  }
+  .fa-tactical-player-name {
+    font-size: 7px;
+    padding: 1px 3px;
+  }
+}
+
+/* ==========================================================================
+   FORTRESS ARMY — FORCE TACTICAL PLAYER SCALE V18
+   Ultima regola del file: prevale sulle dimensioni/transform precedenti.
+   Mantiene il punto di appoggio ai piedi sul tactical slot.
+   ========================================================================== */
+.fa-tactical-render-anchor.is-player .fa-tactical-player {
+  transform: translateX(-50%) scale(.58) !important;
+  transform-origin: center bottom !important;
+}
+
+@media (max-width: 700px) and (hover: none) and (pointer: coarse) {
+  .fa-tactical-render-anchor.is-player .fa-tactical-player {
+    transform: translateX(-50%) scale(.42) !important;
+    transform-origin: center bottom !important;
+  }
+}
