@@ -397,7 +397,179 @@
   const SESSION_VERSION = 1;
   const MAP_LAYOUT_STORAGE_KEY = "fortress-army-node-layouts-v1";
   const TACTICAL_ANCHOR_STORAGE_KEY = "fortress-army-tactical-anchors-v1";
+  const DIAG_CHECKPOINT_STORAGE_KEY = "fortress-army-mobile-diag-checkpoint-v1";
+  const DIAG_EVENTS_STORAGE_KEY = "fortress-army-mobile-diag-events-v1";
+  const DIAG_MAX_EVENTS = 60;
+  let diagnosticLastPhaseKey = null;
+  let diagnosticCopyStatus = "";
   const BASE_MAP_LAYOUTS = Object.fromEntries(ZONES.map((z) => [z.id, zoneDirectorApi.cloneNodeLayout(z)]));
+
+  function diagnosticContext(extra = {}) {
+    let player = null;
+    try {
+      if (game && game.state) {
+        if (isLanding()) player = game.state.players[game.landingIndex] || null;
+        else if (game.dir) player = getLocalFocusPlayer(game.state, game.dir) || null;
+      }
+    } catch (_) {}
+    return Object.assign({
+      at: new Date().toISOString(),
+      uiMode,
+      round: game && game.state ? game.state.round : null,
+      directorPhase: game && game.dir ? game.dir.directorPhase : (game ? "landing" : null),
+      awaitingRoll: Boolean(game && game.dir && game.dir.awaitingRoll),
+      awaitingRollType: game && game.dir && game.dir.awaitingRoll ? game.dir.awaitingRoll.actorType || null : null,
+      pendingAnnouncements: game && game.dir && Array.isArray(game.dir.pendingAnnouncements) ? game.dir.pendingAnnouncements.length : 0,
+      launchMode: launchFlow ? launchFlow.mode : null,
+      launchZoneId: launchFlow ? launchFlow.zoneId : null,
+      playerId: player ? player.id : null,
+      playerName: player ? player.name : null,
+      zoneId: player ? player.zoneId : null,
+      nodeId: player ? player.nodeId : null,
+      hiddenInShelter: Boolean(player && player.hiddenInShelter),
+      visibilityState: typeof document !== "undefined" ? document.visibilityState : null
+    }, extra || {});
+  }
+
+  function diagnosticCheckpoint(label, extra = {}) {
+    try {
+      localStorage.setItem(DIAG_CHECKPOINT_STORAGE_KEY, JSON.stringify(diagnosticContext(Object.assign({ label }, extra))));
+    } catch (_) {}
+  }
+
+  function diagnosticEvent(label, extra = {}) {
+    try {
+      const raw = localStorage.getItem(DIAG_EVENTS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      const events = Array.isArray(parsed) ? parsed : [];
+      events.push(diagnosticContext(Object.assign({ label }, extra)));
+      localStorage.setItem(DIAG_EVENTS_STORAGE_KEY, JSON.stringify(events.slice(-DIAG_MAX_EVENTS)));
+    } catch (_) {}
+  }
+
+  function diagnosticSnapshot() {
+    let checkpoint = null, events = [];
+    try { checkpoint = JSON.parse(localStorage.getItem(DIAG_CHECKPOINT_STORAGE_KEY) || "null"); } catch (_) {}
+    try {
+      const parsed = JSON.parse(localStorage.getItem(DIAG_EVENTS_STORAGE_KEY) || "[]");
+      if (Array.isArray(parsed)) events = parsed;
+    } catch (_) {}
+    return { checkpoint, events };
+  }
+
+  function clearDiagnostics() {
+    try { localStorage.removeItem(DIAG_CHECKPOINT_STORAGE_KEY); } catch (_) {}
+    try { localStorage.removeItem(DIAG_EVENTS_STORAGE_KEY); } catch (_) {}
+    diagnosticCopyStatus = "Log azzerato.";
+  }
+
+  function diagnosticReportText() {
+    const snap = diagnosticSnapshot();
+    const lines = [
+      "FORTRESS ARMY — DIAGNOSTICA MOBILE",
+      `Generato: ${new Date().toISOString()}`,
+      "",
+      "CHECKPOINT",
+      JSON.stringify(snap.checkpoint, null, 2),
+      "",
+      "EVENTI RECENTI",
+      ...snap.events.map((entry) => JSON.stringify(entry))
+    ];
+    return lines.join("\n");
+  }
+
+  function renderGlobalDiagnostics() {
+    const body = $("fa-global-diag-body");
+    if (!body) return;
+    const snap = diagnosticSnapshot();
+    const checkpoint = snap.checkpoint || {};
+    const events = snap.events.slice(-24).reverse();
+    body.innerHTML = `
+      <div class="fa-global-diag-summary">
+        <div><span>Ultimo checkpoint</span><strong>${escapeHtml(checkpoint.label || "Nessuno")}</strong></div>
+        <div><span>Fase</span><strong>${escapeHtml(checkpoint.directorPhase || "—")}</strong></div>
+        <div><span>Round</span><strong>${checkpoint.round == null ? "—" : escapeHtml(String(checkpoint.round))}</strong></div>
+        <div><span>Giocatore</span><strong>${escapeHtml(checkpoint.playerName || checkpoint.playerId || "—")}</strong></div>
+        <div><span>Zona</span><strong>${escapeHtml(checkpoint.zoneId || checkpoint.launchZoneId || "—")}</strong></div>
+        <div><span>Pagina</span><strong>${escapeHtml(checkpoint.visibilityState || document.visibilityState || "—")}</strong></div>
+      </div>
+      <div class="fa-global-diag-actions">
+        <button type="button" class="fa-btn fa-btn-primary" id="fa-global-diag-copy">COPIA LOG</button>
+        <button type="button" class="fa-btn fa-btn-ghost" id="fa-global-diag-clear">AZZERA</button>
+        <button type="button" class="fa-btn fa-btn-ghost" id="fa-global-diag-refresh">AGGIORNA</button>
+      </div>
+      ${diagnosticCopyStatus ? `<p class="fa-panel-mini-help">${escapeHtml(diagnosticCopyStatus)}</p>` : ""}
+      <div class="fa-global-diag-events">${events.length ? events.map((entry) => `<div><b>${escapeHtml(entry.label || "evento")}</b><span>${escapeHtml(entry.at || "")}</span><code>${escapeHtml(JSON.stringify(entry))}</code></div>`).join("") : `<p>Nessun evento registrato.</p>`}</div>`;
+  }
+
+  function openGlobalDiagnostics(reason = null) {
+    const overlay = $("fa-global-diag-overlay");
+    if (!overlay) return;
+    if (reason) diagnosticCopyStatus = `Aperto da: ${reason}`;
+    renderGlobalDiagnostics();
+    overlay.hidden = false;
+  }
+
+  function ensureGlobalDiagnosticsUi() {
+    if ($("fa-global-diag-toggle")) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = "fa-global-diag-toggle";
+    button.className = "fa-global-diag-toggle";
+    button.textContent = "🧪 DIAG";
+    button.setAttribute("aria-label", "Apri diagnostica Fortress Army");
+
+    const overlay = document.createElement("div");
+    overlay.id = "fa-global-diag-overlay";
+    overlay.className = "fa-global-diag-overlay";
+    overlay.hidden = true;
+    overlay.innerHTML = `<div class="fa-global-diag-panel" role="dialog" aria-modal="true" aria-label="Diagnostica Fortress Army">
+      <header><div><p class="fa-eyebrow">Sempre disponibile</p><h2>🧪 DIAGNOSTICA</h2></div><button type="button" class="fa-btn fa-btn-ghost" id="fa-global-diag-close">✕ Chiudi</button></header>
+      <div id="fa-global-diag-body"></div>
+    </div>`;
+    document.body.append(button, overlay);
+
+    button.addEventListener("click", () => openGlobalDiagnostics("manuale"));
+    overlay.addEventListener("click", (ev) => {
+      if (ev.target.id === "fa-global-diag-overlay" || ev.target.closest("#fa-global-diag-close")) { overlay.hidden = true; return; }
+      if (ev.target.closest("#fa-global-diag-refresh")) { diagnosticCopyStatus = ""; renderGlobalDiagnostics(); return; }
+      if (ev.target.closest("#fa-global-diag-clear")) { clearDiagnostics(); renderGlobalDiagnostics(); return; }
+      if (ev.target.closest("#fa-global-diag-copy")) {
+        const report = diagnosticReportText();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(report).then(() => { diagnosticCopyStatus = "Log copiato."; renderGlobalDiagnostics(); }).catch(() => { diagnosticCopyStatus = "Copia automatica non disponibile."; renderGlobalDiagnostics(); });
+        } else { diagnosticCopyStatus = "Copia automatica non disponibile."; renderGlobalDiagnostics(); }
+      }
+    });
+  }
+
+  function registerDiagnosticGlobalHandlers() {
+    window.addEventListener("error", (ev) => {
+      diagnosticEvent("window:error", {
+        message: ev.message || "Errore JavaScript",
+        source: ev.filename || null,
+        line: ev.lineno || null,
+        column: ev.colno || null,
+        stack: ev.error && ev.error.stack ? String(ev.error.stack).slice(0, 3000) : null
+      });
+      diagnosticCheckpoint("error", { message: ev.message || "Errore JavaScript" });
+    });
+    window.addEventListener("unhandledrejection", (ev) => {
+      const reason = ev.reason;
+      diagnosticEvent("promise:unhandled", {
+        message: reason && reason.message ? reason.message : String(reason || "Promise rejection"),
+        stack: reason && reason.stack ? String(reason.stack).slice(0, 3000) : null
+      });
+      diagnosticCheckpoint("promise:unhandled");
+    });
+    document.addEventListener("visibilitychange", () => {
+      diagnosticEvent("page:visibility", { visibilityState: document.visibilityState });
+    });
+  }
+  registerDiagnosticGlobalHandlers();
+  ensureGlobalDiagnosticsUi();
+  diagnosticEvent("boot:init");
+  diagnosticCheckpoint("boot:init");
 
   function defaultSetupPlayers() {
     return Array.from({ length: MAX_PLAYERS }, (_, i) => ({ id: "p" + (i + 1), name: "Giocatore " + (i + 1), avatarId: null, startingWeaponId: null, present: i < 2 }));
@@ -455,32 +627,55 @@
       };
       localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(snapshot));
       savedSession = snapshot;
-    } catch (e) {}
+    } catch (e) {
+      diagnosticEvent("session:persist-error", { message:e && e.message ? e.message : String(e) });
+    }
   }
 
   function resumeSavedSession() {
-    const snapshot = savedSession || loadSavedSession();
-    if (!snapshot) return;
-    game = snapshot.game;
-    (game.state.players || []).forEach((p) => { if (p.present == null) p.present = true; });
-    if (snapshot.roster && Array.isArray(snapshot.roster.players)) {
-      setupCount = Math.max(2, Math.min(MAX_PLAYERS, Number(snapshot.roster.count) || 2));
-      const defaults = defaultSetupPlayers();
-      setupPlayers = defaults.map((d, i) => Object.assign({}, d, snapshot.roster.players[i] || {}, { id: d.id }));
-      saveRoster();
+    diagnosticEvent("resume:start");
+    diagnosticCheckpoint("resume:start");
+    try {
+      const snapshot = savedSession || loadSavedSession();
+      if (!snapshot) {
+        diagnosticEvent("resume:no-snapshot");
+        diagnosticCheckpoint("resume:no-snapshot");
+        return;
+      }
+      diagnosticEvent("resume:snapshot-loaded", { savedAt:snapshot.savedAt || null });
+      game = snapshot.game;
+      diagnosticCheckpoint("resume:game-restored", { savedAt:snapshot.savedAt || null });
+      (game.state.players || []).forEach((p) => { if (p.present == null) p.present = true; });
+      if (snapshot.roster && Array.isArray(snapshot.roster.players)) {
+        setupCount = Math.max(2, Math.min(MAX_PLAYERS, Number(snapshot.roster.count) || 2));
+        const defaults = defaultSetupPlayers();
+        setupPlayers = defaults.map((d, i) => Object.assign({}, d, snapshot.roster.players[i] || {}, { id: d.id }));
+        saveRoster();
+      }
+      if (snapshot.ui) {
+        magnifyMode = snapshot.ui.magnifyMode !== false;
+        moveMode = Boolean(snapshot.ui.moveMode); scannerMode = Boolean(snapshot.ui.scannerMode);
+        actionHubWeaponSlot = snapshot.ui.actionHubWeaponSlot || "primary";
+        launchFlow = snapshot.ui.launchFlow || null;
+        attackFlow = snapshot.ui.attackFlow || null; vehicleFlow = snapshot.ui.vehicleFlow || null; partyBoostFlow = snapshot.ui.partyBoostFlow || null; tradeFlow = snapshot.ui.tradeFlow || null; destinyFlow = Boolean(snapshot.ui.destinyFlow);
+        attackActorId = snapshot.ui.attackActorId || null; diceSelections = snapshot.ui.diceSelections || null; pendingResult = snapshot.ui.pendingResult || null;
+        chestResult = snapshot.ui.chestResult || null; turnTransition = snapshot.ui.turnTransition || null; eventLog = Array.isArray(snapshot.ui.eventLog) ? snapshot.ui.eventLog : [];
+        presenceOpen = Boolean(snapshot.ui.presenceOpen);
+      }
+      diagnosticEvent("resume:ui-restored", { launchMode:launchFlow ? launchFlow.mode : null });
+      diagnosticCheckpoint("resume:before-render");
+      uiMode = "game";
+      render();
+      diagnosticEvent("resume:done");
+      diagnosticCheckpoint("resume:done");
+    } catch (error) {
+      diagnosticEvent("resume:error", {
+        message:error && error.message ? error.message : String(error),
+        stack:error && error.stack ? String(error.stack).slice(0, 3000) : null
+      });
+      diagnosticCheckpoint("resume:error", { message:error && error.message ? error.message : String(error) });
+      openGlobalDiagnostics("errore durante PROSEGUI");
     }
-    if (snapshot.ui) {
-      magnifyMode = snapshot.ui.magnifyMode !== false;
-      moveMode = Boolean(snapshot.ui.moveMode); scannerMode = Boolean(snapshot.ui.scannerMode);
-      actionHubWeaponSlot = snapshot.ui.actionHubWeaponSlot || "primary";
-      launchFlow = snapshot.ui.launchFlow || null;
-      attackFlow = snapshot.ui.attackFlow || null; vehicleFlow = snapshot.ui.vehicleFlow || null; partyBoostFlow = snapshot.ui.partyBoostFlow || null; tradeFlow = snapshot.ui.tradeFlow || null; destinyFlow = Boolean(snapshot.ui.destinyFlow);
-      attackActorId = snapshot.ui.attackActorId || null; diceSelections = snapshot.ui.diceSelections || null; pendingResult = snapshot.ui.pendingResult || null;
-      chestResult = snapshot.ui.chestResult || null; turnTransition = snapshot.ui.turnTransition || null; eventLog = Array.isArray(snapshot.ui.eventLog) ? snapshot.ui.eventLog : [];
-      presenceOpen = Boolean(snapshot.ui.presenceOpen);
-    }
-    uiMode = "game";
-    render();
   }
 
   function renderSetup() {
@@ -580,6 +775,8 @@
     game = { state, dir: null, playerAvatars, landingIndex: 0 };
     eventLog = []; presenceOpen = false;
     uiMode = "game";
+    diagnosticEvent("game:start", { players:players.length });
+    diagnosticCheckpoint("game:start");
     persistSession();
     render();
   }
@@ -592,6 +789,8 @@
   function chooseLandingZone(zoneId) {
     const player = game.state.players[game.landingIndex];
     launchFlow = { mode: "initial", playerId: player.id, zoneId };
+    diagnosticEvent("launch:chosen", { mode:"initial", playerId:player.id, zoneId });
+    diagnosticCheckpoint("launch:awaiting-roll", { mode:"initial", playerId:player.id, zoneId });
     render();
   }
 
@@ -600,6 +799,8 @@
     const playerId = director.getCurrentPlayerId(state, dir);
     launchFlow = { mode: "move", playerId, zoneId };
     moveMode = false;
+    diagnosticEvent("launch:chosen", { mode:"move", playerId, zoneId });
+    diagnosticCheckpoint("launch:awaiting-roll", { mode:"move", playerId, zoneId });
     render();
   }
 
@@ -608,6 +809,8 @@
     const state = game.state;
     const flow = launchFlow;
     const player = loop.getPlayer(state, flow.playerId);
+    diagnosticEvent("launch:resolve-start", { mode:flow.mode, playerId:flow.playerId, zoneId:flow.zoneId, roll });
+    diagnosticCheckpoint("launch:resolving", { mode:flow.mode, playerId:flow.playerId, zoneId:flow.zoneId, roll });
     let outcome;
     if (flow.mode === "initial") {
       outcome = loop.landPlayer(state, flow.playerId, flow.zoneId, Math.random, roll);
@@ -629,6 +832,8 @@
     const zone = loop.getZone(state, flow.zoneId);
     const label = landing.outcome === "disastroso" ? "ATTERRAGGIO DISASTROSO" : landing.outcome === "ostile" ? "ATTERRAGGIO OSTILE" : "ATTERRAGGIO PERFETTO";
     pushEvent(`${player.name}: ${label} a ${zone.name}${landing.damage ? ` · -${landing.damage} HP` : " · nessun danno"}`);
+    diagnosticEvent("launch:resolved", { mode:flow.mode, playerId:flow.playerId, zoneId:flow.zoneId, outcome:landing.outcome, damage:landing.damage || 0, explorationStarted:Boolean(game.dir) });
+    diagnosticCheckpoint("launch:resolved", { playerId:flow.playerId, zoneId:flow.zoneId });
     launchFlow = null;
     render();
   }
@@ -658,12 +863,14 @@
   function groundLootMarkup(groundLoot, currentPlayer) {
     if (!groundLoot || !groundLoot.length) return "";
     const rows = groundLoot.map((entry) => {
+      const resolved = resolveLootEntry(entry);
       const label = escapeHtml(lootEntryLabel(entry));
       const isWeapon = entry.kind === "weapon";
       const owner = entry.ownerPlayerId ? loop.getPlayer(game.state, entry.ownerPlayerId) : null;
       const assignedToOther = Boolean(owner && currentPlayer && owner.id !== currentPlayer.id);
       const assignedToCurrent = Boolean(owner && currentPlayer && owner.id === currentPlayer.id);
       const currentSupport = (!isWeapon && currentPlayer && currentPlayer.equipment) ? currentPlayer.equipment[entry.kind] : null;
+      const pickupLockedForCurrentPlayer = Boolean(!isWeapon && currentPlayer && entry.pickupLockPlayerId === currentPlayer.id && entry.pickupLockRound === game.state.round);
       const sameSupportAlreadyEquipped = Boolean(currentSupport && resolved && currentSupport.id === resolved.id);
       const replacingSupport = Boolean(currentSupport && resolved && currentSupport.id !== resolved.id);
       const effect = !isWeapon ? supportItemEffectLabel(resolved) : "";
@@ -672,6 +879,8 @@
         if (isWeapon) {
           buttons = `<div class="fa-groundloot-actions"><button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="primary">EQUIPAGGIA COME PRIMARIA</button>
              <button type="button" class="fa-btn fa-btn-ghost" data-pickup="${entry.instanceId}" data-pickup-slot="secondary">EQUIPAGGIA COME SECONDARIA</button></div>`;
+        } else if (pickupLockedForCurrentPlayer) {
+          buttons = `<span class="fa-groundloot-owned">⏳ LASCIATO A TERRA</span>`;
         } else if (sameSupportAlreadyEquipped) {
           buttons = `<span class="fa-groundloot-owned">✅ GIÀ NEL TUO INVENTARIO</span>`;
         } else {
@@ -682,13 +891,21 @@
       if (assignedToOther) help = `<small>🎯 ASSEGNATO A <strong>${escapeHtml(owner.name)}</strong>. Solo lui può raccoglierlo; dopo potrete scambiarlo.</small>`;
       else if (isWeapon && assignedToCurrent) help = `<small>🎯 ASSEGNATO A TE. Scegli in quale slot equipaggiarlo.</small>`;
       else if (isWeapon) help = `<small>È una sola arma: scegli in quale slot equipaggiarla. In combattimento userai l'arma selezionata in <strong>ARMA ATTIVA</strong>.</small>`;
+      else if (pickupLockedForCurrentPlayer) help = `<small>${effect ? `<strong>${escapeHtml(effect)}</strong> · ` : ""}Hai appena lasciato ${escapeHtml(resolved.name)} a terra sostituendolo. Gli altri giocatori possono raccoglierlo; tu potrai riprenderlo dal tuo prossimo turno.</small>`;
       else if (sameSupportAlreadyEquipped) help = `<small>${effect ? `<strong>${escapeHtml(effect)}</strong> · ` : ""}Hai già ${escapeHtml(resolved.name)} nello slot ${escapeHtml(entry.kind.toUpperCase())}. Questa è un'altra copia e resta a terra.</small>`;
       else if (replacingSupport) help = `<small>${effect ? `<strong>${escapeHtml(effect)}</strong> · ` : ""}Hai già <strong>${escapeHtml(currentSupport.name)}</strong>. Se prendi ${escapeHtml(resolved.name)}, ${escapeHtml(currentSupport.name)} resterà a terra.</small>`;
       else help = `<small>${effect ? `<strong>${escapeHtml(effect)}</strong> · ` : ""}Slot ${escapeHtml(entry.kind.toUpperCase())} libero: raccoglilo nel tuo inventario.</small>`;
       const inspect = isWeapon ? `<button type="button" class="fa-weapon-inspect" data-inspect-weapon="${entry.weaponId}" aria-label="Vedi dettagli di ${label}" title="Vedi arma">🔍</button>` : "";
       return `<div class="fa-groundloot-row ${assignedToOther ? "is-assigned-other" : ""}"><span class="fa-groundloot-item"><strong>📦 ${label}</strong>${inspect}${help}</span>${buttons}</div>`;
     }).join("");
-    return `<div class="fa-panel-section fa-groundloot-panel"><h4>A TERRA · ${groundLoot.some((e) => !e.ownerPlayerId || (currentPlayer && e.ownerPlayerId === currentPlayer.id)) ? "PUOI RACCOGLIERE" : "LOOT ASSEGNATO"}</h4>${rows}</div>`;
+    const hasCollectibleForCurrent = groundLoot.some((entry) => {
+      if (entry.ownerPlayerId && (!currentPlayer || entry.ownerPlayerId !== currentPlayer.id)) return false;
+      if (entry.kind !== "weapon" && currentPlayer && entry.pickupLockPlayerId === currentPlayer.id && entry.pickupLockRound === game.state.round) return false;
+      return true;
+    });
+    const hasAssignedToOther = groundLoot.some((entry) => entry.ownerPlayerId && (!currentPlayer || entry.ownerPlayerId !== currentPlayer.id));
+    const groundTitle = hasCollectibleForCurrent ? "PUOI RACCOGLIERE" : (hasAssignedToOther ? "LOOT ASSEGNATO" : "RESTERÀ A TERRA");
+    return `<div class="fa-panel-section fa-groundloot-panel"><h4>A TERRA · ${groundTitle}</h4>${rows}</div>`;
   }
   function pushEvent(text) {
     eventLog.unshift(text);
@@ -1373,6 +1590,33 @@
       : `<div class="fa-player-summary-grid">${players.map(utilityPlayerCardMarkup).join("")}</div>`;
   }
 
+  function renderDiagnostics() {
+    const host = $("fa-utility-diagnostics");
+    if (!host) return;
+    const snap = diagnosticSnapshot();
+    const cp = snap.checkpoint || {};
+    const eventRows = snap.events.slice(-20).reverse().map((entry) => `<li><b>${escapeHtml(entry.label || "evento")}</b> · ${escapeHtml(entry.at || "")} · fase ${escapeHtml(entry.directorPhase || "—")} · ${escapeHtml(entry.playerName || entry.playerId || "—")} · ${escapeHtml(entry.zoneId || "—")}</li>`).join("");
+    host.innerHTML = `<div class="fa-utility-card">
+      <h3>🧪 Diagnostica mobile</h3>
+      <p>Registro locale degli ultimi checkpoint. Non invia dati in rete.</p>
+      <div class="fa-utility-facts">
+        <span><b>Checkpoint</b>${escapeHtml(cp.label || "—")}</span>
+        <span><b>Fase</b>${escapeHtml(cp.directorPhase || "—")}</span>
+        <span><b>Round</b>${escapeHtml(cp.round == null ? "—" : String(cp.round))}</span>
+        <span><b>Player</b>${escapeHtml(cp.playerName || cp.playerId || "—")}</span>
+        <span><b>Zona</b>${escapeHtml(cp.zoneId || "—")}</span>
+        <span><b>Visibilità</b>${escapeHtml(cp.visibilityState || "—")}</span>
+      </div>
+      ${diagnosticCopyStatus ? `<p class="fa-panel-mini-help">${escapeHtml(diagnosticCopyStatus)}</p>` : ""}
+      <div class="fa-utility-actions">
+        <button type="button" class="fa-btn fa-btn-primary" id="fa-diag-copy">COPIA LOG</button>
+        <button type="button" class="fa-btn fa-btn-ghost" id="fa-diag-clear">AZZERA</button>
+      </div>
+      <h4>Ultimi eventi</h4>
+      <ul class="fa-situation-list">${eventRows || "<li>Nessun evento registrato.</li>"}</ul>
+    </div>`;
+  }
+
   function renderUtilityContent() {
     if (!game.state || uiMode !== "game") return;
     const state = game.state, dir = game.dir;
@@ -1382,6 +1626,7 @@
     const progress = $("fa-utility-progress");
     const gifts = $("fa-utility-gifts");
     renderUtilityPlayers();
+    renderDiagnostics();
     if (!player) {
       if (session) session.innerHTML = `<div class="fa-utility-card"><p>Nessun giocatore attivo.</p></div>`;
       if (inventory) inventory.innerHTML = `<div class="fa-utility-card"><p>Nessun inventario disponibile.</p></div>`;
@@ -1468,6 +1713,14 @@
         return;
       }
       if (ev.target.closest("#fa-start-gift-machine")) { startGiftMachine(); return; }
+      if (ev.target.closest("#fa-diag-clear")) { clearDiagnostics(); renderDiagnostics(); return; }
+      if (ev.target.closest("#fa-diag-copy")) {
+        const report = diagnosticReportText();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(report).then(() => { diagnosticCopyStatus = "Log copiato."; renderDiagnostics(); }).catch(() => { diagnosticCopyStatus = "Copia automatica non disponibile."; renderDiagnostics(); });
+        } else { diagnosticCopyStatus = "Copia automatica non disponibile."; renderDiagnostics(); }
+        return;
+      }
       const playerSheet = ev.target.closest("[data-player-sheet]");
       if (playerSheet) { utilitySelectedPlayerId = playerSheet.dataset.playerSheet; renderUtilityPlayers(); return; }
       if (ev.target.closest("[data-player-sheet-back]")) { utilitySelectedPlayerId = null; renderUtilityPlayers(); return; }
@@ -1480,11 +1733,17 @@
   }
 
   function render() {
+    diagnosticCheckpoint("render:start");
     $("fa-setup-screen").hidden = uiMode !== "setup";
     $("fa-game-screen").hidden = uiMode !== "game";
-    if (uiMode === "setup") { renderSetup(); return; }
+    if (uiMode === "setup") { renderSetup(); diagnosticCheckpoint("render:done", { screen:"setup" }); return; }
 
     const state = game.state;
+    const phaseKey = `${state.round}|${game.dir ? game.dir.directorPhase : "landing"}|${game.landingIndex || 0}|${launchFlow ? `${launchFlow.mode}:${launchFlow.zoneId}` : ""}`;
+    if (phaseKey !== diagnosticLastPhaseKey) {
+      diagnosticLastPhaseKey = phaseKey;
+      diagnosticEvent("phase:change", { phaseKey });
+    }
     const currentPlayer = isLanding() ? null : getLocalFocusPlayer(state, game.dir);
     const currentZone = currentPlayer ? loop.getZone(state, currentPlayer.zoneId) : null;
     // CAMBIA ZONA sceglie la destinazione su una tile della World Map:
@@ -1517,6 +1776,7 @@
     if (dir && dir.pendingAnnouncements.length) renderAnnouncementOverlay(dir.pendingAnnouncements[0]);
     else $("fa-announcement-overlay").hidden = true;
     persistSession();
+    diagnosticCheckpoint("render:done");
   }
 
   /* =========================================================================
@@ -2299,6 +2559,7 @@
       const viewport = ev.target.closest(".fa-tactical-map-viewport");
       if (!viewport || ev.target.closest("button,input,select,a")) return;
       if (ev.pointerType === "mouse" && ev.button !== 0) return;
+      if (ev.pointerType !== "mouse") diagnosticEvent("map:pointerdown", { pointerType:ev.pointerType, scale:magnifyView.scale });
       magnifyPointers.set(ev.pointerId, { clientX:ev.clientX, clientY:ev.clientY });
       try { viewport.setPointerCapture(ev.pointerId); } catch (_) {}
       const rect = viewport.getBoundingClientRect();
@@ -2306,6 +2567,7 @@
         magnifyDragStart = { pointerId:ev.pointerId, clientX:ev.clientX, clientY:ev.clientY, x:magnifyView.x, y:magnifyView.y, moved:false };
         magnifyPinchStart = null;
       } else if (magnifyPointers.size === 2) {
+        diagnosticEvent("map:pinch-start", { scale:magnifyView.scale });
         const pts = Array.from(magnifyPointers.values());
         const center = magnifyCenter(pts[0], pts[1], rect);
         magnifyPinchStart = {
@@ -2338,6 +2600,7 @@
       } else if (magnifyPointers.size === 1 && magnifyDragStart && magnifyDragStart.pointerId === ev.pointerId) {
         const dragDistance = Math.hypot(ev.clientX - magnifyDragStart.clientX, ev.clientY - magnifyDragStart.clientY);
         if (dragDistance > 6) {
+          if (!magnifyDragStart.moved) diagnosticEvent("map:pan-start", { pointerType:ev.pointerType, scale:magnifyView.scale });
           magnifyDragStart.moved = true;
           magnifySuppressNodeClickUntil = Date.now() + 350;
         }
@@ -4185,7 +4448,7 @@
         renderSetup();
         return;
       }
-      if (ev.target.id === "fa-resume-game") { resumeSavedSession(); return; }
+      if (ev.target.id === "fa-resume-game") { diagnosticEvent("resume:click"); diagnosticCheckpoint("resume:click"); resumeSavedSession(); return; }
       if (ev.target.id === "fa-new-game") { clearSavedSession(); renderSetup(); return; }
       if (ev.target.id === "fa-setup-start") attemptStartGame();
     });
@@ -4205,11 +4468,13 @@
     });
   }
 
+  diagnosticEvent("boot:startup");
   applyOfficialZoneLayouts();
   loadSavedMapLayouts();
   loadRoster();
   ensureSetupPlayers();
   savedSession = loadSavedSession();
+  diagnosticEvent("boot:saved-session-check", { hasSavedSession:Boolean(savedSession), savedAt:savedSession && savedSession.savedAt ? savedSession.savedAt : null });
 
   bindSetupEvents();
   bindMapEvents();
@@ -4227,6 +4492,8 @@
   window.addEventListener("resize", () => { if (uiMode === "game") drawConnections(); });
 
   render();
+  diagnosticEvent("boot:ready", { hasSavedSession:Boolean(savedSession) });
+  diagnosticCheckpoint("boot:ready");
 
   // Hook di sola verifica manuale (QA), utile durante lo sviluppo: mai in produzione.
   const IS_DEV = location.hostname === "localhost" || location.hostname === "127.0.0.1";

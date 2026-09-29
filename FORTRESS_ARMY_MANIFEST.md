@@ -970,3 +970,34 @@ Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore es
 - Se il giocatore possiede già lo stesso oggetto, il pulsante di raccolta non viene mostrato e compare `GIÀ NEL TUO INVENTARIO`; una copia duplicata resta correttamente a terra.
 - Cure e scudi mostrano l'effetto sintetico, distinguendo ad esempio `Medikit` (+6 HP) da `Kit Medico` (cura completa).
 - Nessuna modifica all'economia di loot o agli slot inventario.
+
+
+## 2026-09-28 — Ground loot resolved scope hotfix V29
+- Corretto `ReferenceError: resolved is not defined` in `groundLootMarkup()`.
+- `resolved` viene ora calcolato nello scope della singola entry prima dei controlli su support item.
+- Aggiunto test di regressione specifico sul binding `resolveLootEntry(entry)`.
+
+
+## 2026-09-28 — Ground loot anti-swap loop V30
+- Corretto il ping-pong infinito tra supporti dello stesso slot (es. Medikit ↔ Kit Medico).
+- Quando un supporto viene sostituito, quello precedente resta a terra ma riceve `pickupLockPlayerId` + `pickupLockRound`.
+- Lo stesso giocatore non può riprenderlo nello stesso round; gli altri giocatori possono raccoglierlo immediatamente.
+- Dal round successivo il blocco decade automaticamente.
+- Action Hub mostra `⏳ LASCIATO A TERRA` invece di `SOSTITUISCI` per l'oggetto appena rilasciato.
+
+
+## 2026-09-29 — Mobile diagnostics V31
+- Aggiunto watchdog diagnostico locale per indagare i blocchi osservati su telefono senza modificare gameplay o loop.
+- Checkpoint persistenti: `game:start`, lancio scelto/in risoluzione/risolto, `render:start`, `render:done`, errori JS e promise non gestite.
+- Eventi touch significativi: pointerdown mobile, inizio pan, inizio pinch, cambio visibilità pagina.
+- Log limitato agli ultimi 60 eventi; nessun polling continuo.
+- Nuova sezione `UTILITÀ > Diagnostica` con checkpoint corrente, ultimi eventi, copia e azzeramento log.
+- Il log resta solo in `localStorage` del dispositivo e non viene inviato in rete.
+
+## 2026-09-29 — Diagnostica globale V32
+- La diagnostica non dipende più da UTILITÀ: un pulsante fisso `🧪 DIAG` è disponibile già nel setup e prima di `PROSEGUI`.
+- Il logger parte all'avvio dello script e registra bootstrap, presenza di sessione salvata e completamento iniziale.
+- `PROSEGUI` registra ora `resume:click`, `resume:start`, caricamento snapshot, ripristino UI, `resume:before-render` e `resume:done`.
+- `resumeSavedSession()` è protetta da `try/catch`: in caso di errore viene salvato stack/messaggio e viene aperta direttamente la diagnostica globale.
+- Dopo un blocco è possibile ricaricare la pagina e consultare/copiare il log senza riprendere la sessione.
+- Nessuna modifica a gameplay, Director, combat o regole di movimento.

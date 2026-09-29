@@ -1,0 +1,15 @@
+const fs=require('fs'); const assert=require('assert'); const path=require('path');
+const ui=fs.readFileSync(path.join(__dirname,'..','fortress-game-ui.js'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'..','fortress-army.html'),'utf8');
+assert(ui.includes('DIAG_CHECKPOINT_STORAGE_KEY'), 'checkpoint key missing');
+assert(ui.includes('DIAG_EVENTS_STORAGE_KEY'), 'event ring key missing');
+assert(ui.includes('diagnosticCheckpoint("render:start")'), 'render start checkpoint missing');
+assert(ui.includes('diagnosticCheckpoint("render:done")'), 'render done checkpoint missing');
+assert(ui.includes('diagnosticEvent("launch:resolve-start"'), 'launch resolve diagnostic missing');
+assert(ui.includes('window.addEventListener("error"'), 'window error handler missing');
+assert(ui.includes('window.addEventListener("unhandledrejection"'), 'promise rejection handler missing');
+assert(ui.includes('diagnosticEvent("map:pinch-start"'), 'pinch diagnostic missing');
+assert(ui.includes('diagnosticEvent("map:pan-start"'), 'pan diagnostic missing');
+assert(html.includes('data-utility-tab="diagnostica"'), 'diagnostics utility tab missing');
+assert(html.includes('id="fa-utility-diagnostics"'), 'diagnostics utility panel missing');
+console.log('fortress-mobile-diagnostics: 11/11 OK');
