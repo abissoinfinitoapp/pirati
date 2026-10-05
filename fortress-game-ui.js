@@ -1884,9 +1884,19 @@
     const gifts = $("fa-utility-gifts");
     renderUtilityPlayers();
     renderDiagnostics();
+
+    // B-Pack e Regali sono dati globali di sessione: devono essere visibili
+    // anche quando non esiste ancora un giocatore locale/focus valido.
+    if (progress) progress.innerHTML = `<div class="fa-utility-card"><h3>🎒 B-Pack & Progressi</h3><div class="fa-progress-big">${escapeHtml($("fa-money") ? $("fa-money").textContent : "0")} <small>B-Pack</small></div><p>Arsenale, cosmetici e ricompense cooperative restano accessibili da questo centro.</p></div>`;
+    if (gifts) {
+      const present = giftPresentPlayers();
+      const completed = Boolean(state.giftMachineCompleted);
+      gifts.innerHTML = `<div class="fa-utility-card fa-gift-utility-card"><h3>🎁 Macchina Regali</h3><p>Un giro, un regalo per ogni bambino presente. Ogni premio è un'arma reale della Libreria.</p><div class="fa-utility-facts"><span><b>Bambini</b>${present.length}</span><span><b>Stato</b>${completed ? "COMPLETATO" : "PRONTO"}</span></div>${completed ? `<p class="fa-panel-mini-help">Il giro Regali di questa missione è già stato completato.</p>` : `<button type="button" class="fa-btn fa-btn-primary" id="fa-start-gift-machine">🎁 AVVIA GIRO REGALI</button>`}</div>`;
+    }
+
     if (!player) {
       if (session) session.innerHTML = `<div class="fa-utility-card"><p>Nessun giocatore attivo.</p></div>`;
-      if (inventory) inventory.innerHTML = `<div class="fa-utility-card"><p>Nessun inventario disponibile.</p></div>`;
+      if (inventory) inventory.innerHTML = `<div class="fa-utility-card"><h3>🎒 Inventario</h3><p>Nessun giocatore attivo da mostrare.</p></div>`;
       return;
     }
     const zone = player.zoneId ? loop.getZone(state, player.zoneId) : null;
@@ -1903,12 +1913,6 @@
     const eq = player.equipment || {};
     const row = (label, item) => `<div class="fa-utility-equip-row"><span>${label}</span><strong>${item ? escapeHtml(item.name) : "—"}</strong></div>`;
     if (inventory) inventory.innerHTML = `<div class="fa-utility-card"><h3>🎒 Inventario di ${escapeHtml(player.name)}</h3>${row("Primaria",eq.primary)}${row("Secondaria",eq.secondary)}${row("Cura",eq.cura)}${row("Scudo",eq.scudo)}${row("Utility",eq.utility)}</div>`;
-    if (progress) progress.innerHTML = `<div class="fa-utility-card"><h3>🎒 B-Pack & Progressi</h3><div class="fa-progress-big">${escapeHtml($("fa-money") ? $("fa-money").textContent : "0")} <small>B-Pack</small></div><p>Arsenale, cosmetici e ricompense cooperative restano accessibili da questo centro.</p></div>`;
-    if (gifts) {
-      const present = giftPresentPlayers();
-      const completed = Boolean(state.giftMachineCompleted);
-      gifts.innerHTML = `<div class="fa-utility-card fa-gift-utility-card"><h3>🎁 Macchina Regali</h3><p>Un giro, un regalo per ogni bambino presente. Ogni premio è un'arma reale della Libreria.</p><div class="fa-utility-facts"><span><b>Bambini</b>${present.length}</span><span><b>Stato</b>${completed ? "COMPLETATO" : "PRONTO"}</span></div>${completed ? `<p class="fa-panel-mini-help">Il giro Regali di questa missione è già stato completato.</p>` : `<button type="button" class="fa-btn fa-btn-primary" id="fa-start-gift-machine">🎁 AVVIA GIRO REGALI</button>`}</div>`;
-    }
   }
 
 

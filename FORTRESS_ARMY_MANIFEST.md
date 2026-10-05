@@ -1018,3 +1018,8 @@ Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore es
 - Il roster del resume viene ricostruito dalla sessione salvata (`snapshot.roster`) e, come fallback, dai player runtime; non dipende più dal solo roster locale del dispositivo.
 - `UTILITÀ > PRESENZE` sincronizza sempre il roster UI con lo stato runtime prima del render, evitando il pannello vuoto dopo un resume.
 - Le presenze scelte prima del resume vengono applicate alla sessione tramite le API già esistenti di presenza/Director; nessuna nuova regola di gameplay.
+
+## V35 — Utility global content hotfix
+- B-Pack and Regali are rendered before the active-player guard, so those global panels never remain blank just because no local focus player is available.
+- Inventario now shows an explicit empty state when no active player can be resolved.
+- No gameplay/state rules changed.
