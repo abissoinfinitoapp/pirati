@@ -385,6 +385,165 @@
   const GIFT_RIVE_TRIGGER_NAME = "start";
   const GIFT_REVEAL_FALLBACK_MS = 5000;
 
+  /* =========================================================================
+     SOUND SYSTEM V1 — feedback percettivo. Gli SFX sono solo presentazione:
+     nessun play() può bloccare il Director o il loop di gioco. I nomi
+     corrispondono 1:1 ai file consegnati in /sound.
+     ========================================================================= */
+  const SFX_PATHS = Object.freeze({
+    "boost":"sound/boost.mp3", "boss-appear":"sound/boss-appear.mp3", "boss-attack":"sound/boss-attack.mp3",
+    "boss-defeated":"sound/boss-defeated.mp3", "boss-hit":"sound/boss-hit.mp3", "boss-warning":"sound/boss-warning.mp3",
+    "chest-open":"sound/chest-open.mp3", "enemy-alert":"sound/enemy-alert.mp3", "enemy-turn":"sound/enemy-turn.mp3",
+    "gift-machine-jackpot":"sound/gift-machine-jackpot.mp3", "gift-machine-loop":"sound/gift-machine-loop.mp3",
+    "gift-machine-slowdown":"sound/gift-machine-slowdown.mp3", "gift-machine-start":"sound/gift-machine-start.mp3",
+    "gift-machine-tick":"sound/gift-machine-tick.mp3", "gift-machine-win":"sound/gift-machine-win.mp3",
+    "heal":"sound/heal.mp3", "invalid":"sound/invalid.mp3", "inventory-equip":"sound/inventory-equip.mp3",
+    "ko":"sound/ko.mp3", "loot-found":"sound/loot-found.mp3", "move":"sound/move.mp3", "node-select":"sound/node-select.mp3",
+    "player-hit":"sound/player-hit.mp3", "rare-loot":"sound/rare-loot.mp3", "roll-critical":"sound/roll-critical.mp3",
+    "roll-fail":"sound/roll-fail.mp3", "roll-request":"sound/roll-request.mp3", "roll-success":"sound/roll-success.mp3",
+    "round-start":"sound/round-start.mp3", "shelter-enter":"sound/shelter-enter.mp3", "shelter-exit":"sound/shelter-exit.mp3",
+    "shield-hit":"sound/shield-hit.mp3", "shield":"sound/shield.mp3", "storm-coming":"sound/storm-coming.mp3",
+    "storm-hit":"sound/storm-hit.mp3", "storm-warning":"sound/storm-warning.mp3", "trap":"sound/trap.mp3",
+    "turn-player":"sound/turn-player.mp3", "vehicle":"sound/vehicle.mp3", "victory":"sound/victory.mp3",
+    "weapon-found":"sound/weapon-found.mp3", "zone-enter":"sound/zone-enter.mp3"
+  });
+  const SFX_VOLUME = .78;
+  const sfxBase = new Map();
+  let sfxEnabled = true;
+  let sfxUnlockAttempted = false;
+  let sfxLoopAudio = null;
+  let giftTickTimer = null;
+  let sfxLastTurnPlayerId = null;
+  let sfxLastPhase = null;
+  let sfxLastAwaitingRollKey = null;
+  let sfxLastLaunchKey = null;
+  let sfxLastAnnouncementKey = null;
+
+  function sfxAudio(id) {
+    if (!SFX_PATHS[id] || typeof Audio === "undefined") return null;
+    if (!sfxBase.has(id)) {
+      const audio = new Audio(SFX_PATHS[id]);
+      audio.preload = "auto";
+      audio.volume = SFX_VOLUME;
+      sfxBase.set(id, audio);
+    }
+    return sfxBase.get(id);
+  }
+
+  function playSfx(id, options = {}) {
+    if (!sfxEnabled || !SFX_PATHS[id]) return null;
+    const run = () => {
+      try {
+        const base = sfxAudio(id);
+        if (!base) return null;
+        const audio = base.cloneNode(true);
+        audio.volume = Math.max(0, Math.min(1, Number(options.volume ?? SFX_VOLUME)));
+        audio.loop = Boolean(options.loop);
+        const started = audio.play();
+        if (started && typeof started.catch === "function") started.catch(() => {});
+        return audio;
+      } catch (_) { return null; }
+    };
+    if (options.delay) { setTimeout(run, Math.max(0, Number(options.delay) || 0)); return null; }
+    return run();
+  }
+
+  function stopSfxLoop() {
+    if (!sfxLoopAudio) return;
+    try { sfxLoopAudio.pause(); sfxLoopAudio.currentTime = 0; } catch (_) {}
+    sfxLoopAudio = null;
+  }
+
+  function startSfxLoop(id, volume = .48) {
+    stopSfxLoop();
+    if (!sfxEnabled || !SFX_PATHS[id]) return;
+    try {
+      const base = sfxAudio(id);
+      if (!base) return;
+      const audio = base.cloneNode(true);
+      audio.loop = true; audio.volume = volume;
+      const started = audio.play();
+      if (started && typeof started.catch === "function") started.catch(() => {});
+      sfxLoopAudio = audio;
+    } catch (_) {}
+  }
+
+  function unlockSfx() {
+    if (sfxUnlockAttempted) return;
+    sfxUnlockAttempted = true;
+    try {
+      const audio = sfxAudio("node-select");
+      if (!audio) return;
+      audio.volume = 0;
+      const started = audio.play();
+      if (started && typeof started.then === "function") started.then(() => { try { audio.pause(); audio.currentTime = 0; audio.volume = SFX_VOLUME; } catch (_) {} }).catch(() => {});
+    } catch (_) {}
+  }
+
+  function announcementSfx(announcement) {
+    if (!announcement) return null;
+    const p = announcement.payload || {};
+    if (announcement.type === "round-start") return "round-start";
+    if (announcement.type === "boss-activated") return "boss-warning";
+    if (announcement.type === "ko" || announcement.type === "eliminated" || announcement.type === "defeat") return "ko";
+    if (announcement.type === "reinforcement") return "enemy-alert";
+    if (announcement.type === "victory") return "victory";
+    if (announcement.type === "storm-batch") {
+      if (Array.isArray(p.eliminated) && p.eliminated.length) return "storm-hit";
+      if (Array.isArray(p.storm) && p.storm.length) return "storm-coming";
+      if (Array.isArray(p.warning) && p.warning.length) return "storm-warning";
+    }
+    return null;
+  }
+
+  function syncGameplaySfx() {
+    if (!game || uiMode !== "game") return;
+    const dir = game.dir;
+    if (launchFlow) {
+      const key = `${launchFlow.mode}|${launchFlow.playerId}|${launchFlow.zoneId}`;
+      if (key !== sfxLastLaunchKey) { sfxLastLaunchKey = key; playSfx("roll-request"); }
+    } else sfxLastLaunchKey = null;
+
+    if (!dir) return;
+    if (dir.directorPhase !== sfxLastPhase) {
+      sfxLastPhase = dir.directorPhase;
+      if (dir.directorPhase === "enemy-phase") playSfx("enemy-turn");
+    }
+    if (dir.directorPhase === "player-turn") {
+      const pid = director.getCurrentPlayerId(game.state, dir);
+      if (pid && pid !== sfxLastTurnPlayerId) { sfxLastTurnPlayerId = pid; playSfx("turn-player"); }
+    }
+
+    const aw = dir.awaitingRoll;
+    if (aw) {
+      const key = `${aw.actorType}|${aw.actorId || ""}|${aw.targetId || ""}|${aw.diceCount}|${(aw.pendingRerollIndices || []).join(",")}`;
+      if (key !== sfxLastAwaitingRollKey) {
+        sfxLastAwaitingRollKey = key;
+        if (aw.actorType === "boss") playSfx("boss-attack");
+        else if (aw.actorType === "enemy" || aw.actorType === "enemy-pre-reaction") playSfx("enemy-turn");
+        else if (aw.actorType === "vehicle") playSfx("vehicle");
+        else playSfx("roll-request");
+      }
+    } else sfxLastAwaitingRollKey = null;
+
+    const announcement = dir.pendingAnnouncements && dir.pendingAnnouncements[0];
+    if (announcement) {
+      const key = `${announcement.type}|${JSON.stringify(announcement.payload || {})}`;
+      if (key !== sfxLastAnnouncementKey) {
+        sfxLastAnnouncementKey = key;
+        const id = announcementSfx(announcement);
+        if (id) playSfx(id);
+      }
+    } else sfxLastAnnouncementKey = null;
+  }
+
+  function isRareLoot(item) {
+    const rarity = String(item && item.rarity || "").toLowerCase();
+    return rarity.includes("epic") || rarity.includes("leggend") || rarity.includes("mitic") || rarity.includes("epica") || rarity.includes("rara");
+  }
+
+  window.FORTRESS_SFX = { play:playSfx, stopLoop:stopSfxLoop, setEnabled(value){ sfxEnabled = Boolean(value); if (!sfxEnabled) stopSfxLoop(); }, paths:SFX_PATHS };
+
 
   function isLanding() { return game && !game.dir; }
 
@@ -568,6 +727,7 @@
   }
   registerDiagnosticGlobalHandlers();
   ensureGlobalDiagnosticsUi();
+  document.addEventListener("pointerdown", unlockSfx, { once:true, capture:true });
   diagnosticEvent("boot:init");
   diagnosticCheckpoint("boot:init");
 
@@ -596,6 +756,76 @@
 
   function ensureSetupPlayers() {
     if (!setupPlayers) setupPlayers = defaultSetupPlayers();
+  }
+
+  function syncSetupRosterFromSnapshot(snapshot) {
+    ensureSetupPlayers();
+    if (!snapshot || !snapshot.game || !snapshot.game.state) return;
+    const runtimePlayers = Array.isArray(snapshot.game.state.players) ? snapshot.game.state.players : [];
+    const savedRoster = snapshot.roster && Array.isArray(snapshot.roster.players) ? snapshot.roster.players : [];
+    const avatars = snapshot.game.playerAvatars || {};
+    const savedById = new Map(savedRoster.map((p) => [p.id, p]));
+    const runtimeById = new Map(runtimePlayers.map((p) => [p.id, p]));
+    const maxRuntimeIndex = runtimePlayers.reduce((max, p) => {
+      const m = /^p(\d+)$/.exec(String(p.id || ""));
+      return m ? Math.max(max, Number(m[1])) : max;
+    }, 0);
+    const requestedCount = snapshot.roster ? Number(snapshot.roster.count) || 0 : 0;
+    setupCount = Math.max(2, Math.min(MAX_PLAYERS, Math.max(requestedCount, maxRuntimeIndex, savedRoster.length)));
+    const defaults = defaultSetupPlayers();
+    setupPlayers = defaults.map((d, i) => {
+      const current = setupPlayers && setupPlayers[i] ? setupPlayers[i] : d;
+      const id = d.id;
+      const saved = savedById.get(id) || savedRoster[i] || null;
+      const runtime = runtimeById.get(id) || null;
+      const merged = Object.assign({}, d, current, saved || {}, { id });
+      if (runtime) {
+        merged.name = runtime.name || merged.name;
+        merged.present = runtime.present !== false;
+        merged.avatarId = avatars[id] || merged.avatarId;
+        if (!merged.startingWeaponId && runtime.equipment && runtime.equipment.primary) merged.startingWeaponId = runtime.equipment.primary.id || null;
+      }
+      return merged;
+    });
+  }
+
+  function syncSetupRosterFromGame() {
+    if (!game || !game.state) return;
+    syncSetupRosterFromSnapshot({ game, roster:{ count:setupCount, players:setupPlayers } });
+  }
+
+  function resumePresenceSelection() {
+    ensureSetupPlayers();
+    return Object.fromEntries(setupPlayers.slice(0, setupCount).map((p) => [p.id, p.present !== false]));
+  }
+
+  function applyResumePresenceSelection(selection) {
+    if (!selection || !game || !game.state) return;
+    syncSetupRosterFromGame();
+    const state = game.state;
+    const entryZoneId = currentPresenceEntryZoneId();
+    setupPlayers.slice(0, setupCount).forEach((member) => {
+      if (!Object.prototype.hasOwnProperty.call(selection, member.id)) return;
+      const desired = selection[member.id] !== false;
+      member.present = desired;
+      const existing = loop.getPlayer(state, member.id);
+      if (!game.dir) {
+        if (existing) existing.present = desired;
+        return;
+      }
+      if (!desired && existing && existing.present !== false) {
+        loop.setPlayerPresence(state, member.id, false, entryZoneId, null);
+        director.handlePlayerDeactivated(state, game.dir, member.id);
+        return;
+      }
+      if (desired && (!existing || existing.present === false) && entryZoneId) {
+        loop.setPlayerPresence(state, member.id, true, entryZoneId, existing ? null : runtimeSpecForRosterMember(member));
+        game.playerAvatars = game.playerAvatars || {};
+        game.playerAvatars[member.id] = member.avatarId;
+        director.registerPresentPlayer(state, game.dir, member.id);
+      }
+    });
+    saveRoster();
   }
 
   function loadSavedSession() {
@@ -632,7 +862,7 @@
     }
   }
 
-  function resumeSavedSession() {
+  function resumeSavedSession(presenceSelection = null) {
     diagnosticEvent("resume:start");
     diagnosticCheckpoint("resume:start");
     try {
@@ -646,12 +876,13 @@
       game = snapshot.game;
       diagnosticCheckpoint("resume:game-restored", { savedAt:snapshot.savedAt || null });
       (game.state.players || []).forEach((p) => { if (p.present == null) p.present = true; });
-      if (snapshot.roster && Array.isArray(snapshot.roster.players)) {
-        setupCount = Math.max(2, Math.min(MAX_PLAYERS, Number(snapshot.roster.count) || 2));
-        const defaults = defaultSetupPlayers();
-        setupPlayers = defaults.map((d, i) => Object.assign({}, d, snapshot.roster.players[i] || {}, { id: d.id }));
-        saveRoster();
+      syncSetupRosterFromSnapshot(snapshot);
+      if (presenceSelection) {
+        setupPlayers.slice(0, setupCount).forEach((member) => {
+          if (Object.prototype.hasOwnProperty.call(presenceSelection, member.id)) member.present = presenceSelection[member.id] !== false;
+        });
       }
+      saveRoster();
       if (snapshot.ui) {
         magnifyMode = snapshot.ui.magnifyMode !== false;
         moveMode = Boolean(snapshot.ui.moveMode); scannerMode = Boolean(snapshot.ui.scannerMode);
@@ -665,6 +896,7 @@
       diagnosticEvent("resume:ui-restored", { launchMode:launchFlow ? launchFlow.mode : null });
       diagnosticCheckpoint("resume:before-render");
       uiMode = "game";
+      applyResumePresenceSelection(presenceSelection);
       render();
       diagnosticEvent("resume:done");
       diagnosticCheckpoint("resume:done");
@@ -727,7 +959,10 @@
       const st = savedSession.game && savedSession.game.state;
       const presentNames = st ? st.players.filter((p) => p.present !== false).map((p) => p.name).join(", ") : "";
       const round = st && st.round ? st.round : 0;
-      return `<div class="fa-resume-card"><div><strong>💾 PARTITA IN CORSO</strong><span>Round ${round || "atterraggio"} · ${escapeHtml(presentNames || "roster salvato")}</span></div><div class="fa-resume-actions"><button type="button" class="fa-btn fa-btn-primary" id="fa-resume-game">CONTINUA PARTITA</button><button type="button" class="fa-btn fa-btn-ghost" id="fa-new-game">NUOVA PARTITA</button></div></div>`;
+      const resumeRoster = setupPlayers.slice(0, setupCount);
+      const resumePresentCount = resumeRoster.filter((p) => p.present !== false).length;
+      const presenceChoices = resumeRoster.map((p) => `<label class="fa-resume-presence ${p.present !== false ? "is-present" : "is-absent"}"><input type="checkbox" data-resume-presence="${escapeHtml(p.id)}" ${p.present !== false ? "checked" : ""}><span>${escapeHtml(p.name)}</span></label>`).join("");
+      return `<div class="fa-resume-card"><div class="fa-resume-card-main"><div><strong>💾 PARTITA IN CORSO</strong><span>Round ${round || "atterraggio"} · ${escapeHtml(presentNames || "roster salvato")}</span></div><div class="fa-resume-presence-box"><b>CHI GIOCA OGGI?</b><div class="fa-resume-presence-list">${presenceChoices}</div><small>${resumePresentCount} presenti · puoi cambiarli prima di continuare</small></div></div><div class="fa-resume-actions"><button type="button" class="fa-btn fa-btn-primary" id="fa-resume-game" ${resumePresentCount < 2 ? "disabled" : ""}>CONTINUA PARTITA</button><button type="button" class="fa-btn fa-btn-ghost" id="fa-new-game">NUOVA PARTITA</button></div></div>`;
     })() : "";
 
     $("fa-setup-body").innerHTML = `
@@ -834,6 +1069,13 @@
     pushEvent(`${player.name}: ${label} a ${zone.name}${landing.damage ? ` · -${landing.damage} HP` : " · nessun danno"}`);
     diagnosticEvent("launch:resolved", { mode:flow.mode, playerId:flow.playerId, zoneId:flow.zoneId, outcome:landing.outcome, damage:landing.damage || 0, explorationStarted:Boolean(game.dir) });
     diagnosticCheckpoint("launch:resolved", { playerId:flow.playerId, zoneId:flow.zoneId });
+    if (landing.outcome === "perfetto") playSfx("roll-success");
+    else if (landing.outcome === "disastroso") playSfx("roll-fail");
+    else playSfx("roll-fail", { volume:.58 });
+    playSfx("zone-enter", { delay:180 });
+    if (landing.damage) playSfx("player-hit", { delay:420 });
+    if (outcome.lootFound) playSfx("loot-found", { delay:650 });
+    try { if (loop.enemiesInZone(state, flow.zoneId).some((enemy) => enemy.hp > 0)) playSfx("enemy-alert", { delay:820 }); } catch (_) {}
     launchFlow = null;
     render();
   }
@@ -1093,10 +1335,10 @@
   function renderPresenceBar() {
     const bar = $("fa-presence-bar");
     if (!bar) return;
-    if (uiMode !== "game" || !game || !game.dir) { bar.hidden = true; return; }
+    if (uiMode !== "game" || !game || !game.state) { bar.hidden = true; return; }
     bar.hidden = false;
-    ensureSetupPlayers();
-    const locked = Boolean(game.dir.awaitingRoll || game.dir.pendingReaction || game.dir.teamAttackPending);
+    syncSetupRosterFromGame();
+    const locked = !game.dir || Boolean(game.dir.awaitingRoll || game.dir.pendingReaction || game.dir.teamAttackPending);
     const presentCount = game.state.players.filter((p) => p.present !== false).length;
     const cards = setupPlayers.slice(0, setupCount).map((member) => {
       const runtime = loop.getPlayer(game.state, member.id);
@@ -1121,7 +1363,10 @@
         </div>
       </article>`;
     }).join("");
-    bar.innerHTML = `<div class="fa-presence-roster-head"><div><p class="fa-eyebrow">Roster permanente</p><h3>👥 Squadra · ${presentCount} presenti</h3><small>Gli assenti restano nel roster. Chi viene riattivato entra dalla Zona Sicura.</small></div></div>${locked ? `<p class="fa-panel-mini-help">Completa prima il tiro/reazione in corso per modificare le presenze.</p>` : ""}<div class="fa-presence-cards">${cards}</div>`;
+    const lockHelp = !game.dir
+      ? "Presenze visibili durante l’atterraggio; le modifiche diventano disponibili appena inizia il round."
+      : "Completa prima il tiro/reazione in corso per modificare le presenze.";
+    bar.innerHTML = `<div class="fa-presence-roster-head"><div><p class="fa-eyebrow">Roster permanente</p><h3>👥 Squadra · ${presentCount} presenti</h3><small>Gli assenti restano nel roster. Chi viene riattivato entra dalla Zona Sicura.</small></div></div>${locked ? `<p class="fa-panel-mini-help">${lockHelp}</p>` : ""}<div class="fa-presence-cards">${cards}</div>`;
   }
 
   function bindPresenceEvents() {
@@ -1331,6 +1576,12 @@
   function revealGiftReward() {
     if (!giftMachineFlow || giftMachineFlow.step !== "animating") return;
     if (giftRevealTimer) { clearTimeout(giftRevealTimer); giftRevealTimer = null; }
+    if (giftTickTimer) { clearInterval(giftTickTimer); giftTickTimer = null; }
+    stopSfxLoop();
+    playSfx("gift-machine-slowdown");
+    const rarity = String(giftMachineFlow.reward && giftMachineFlow.reward.weapon && giftMachineFlow.reward.weapon.rarity || "").toLowerCase();
+    const jackpot = rarity.includes("leggend") || rarity.includes("mitic");
+    playSfx(jackpot ? "gift-machine-jackpot" : "gift-machine-win", { delay:320 });
     giftMachineFlow.step = "reward";
     renderGiftMachine();
   }
@@ -1356,6 +1607,8 @@
   }
 
   function closeGiftMachine() {
+    if (giftTickTimer) { clearInterval(giftTickTimer); giftTickTimer = null; }
+    stopSfxLoop();
     const overlay = $("fa-gift-overlay");
     if (overlay) overlay.hidden = true;
   }
@@ -1369,6 +1622,10 @@
     // Appena il Master inserisce il D6, parte subito il trigger Rive `start`.
     // Il premio resta nascosto fino al termine dell'animazione.
     giftMachineFlow.step = "animating";
+    playSfx("gift-machine-start");
+    startSfxLoop("gift-machine-loop", .42);
+    if (giftTickTimer) clearInterval(giftTickTimer);
+    giftTickTimer = setInterval(() => playSfx("gift-machine-tick", { volume:.32 }), 650);
     renderGiftMachine();
     fireGiftRive();
   }
@@ -1462,7 +1719,7 @@
       if (slot) { collectGiftReward(slot.dataset.giftSlot); return; }
       const action = ev.target.closest("[data-gift-action]");
       if (!action) return;
-      if (action.dataset.giftAction === "ready") { giftMachineFlow.step = "roll"; renderGiftMachine(); return; }
+      if (action.dataset.giftAction === "ready") { giftMachineFlow.step = "roll"; playSfx("roll-request"); renderGiftMachine(); return; }
       if (action.dataset.giftAction === "collect") { collectGiftReward(); return; }
       if (action.dataset.giftAction === "close") { closeGiftMachine(); return; }
     });
@@ -1775,6 +2032,7 @@
     const dir = game.dir;
     if (dir && dir.pendingAnnouncements.length) renderAnnouncementOverlay(dir.pendingAnnouncements[0]);
     else $("fa-announcement-overlay").hidden = true;
+    syncGameplaySfx();
     persistSession();
     diagnosticCheckpoint("render:done");
   }
@@ -2425,9 +2683,15 @@
   function handleMoveNode(direction) {
     const state = game.state, dir = game.dir;
     const playerId = director.getCurrentPlayerId(state, dir);
+    const player = loop.getPlayer(state, playerId);
+    const wasHidden = Boolean(player && player.hiddenInShelter);
+    playSfx("node-select", { volume:.5 });
     try {
       director.performMoveNode(state, dir, playerId, direction);
+      if (wasHidden) playSfx("shelter-exit");
+      playSfx("move", { delay:70 });
     } catch (e) {
+      playSfx("invalid");
       pushEvent(e.message);
     }
     render();
@@ -2482,15 +2746,16 @@
       if (ev.target.id === "fa-vehicle-back" && vehicleFlow) { vehicleFlow.step = "crew"; vehicleFlow.gunnerTargets = [null,null]; render(); return; }
       if (ev.target.id === "fa-vehicle-crew-confirm" && vehicleFlow) {
         const ids = [vehicleFlow.pilotId].concat(vehicleFlow.gunnerIds || []);
-        if (ids.length !== 3 || new Set(ids).size !== 3) { pushEvent("MEZZO PESANTE — pilota e tiratori devono essere 3 giocatori diversi"); render(); return; }
+        if (ids.length !== 3 || new Set(ids).size !== 3) { playSfx("invalid"); pushEvent("MEZZO PESANTE — pilota e tiratori devono essere 3 giocatori diversi"); render(); return; }
         vehicleFlow.step = "target"; vehicleFlow.gunnerTargets = [null,null]; render(); return;
       }
       if (ev.target.id === "fa-vehicle-fire" && vehicleFlow) {
         const targets = Array.isArray(vehicleFlow.gunnerTargets) ? vehicleFlow.gunnerTargets : [];
-        if (targets.length !== 2 || targets.some((t)=>!t || !t.kind || !t.id)) { pushEvent("MEZZO PESANTE — ogni tiratore deve scegliere un bersaglio"); render(); return; }
+        if (targets.length !== 2 || targets.some((t)=>!t || !t.kind || !t.id)) { playSfx("invalid"); pushEvent("MEZZO PESANTE — ogni tiratore deve scegliere un bersaglio"); render(); return; }
         const currentId = director.getCurrentPlayerId(game.state, game.dir);
         try {
           director.beginVehicleSalvo(game.state, game.dir, currentId, vehicleFlow.pilotId, vehicleFlow.gunnerIds || [], targets);
+          playSfx("vehicle");
           const zone = loop.getZone(game.state, loop.getPlayer(game.state, currentId).zoneId);
           pushEvent(`MEZZO PESANTE — ${zone.vehicleVisit.vehicle.name}: bersagli confermati, ora tirate 3 D6`);
           vehicleFlow = null;
@@ -2515,6 +2780,7 @@
         try {
           const result = director.performPartyBoost(game.state, game.dir, currentId, declarations);
           partyBoostFlow.step = "result"; partyBoostFlow.result = result;
+          playSfx(result.successes > 0 ? "boost" : "roll-fail");
           pushEvent(`${result.tier === "big" ? "BIG BOOST" : result.tier === "party" ? "PARTY BOOST" : "BOOST FALLITO"} · ${result.successes} successi`);
         } catch (e) { pushEvent(e.message); }
         render(); return;
@@ -2942,6 +3208,7 @@
         break;
       }
       case "mezzo_pesante": {
+        playSfx("vehicle");
         vehicleFlow = { step:"crew", initiatorId:playerId, pilotId:playerId, gunnerIds:[] };
         pushEvent(`MEZZO PESANTE — prepara prima l'equipaggio`);
         break;
@@ -2963,12 +3230,14 @@
       }
       case "nasconditi": {
         const result = director.performNasconditi(state, dir, playerId);
+        playSfx("shelter-enter");
         pushEvent(`${player.name}: NASCOSTO NEL RIPARO · i nemici preferiranno bersagli esposti`);
         endsTurn = true;
         break;
       }
       case "piazza_trappola": {
         const result = director.performPiazzaTrappola(state, dir, playerId);
+        playSfx("trap");
         pushEvent(`${player.name}: TRAPPOLA ARMATA · ${result.damage} danni al primo nemico che entra`);
         endsTurn = true;
         break;
@@ -2980,8 +3249,8 @@
         break;
       }
       case "scambia": tradeFlow = { targetId }; break;
-      case "usa_cura": director.performUsaCura(state, dir, playerId); endsTurn = true; break;
-      case "usa_scudo": director.performUsaScudo(state, dir, playerId); endsTurn = true; break;
+      case "usa_cura": director.performUsaCura(state, dir, playerId); playSfx("heal"); endsTurn = true; break;
+      case "usa_scudo": director.performUsaScudo(state, dir, playerId); playSfx("shield"); endsTurn = true; break;
       case "usa_utility": {
         const result = director.performUsaUtility(state, dir, playerId, utilityId === "scanner" ? chestId : null, Math.random);
         if (result.type === "scanner") pushEvent(`SCANNER CASSA — ${lootEntryLabel(result.weapon)} + ${lootEntryLabel(result.support)}`);
@@ -2992,6 +3261,7 @@
       }
       case "apri_cassa": {
         const found = director.performApriCassa(state, dir, playerId, chestId, Math.random);
+        playSfx("chest-open");
         chestResult = found;
         pushEvent(`CASSA APERTA — a terra: ${lootEntryLabel(found.weapon)} + ${lootEntryLabel(found.support)}`);
         break;
@@ -3014,6 +3284,9 @@
     if (!resolved) return;
     if (entry.kind === "weapon") director.performEquipFoundWeapon(state, dir, playerId, slot, entry.instanceId, resolved);
     else director.performEquipFoundSupportItem(state, dir, playerId, slot, entry.instanceId, resolved);
+    if (entry.kind === "weapon") playSfx(isRareLoot(resolved) ? "rare-loot" : "weapon-found");
+    else playSfx("loot-found");
+    playSfx("inventory-equip", { delay:160, volume:.55 });
     pushEvent(`${player.name}: RACCOLTO — ${lootEntryLabel(entry)}`);
     // Modale cassa aperta (Guided Turn UI): la card appena presa sparisce; a
     // modale vuoto si chiude da sola (nessuna azione residua da compiere lì).
@@ -3068,7 +3341,13 @@
         destinyFlow = false; checkTurnTransition(before); render(); return;
       }
       if (btn.id === "fa-boss-continue") { director.beginBossRollStep(game.state, game.dir); render(); return; }
-      if (btn.id === "fa-end-round") { director.resolveEndOfRound(game.state, game.dir, Math.random); render(); return; }
+      if (btn.id === "fa-end-round") {
+        let stormWillHit = false;
+        try { stormWillHit = game.state.players.some((p) => p.status === "active" && director.getStormRisk(game.state, p).atRisk); } catch (_) {}
+        director.resolveEndOfRound(game.state, game.dir, Math.random);
+        if (stormWillHit) playSfx("storm-hit");
+        render(); return;
+      }
       if (btn.id === "fa-move-cancel") { moveMode = false; render(); return; }
       if (btn.id === "fa-magnify-toggle") { magnifyMode = !magnifyMode; render(); return; }
       if (btn.id === "fa-trade-cancel") { tradeFlow = null; render(); return; }
@@ -3132,6 +3411,8 @@
   function bindAnnouncementEvents() {
     $("fa-announcement-overlay").addEventListener("click", (ev) => {
       if (ev.target.id === "fa-announcement-continue") {
+        const currentAnnouncement = game.dir && game.dir.pendingAnnouncements && game.dir.pendingAnnouncements[0];
+        if (currentAnnouncement && currentAnnouncement.type === "boss-activated") playSfx("boss-appear");
         director.acknowledgeAnnouncement(game.state, game.dir);
         render();
       }
@@ -3466,6 +3747,27 @@
     handleRollOutcome(outcome, aw, preSnapshot);
   }
 
+  function playRollOutcomeSfx(outcome, aw, result) {
+    if (!aw || !result) return;
+    if (aw.actorType === "player") {
+      const damage = Number(result.damage ?? result.total ?? 0);
+      if (aw.targetKind === "boss") {
+        if (result.eliminated) playSfx("boss-defeated");
+        else if (damage > 0) playSfx("boss-hit");
+        else playSfx("roll-fail");
+      } else if (result.eliminated) playSfx("roll-critical");
+      else playSfx(damage > 0 ? "roll-success" : "roll-fail");
+      return;
+    }
+    if (["enemy","enemy-pre-reaction","reaction","counter","structure","boss"].includes(aw.actorType)) {
+      const shieldLost = Number(result.shieldBefore || 0) > Number(result.shieldAfter || 0);
+      const hpLost = Number(result.hpBefore || 0) > Number(result.hpAfter || 0);
+      if (shieldLost) playSfx("shield-hit");
+      if (hpLost) playSfx("player-hit", { delay:shieldLost ? 120 : 0 });
+      if (result.fallen || result.eliminated) playSfx("ko", { delay:220 });
+    }
+  }
+
   function handleRollOutcome(outcome, aw, preSnapshot) {
     if (outcome.status === "needs-reroll") {
       diceSelections = new Array(outcome.rerollIndices.length).fill(null);
@@ -3478,6 +3780,7 @@
       return;
     }
     pendingResult = buildPendingResult(outcome, aw, preSnapshot);
+    playRollOutcomeSfx(outcome, aw, pendingResult);
     diceSelections = null;
     render();
   }
@@ -4448,12 +4751,20 @@
         renderSetup();
         return;
       }
-      if (ev.target.id === "fa-resume-game") { diagnosticEvent("resume:click"); diagnosticCheckpoint("resume:click"); resumeSavedSession(); return; }
+      if (ev.target.id === "fa-resume-game") { diagnosticEvent("resume:click"); diagnosticCheckpoint("resume:click"); resumeSavedSession(resumePresenceSelection()); return; }
       if (ev.target.id === "fa-new-game") { clearSavedSession(); renderSetup(); return; }
       if (ev.target.id === "fa-setup-start") attemptStartGame();
     });
     $("fa-setup-screen").addEventListener("change", (ev) => {
       if (ev.target.id === "fa-setup-count-select") { setupCount = Number(ev.target.value); saveRoster(); renderSetup(); return; }
+      const resumePresence = ev.target.closest("input[data-resume-presence]");
+      if (resumePresence) {
+        const member = setupPlayers.slice(0, setupCount).find((p) => p.id === resumePresence.dataset.resumePresence);
+        if (member) member.present = resumePresence.checked;
+        saveRoster();
+        renderSetup();
+        return;
+      }
       const presence = ev.target.closest("input[data-setup-presence]");
       if (presence) { setupPlayers[Number(presence.dataset.setupPresence)].present = presence.checked; saveRoster(); renderSetup(); return; }
       const weaponSelect = ev.target.closest("select[data-start-weapon]");
@@ -4474,6 +4785,7 @@
   loadRoster();
   ensureSetupPlayers();
   savedSession = loadSavedSession();
+  if (savedSession) syncSetupRosterFromSnapshot(savedSession);
   diagnosticEvent("boot:saved-session-check", { hasSavedSession:Boolean(savedSession), savedAt:savedSession && savedSession.savedAt ? savedSession.savedAt : null });
 
   bindSetupEvents();

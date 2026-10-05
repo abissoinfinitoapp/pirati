@@ -2271,3 +2271,59 @@ body.fa-game-active .fa-header { display:none; }
   .fa-global-diag-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fa-global-diag-toggle { right: 7px; bottom: 7px; padding: 7px 9px; }
 }
+
+/* ===== Utility compact rail + resume attendance V34 ===== */
+.fa-utility-grid{
+  display:flex!important;
+  grid-template-columns:none!important;
+  gap:6px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  flex:0 0 auto;
+  margin-bottom:8px;
+  padding:2px 1px 5px;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.fa-utility-tile{
+  flex:0 0 auto;
+  min-width:104px;
+  min-height:44px;
+  padding:7px 10px;
+  flex-direction:row;
+  gap:7px;
+  border-radius:11px;
+  font-size:16px;
+  white-space:nowrap;
+}
+.fa-utility-tile span{font-size:10px;}
+.fa-utility-content{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;}
+.fa-resume-card-main{min-width:0;display:flex;flex-direction:column;gap:10px;}
+.fa-resume-presence-box{padding:10px;border:1px solid var(--fa-line);border-radius:12px;background:rgba(0,0,0,.16);}
+.fa-resume-presence-box>b{display:block;font-size:10px;letter-spacing:.08em;color:var(--fa-muted);margin-bottom:7px;}
+.fa-resume-presence-list{display:flex;gap:6px;flex-wrap:wrap;}
+.fa-resume-presence{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:5px 9px;border:1px solid var(--fa-line);border-radius:999px;background:rgba(255,255,255,.035);font-size:12px;font-weight:800;cursor:pointer;}
+.fa-resume-presence.is-present{border-color:rgba(76,180,108,.45);background:rgba(76,180,108,.10);}
+.fa-resume-presence.is-absent{opacity:.62;}
+.fa-resume-presence input{margin:0;}
+.fa-resume-presence-box small{display:block;margin-top:7px;color:var(--fa-muted);font-size:11px;}
+
+@media (max-width:600px){
+  .fa-utility-panel{
+    width:100vw!important;
+    max-width:100vw!important;
+    height:100dvh;
+    max-height:100dvh!important;
+    border-radius:0!important;
+    padding:10px!important;
+  }
+  .fa-utility-head{align-items:center;margin-bottom:6px;}
+  .fa-utility-head .fa-eyebrow{display:none;}
+  .fa-utility-head h2{font-size:18px;}
+  .fa-utility-head #fa-utility-close{min-height:36px;padding:6px 10px;}
+  .fa-utility-grid{margin-left:-2px;margin-right:-2px;}
+  .fa-utility-tile{min-width:auto;min-height:40px;padding:6px 9px;font-size:15px;}
+  .fa-utility-tile span{font-size:9px;}
+  .fa-resume-presence-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+  .fa-resume-presence{width:100%;box-sizing:border-box;}
+}

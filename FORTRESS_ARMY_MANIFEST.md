@@ -1001,3 +1001,20 @@ Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore es
 - `resumeSavedSession()` è protetta da `try/catch`: in caso di errore viene salvato stack/messaggio e viene aperta direttamente la diagnostica globale.
 - Dopo un blocco è possibile ricaricare la pagina e consultare/copiare il log senza riprendere la sessione.
 - Nessuna modifica a gameplay, Director, combat o regole di movimento.
+
+## 2026-09-29 — Sound system V33
+- Integrata la cartella root `sound/` consegnata dall'utente con 42 MP3, mantenendo esattamente gli ID/nome file.
+- Aggiunto `FORTRESS_SFX`: gestore centralizzato non bloccante; eventuali rifiuti browser di `Audio.play()` vengono assorbiti e non possono interrompere Director/render.
+- Unlock audio al primo `pointerdown` per aumentare l'affidabilità su browser mobile.
+- Feedback di stato automatico: turno giocatore, fase nemici, richiesta dadi, round, tempesta, boss, KO, vittoria.
+- Feedback azioni: movimento/nodo, ingresso zona, danni/scudo, cassa, loot/arma rara, equip, cura/scudo, rifugio, trappola, Party Boost e mezzo pesante.
+- Gift Machine sonorizzata con start, loop, tick, slowdown e win/jackpot; loop/timer vengono sempre fermati alla rivelazione o chiusura.
+- Nessuna modifica a Director, engine, dadi fisici o regole di gameplay.
+
+## 2026-10-05 — Utility compacta + presenze su ripresa V34
+- Il menu di `UTILITÀ` non occupa più una griglia alta: diventa una rail orizzontale compatta e scrollabile, con contenuto che usa tutto lo spazio verticale restante.
+- Su smartphone la modale Utilità usa l'intera viewport (`100dvh`) e mantiene header/menu compatti, lasciando il corpo realmente interagibile.
+- La card `PARTITA IN CORSO` mostra ora `CHI GIOCA OGGI?` con un toggle per ogni membro del roster prima di `CONTINUA PARTITA`.
+- Il roster del resume viene ricostruito dalla sessione salvata (`snapshot.roster`) e, come fallback, dai player runtime; non dipende più dal solo roster locale del dispositivo.
+- `UTILITÀ > PRESENZE` sincronizza sempre il roster UI con lo stato runtime prima del render, evitando il pannello vuoto dopo un resume.
+- Le presenze scelte prima del resume vengono applicate alla sessione tramite le API già esistenti di presenza/Director; nessuna nuova regola di gameplay.
