@@ -1030,3 +1030,10 @@ Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore es
 - I membri assenti possono restare incompleti nel roster senza impedire l'avvio della nuova partita.
 - Restano obbligatori almeno 2 presenti e, per ciascun presente, avatar + arma iniziale validi.
 - Nessuna modifica a gameplay, Utility, B-Pack, Regali, audio o diagnostica.
+
+### V37 — Setup 10 giocatori robusto (08/10/2026)
+- Confermato limite ufficiale `MAX_PLAYERS = 10`.
+- Il setup normalizza sempre l'arma iniziale dei giocatori presenti: se una scelta salvata manca o non è più valida, assegna automaticamente la Starter, che per regola è sempre disponibile.
+- `INIZIA PARTITA` accetta esplicitamente da 2 a 10 presenti e non si spegne più per un `startingWeaponId` mancante/transitorio del decimo giocatore.
+- Il controllo finale prima dell'avvio ripete la normalizzazione e rifiuta solo oltre 10 giocatori o presenti senza avatar.
+- Test aggiunto: 10/10 presenti configurati, con fallback Starter sul decimo; 11 giocatori restano rifiutati.
