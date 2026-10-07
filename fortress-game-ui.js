@@ -952,9 +952,10 @@
     }).join("");
 
     const registered = setupPlayers.slice(0, setupCount);
-    const presentCount = registered.filter((p) => p.present).length;
-    const allAvatarsChosen = registered.every((p) => p.avatarId && p.startingWeaponId);
-    const canStart = allAvatarsChosen && presentCount >= 2;
+    const presentPlayers = registered.filter((p) => p.present);
+    const presentCount = presentPlayers.length;
+    const presentPlayersReady = presentPlayers.every((p) => p.avatarId && p.startingWeaponId);
+    const canStart = presentPlayersReady && presentCount >= 2;
     const resume = savedSession ? (() => {
       const st = savedSession.game && savedSession.game.state;
       const presentNames = st ? st.players.filter((p) => p.present !== false).map((p) => p.name).join(", ") : "";
@@ -979,9 +980,9 @@
 
   function attemptStartGame() {
     const registered = setupPlayers.slice(0, setupCount);
-    if (registered.some((p) => !p.avatarId || !p.startingWeaponId)) { setupError = "Completa avatar e arma iniziale di tutto il roster."; renderSetup(); return; }
     const active = registered.filter((p) => p.present);
     if (active.length < 2) { setupError = "Servono almeno 2 bambini presenti per iniziare."; renderSetup(); return; }
+    if (active.some((p) => !p.avatarId || !p.startingWeaponId)) { setupError = "Completa avatar e arma iniziale solo dei bambini presenti oggi."; renderSetup(); return; }
     setupError = null;
     saveRoster();
     clearSavedSession();

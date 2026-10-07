@@ -1023,3 +1023,10 @@ Test dedicati: 4/4 verdi, incluso lo scenario reale `entry sicura + giocatore es
 - B-Pack and Regali are rendered before the active-player guard, so those global panels never remain blank just because no local focus player is available.
 - Inventario now shows an explicit empty state when no active player can be resolved.
 - No gameplay/state rules changed.
+
+## 2026-10-07 — Nuova partita / validazione presenze V36
+- Corretto il blocco permanente di `INIZIA PARTITA` introdotto con la gestione roster/presenze.
+- Il setup ora valida avatar e arma iniziale esclusivamente per i bambini marcati `PRESENTE OGGI`.
+- I membri assenti possono restare incompleti nel roster senza impedire l'avvio della nuova partita.
+- Restano obbligatori almeno 2 presenti e, per ciascun presente, avatar + arma iniziale validi.
+- Nessuna modifica a gameplay, Utility, B-Pack, Regali, audio o diagnostica.
