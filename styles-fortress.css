@@ -2327,3 +2327,72 @@ body.fa-game-active .fa-header { display:none; }
   .fa-resume-presence-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
   .fa-resume-presence{width:100%;box-sizing:border-box;}
 }
+
+/* V38 — Arena PvP separata dall'Avventura. */
+.fa-arena-entry{display:grid;gap:9px;padding:15px;margin:12px 0;border:1px solid #8b7951;border-radius:12px;background:#1c242d;color:#f3e8cf}
+.fa-arena-entry span,.fa-arena-entry small{font-size:.88rem}
+.fa-arena-overlay{position:fixed;inset:0;z-index:99990;background:#101923;overflow:auto;color:#f9f1dc;padding:16px;box-sizing:border-box;font-family:inherit}
+.fa-arena-overlay[hidden]{display:none!important}
+.fa-arena-panel{max-width:750px;margin:auto;padding:16px;background:#202d3a;border-radius:18px;min-height:90vh;box-sizing:border-box;text-align:center}
+.fa-arena-header{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #647080;padding-bottom:14px}
+.fa-arena-panel h2{font-size:1.35rem;margin:25px 0 15px;color:#f5d990}.fa-arena-panel h3{font-size:1.2rem;margin:16px 0}
+.fa-arena-btn{border:1px solid #e3b762;border-radius:10px;background:#66471c;color:#fff5dc;font-size:1.05rem;font-weight:800;min-height:55px;padding:12px 15px;cursor:pointer}
+.fa-arena-btn:disabled{opacity:.45;cursor:default}.fa-arena-header .fa-arena-btn{font-size:.72rem;min-height:37px;padding:6px}
+.fa-arena-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0}
+.fa-arena-choices .fa-arena-btn{display:flex;flex-direction:column;justify-content:center;gap:8px;overflow-wrap:anywhere;font-size:.85rem}
+.fa-arena-versus{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:18px 4px;background:#2a3d4c;border-radius:12px;font-size:1.05rem;font-weight:800}
+.fa-arena-dice{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.fa-arena-dice .fa-arena-btn{font-size:2rem;min-height:76px;background:#dcd6c5;color:#181b20}
+.fa-arena-event{color:#ffe09a;background:#514022;padding:13px;border-radius:10px;font-weight:800}
+.fa-arena-score{font-size:2rem;font-weight:900;padding:28px 0}
+.fa-arena-roster{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:25px;border-top:1px solid #647080;padding-top:18px}
+.fa-arena-roster span{background:#344657;padding:7px;border-radius:7px;font-size:.77rem}.fa-arena-roster .fa-arena-out{opacity:.4;text-decoration:line-through}
+@media(max-width:520px){.fa-arena-panel{padding:10px}.fa-arena-header strong{font-size:.85rem}.fa-arena-choices{grid-template-columns:1fr}.fa-arena-dice{gap:8px}}
+
+/* V39: roster PvP separato dalla modalità Avventura */
+.fa-arena-player-list{display:grid;gap:8px;margin:20px 0;text-align:left}
+.fa-arena-player-row{display:grid;grid-template-columns:85px minmax(0,1fr) minmax(100px,150px);align-items:center;gap:8px;background:#2b3c4b;padding:9px;border-radius:9px}
+.fa-arena-player-row label{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.fa-arena-player-row input[type="text"],.fa-arena-player-row select{min-width:0;width:100%;box-sizing:border-box;border:1px solid #8997a2;border-radius:7px;background:#142430;color:#fff;padding:9px;font:inherit}
+.fa-arena-player-row input[type="checkbox"]{width:20px;height:20px}
+.fa-arena-error{color:#ffc5a9;font-weight:700}
+@media(max-width:520px){.fa-arena-player-row{grid-template-columns:70px minmax(0,1fr);}.fa-arena-player-row select{grid-column:2}}
+
+/* V40 — immagini delle tre armi in Arena, riprese dal catalogo esistente. */
+.fa-arena-choices .fa-arena-btn{align-items:center;min-width:0;padding:12px 8px}
+.fa-arena-weapon-image{display:flex;align-items:center;justify-content:center;width:100%;height:122px;border-radius:8px;background:rgba(0,0,0,.19);overflow:hidden}
+.fa-arena-weapon-image img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.fa-arena-weapon-placeholder{font-size:2rem;opacity:.65}
+.fa-arena-weapon-name{display:block;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+.fa-arena-choices .fa-arena-btn small{opacity:.83}
+@media(max-width:520px){.fa-arena-choices .fa-arena-btn{min-height:165px}.fa-arena-weapon-image{height:120px}}
+
+/* V41 — due dadi visibili e conferma esplicita del turno */
+.fa-arena-turn-instruction{font-size:1.08rem;line-height:1.5}
+.fa-arena-roll-slots{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:18px 0}
+.fa-arena-roll-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:94px;height:105px;border:2px solid #728394;border-radius:13px;background:#172532}
+.fa-arena-roll-slot small{font-size:.8rem;color:#e3e9ef;font-weight:700}
+.fa-arena-roll-slot strong{font-size:2.4rem;color:white}
+.fa-arena-roll-active{border-color:#ffd275;box-shadow:0 0 0 2px rgba(255,210,117,.2)}
+.fa-arena-roll-filled{border-color:#76b997}
+.fa-arena-roll-hint{font-weight:750;color:#f5d990}
+.fa-arena-panel .fa-arena-btn[data-arena="confirm-dice"]{display:block;width:100%;margin:16px 0 8px;background:#34634d;border-color:#90c7a5}
+@media(max-width:520px){.fa-arena-roll-slot{width:80px;height:92px}.fa-arena-roll-slot strong{font-size:2rem}}
+
+/* Arena V42: reset sempre raggiungibile anche da smartphone. */
+.fa-arena-header-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.fa-arena-header .fa-arena-btn[data-arena="reset"]{background:#62302b;border-color:#d8988a}
+@media(max-width:520px){.fa-arena-header{align-items:flex-start;flex-wrap:wrap}.fa-arena-header-actions{width:100%;justify-content:space-between}.fa-arena-header-actions .fa-arena-btn{flex:1}}
+
+/* V43: Splatter House, evento collettivo tra gli scontri. */
+.fa-arena-splatter{padding:15px;border:2px solid #b64b4b;border-radius:14px;background:linear-gradient(145deg,#321a24,#202d3a);margin:20px 0}
+.fa-arena-splatter h2{color:#ffb2a3}.fa-arena-splatter-results{text-align:left;max-width:460px;margin:16px auto}
+.fa-arena-splatter-results p{padding:9px 12px;background:#1b2936;border-radius:8px;margin:6px 0}
+.fa-arena-splatter .fa-arena-btn[data-arena="splatter-next"]{width:100%;background:#763b34;border-color:#d58c7f}
+
+/* V44 — Animal Battle; card compatte leggibili su telefono. */
+.fa-arena-animal-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.fa-arena-animal{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 5px;border:1px solid rgba(213,158,86,.55);border-radius:12px;background:rgba(54,37,24,.5);text-align:center}
+.fa-arena-animal>span{font-size:38px;line-height:1.25}
+.fa-arena-animal>strong{font-size:14px}
+.fa-arena-animal>small{opacity:.8}
+@media(max-width:460px){.fa-arena-animal-cards{gap:5px}.fa-arena-animal{padding:10px 3px}.fa-arena-animal>span{font-size:31px}}

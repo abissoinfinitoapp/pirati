@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm');
+const source=fs.readFileSync(__dirname+'/../fortress-game-ui.js','utf8');
+const start=source.indexOf('  const ARENA_KEY =');
+const code=source.slice(start,source.indexOf('  /* =========================================================================\n     AVVIO',start));
+const store=new Map();
+const ctx={localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},ARMI:Array.from({length:10},(_,i)=>({id:'w'+i,name:'W'+i,rarity:'C'})),MAX_PLAYERS:10,CHARACTERS:[{id:'a',name:'A'},{id:'b',name:'B'}],setupPlayers:[{id:'p1',name:'P1',avatarId:'a',present:true},{id:'p2',name:'P2',avatarId:'b',present:true}],setupCount:2,defaultSetupPlayers:()=>Array.from({length:10},(_,i)=>({id:`empty${i}`,name:`Empty ${i}`,avatarId:null,present:false})),weaponsApi:{},imgTag:()=>'',escapeHtml:String,renderSetup(){},playSfx(){},document:{createElement(){return {addEventListener(){}}},body:{appendChild(){}}},$(){return null},Math};
+vm.createContext(ctx);vm.runInContext(code,ctx);
+const run=s=>vm.runInContext(s,ctx);
+run('arenaLoadRoster();arenaNewTournament();arena.stage="ready";arenaChoosePair()');
+run('arenaInputDie(1);arenaInputDie(6)');
+assert.equal(run('arena.stage'),'attack','Secondo dado non deve cambiare automaticamente turno');
+assert.equal(run('arena.match.attack.length'),2);
+run('arenaConfirmDice()');assert.equal(run('arena.stage'),'defense');
+run('arenaInputDie(2);arenaInputDie(2)');assert.equal(run('arena.stage'),'defense','Secondo dado difesa non deve risolvere');
+run('arenaConfirmDice()');assert.equal(run('arena.stage'),'result');assert.equal(run('arena.result.delta'),3);
+assert.match(source,/DADO \$\{i\+1\}/);assert.match(source,/CONFERMA ATTACCO/);
+console.log('V41: due dadi per fase, conferme esplicite, risoluzione solo dopo difesa OK');
