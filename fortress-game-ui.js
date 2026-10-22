@@ -4787,6 +4787,7 @@
     try { const v = JSON.parse(localStorage.getItem(ARENA_KEY) || "null");
       if (v && v.version === 1 && Array.isArray(v.players) && v.players.length >= 2 && v.players.length <= 10) {
         arena = v;
+        if (arena.stage === "gift" && arena.giftAnimating) { arena.giftAnimating = false; arenaStore(); }
         if (!arena.animals) arena.animals={waves:0,fighters:[]}; // Compatibilità salvataggi V43
       }
     } catch (_) {}
@@ -4800,10 +4801,179 @@
   }
   function arenaRandom(max) { return Math.floor(Math.random() * max); } // Solo matchmaking/eventi, MAI risultati dei dadi
   function arenaShuffle(xs) { const a = xs.slice(); for (let i=a.length-1;i>0;i--) { const j=arenaRandom(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-  function arenaPickWeapons() {
-    const pool = arenaShuffle(ARMI.filter((w) => w && w.id && w.name));
-    return pool.slice(0,3).map((w) => w.id);
+  // Premi di equipaggiamento Arena: separati dalle armi della modalità Avventura.
+  const ARENA_LOOT_WEAPONS=[
+    {id:"plasma",name:"Pistola al Plasma",bonus:1,kind:"attack"},
+    {id:"rifle",name:"Fucile d'Assalto",bonus:2,kind:"attack"},
+    {id:"cannon",name:"Cannone Devastante",bonus:3,kind:"attack"},
+    {id:"rocket",name:"Lanciarazzi",bonus:0,kind:"rocket"},
+    {id:"shield",name:"Scudo Balistico",bonus:2,kind:"defense"},
+    {id:"cursed",name:"Arma Maledetta",bonus:4,kind:"cursed"}
+  ];
+  // V50: armi epiche e leggendarie monouso, indipendenti dall'arma persistente.
+  const ARENA_SPECIAL_WEAPONS=[
+    {id:"epic-rifle",name:"Fucile Epico",tier:"epica",bonus:4,kind:"damage"},
+    {id:"titan-gun",name:"Mitragliatore Titanico",tier:"epica",bonus:6,kind:"damage"},
+    {id:"plasma-cannon",name:"Cannone al Plasma",tier:"epica",bonus:8,kind:"damage"},
+    {id:"legend-rocket",name:"Lanciarazzi Leggendario",tier:"leggendaria",bonus:0,kind:"any-ko"},
+    {id:"world-breaker",name:"Distruttore di Mondi",tier:"leggendaria",bonus:0,kind:"beast-ko"},
+    {id:"champion-fury",name:"Furia del Campione",tier:"leggendaria",bonus:8,kind:"damage"}
+  ];
+  function arenaSpecial(p){return ARENA_SPECIAL_WEAPONS.find(w=>w.id===p?.specialWeapon)||null;}
+  function arenaDrawSpecial(){const epics=ARENA_SPECIAL_WEAPONS.filter(w=>w.tier==="epica"),legend=ARENA_SPECIAL_WEAPONS.filter(w=>w.tier==="leggendaria");const pool=arenaRandom(100)<70?epics:legend;return pool[arenaRandom(pool.length)];}
+  // V54: equip iniziale dal catalogo; unico bonus persistente, sostituito dai ritrovamenti.
+  const ARENA_GIFT_BONUS={comune:0,"non-comune":1,rara:2,epica:3,leggendaria:4,mitica:5};
+  function arenaGiftName(p){return p?.giftWeapon?.name||"";}
+  function arenaGiftBonus(p){return p?.giftWeapon?ARENA_GIFT_BONUS[p.giftWeapon.rarity]||0:0;}
+  // V57: il caricamento non basta: attendere un frame realmente visibile.
+  let arenaGiftRive = null;
+  let arenaGiftRiveTrigger = null;
+  let arenaGiftRevealTimer = null;
+  let arenaGiftProbeTimer = null;
+  let arenaGiftAttempt = 0;
+  const ARENA_RIVE_CONFIGS = [
+    { artboard: null, machine: "State Machine 1" },
+    { artboard: "Artboard 1", machine: "State Machine 1" }
+  ];
+  function arenaGiftRiveStatus(message) {
+    const status = $("fa-arena-gift-status");
+    if (status) status.textContent = message || "";
   }
+  function arenaGiftRiveCleanup() {
+    if (arenaGiftRevealTimer) clearTimeout(arenaGiftRevealTimer);
+    arenaGiftRevealTimer = null;
+    if (arenaGiftProbeTimer) clearTimeout(arenaGiftProbeTimer);
+    arenaGiftProbeTimer = null;
+    try { arenaGiftRive?.cleanup(); } catch (_) {}
+    arenaGiftRive = null;
+    arenaGiftRiveTrigger = null;
+  }
+  function arenaGiftRiveInit(attempt = 0) {
+    if (!arena || arena.stage !== "gift" || arenaGiftRive) return;
+    const canvas = $("fa-arena-gift-canvas");
+    if (!canvas || !window.rive?.Rive) {
+      arenaGiftRiveStatus("Animazione Rive non disponibile; l’estrazione resta utilizzabile.");
+      return;
+    }
+    const config = ARENA_RIVE_CONFIGS[attempt];
+    if (!config) {
+      arenaGiftRiveStatus("Macchinario non visibile. Controllare asset Rive e dimensioni del canvas.");
+      return;
+    }
+    arenaGiftAttempt = attempt;
+    const machine = config.machine;
+    let instance;
+    const options = {
+      src: GIFT_RIVE_SRC, canvas, autoplay: true,
+      stateMachine: machine,
+      layout: window.rive.Layout ? new window.rive.Layout({
+        fit: window.rive.Fit?.Contain, alignment: window.rive.Alignment?.Center
+      }) : undefined,
+      onLoad: () => {
+        if (arenaGiftRive !== instance) return;
+        const resize = () => { try { instance.resizeDrawingSurfaceToCanvas(); } catch (_) {} };
+        resize();
+        try {
+          arenaGiftRiveTrigger = (instance.stateMachineInputs(machine) || [])
+            .find(input => input?.name === GIFT_RIVE_TRIGGER_NAME && typeof input.fire === "function") || null;
+        } catch (_) { arenaGiftRiveTrigger = null; }
+        // Aspetta frame effettivi: un onLoad positivo può comunque mostrare un canvas vuoto.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (arenaGiftRive !== instance) return;
+          resize();
+          arenaGiftProbeTimer = setTimeout(() => {
+            if (arenaGiftRive !== instance) return;
+            const visible = giftCanvasHasPixels(canvas);
+            if ((!visible || !arenaGiftRiveTrigger) && attempt + 1 < ARENA_RIVE_CONFIGS.length) {
+              try { instance.cleanup(); } catch (_) {}
+              arenaGiftRive = null;
+              arenaGiftRiveTrigger = null;
+              arenaGiftProbeTimer = null;
+              arenaGiftRiveInit(attempt + 1);
+              return;
+            }
+            arenaGiftRiveStatus(visible ? "" : "Macchinario non visibile; l’estrazione resta disponibile.");
+            // Se il bambino ha già tirato mentre Rive caricava, aziona ora il trigger.
+            if (arena?.giftAnimating && arenaGiftRiveTrigger) {
+              try { arenaGiftRiveTrigger.fire(); } catch (_) {}
+            }
+          }, 300);
+        }));
+      },
+      onLoadError: () => {
+        if (arenaGiftRive !== instance) return;
+        try { instance.cleanup(); } catch (_) {}
+        arenaGiftRive = null;
+        arenaGiftRiveTrigger = null;
+        if (attempt + 1 < ARENA_RIVE_CONFIGS.length) arenaGiftRiveInit(attempt + 1);
+        else arenaGiftRiveStatus("Impossibile caricare il macchinario Rive.");
+      }
+    };
+    if (config.artboard) options.artboard = config.artboard;
+    arenaGiftRiveStatus("Caricamento macchinario…");
+    try { instance = new window.rive.Rive(options); arenaGiftRive = instance; }
+    catch (_) {
+      if (attempt + 1 < ARENA_RIVE_CONFIGS.length) arenaGiftRiveInit(attempt + 1);
+      else arenaGiftRiveStatus("Impossibile avviare il macchinario Rive.");
+    }
+  }
+  function arenaGiftReveal() {
+    if (!arena || arena.stage !== "gift" || !arena.giftAnimating) return;
+    arena.giftAnimating = false;
+    arenaGiftRiveCleanup();
+    arenaStore(); playSfx("gift-machine-win"); renderArena();
+  }
+  function arenaGiftPlay() {
+    try { arenaGiftRiveTrigger?.fire?.(); } catch (_) {}
+    playSfx("gift-machine-start");
+    if (typeof setTimeout === "function") arenaGiftRevealTimer = setTimeout(arenaGiftReveal, GIFT_REVEAL_FALLBACK_MS);
+  }
+  function arenaGiftRoll(n){
+    if(!arena||arena.stage!=="gift")return;
+    if(typeof giftMachineApi?.drawArenaWeapon !== "function") {
+      arenaRosterError="Modulo Macchina Regali non aggiornato: installa fortress-gift-machine.js V54 (drawArenaWeapon).";
+      const status=$("fa-arena-gift-status");
+      if(status) status.textContent=arenaRosterError;
+      const actions=$("fa-arena-gift-actions");
+      if(actions) actions.insertAdjacentHTML("afterbegin",`<p role="alert" class="fa-arena-error">${arenaEscape(arenaRosterError)}</p>`);
+      return;
+    }
+    const p=arena.players[arena.giftIndex||0];if(!p||p.giftWeapon)return;
+    try {
+      const drawn=giftMachineApi.drawArenaWeapon(n,Math.random,arena.players.map(x=>x.giftWeapon?.id).filter(Boolean));
+      p.giftWeapon={id:drawn.weaponId,name:drawn.weapon.name,rarity:drawn.rarity,image:drawn.image||null};
+      arena.giftReveal=true;arena.giftAnimating=true;arenaStore();arenaGiftPlay();renderArenaGiftPending();
+    }catch(err){arenaRosterError=err?.message||"Errore estrazione arma";renderArena();}
+  }
+  function renderArenaGiftPending() {
+    const actions = $("fa-arena-gift-actions");
+    if (actions) actions.innerHTML = '<p class="fa-arena-gift-wait" role="status">🎁 LA MACCHINA STA ESTRAENDO L’ARMA…</p>';
+  }
+  function arenaGiftNext(){
+    if(!arena||arena.stage!=="gift"||!arena.giftReveal||arena.giftAnimating)return;
+    arenaGiftRiveCleanup();
+    arena.giftIndex=(arena.giftIndex||0)+1;arena.giftReveal=false;arenaRosterError="";
+    if(arena.giftIndex>=arena.players.length)arena.stage="ready";
+    arenaStore();renderArena();
+  }
+  function arenaJoinPlayer(index){
+    if(!arena||!["ready","result","splatter-result"].includes(arena.stage))return;
+    arenaLoadRoster();const r=arenaRoster[index];
+    if(!r||arena.players.length>=MAX_PLAYERS||arena.players.some(p=>p.id===r.id)||!r.name.trim()||!r.avatarId||arena.players.some(p=>p.avatarId===r.avatarId))return;
+    if(!giftMachineApi?.drawArenaWeapon)return;
+    try{
+      const item=giftMachineApi.drawArenaWeapon(1,Math.random,arena.players.map(x=>x.giftWeapon?.id).filter(Boolean));
+      const p={id:r.id,name:r.name,avatarId:r.avatarId,hp:100,maxHp:100,shield:40,maxShield:40,attacks:0,defends:0,
+        skill:null,skillUsed:{},lastMatch:arena.exchange,arenaWeapon:null,specialWeapon:null,weaponId:null,
+        giftWeapon:{id:item.weaponId,name:item.weapon.name,rarity:item.rarity,image:item.image||null}};
+      arena.players.push(p);r.selected=true;arenaSaveRoster();arenaRosterError="";
+      arenaStore();renderArena();
+    }catch(err){arenaRosterError=err?.message||"Ingresso non disponibile";renderArena();}
+  }
+  function arenaWeapon(p) {return ARENA_LOOT_WEAPONS.find(w=>w.id===p?.arenaWeapon)||null;}
+  function arenaWeaponLabel(p) {return arenaWeapon(p)?.name||"";}
+  function arenaWeaponDice(p,attacking){return attacking&&arenaWeapon(p)?.kind==="rocket"?1:0;}
+  function arenaEquipWeapon(p,w) {if(!p||!w)return; p.arenaWeapon=w.id; p.giftWeapon=null;}
   const ARENA_SKILLS_KEY="fortress-army-arena-champion-skills-v1";
   const ARENA_SKILLS=[
     {id:"fire",name:"Potenza di Fuoco",description:"+2 a un dado di attacco"},
@@ -4821,11 +4991,16 @@
   function arenaSkill(p) {return p&&!p.animal&&p.hp>0?p.skill:null;}
   function arenaSkillName(id) {return ARENA_SKILLS.find(x=>x.id===id)?.name||"";}
   function arenaEliminateSkill(p) {if(p&&!p.animal&&p.hp<=0) {p.skill=null;p.skillUsed=null;} }
-  function arenaSkillDice(p,attacking) {return (attacking&&(p.boost||arenaSkill(p)==="destiny"))?3:2;}
+  function arenaSkillDice(p,attacking) {return (attacking&&(p.boost||arenaSkill(p)==="destiny"||arenaWeaponDice(p,attacking)))?3:2;}
   function arenaDiceTotal(p,rolls,attacking) {
     let total=rolls.reduce((a,b)=>a+b,0);
+    const weapon=arenaWeapon(p);
+    if(!p?.animal && p?.giftWeapon && !weapon) total+=attacking?arenaGiftBonus(p):0;
+    if(weapon&&((attacking&&weapon.kind!=="defense")||(!attacking&&weapon.kind==="defense")))total+=weapon.bonus;
     if(attacking&&arenaSkill(p)==="fire") total+=2;
     if(attacking&&arenaSkill(p)==="devastating") total+=rolls.length*2;
+    if(attacking && p?.animal) total+=(p.attackBonus||0);
+    if(attacking && arenaSpecial(p)) total+=arenaSpecial(p).bonus;
     return total;
   }
   function arenaAwardSkill(id) {
@@ -4845,6 +5020,38 @@
     {id:"rinoceronte",name:"Rinoceronte",maxHp:140,icon:"🦏"}, {id:"cinghiale",name:"Cinghiale",maxHp:80,icon:"🐗"},
     {id:"gorilla",name:"Gorilla",maxHp:125,icon:"🦍"}
   ];
+  // Avversari stravaganti: condividono il motore degli animali (dadi, HP, turnazione e Splatter).
+  const ARENA_ODD_CREATURES = [
+    {id:"pollo-terminator",name:"Pollo Terminator",maxHp:85,icon:"🐓"},
+    {id:"banana-ninja",name:"Banana Ninja",maxHp:75,icon:"🍌"},
+    {id:"wc-corazzato",name:"WC Corazzato",maxHp:125,icon:"🚽"},
+    {id:"cactus-pugile",name:"Cactus Pugile",maxHp:100,icon:"🌵"},
+    {id:"papera-infernale",name:"Papera Infernale",maxHp:90,icon:"🦆"}
+  ];
+  const ARENA_BEAST_POOL = [...ARENA_ANIMALS,...ARENA_ODD_CREATURES];
+  const ARENA_BEAST_UPGRADES = [
+    {id:"armored",label:"CORAZZA",shield:60},
+    {id:"ferocious",label:"FURIA",attackBonus:2},
+    {id:"giant",label:"GIGANTE",extraHp:40}
+  ];
+  function arenaUpgradeBeast(beast, upgrade) {
+    if (!beast || !beast.animal || beast.hp<=0 || !upgrade || beast.upgrade) return false;
+    beast.upgrade=upgrade.id;
+    beast.upgradeName=beast.species==="elefante" && upgrade.id==="armored" ? "ELEFANTE CORAZZATO" : `${beast.name} ${upgrade.label}`;
+    if(upgrade.shield) beast.shield=(beast.shield||0)+upgrade.shield;
+    if(upgrade.attackBonus) beast.attackBonus=upgrade.attackBonus;
+    if(upgrade.extraHp) {beast.maxHp+=upgrade.extraHp;beast.hp+=upgrade.extraHp;}
+    return true;
+  }
+  function arenaMaybeUpgradeBeast() {
+    // Un potenziamento massimo per creatura. Nessuna azione/polling aggiuntivo.
+    if(!arena || arena.exchange<3 || arenaRandom(100)>=28) return null;
+    const eligible=arenaAliveAnimals().filter(a=>!a.upgrade);
+    if(!eligible.length) return null;
+    const beast=eligible[arenaRandom(eligible.length)];
+    const upgrade=ARENA_BEAST_UPGRADES[arenaRandom(ARENA_BEAST_UPGRADES.length)];
+    return arenaUpgradeBeast(beast,upgrade)?`${beast.upgradeName}! Potenziamento attivo fino all'eliminazione.`:null;
+  }
   function arenaPlayer(id) { return [...arena.players,...(arena.animals?.fighters||[])].find((p) => p.id === id); }
   function arenaAlivePlayers() { return arena.players.filter((p) => p.hp > 0); }
   function arenaAliveAnimals() { return (arena.animals?.fighters||[]).filter((p) => p.hp > 0); }
@@ -4871,7 +5078,7 @@
   function arenaBeginAnimalWave() {
     if (!arenaShouldAnimalWave()) return false;
     const used=new Set(arena.animals.fighters.map(a=>a.species));
-    const choices=arenaShuffle(ARENA_ANIMALS.filter(a=>!used.has(a.id))).slice(0,3);
+    const choices=arenaShuffle(ARENA_BEAST_POOL.filter(a=>!used.has(a.id))).slice(0,3);
     const wave=++arena.animals.waves;
     for (const a of choices) arena.animals.fighters.push({id:`animal-${wave}-${a.id}`,species:a.id,
       name:a.name,icon:a.icon,animal:true,maxHp:a.maxHp,hp:a.maxHp,shield:0,attacks:0,defends:0,lastMatch:0});
@@ -4891,23 +5098,23 @@
     const nextPlayers=members.map((p)=>{
       const skill=skillBook[p.id]||null;
       return {id:p.id,name:p.name,avatarId:p.avatarId,hp:skill==="defense"?200:100,
-        maxHp:skill==="defense"?200:100,shield:skill==="defense"?200:0,attacks:0,defends:0,
-        skill,skillUsed:{},lastMatch:0,weaponId:null,choices:arenaPickWeapons()};
+        maxHp:skill==="defense"?200:100,shield:skill==="defense"?200:40,maxShield:skill==="defense"?200:40,attacks:0,defends:0,
+        skill,skillUsed:{},lastMatch:0,arenaWeapon:null,specialWeapon:null,weaponId:null,giftWeapon:null};
     });
     for(const p of members) delete skillBook[p.id];
     arenaWriteSkillBook(skillBook);
-    arena = { version:1, tournament:(arena ? arena.tournament + 1 : 1), stage:"weapons", pickIndex:0,
+    arena = { version:1, tournament:(arena ? arena.tournament + 1 : 1), stage:"gift", giftIndex:0,giftReveal:false,pickIndex:0,
       players:nextPlayers,
       match:null, exchange:0, result:null, winner:null, log:[],
-      splatter:{target:1+arenaRandom(3),count:0,rolls:[],outcomes:[]},
-      animals:{waves:0,fighters:[]} };
+      splatter:{target:1+arenaRandom(3),count:0,rolls:[],outcomes:[],nextAt:5+arenaRandom(3)},
+      animals:{waves:0,fighters:[]},specialDropNext:2+arenaRandom(2) };
     arenaStore(); renderArena();
   }
   // Splatter House: un tiro fisico per ogni superstite, danno applicato solo dopo tutti i tiri.
   function arenaShouldSplatter() {
     if (!arena || arena.stage !== "ready" || arenaAlivePlayers().length < 1 || arenaAlive().length < 2) return false;
     const sp=arena.splatter;
-    return !!sp && sp.count < sp.target && (sp.count === 0 || arena.exchange >= 3);
+    return !!sp && sp.count < sp.target && arena.exchange >= (sp.nextAt ?? 5);
   }
   function arenaBeginSplatter() {
     if (!arenaShouldSplatter()) return false;
@@ -4940,6 +5147,7 @@
       sp.eliminatedAnimals=arenaAliveAnimals().map(animal=>({id:animal.id,name:animal.name}));
       for (const animal of arenaAliveAnimals()) { animal.hp=0; arena.animals.splatterKills=(arena.animals.splatterKills||0)+1; }
       sp.count++;
+      sp.nextAt=arena.exchange+4+arenaRandom(3);
       arena.stage="splatter-result";
       playSfx(arenaAlive().length===0?"ko":"storm-warning");
     }
@@ -4978,7 +5186,38 @@
     }
     arena.exchange++;
     let event=null;
-    if (arena.exchange>1 && arenaAlivePlayers().length>1 && arenaRandom(100)<17) {
+    // Le creature possono trovare corazze e potenziamenti indipendentemente dai giocatori.
+    const beastEvent=arenaMaybeUpgradeBeast();
+    if(beastEvent) event=beastEvent;
+    // Ritrovamento garantito ogni 2-3 scontri: un solo colpo speciale conservato fino al prossimo attacco.
+    if(arena.exchange >= (arena.specialDropNext||2)) {
+      const recipients=arenaAlivePlayers().filter(p=>!p.specialWeapon);
+      if(recipients.length) {
+        const recipient=recipients[arenaRandom(recipients.length)], special=arenaDrawSpecial();
+        recipient.specialWeapon=special.id;
+        // Il colpo speciale include la scelta del bersaglio: non serve Sfida Diretta.
+        recipient.specialTargetPending=true;
+        event=[event,`${recipient.name} trova ${special.name.toUpperCase()} (${special.tier})! Un attacco speciale con bersaglio a scelta.`].filter(Boolean).join(" · ");
+      }
+      arena.specialDropNext=arena.exchange+2+arenaRandom(2);
+    }
+    // Ritrovamenti: solo per un giocatore vivo; arma valida fino alla sua eliminazione.
+    if(arena.exchange>=2 && arenaRandom(100)<35) {
+      const recipients=arenaAlivePlayers();
+      const recipient=recipients[arenaRandom(recipients.length)];
+      if(recipient) {
+        if(arenaRandom(100)<25){
+          recipient.directChallenges=(recipient.directChallenges||0)+1;
+          event=[event,`${recipient.name} trova SFIDA DIRETTA: puo scegliere chi attaccare!`].filter(Boolean).join(" · ");
+        } else {
+          const weapon=ARENA_LOOT_WEAPONS[arenaRandom(ARENA_LOOT_WEAPONS.length)];
+          arenaEquipWeapon(recipient,weapon);
+          event=[event,`${recipient.name} trova ${weapon.name}! Bonus attivo fino alla sua eliminazione.`].filter(Boolean).join(" · ");
+        }
+      }
+    }
+
+    if (!event && arena.exchange>1 && arenaAlivePlayers().length>1 && arenaRandom(100)<17) {
       const eligible=[a,d].filter(p=>!p.animal && (p.hp<(p.maxHp||100)||p.shield===0));
       if(eligible.length) {
         const target=eligible[arenaRandom(eligible.length)], type=arenaRandom(3);
@@ -4987,30 +5226,56 @@
         else {target.boost=true;event=`${target.name} trova POTENZA: +1 dado nel proprio prossimo attacco`;}
       }
     }
+    // Priorita' immediata ai colpi speciali: niente attese o catene di attacchi extra.
+    const specialChallenger=arenaAlivePlayers().find(p=>p.specialTargetPending && p.specialWeapon && arenaAlive().some(q=>q.id!==p.id));
+    if(specialChallenger){
+      specialChallenger.specialTargetPending=false;
+      arena.pendingMatch={a:specialChallenger.id,event,fromSpecial:true};arena.stage="direct-target";arenaStore();return;
+    }
+    // Il possessore di Sfida Diretta sceglie il bersaglio prima dei dadi.
+    const challengers=arenaAlivePlayers().filter(p=>(p.directChallenges||0)>0 && arenaAlive().some(q=>q.id!==p.id));
+    if(challengers.length){
+      const challenger=challengers.sort((x,y)=>(y.directChallenges||0)-(x.directChallenges||0))[0];
+      arena.pendingMatch={a:challenger.id,event}; arena.stage="direct-target"; arenaStore(); return;
+    }
     arena.match={a:a.id,b:d.id,attack:[],defense:[],event}; arena.stage="attack"; arenaStore();
   }
   function arenaResolve() {
     const m=arena.match, a=arenaPlayer(m.a), d=arenaPlayer(m.b);
     const attack=arenaDiceTotal(a,m.attack,true), defense=arenaDiceTotal(d,m.defense,false), delta=attack-defense;
     const levels=[0,40,70,80,100];
+    const special=arenaSpecial(a);
     let level=delta<=0?0:Math.min(4,delta);
+    // I KO speciali richiedono sempre che l'attacco superi la difesa.
+    if(delta>0&&special&&((special.kind==="any-ko")||(special.kind==="beast-ko"&&d.animal)))level=4;
     if(level>0&&arenaSkill(d)==="armor")level--;
     let percent=levels[level];
     if(percent>0&&arenaSkill(d)==="dodge"&&!d.skillUsed?.dodge){percent=0;d.skillUsed.dodge=true;}
-    const blocked=percent===100?0:Math.min(d.shield,Math.ceil((d.maxHp||100)*percent/100));
-    d.shield-=blocked;
+    // V51: una parata debole consuma protezione, e senza scudo intacca la salute.
+    // Scarto <= -4: perfetta (0); -3..-1: 10; 0: 20.
+    // Le parate ottenute grazie all'armatura seguono il livello di pressione piu' alto.
+    const parryPressure=percent===0?(d.skillUsed?.dodge&&delta>0?0:delta<=-4?0:delta<0?10:20):0;
     const maxHp=d.maxHp||100;
-    const rawDamage=percent===100?d.hp:Math.ceil(maxHp*percent/100);
-    d.hp=Math.max(0,d.hp-(percent===100?d.hp:Math.max(0,rawDamage-blocked)));
+    const rawDamage=percent===100?d.hp:percent>0?Math.ceil(maxHp*percent/100):parryPressure;
+    const blocked=percent===100?0:Math.min(Math.max(0,d.shield||0),rawDamage);
+    d.shield=Math.max(0,(d.shield||0)-blocked);
+    const hpDamage=percent===100?d.hp:Math.max(0,rawDamage-blocked);
+    d.hp=Math.max(0,d.hp-hpDamage);
     if(d.hp===0&&d.skill==="phoenix"&&!d.skillUsed?.phoenix){d.hp=Math.ceil(maxHp*.4);d.skillUsed.phoenix=true;}
     if(percent>0&&arenaSkill(a)==="vampire")a.hp=Math.min(a.maxHp||100,a.hp+Math.ceil((a.maxHp||100)*.2));
+    if(arenaWeapon(a)?.kind==="cursed")a.hp=Math.max(0,a.hp-Math.ceil((a.maxHp||100)*.2));
+    if(a.hp===0)arenaEliminateSkill(a);
+    // Monouso: il colpo si consuma anche in caso di parata.
+    if(special){a.specialWeapon=null;a.specialTargetPending=false;}
+    if(d.hp===0){d.giftWeapon=null;d.arenaWeapon=null;d.specialWeapon=null;d.specialTargetPending=false;}
+    if(a.hp===0){a.giftWeapon=null;a.arenaWeapon=null;a.specialWeapon=null;a.specialTargetPending=false;}
     arenaEliminateSkill(d);
     a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
-    arena.result={attack,defense,delta,percent,blocked,eliminated:d.hp===0};
+    arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null};
     arena.log.unshift({number:arena.exchange,a:a.name,b:d.name,delta,eliminated:d.hp===0});
     arena.log=arena.log.slice(0,12);
     arena.stage="result"; arenaStore();
-    if (delta>0) playSfx(d.hp===0?"ko":"player-hit"); else playSfx("roll-success");
+    if (d.hp===0) playSfx("ko"); else if(hpDamage>0) playSfx("player-hit"); else if(blocked>0) playSfx("shield-hit"); else playSfx("roll-success");
   }
   function arenaInputDie(n) {
     if (!arena || !arena.match || !Number.isInteger(n) || n < 1 || n > 6) return;
@@ -5055,18 +5320,26 @@
       root.addEventListener("click",(ev)=>{
         const btn=ev.target.closest("button[data-arena]"); if (!btn) return;
         const op=btn.dataset.arena;
-        if(op==="exit") { root.hidden=true; arena=null; renderSetup(); return; }
+        if(op==="exit") { arenaGiftRiveCleanup(); root.hidden=true; arena=null; renderSetup(); return; }
         if(op==="reset") {
           if (!arena) return;
           if (typeof confirm !== "function" || !confirm("Annullare il Deathmatch in corso? Gli scontri non completati andranno persi. I partecipanti e i premi precedenti resteranno salvati.")) return;
-          arenaResetTournament(); return;
+          arenaGiftRiveCleanup(); arenaResetTournament(); return;
         }
         if(op==="skill") {arenaAwardSkill(btn.dataset.skill);return;}
         if(op==="reroll") {arenaReroll();return;}
         if(op==="start") { arenaNewTournament(); return; }
-        if(op==="setup") { arena=null; arenaRosterError=""; renderArena(); return; }
-        if(op==="choose") { const p=arena.players[arena.pickIndex], w=p.choices.find((id)=>id===btn.dataset.weapon); if(!w)return;
-          p.weaponId=w; arena.pickIndex++; if(arena.pickIndex>=arena.players.length) { arena.stage="ready"; } arenaStore(); renderArena(); return; }
+        if(op==="gift-die") { arenaGiftRoll(Number(btn.dataset.die)); return; }
+        if(op==="gift-next") { arenaGiftNext(); return; }
+        if(op==="join") { arenaJoinPlayer(Number(btn.dataset.index)); return; }
+        if(op==="setup") { arenaGiftRiveCleanup(); arena=null; arenaRosterError=""; renderArena(); return; }
+        if(op==="direct-target" && arena?.stage==="direct-target") {
+          const attacker=arenaPlayer(arena.pendingMatch?.a), defender=arenaPlayer(btn.dataset.target);
+          if(!attacker||attacker.hp<=0||!defender||defender.hp<=0||attacker.id===defender.id)return;
+          if(!arena.pendingMatch?.fromSpecial) attacker.directChallenges=Math.max(0,(attacker.directChallenges||0)-1);
+          arena.match={a:attacker.id,b:defender.id,attack:[],defense:[],event:arena.pendingMatch.event||(arena.pendingMatch.fromSpecial?"ARMA SPECIALE!":"SFIDA DIRETTA!")};
+          arena.pendingMatch=null;arena.stage="attack";arenaStore();renderArena();return;
+        }
         if(op==="fight" && arena.stage==="ready") {
           if (!arenaBeginAnimalWave() && !arenaBeginSplatter()) arenaChoosePair();
           renderArena(); return;
@@ -5097,11 +5370,43 @@
       });
     } return root;
   }
+  function arenaBars(p) {
+    const hpMax=Math.max(1,Number(p.maxHp)||100),hp=Math.max(0,Math.min(hpMax,Number(p.hp)||0));
+    // Lo scudo base non aveva maxShield; renderizziamo almeno 100, o il massimo della skill/upgrade.
+    const shield=Math.max(0,Number(p.shield)||0),shieldMax=Math.max(1,Number(p.maxShield)||40,shield);
+    const bar=(label,value,max,color)=>`<div class="fa-arena-meter"><div class="fa-arena-meter-label"><span>${label}</span><strong>${value}/${max}</strong></div><div class="fa-arena-meter-track" role="progressbar" aria-label="${label}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${value}"><div class="fa-arena-meter-fill" style="width:${Math.max(0,Math.min(100,value/max*100))}%;background:${color}"></div></div></div>`;
+    return `<div class="fa-arena-bars">${bar("❤️ VITA",hp,hpMax,"#d34c53")}${bar("🛡️ SCUDO",shield,shieldMax,"#369bd9")}</div>`;
+  }
+  // V52: riepilogo delle dotazioni dallo stato reale del combattente, senza duplicare inventari.
+  function arenaEquipment(p) {
+    if (!p) return "";
+    const entries=[];
+    const weapon=arenaWeapon(p),special=arenaSpecial(p),skill=arenaSkill(p);
+    if (p.giftWeapon && !weapon) entries.push({icon:"🎁",name:arenaGiftName(p),detail:`${p.giftWeapon.rarity} · +${arenaGiftBonus(p)} attacco`,type:"weapon"});
+    if (weapon) entries.push({icon:"🔫",name:weapon.name,detail:weapon.kind==="rocket"?"+1 dado in attacco":weapon.kind==="defense"?`+${weapon.bonus} difesa`:`+${weapon.bonus} attacco`,type:"weapon"});
+    if (special) entries.push({icon:"💥",name:special.name,detail:`${special.tier} · 1 attacco`,type:"special"});
+    if (skill) entries.push({icon:"✨",name:arenaSkillName(skill),detail:"Skill campione",type:"skill"});
+    if (p.boost) entries.push({icon:"⚡",name:"Potenza",detail:"+1 dado al prossimo attacco",type:"boost"});
+    if ((p.directChallenges||0)>0) entries.push({icon:"🎯",name:"Sfida Diretta",detail:`${p.directChallenges} disponibili`,type:"direct"});
+    if (p.upgradeName) entries.push({icon:"🐾",name:p.upgradeName,detail:"Potenziamento",type:"upgrade"});
+    if (!entries.length) entries.push({icon:"—",name:"Nessuna dotazione",detail:"",type:"empty"});
+    return `<div class="fa-arena-equipment" aria-label="Dotazioni ${arenaEscape(p.name)}"><div class="fa-arena-equipment-title">🎒 DOTAZIONI</div><div class="fa-arena-equipment-items">${entries.map(e=>`<div class="fa-arena-equipment-item fa-arena-equipment-${e.type}"><span aria-hidden="true">${e.icon}</span><span><strong>${arenaEscape(e.name)}</strong>${e.detail?`<small>${arenaEscape(e.detail)}</small>`:""}</span></div>`).join("")}</div></div>`;
+  }
   function renderArena() {
     const root=arenaRoot(); root.hidden=false;
+    const arenaBarStyles=`<style>
+      .fa-arena-gift-stage{text-align:center;max-width:760px;margin:auto}
+      .fa-arena-gift-machine{width:100%;max-width:520px;aspect-ratio:16/10;margin:12px auto;position:relative}
+      .fa-arena-gift-machine canvas{display:block;width:100%;height:100%}
+      #fa-arena-gift-status{font-size:.78rem;position:absolute;bottom:0;left:0;right:0}
+      .fa-arena-gift-dice{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:440px;margin:12px auto}
+      .fa-arena-gift-dice .fa-arena-btn{width:100%;height:64px;min-height:0;padding:4px;font-size:1.5rem;line-height:1;display:flex;align-items:center;justify-content:center}
+      .fa-arena-gift-wait{font-weight:800;padding:14px}
+      @media(max-width:380px){.fa-arena-gift-dice .fa-arena-btn{height:54px}.fa-arena-gift-machine{aspect-ratio:4/3}}
+.fa-arena-damage-guide{margin:12px 0;padding:10px;border:1px solid rgba(150,160,175,.35);border-radius:10px;background:rgba(120,135,160,.1)}.fa-arena-damage-guide summary{cursor:pointer;font-weight:800}.fa-arena-damage-guide table{width:100%;border-collapse:collapse;font-size:.84em;text-align:left}.fa-arena-damage-guide th,.fa-arena-damage-guide td{padding:5px 4px;border-bottom:1px solid rgba(150,160,175,.25)}.fa-arena-damage-guide p{font-size:.8em;line-height:1.45;margin:6px 0}.fa-arena-equipment{margin-top:9px}.fa-arena-equipment-title{font-size:.75em;letter-spacing:.06em;opacity:.8;margin-bottom:5px;font-weight:700}.fa-arena-equipment-items{display:flex;flex-wrap:wrap;gap:6px}.fa-arena-equipment-item{display:flex;gap:5px;align-items:flex-start;padding:5px 8px;border-radius:8px;background:rgba(130,145,165,.13);border:1px solid rgba(150,160,175,.2);font-size:.82em;min-width:0}.fa-arena-equipment-item strong{display:block;overflow-wrap:anywhere}.fa-arena-equipment-item small{display:block;opacity:.8}.fa-arena-equipment-special{border-color:rgba(205,157,75,.65);background:rgba(198,146,56,.16)}.fa-arena-equipment-skill{border-color:rgba(151,105,198,.55)}.fa-arena-roster .fa-arena-equipment-item{font-size:.75em}.fa-arena-fighter-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:12px 0}.fa-arena-fighter-card{border:1px solid rgba(150,160,175,.32);border-radius:12px;padding:12px;background:rgba(40,50,65,.22)}.fa-arena-fighter-card>strong{display:block;margin-bottom:10px}.fa-arena-bars{display:grid;gap:9px}.fa-arena-meter-label{display:flex;justify-content:space-between;gap:10px;font-size:.85em;margin-bottom:3px}.fa-arena-meter-track{width:100%;height:13px;border-radius:8px;background:rgba(130,135,145,.3);overflow:hidden}.fa-arena-meter-fill{height:100%;border-radius:8px;transition:width .15s ease}.fa-arena-roster .fa-arena-bars{margin-top:7px}.fa-arena-roster .fa-arena-meter-track{height:8px}.fa-arena-defense-note{font-size:.85em;opacity:.85;margin:7px 0}</style>`;
     const btn=(action,label,extra="")=>`<button class="fa-arena-btn" data-arena="${action}" ${extra}>${label}</button>`;
     const header=`<header class="fa-arena-header"><strong>⚔️ FORTRESS ARENA · PvP</strong><div class="fa-arena-header-actions">${arena ? btn("reset","↻ RESET TORNEO") : ""}${btn("exit","ESCI DALL'ARENA")}</div></header>`;
-    const roster=arena ? `<div class="fa-arena-roster">${arena.players.map(p=>`<span class="${p.hp<=0?'fa-arena-out':''}">${arenaEscape(p.name)}${arenaSkill(p)?" ✨ "+arenaEscape(arenaSkillName(p.skill)):""} · ${p.hp}${p.maxHp===200?"/200":"%"} ❤️${p.shield?' 🛡️'+p.shield:''}</span>`).join("")}${(arena.animals?.fighters||[]).map(p=>`<span class="${p.hp<=0?'fa-arena-out':''}">${p.icon} ${arenaEscape(p.name)} · ${p.hp}/${p.maxHp} HP</span>`).join("")}</div>` : "";
+    const roster=arena ? `<div class="fa-arena-roster">${[...arena.players,...(arena.animals?.fighters||[])].map(p=>`<div class="${p.hp<=0?'fa-arena-out':''}"><strong>${p.icon||'🎮'} ${arenaEscape(p.name)}</strong>${arenaBars(p)}${arenaEquipment(p)}</div>`).join("")}</div>` : "";
     let body="";
     if (!arena) {
       arenaLoadRoster();
@@ -5116,17 +5421,24 @@
         ${arenaRosterError?`<p role="alert" class="fa-arena-error">${arenaEscape(arenaRosterError)}</p>`:''}
         ${btn("start","INIZIA TORNEO",selected<2?'disabled':'')}`;
     }
-    else if (arena.stage==="weapons") {
-      const p=arena.players[arena.pickIndex];body=`<h2>TORNEO ${arena.tournament} · SCEGLI UN'ARMA</h2><h3>${arenaEscape(p.name)} (${arena.pickIndex+1}/${arena.players.length})</h3><div class="fa-arena-choices">${p.choices.map((id)=>{
-        const w=ARMI.find((item)=>item.id===id);
-        const image=w && (w.image || (weaponsApi && typeof weaponsApi.getImage === "function" ? weaponsApi.getImage(w) : null));
-        const art=image ? `<span class="fa-arena-weapon-image">${imgTag(image,w.name)}</span>` : `<span class="fa-arena-weapon-image fa-arena-weapon-placeholder" aria-hidden="true">⚔️</span>`;
-        return btn("choose",`${art}<span class="fa-arena-weapon-name">${arenaEscape(w?.name||id)}</span><small>${arenaEscape(w?.rarity||'')}</small>`,`data-weapon="${arenaEscape(id)}"`);
-      }).join("")}</div><p>Arma cosmetica nel Deathmatch: tutti tirano 2 dadi. Nessun vantaggio di rarità.</p>`;
+    else if (arena.stage==="gift") {
+      const p=arena.players[arena.giftIndex||0];
+      const w=p?.giftWeapon;
+      const pending=Boolean(arena.giftAnimating);
+      body=`<section class="fa-arena-gift-stage"><h2>🎁 MACCHINA DEI REGALI · ${arena.giftIndex+1}/${arena.players.length}</h2>
+        <h3>${arenaEscape(p?.name||"")}</h3>
+        <div class="fa-arena-gift-machine"><canvas id="fa-arena-gift-canvas" aria-label="Macchina dei regali animata"></canvas><div id="fa-arena-gift-status" role="status"></div></div>
+        <div id="fa-arena-gift-actions">${pending?'<p class="fa-arena-gift-wait" role="status">🎁 LA MACCHINA STA ESTRAENDO L’ARMA…</p>':w?`<div class="fa-arena-gift-result"><h3>🎉 ${arenaEscape(w.name)}</h3><p>${arenaEscape(w.rarity.toUpperCase())} · +${arenaGiftBonus(p)} al totale di attacco</p>${w.image?`<img src="${arenaEscape(w.image)}" alt="${arenaEscape(w.name)}" style="max-height:140px;max-width:100%;object-fit:contain" onerror="this.hidden=true">`:''}</div>${btn("gift-next",arena.giftIndex+1===arena.players.length?"ENTRA NELL'ARENA":"PROSSIMO GIOCATORE")}`:
+        `<p>Tira 1 dado fisico per determinare la rarità dell'arma.</p><div class="fa-arena-gift-dice">${[1,2,3,4,5,6].map(n=>btn("gift-die",String(n),`data-die="${n}"`)).join("")}</div>`}</div>
+        ${arenaRosterError?`<p role="alert">${arenaEscape(arenaRosterError)}</p>`:""}</section>`;
+    }
+    else if (arena.stage==="direct-target") {
+      const attacker=arenaPlayer(arena.pendingMatch?.a);
+      body=`<h2>🎯 ${arena.pendingMatch?.fromSpecial?'ARMA SPECIALE!':'SFIDA DIRETTA!'}</h2><p><strong>${arenaEscape(attacker?.name||'')}</strong>, scegli il bersaglio da attaccare.</p><div class="fa-arena-choices">${arenaAlive().filter(p=>p.id!==attacker?.id).map(p=>btn("direct-target",arenaEscape(p.name),`data-target="${arenaEscape(p.id)}"`)).join('')}</div>`;
     } else if (arena.stage==="animal-wave") {
       const newFighters=arena.animals.fighters.filter(f=>f.id.startsWith(`animal-${arena.animals.waves}-`));
       body=`<div class="fa-arena-splatter"><h2>🐾 ANIMAL BATTLE · ONDATA ${arena.animals.waves}/2</h2>
-        <p>Tre animali entrano nell'arena e partecipano agli scontri fino all'eliminazione.</p>
+        <p>Tre avversari, tra animali feroci e creature assurde, entrano nell'arena e combattono fino all'eliminazione.</p>
         <div class="fa-arena-animal-cards">${newFighters.map(f=>`<div class="fa-arena-animal"><span>${f.icon}</span><strong>${arenaEscape(f.name)}</strong><small>${f.hp} HP</small></div>`).join('')}</div>
         ${btn("animal-continue","CONTINUA DEATHMATCH")}</div>`;
     } else if(arena.stage==="splatter") {
@@ -5150,13 +5462,14 @@
     else if(arena.stage==="attack" || arena.stage==="defense") {
       const m=arena.match, a=arenaPlayer(m.a),d=arenaPlayer(m.b), attacking=arena.stage==="attack";
       const p=attacking?a:d, rolls=attacking?m.attack:m.defense, count=arenaSkillDice(p,attacking);
-      body=`<h2>SCONTRO ${arena.exchange}</h2><div class="fa-arena-versus"><span>⚔️ ${arenaEscape(a.name)}</span><strong>VS</strong><span>🛡️ ${arenaEscape(d.name)}</span></div>
-        ${m.event?`<p class="fa-arena-event">🎁 ${arenaEscape(m.event)}</p>`:''}${arenaSkill(p)?`<p class="fa-arena-event">✨ SKILL DEL CAMPIONE: ${arenaEscape(arenaSkillName(p.skill))}</p>`:""}<h3>${attacking?'ATTACCA':'DIFENDE'}: ${arenaEscape(p.name)}</h3>
+      body=`<h2>SCONTRO ${arena.exchange}</h2><div class="fa-arena-versus"><span>⚔️ ${arenaEscape(a.name)}</span><strong>VS</strong><span>🛡️ ${arenaEscape(d.name)}</span></div><div class="fa-arena-fighter-bars"><div class="fa-arena-fighter-card"><strong>⚔️ ${arenaEscape(a.name)}</strong>${arenaBars(a)}${arenaEquipment(a)}</div><div class="fa-arena-fighter-card"><strong>🛡️ ${arenaEscape(d.name)}</strong>${arenaBars(d)}${arenaEquipment(d)}</div></div>
+        ${m.event?`<p class="fa-arena-event">🎁 ${arenaEscape(m.event)}</p>`:''}${arenaWeapon(p)?`<p class="fa-arena-event">🔫 ${arenaEscape(arenaWeaponLabel(p))}</p>`:""}${arenaSpecial(p)?`<p class="fa-arena-event">💥 COLPO UNICO: ${arenaEscape(arenaSpecial(p).name)} · scegli bersaglio, si consuma dopo il tiro</p>`:""}${arenaSkill(p)?`<p class="fa-arena-event">✨ SKILL DEL CAMPIONE: ${arenaEscape(arenaSkillName(p.skill))}</p>`:""}${p.upgradeName?`<p class="fa-arena-event">🐾 ${arenaEscape(p.upgradeName)}${p.attackBonus?" · +"+p.attackBonus+" attacco":""}${p.shield?" · 🛡️"+p.shield:""}</p>`:""}<h3>${attacking?'ATTACCA':'DIFENDE'}: ${arenaEscape(p.name)}</h3>
         <p class="fa-arena-turn-instruction">${arenaEscape(p.name)}, tira <strong>${count} dadi fisici insieme</strong> e inserisci il valore di ciascuno.</p>
         <div class="fa-arena-roll-slots" aria-label="Dadi di ${attacking?'attacco':'difesa'}">
           ${Array.from({length:count},(_,i)=>`<div class="fa-arena-roll-slot ${i===rolls.length?'fa-arena-roll-active':''} ${i<rolls.length?'fa-arena-roll-filled':''}"><small>DADO ${i+1}</small><strong>${rolls[i]??'?'}</strong></div>`).join('')}
         </div>
         <p class="fa-arena-roll-hint">${rolls.length<count?`Inserisci il valore del DADO ${rolls.length+1}`:`Totale: ${arenaDiceTotal(p,rolls,attacking)}${arenaDiceTotal(p,rolls,attacking)!==rolls.reduce((sum,n)=>sum+n,0)?" (bonus skill incluso)":""} · Conferma per proseguire`}</p>
+        ${arenaDamageGuide(d)}
         <div class="fa-arena-dice">${[1,2,3,4,5,6].map((n)=>btn("die",String(n),`data-die="${n}" ${rolls.length>=count?'disabled':''}`)).join('')}</div>
         ${arenaSkill(p)==="reroll"&&rolls.length===count&&!m.rerolled?.[arena.stage]?btn("reroll","⚡ RITIRA ENTRAMBI I DADI"):""}
         ${btn("undo","CORREGGI ULTIMO DADO",rolls.length?'':'disabled')}
@@ -5164,8 +5477,10 @@
     } else if(arena.stage==="result") {
       const r=arena.result, d=arenaPlayer(arena.match.b);
       body=`<h2>RISULTATO SCONTRO ${arena.exchange}</h2><div class="fa-arena-score">${r.attack} ⚔️ VS 🛡️ ${r.defense}</div>
-      <h3>${r.delta<=0?'PARATA!':r.eliminated?'💀 ELIMINATO':`DANNI: −${r.percent-r.blocked}% HP`}</h3>
-      <p>${arenaEscape(d.name)}: ${d.hp}${d.animal?`/${d.maxHp} HP`:`% HP`} ${r.blocked?`· 🛡️ ${r.blocked} assorbiti`:''}</p>${btn("next","PROSSIMO SCONTRO")}`;
+      ${r.specialName?`<p class="fa-arena-event">💥 ${arenaEscape(r.specialName)} consumata</p>`:''}<h3>${r.eliminated?'💀 ELIMINATO':r.delta<=0?(r.parryPressure===0?'DIFESA PERFETTA!':'DIFESA SOTTO PRESSIONE!'):`COLPO A SEGNO!`}</h3>
+      <p>${r.hpDamage?`❤️ −${r.hpDamage} HP · `:''}${r.blocked?`🛡️ −${r.blocked} scudo`:''}${!r.hpDamage&&!r.blocked?'Nessun danno':''}</p>
+      <p class="fa-arena-defense-note">${r.percent===100?'KO immediato: lo scudo non protegge':`Danno base: ${r.percent>0?Math.ceil((d.maxHp||100)*r.percent/100):r.parryPressure} punti · Scudo assorbito: ${r.blocked} · HP persi: ${r.hpDamage}`}</p>
+      <p class="fa-arena-defense-note">${r.delta<=-4?'Scarto difensivo perfetto: protezione intatta':r.delta<=0?`Scarto difensivo ${Math.abs(r.delta)} · pressione ${r.parryPressure} punti`:`Scarto attacco +${r.delta}`}</p>${arenaBars(d)}${arenaEquipment(d)}${btn("next","PROSSIMO SCONTRO")}`;
     } else if(arena.stage==="winner") {
       arenaPrepareSkillChoices();
       body=`<h2>🏆 CAMPIONE DEL TORNEO ${arena.tournament}</h2><h3>${arenaEscape(arenaPlayer(arena.winner)?.name||'—')}</h3>
@@ -5175,7 +5490,30 @@
           return btn("skill",`<strong>${arenaEscape(sk.name)}</strong><small>${arenaEscape(sk.description)}</small>`,`data-skill="${id}"`);
         }).join("")}</div>`}`;
     }
-    root.innerHTML=`<div class="fa-arena-panel">${header}${body}${roster}</div>`;
+    const canJoin=arena && ["ready","result","splatter-result"].includes(arena.stage) && arena.players.length<MAX_PLAYERS;
+    const waiting=canJoin?(arenaLoadRoster(),arenaRoster.map((p,i)=>({p,i})).filter(({p})=>!arena.players.some(a=>a.id===p.id)&&p.name.trim()&&p.avatarId&&!arena.players.some(a=>a.avatarId===p.avatarId))):[];
+    const joinUi=waiting.length?`<details class="fa-arena-damage-guide"><summary>➕ AGGIUNGI GIOCATORE IN ARENA (${arena.players.length}/10)</summary><p>Ingresso tardivo: HP 100, Scudo 40, arma Comune. Disponibile tra gli scontri.</p><div class="fa-arena-choices">${waiting.map(({p,i})=>btn("join",arenaEscape(p.name),`data-index="${i}"`)).join("")}</div>${arenaRosterError?`<p role="alert">${arenaEscape(arenaRosterError)}</p>`:""}</details>`:"";
+    // Il canvas Rive è ricreato al render; chiudere la vecchia istanza prima.
+    arenaGiftRiveCleanup();
+    root.innerHTML=`${arenaBarStyles}<div class="fa-arena-panel">${header}${body}${joinUi}${roster}</div>`;
+    if (arena?.stage === "gift") arenaGiftRiveInit();
+  }
+  function arenaDamageGuide(defender) {
+    const hpMax=Math.max(1,Number(defender?.maxHp)||100);
+    const entries=[
+      ["≤ −4","Difesa perfetta","0"],
+      ["−3 … −1","Parata sotto pressione","10"],
+      ["0","Parata al limite","20"],
+      ["+1","Colpo leggero",String(Math.ceil(hpMax*.4))],
+      ["+2","Colpo forte",String(Math.ceil(hpMax*.7))],
+      ["+3","Colpo devastante",String(Math.ceil(hpMax*.8))],
+      ["≥ +4","KO immediato","KO"]
+    ];
+    return `<details class="fa-arena-damage-guide" open><summary>🎲 QUANTO VALGONO I DADI?</summary>
+      <p>Scarto = totale attacco − totale difesa. Valori riferiti a ${hpMax} HP massimi del difensore.</p>
+      <table><thead><tr><th>Scarto</th><th>Esito</th><th>Punti</th></tr></thead><tbody>${entries.map(([delta,label,points])=>`<tr><td>${delta}</td><td>${label}</td><td>${points}</td></tr>`).join('')}</tbody></table>
+      <p>I punti consumano prima lo scudo 🛡️; solo il resto toglie HP ❤️. Il KO immediato ignora lo scudo. Armi e skill possono modificare il risultato.</p>
+    </details>`;
   }
   function arenaOpen() { arenaLoad(); renderArena(); }
   function arenaBindSetup() {

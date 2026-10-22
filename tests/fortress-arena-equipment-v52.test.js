@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync(__dirname+'/../fortress-game-ui.js','utf8');
+const start=source.indexOf('  const ARENA_KEY =');
+const code=source.slice(start,source.indexOf('  /* =========================================================================\n     AVVIO',start));
+const saved=new Map(),root={hidden:false,innerHTML:'',addEventListener(){}};
+const ctx={localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)}, ARMI:[],MAX_PLAYERS:10,CHARACTERS:Array.from({length:10},(_,i)=>({id:'a'+i,name:'A'+i})),setupPlayers:Array.from({length:6},(_,i)=>({id:'p'+i,name:'P'+i,avatarId:'a'+i,present:true})),setupCount:6,defaultSetupPlayers:()=>Array.from({length:10},(_,i)=>({id:'p'+i,name:'P'+i,avatarId:'a'+i,present:i<6})),weaponsApi:{},imgTag:()=>'',escapeHtml:String,renderSetup(){},playSfx(){},document:{createElement(){return root},body:{appendChild(){}}},$(){return null},Math};
+vm.createContext(ctx);vm.runInContext(code,ctx);
+const run=s=>vm.runInContext(s,ctx);
+run('arenaLoadRoster();arenaNewTournament()');
+run('arena.players[0].arenaWeapon="rifle";arena.players[0].specialWeapon="legend-rocket";arena.players[0].directChallenges=2;arena.players[0].boost=true;arena.players[0].skill="fire";arena.players[0].hp=56;arena.players[0].shield=12;arenaStore();renderArena()');
+for (const label of ["Fucile d'Assalto","Lanciarazzi Leggendario","Sfida Diretta","Potenza di Fuoco","Potenza","56/100","12/40"]) assert.ok(root.innerHTML.includes(label),label);
+run('arena.match={a:arena.players[0].id,b:arena.players[1].id,attack:[],defense:[]};arena.stage="attack";renderArena()');
+assert.ok((root.innerHTML.match(/fa-arena-equipment-title/g)||[]).length>=3,'Equipment for both fighters and roster');
+run('arena.players[0].specialWeapon=null;arena.players[0].boost=false;arena.players[0].directChallenges=0;arena.players[0].arenaWeapon=null;arena.players[0].skill=null;renderArena()');
+assert.ok(!root.innerHTML.includes('Lanciarazzi Leggendario'));
+assert.ok(root.innerHTML.includes('Nessuna dotazione'));
+console.log('V52: roster, barre e dotazioni in combattimento aggiornate da stato reale OK');

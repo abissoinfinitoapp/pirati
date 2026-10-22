@@ -77,10 +77,27 @@
     };
   }
 
+  // Solo Arena: il risultato fisico D6 definisce una rarità certa.
+  const ARENA_RARITIES = Object.freeze({1:"comune",2:"non-comune",3:"rara",4:"epica",5:"leggendaria",6:"mitica"});
+  function drawArenaWeapon(roll, rng, seenWeaponIds) {
+    const n=assertRoll(roll), rarity=ARENA_RARITIES[n];
+    const candidates=weaponsForRarity(rarity);
+    if (!candidates.length) throw new Error("Catalogo privo di armi di rarità "+rarity);
+    const seen=new Set(Array.isArray(seenWeaponIds)?seenWeaponIds:[]);
+    const available=candidates.filter(w=>!seen.has(w.id));
+    const pool=available.length?available:candidates;
+    const random=rng||Math.random;
+    const weapon=pool[Math.min(pool.length-1,Math.floor(random()*pool.length))];
+    return {roll:n,rarity,weaponId:weapon.id,weapon,
+      image:armiCatalog.getImage?armiCatalog.getImage(weapon):weapon.image||null,
+      power:armiCatalog.computePower?armiCatalog.computePower(weapon):null,
+      potenza:armiCatalog.computePotenza?armiCatalog.computePotenza(weapon):null};
+  }
+
   function favorableChance(roll) {
     const table = RARITY_BY_ROLL[assertRoll(roll)];
     return (table.rara || 0) + (table.epica || 0);
   }
 
-  return { RARITY_BY_ROLL, drawWeapon, favorableChance, assertRoll };
+  return { RARITY_BY_ROLL, ARENA_RARITIES, drawWeapon, drawArenaWeapon, favorableChance, assertRoll };
 });

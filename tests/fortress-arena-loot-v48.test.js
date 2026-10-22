@@ -1,0 +1,24 @@
+const assert=require('node:assert/strict');const fs=require('fs'),vm=require('vm');
+const source=fs.readFileSync(__dirname+'/../fortress-game-ui.js','utf8');
+const start=source.indexOf('  const ARENA_KEY =');
+const code=source.slice(start,source.indexOf('  /* =========================================================================\n     AVVIO',start));
+const saved=new Map(),root={hidden:false,innerHTML:'',addEventListener(){}};
+const ctx={localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)},
+ARMI:[],MAX_PLAYERS:10,CHARACTERS:Array.from({length:10},(_,i)=>({id:'a'+i,name:'A'+i})),setupPlayers:Array.from({length:3},(_,i)=>({id:'p'+i,name:'P'+i,avatarId:'a'+i,present:true})),setupCount:3,defaultSetupPlayers:()=>Array.from({length:10},(_,i)=>({id:'p'+i,name:'P'+i,avatarId:'a'+i,present:i<3})),weaponsApi:{},imgTag:()=>'',escapeHtml:String,renderSetup(){},playSfx(){},document:{createElement(){return root},body:{appendChild(){}}},$(){return null},Math};
+vm.createContext(ctx);vm.runInContext(code,ctx);const run=s=>vm.runInContext(s,ctx);
+run('arenaLoadRoster();arenaNewTournament();arena.stage="ready"');
+assert.equal(run('arena.stage'),'ready','non si sceglie arma iniziale');
+assert.equal(run('arenaShouldSplatter()'),false,'mai Splatter come primo evento');
+run('arena.exchange=4');assert.equal(run('arenaShouldSplatter()'),false,'prima del quinto scambio Splatter non parte');
+run('arena.splatter.nextAt=5;arena.exchange=5');assert.equal(run('arenaShouldSplatter()'),true,'Splatter possibile solo alla soglia programmata');
+run('arenaEquipWeapon(arena.players[0],ARENA_LOOT_WEAPONS.find(w=>w.id==="cannon"))');
+assert.equal(run('arenaDiceTotal(arena.players[0],[3,3],true)'),9,'cannone bonus +3');
+assert.equal(run('arenaDiceTotal(arena.players[0],[3,3],false)'),6,'cannone non modifica difesa');
+run('arenaEquipWeapon(arena.players[0],ARENA_LOOT_WEAPONS.find(w=>w.id==="shield"))');
+assert.equal(run('arenaDiceTotal(arena.players[0],[3,3],false)'),8,'scudo balistico +2 difesa');
+run('arenaEquipWeapon(arena.players[0],ARENA_LOOT_WEAPONS.find(w=>w.id==="rocket"))');
+assert.equal(run('arenaSkillDice(arena.players[0],true)'),3,'lanciarazzi 3 dadi attacco');
+run('arena.players[0].directChallenges=1;arena.pendingMatch={a:arena.players[0].id,event:"SFIDA DIRETTA"};arena.stage="direct-target"');
+run('renderArena()');assert.ok(root.innerHTML.includes('SFIDA DIRETTA'),'schermata bersaglio');
+assert.equal(run('arena.stage'),'direct-target');
+console.log('V48: armi, dadi, roster senza armi, Splatter e sfida diretta OK');

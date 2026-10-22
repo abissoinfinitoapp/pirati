@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const code = fs.readFileSync(path.join(__dirname,'..','fortress-game-ui.js'),'utf8');
+const start = code.indexOf('function arenaGiftRiveInit(');
+const end = code.indexOf('function arenaGiftReveal()',start);
+assert.ok(start >= 0 && end > start);
+const section = code.slice(start,end);
+assert.match(section,/giftCanvasHasPixels\(canvas\)/);
+assert.match(section,/resizeDrawingSurfaceToCanvas/);
+assert.match(section,/ARENA_RIVE_CONFIGS/);
+assert.match(section,/arenaGiftRiveTrigger\.fire\(\)/);
+assert.match(section,/Macchinario non visibile/);
+assert.match(code,/function arenaGiftRoll\(n\)/);
+assert.match(code,/drawArenaWeapon\(n,/);
+console.log('V57: controlli del canvas, resize, trigger e mantenimento dell’estrazione OK');

@@ -1,0 +1,13 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const code = fs.readFileSync(require('node:path').join(__dirname, '..', 'fortress-game-ui.js'), 'utf8');
+const start = code.indexOf('function arenaGiftRiveInit()');
+const end = code.indexOf('function arenaGiftReveal()', start);
+assert.ok(start >= 0 && end > start);
+const section = code.slice(start,end);
+assert.match(section, /artboard: "Artboard 1"/);
+assert.match(section, /const machine = "State Machine 1"/);
+assert.match(section, /stateMachine: machine/);
+assert.doesNotMatch(section, /GIFT_RIVE_CONFIGS|index \+ 1|arenaGiftRiveInit\(index/);
+assert.match(section, /GIFT_RIVE_TRIGGER_NAME/);
+console.log('V56: riferimenti reali artboard/state machine, trigger e nessun fallback ciclico OK');

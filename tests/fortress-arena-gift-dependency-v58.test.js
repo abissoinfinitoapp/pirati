@@ -1,0 +1,11 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ui = fs.readFileSync(path.resolve(__dirname, '../fortress-game-ui.js'), 'utf8');
+const gift = fs.readFileSync(path.resolve(__dirname, '../fortress-gift-machine.js'), 'utf8');
+assert.match(gift, /function drawArenaWeapon\(/);
+assert.match(gift, /return \{ RARITY_BY_ROLL, ARENA_RARITIES, drawWeapon, drawArenaWeapon/);
+assert.match(ui, /typeof giftMachineApi\?\.drawArenaWeapon !== "function"/);
+assert.match(ui, /Modulo Macchina Regali non aggiornato/);
+assert.match(ui, /if\(op==="gift-die"\) \{ arenaGiftRoll\(Number\(btn.dataset.die\)\)/);
+console.log('V58: dipendenza Gift Machine e callback pulsante OK');
