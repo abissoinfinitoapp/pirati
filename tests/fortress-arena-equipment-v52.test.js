@@ -10,7 +10,9 @@ run('arenaLoadRoster();arenaNewTournament()');
 run('arena.players[0].arenaWeapon="rifle";arena.players[0].specialWeapon="legend-rocket";arena.players[0].directChallenges=2;arena.players[0].boost=true;arena.players[0].skill="fire";arena.players[0].hp=56;arena.players[0].shield=12;arenaStore();renderArena()');
 for (const label of ["Fucile d'Assalto","Lanciarazzi Leggendario","Sfida Diretta","Potenza di Fuoco","Potenza","56/100","12/40"]) assert.ok(root.innerHTML.includes(label),label);
 run('arena.match={a:arena.players[0].id,b:arena.players[1].id,attack:[],defense:[]};arena.stage="attack";renderArena()');
-assert.ok((root.innerHTML.match(/fa-arena-equipment-title/g)||[]).length>=3,'Equipment for both fighters and roster');
+// V59: le dotazioni stanno nella scheda unica del combattente selezionato (predefinito: chi tira), non duplicate per duellante e lista.
+assert.equal((root.innerHTML.match(/class="fa-arena-equipment-title"/g)||[]).length,1,'una sola scheda con le dotazioni');
+assert.ok(root.innerHTML.includes("Fucile d'Assalto"),"dotazioni dell'attaccante visibili nella scheda");
 run('arena.players[0].specialWeapon=null;arena.players[0].boost=false;arena.players[0].directChallenges=0;arena.players[0].arenaWeapon=null;arena.players[0].skill=null;renderArena()');
 assert.ok(!root.innerHTML.includes('Lanciarazzi Leggendario'));
 assert.ok(root.innerHTML.includes('Nessuna dotazione'));

@@ -2396,3 +2396,72 @@ body.fa-game-active .fa-header { display:none; }
 .fa-arena-animal>strong{font-size:14px}
 .fa-arena-animal>small{opacity:.8}
 @media(max-width:460px){.fa-arena-animal-cards{gap:5px}.fa-arena-animal{padding:10px 3px}.fa-arena-animal>span{font-size:31px}}
+
+/* =========================================================================
+   ARENA / DEATHMATCH — layout mobile (V59)
+   Ordine: duellanti → dadi → bonus → istruzioni valore → combattenti (pulsanti + scheda unica)
+   ========================================================================= */
+.fa-arena-duel{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;align-items:stretch;margin:6px 0 10px}
+.fa-arena-duel>strong{align-self:center;color:#f5d990;font-size:1rem}
+.fa-arena-duelist{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;border:2px solid #44566a;border-radius:12px;background:#2a3d4c;min-width:0}
+.fa-arena-duelist.is-rolling{border-color:#ffd275;box-shadow:0 0 0 2px rgba(255,210,117,.25)}
+.fa-arena-duelist-role{font-size:.66rem;letter-spacing:.06em;font-weight:800;opacity:.9}
+.fa-arena-duelist-name{font-size:.95rem;line-height:1.15;overflow-wrap:anywhere}
+.fa-arena-duelist .fa-arena-bars{width:100%;gap:4px}
+.fa-arena-duelist .fa-arena-meter-label{font-size:.68rem;margin-bottom:1px}
+.fa-arena-duelist .fa-arena-meter-track{height:7px}
+.fa-arena-thumb{width:56px;height:56px;border-radius:50%;overflow:hidden;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;flex:none}
+.fa-arena-thumb img{width:100%;height:100%;object-fit:cover;object-position:50% 12%}
+.fa-arena-thumb .fa-arena-photo-emoji{font-size:30px}
+.fa-arena-roll{margin:4px 0}
+.fa-arena-roll h3{margin:8px 0 4px}
+.fa-arena-roll-actions{display:grid;gap:8px;margin-top:6px}
+.fa-arena-roll-actions .fa-arena-btn[data-arena="undo"]{min-height:42px;font-size:.85rem}
+
+.fa-arena-cards{margin-top:22px;border-top:1px solid #647080;padding-top:14px}
+.fa-arena-panel h3.fa-arena-section-title{margin:0 0 10px;font-size:.95rem;letter-spacing:.06em;color:#f5d990}
+.fa-arena-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:12px}
+.fa-arena-chip{border:1px solid #647080;border-radius:999px;background:#2b3c4b;color:#f3e8cf;font:inherit;font-size:.85rem;font-weight:700;min-height:40px;padding:6px 14px;cursor:pointer}
+.fa-arena-chip.is-active{background:#66471c;border-color:#e3b762;color:#fff5dc}
+.fa-arena-chip.is-out{opacity:.5;text-decoration:line-through}
+.fa-arena-cardframe{text-align:left}
+.fa-arena-card{display:grid;grid-template-columns:128px minmax(0,1fr);gap:12px;align-items:start;padding:12px;border:1px solid #8b7951;border-radius:14px;background:#1c242d}
+.fa-arena-card.fa-arena-out{opacity:.7}
+.fa-arena-photo{position:relative;aspect-ratio:1/1;border-radius:10px;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.fa-arena-photo img{width:100%;height:100%;object-fit:contain}
+.fa-arena-photo-emoji{font-size:56px;line-height:1}
+.fa-arena-ko{position:absolute;inset:auto 0 8px 0;text-align:center;font-weight:900;color:#fff;background:rgba(181,48,63,.85);padding:3px 0;letter-spacing:.1em}
+.fa-arena-card-head{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fa-arena-card-name{font-size:1.15rem;overflow-wrap:anywhere;color:#f5d990}
+.fa-arena-card-head small{opacity:.8;margin-top:-4px}
+.fa-arena-card-gear{grid-column:1/-1}
+@media(max-width:520px){
+  .fa-arena-panel h2{margin:14px 0 8px}
+  .fa-arena-card{grid-template-columns:104px minmax(0,1fr);gap:10px;padding:10px}
+  .fa-arena-dice{margin:12px 0}
+  .fa-arena-dice .fa-arena-btn{min-height:64px;font-size:1.8rem}
+  .fa-arena-roll-slots{gap:10px;margin:10px 0}
+}
+
+/* ARENA — riepilogo scontro (V60): card di chi vince / chi subisce, mobile-first */
+.fa-arena-verdict{margin:6px 0 12px;font-size:1.2rem}
+.fa-arena-score{padding:6px 0 4px}
+.fa-arena-outcome{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 14px}
+.fa-arena-outcome-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 8px;border:2px solid #44566a;border-radius:14px;background:#1c242d;min-width:0}
+.fa-arena-outcome-card.is-winner{border-color:#e3b762;background:linear-gradient(160deg,rgba(201,162,74,.2),#1c242d)}
+.fa-arena-outcome-card.is-hit{border-color:#d8704f}
+.fa-arena-outcome-card.is-ko{border-color:#b5303f;background:#241519}
+.fa-arena-outcome-card .fa-arena-photo{width:100%;max-height:200px}
+.fa-arena-outcome-card.is-ko .fa-arena-photo img{filter:grayscale(1) brightness(.7)}
+.fa-arena-outcome-card .fa-arena-bars{width:100%;gap:4px}
+.fa-arena-outcome-card .fa-arena-meter-label{font-size:.68rem;margin-bottom:1px}
+.fa-arena-outcome-card .fa-arena-meter-track{height:7px}
+.fa-arena-ribbon{position:absolute;top:-11px;left:50%;transform:translateX(-50%);z-index:2;white-space:nowrap;background:#e3b762;color:#2a1c05;font-size:.72rem;font-weight:900;letter-spacing:.06em;padding:3px 10px;border-radius:999px}
+.fa-arena-badge{font-weight:900;font-size:.9rem;text-align:center;padding:5px 8px;border-radius:8px;background:rgba(130,145,165,.2);width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+.fa-arena-is-hit .fa-arena-badge,.fa-arena-outcome-card.is-hit .fa-arena-badge{background:rgba(216,112,79,.25);color:#ffd2c2}
+.fa-arena-outcome-card.is-ko .fa-arena-badge{background:rgba(181,48,63,.35);color:#ffd0d6}
+.fa-arena-outcome-card.is-winner:not(.is-ko) .fa-arena-badge{background:rgba(201,162,74,.25);color:#ffe9b3}
+.fa-arena-change{opacity:.9;font-size:.78rem}
+.fa-arena-panel .fa-arena-btn[data-arena="next"]{display:block;width:100%;margin:6px 0 12px;background:#34634d;border-color:#90c7a5}
+.fa-arena-photo-mini{width:84px;max-height:112px;margin:0 auto 4px}
+.fa-arena-photo-mini .fa-arena-photo-emoji{font-size:40px}
