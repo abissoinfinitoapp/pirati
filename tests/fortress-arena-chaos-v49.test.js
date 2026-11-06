@@ -7,8 +7,8 @@ const ctx={localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(
  ARMI:[],MAX_PLAYERS:10,CHARACTERS:Array.from({length:10},(_,i)=>({id:'a'+i,name:'A'+i})),setupPlayers:Array.from({length:6},(_,i)=>({id:'p'+i,name:'P'+i,avatarId:'a'+i,present:true})),setupCount:6,defaultSetupPlayers:()=>Array.from({length:10},(_,i)=>({id:'p'+i,name:'P'+i,avatarId:'a'+i,present:i<6})),weaponsApi:{},imgTag:()=>'',escapeHtml:String,renderSetup(){},playSfx(){},document:{createElement(){return root},body:{appendChild(){}}},$(){return null},Math};
 vm.createContext(ctx);vm.runInContext(code,ctx);const run=s=>vm.runInContext(s,ctx);
 run('arenaLoadRoster();arenaNewTournament();arena.stage="ready"');
-assert.equal(run('ARENA_BEAST_POOL.length'),24);
-assert.equal(run('ARENA_ODD_CREATURES.length'),15);
+assert.equal(run('ARENA_BEAST_POOL.length'),26);
+assert.equal(run('ARENA_ODD_CREATURES.length'),17);
 run('arena.exchange=2;arenaBeginAnimalWave()');
 assert.equal(run('arena.animals.fighters.length'),3);
 assert.equal(run('new Set(arena.animals.fighters.map(a=>a.species)).size'),3);
