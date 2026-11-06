@@ -34,7 +34,7 @@
      queste 4 varianti cosmetiche (la Base non è qui: vive nel catalogo
      personaggi e non appartiene all'economia del Guardaroba) */
   const RARITY_ORDER = ["non-comune", "rara", "epica", "leggendaria"];
-  const RARITY_PRICE = { "non-comune": 300, rara: 700, epica: 1400, leggendaria: 2500 };
+  const RARITY_PRICE = { "non-comune": 100, rara: 200, epica: 350, leggendaria: 500 };
 
   const CHARACTER_SKIN_DATA = [
     { characterId: "automate", name: "Automate", variants: [

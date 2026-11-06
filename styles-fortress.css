@@ -47,7 +47,10 @@ h1, h2, h3 { font-family: var(--fa-font-display); letter-spacing: .03em; margin:
 .fa-panel-head h2 { font-size: 19px; margin-bottom: 4px; }
 .fa-panel-head p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--fa-muted); }
 
-#fa-money::before { content: "💰 "; }
+#fa-money::before { content: "💶 "; }
+.fa-wallets { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.fa-wallet-chip { padding:3px 9px; border-radius:999px; background:rgba(120,135,160,.18); font-size:.85em; }
+.fa-skin-missing { display:block; margin-top:4px; opacity:.75; }
 
 /* ---- bottoni ---- */
 .fa-btn {

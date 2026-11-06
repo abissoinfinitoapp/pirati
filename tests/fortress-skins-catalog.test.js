@@ -45,7 +45,7 @@ test("ogni personaggio ha un'immagine base canonica <id>-base.webp", () => {
 });
 
 test("prezzi coerenti con la rarità (4 tier, niente Comune)", () => {
-  const expected = { "non-comune": 300, rara: 700, epica: 1400, leggendaria: 2500 };
+  const expected = { "non-comune": 100, rara: 200, epica: 350, leggendaria: 500 };
   assert.deepEqual(catalog.RARITY_ORDER, ["non-comune", "rara", "epica", "leggendaria"]);
   catalog.SKINS.forEach((s) => assert.equal(s.price, expected[s.rarity], s.id));
 });
@@ -62,4 +62,11 @@ test("nessun campo di gameplay nel catalogo skin", () => {
 
 test("ogni immagine punta a assets/fortress-img/<id>.webp", () => {
   catalog.SKINS.forEach((s) => assert.equal(s.image, `assets/fortress-img/${s.id}.webp`));
+});
+
+test("prezzi tra 100 e 500 euro, crescenti con la rarita'", () => {
+  const prices = catalog.RARITY_ORDER.map((r) => catalog.RARITY_PRICE[r]);
+  assert.equal(Math.min(...prices), 100);
+  assert.equal(Math.max(...prices), 500);
+  assert.deepEqual(prices, prices.slice().sort((a, b) => a - b));
 });

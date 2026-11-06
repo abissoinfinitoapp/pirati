@@ -19,10 +19,47 @@
 })(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : null), function () {
   "use strict";
 
+  /* ---------------------------------------------------------------------
+     ECONOMIA — un portafoglio (in euro interi) per ogni personaggio.
+     Si guadagna combattendo nel Deathmatch e si spende solo in skin del
+     proprio personaggio. Tutti i numeri da ritoccare sono qui sotto.
+     --------------------------------------------------------------------- */
+  const PAYOUT = {
+    base: 1,        /* ogni scontro a cui partecipa un giocatore */
+    epicBonus: 1,   /* in piu' se lo scarto a proprio favore e' epico */
+    epicMargin: 4   /* scarto (attacco-difesa) che vale come "epico" */
+  };
+
+  /* Quanto guadagna ciascun combattente in UNO scontro. Gli animali/creature
+     non guadagnano: passare isHuman=false. delta = attacco - difesa. */
+  function exchangePayout(delta, attackerIsHuman, defenderIsHuman) {
+    const d = Number(delta) || 0;
+    const earn = (human, margin) => !human ? 0 :
+      PAYOUT.base + (margin >= PAYOUT.epicMargin ? PAYOUT.epicBonus : 0);
+    return { attacker: earn(attackerIsHuman, d), defender: earn(defenderIsHuman, -d) };
+  }
+
   function defaultState() {
-    /* Fixture DEV isolata: nessuna economia reale collegata, monete usate
-       solo per testare acquisto/equip delle skin nel Guardaroba. */
-    return { money: 2000, ownedSkinIds: [], equippedByCharacter: {} };
+    return { walletByCharacter: {}, ownedSkinIds: [], equippedByCharacter: {} };
+  }
+
+  function getBalance(state, characterId) {
+    const w = state && state.walletByCharacter;
+    return Math.max(0, Math.floor(Number(w && w[characterId]) || 0));
+  }
+
+  function totalBalance(state) {
+    const w = (state && state.walletByCharacter) || {};
+    return Object.keys(w).reduce((sum, id) => sum + getBalance(state, id), 0);
+  }
+
+  /* amount intero > 0; qualunque altro valore lascia lo stato invariato */
+  function addMoney(state, characterId, amount) {
+    const n = Math.floor(Number(amount));
+    if (!characterId || !Number.isFinite(n) || n <= 0) return state;
+    return Object.assign({}, state, {
+      walletByCharacter: Object.assign({}, state.walletByCharacter, { [characterId]: getBalance(state, characterId) + n })
+    });
   }
 
   function findSkin(catalog, id) {
@@ -37,14 +74,16 @@
   function canBuy(state, skin) {
     if (!skin || !skin.assetReady) return false;
     if (ownsSkin(state, skin)) return false;
-    return (Number(state.money) || 0) >= skin.price;
+    return getBalance(state, skin.characterId) >= skin.price;
   }
 
   function buySkin(state, catalog, skinId) {
     const skin = findSkin(catalog, skinId);
     if (!canBuy(state, skin)) return state;
     return Object.assign({}, state, {
-      money: state.money - skin.price,
+      walletByCharacter: Object.assign({}, state.walletByCharacter, {
+        [skin.characterId]: getBalance(state, skin.characterId) - skin.price
+      }),
       ownedSkinIds: state.ownedSkinIds.concat(skin.id)
     });
   }
@@ -94,6 +133,7 @@
   }
 
   return {
+    PAYOUT, exchangePayout, getBalance, totalBalance, addMoney,
     defaultState, findSkin, ownsSkin,
     canBuy, buySkin, canEquip, equipSkin, unequipSkin,
     getEquippedSkinId, getEquippedSkin, getCharacterDisplayImage

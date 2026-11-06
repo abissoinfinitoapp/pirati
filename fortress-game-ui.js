@@ -255,6 +255,10 @@
   /* Guardaroba (skin cosmetiche): solo lettura, solo per scegliere quale
      immagine mostrare. Nessuna logica di gioco arriva da qui. */
   const skinsApi = window.FORTRESS_SKINS_API;
+  /* Portafoglio in € per personaggio (fortress-army.js) e regole del guadagno
+     (engine/fortress-skins-core.js): l'Arena li usa solo per accreditare soldi. */
+  const walletApi = window.FORTRESS_WALLET_API || null;
+  const skinsCoreApi = window.FORTRESS_SKINS_CORE || null;
   function characterDisplayImage(characterId, fallback) {
     if (skinsApi) return skinsApi.getCharacterDisplayImage(characterId);
     return fallback;
@@ -5319,6 +5323,21 @@
     }
     arena.match={a:a.id,b:d.id,attack:[],defense:[],event}; arena.stage="attack"; arenaStore();
   }
+  // Guadagno in € di uno scontro: 1€ a ogni giocatore, +1€ per uno scarto epico a suo favore.
+  // Accredito immediato e salvato nel portafoglio del personaggio: un RESET non lo toglie.
+  function arenaPayExchange(a,d,delta) {
+    if(typeof skinsCoreApi==="undefined"||!skinsCoreApi||typeof walletApi==="undefined"||!walletApi)return [];
+    const pay=skinsCoreApi.exchangePayout(delta,!a.animal,!d.animal);
+    const out=[];
+    for(const [p,amount] of [[a,pay.attacker],[d,pay.defender]]) {
+      if(p.animal||!(amount>0)||!p.avatarId)continue;
+      walletApi.addMoney(p.avatarId,amount);
+      arena.earned=arena.earned||{};
+      arena.earned[p.id]=(arena.earned[p.id]||0)+amount;
+      out.push({id:p.id,name:p.name,amount});
+    }
+    return out;
+  }
   function arenaResolve() {
     const m=arena.match, a=arenaPlayer(m.a), d=arenaPlayer(m.b);
     // V60: stato prima dello scontro, per il riepilogo (colpi presi, scudo perso, cure/maledizioni dell'attaccante).
@@ -5352,7 +5371,8 @@
     if(a.hp===0){a.giftWeapon=null;a.arenaWeapon=null;a.specialWeapon=null;a.specialTargetPending=false;}
     arenaEliminateSkill(d);
     a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
-    arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null,
+    const earnings=arenaPayExchange(a,d,delta);
+    arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null,earnings,
       before,after:{a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}}};
     arena.log.unshift({number:arena.exchange,a:a.name,b:d.name,delta,eliminated:d.hp===0});
     arena.log=arena.log.slice(0,12);
@@ -5637,6 +5657,7 @@
       body=`<h2>RISULTATO SCONTRO ${arena.exchange}</h2><div class="fa-arena-score">${r.attack} ⚔️ VS 🛡️ ${r.defense}</div>
       <h3 class="fa-arena-verdict">${r.eliminated?`💀 ${arenaEscape(d.name)} È ELIMINATO`:r.delta<=0?(r.parryPressure===0?'DIFESA PERFETTA!':'DIFESA SOTTO PRESSIONE!'):`COLPO A SEGNO!`}</h3>
       ${r.specialName?`<p class="fa-arena-event">💥 ${arenaEscape(r.specialName)} consumata</p>`:''}
+      ${(r.earnings||[]).length?`<p class="fa-arena-event" role="status">💶 ${r.earnings.map(e=>`${arenaEscape(e.name)} +${e.amount}€`).join(' · ')}</p>`:''}
       <div class="fa-arena-outcome" aria-label="Esito dello scontro">${arenaResultCards(a,d,r)}</div>
       ${btn("next","PROSSIMO SCONTRO")}
       <details class="fa-arena-damage-guide"><summary>📋 DETTAGLIO DEL CALCOLO</summary>
@@ -5644,7 +5665,7 @@
       <p class="fa-arena-defense-note">${r.delta<=-4?'Scarto difensivo perfetto: protezione intatta':r.delta<=0?`Scarto difensivo ${Math.abs(r.delta)} · pressione ${r.parryPressure} punti`:`Scarto attacco +${r.delta}`}</p></details>`;
     } else if(arena.stage==="winner") {
       arenaPrepareSkillChoices();
-      body=`<h2>🏆 CAMPIONE DEL TORNEO ${arena.tournament}</h2><h3>${arenaEscape(arenaPlayer(arena.winner)?.name||'—')}</h3>
+      body=`<h2>🏆 CAMPIONE DEL TORNEO ${arena.tournament}</h2><h3>${arenaEscape(arenaPlayer(arena.winner)?.name||'—')}</h3>${arenaEarnedSummary()}
         ${arena.skillAwarded?`<p>SKILL CONQUISTATA: <strong>${arenaEscape(arenaSkillName(arena.skillAwarded))}</strong>. Si attiverà nel prossimo torneo.</p>${btn("restart","NUOVO DEATHMATCH")}`:
         `<p>Scegli una skill leggendaria per il prossimo Deathmatch:</p><div class="fa-arena-choices">${arena.skillChoices.map(id=>{
           const sk=ARENA_SKILLS.find(x=>x.id===id);
@@ -5658,6 +5679,12 @@
     arenaGiftRiveCleanup();
     root.innerHTML=`${arenaBarStyles}<div class="fa-arena-panel">${header}${body}${joinUi}${roster}</div>`;
     if (arena?.stage === "gift") arenaGiftRiveInit();
+  }
+  // Riepilogo dei guadagni del torneo, già accreditati nei portafogli.
+  function arenaEarnedSummary() {
+    const rows=arena.players.filter(p=>(arena.earned?.[p.id]||0)>0).sort((x,y)=>arena.earned[y.id]-arena.earned[x.id]);
+    if(!rows.length)return "";
+    return `<p role="status">💶 <strong>Guadagni del torneo:</strong> ${rows.map(p=>`${arenaEscape(p.name)} +${arena.earned[p.id]}€`).join(' · ')}</p>`;
   }
   function arenaDamageGuide(defender) {
     const hpMax=Math.max(1,Number(defender?.maxHp)||100);

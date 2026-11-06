@@ -24,9 +24,10 @@ const CHARACTERS_FOR_SKINS = window.FORTRESS_CHARACTERS || [];
 const skinsCore = window.FORTRESS_SKINS_CORE;
 const arsenalCore = window.FORTRESS_ARSENAL_CORE;
 
-/* --- stato: solo Guardaroba (monete/skin possedute/equipaggiata per personaggio) ---
-   "money" è una fixture DEV isolata (nessuna economia reale collegata):
-   serve solo a testare acquisto -> possesso -> equip delle skin. */
+/* --- stato: Guardaroba (skin possedute/equipaggiata per personaggio) e
+   portafoglio in € per personaggio (walletByCharacter), alimentato dai
+   guadagni del Deathmatch. Il vecchio campo "money" (fixture di test da 2000)
+   non esiste più: viene ignorato nei salvataggi vecchi. --- */
 function defaultAppState() {
   return Object.assign({}, skinsCore.defaultState(), { arsenalByCharacter: {} });
 }
@@ -39,6 +40,8 @@ function loadState() {
     if (!raw) return;
     const saved = JSON.parse(raw);
     state = Object.assign(defaultAppState(), saved);
+    delete state.money;
+    if (!state.walletByCharacter || typeof state.walletByCharacter !== "object" || Array.isArray(state.walletByCharacter)) state.walletByCharacter = {};
     if (!state.arsenalByCharacter || typeof state.arsenalByCharacter !== "object") state.arsenalByCharacter = {};
   } catch (e) { state = defaultAppState(); /* salvataggio corrotto: si riparte da zero */ }
 }
@@ -115,6 +118,20 @@ window.FORTRESS_SKINS_API = {
   getCharacterDisplayImage: (characterId) => skinsCore.getCharacterDisplayImage(state, SKINS, CHARACTERS_FOR_SKINS, characterId)
 };
 
+/* Portafoglio: l'Arena (fortress-game-ui.js) accredita qui i guadagni di ogni
+   scontro. Salva subito, così un reset del torneo non fa perdere i soldi. */
+window.FORTRESS_WALLET_API = {
+  getBalance: (characterId) => skinsCore.getBalance(state, characterId),
+  addMoney(characterId, amount) {
+    const next = skinsCore.addMoney(state, characterId, amount);
+    if (next === state) return skinsCore.getBalance(state, characterId);
+    state = next;
+    saveState();
+    if (typeof renderWardrobe === "function" && $("fa-wardrobe-grid")) renderWardrobe();
+    return skinsCore.getBalance(state, characterId);
+  }
+};
+
 /* Notifica UI-only (nessuno stato di gioco coinvolto): permette a
    fortress-game-ui.js di ridisegnare subito il token sulla mappa dopo un
    equip/unequip, senza aspettare la prossima azione di gioco. */
@@ -167,8 +184,10 @@ function wardrobeCardMarkup(skin) {
   } else if (cardState === "owned") {
     actionHtml = `<button type="button" class="fa-btn fa-btn-ghost" data-equip-skin="${skin.id}">Equipaggia</button>`;
   } else {
-    const canAfford = state.money >= skin.price;
-    actionHtml = `<button type="button" class="fa-btn fa-btn-primary" data-buy-skin="${skin.id}" ${canAfford ? "" : "disabled"}>Compra · ${skin.price}💰</button>`;
+    const balance = skinsCore.getBalance(state, skin.characterId);
+    const canAfford = balance >= skin.price;
+    actionHtml = `<button type="button" class="fa-btn fa-btn-primary" data-buy-skin="${skin.id}" ${canAfford ? "" : "disabled"}>Compra · ${skin.price}€</button>` +
+      (canAfford ? "" : `<small class="fa-skin-missing">Ti mancano ${skin.price - balance}€</small>`);
   }
 
   return `<article class="fa-shop-card ${cardState === "equipped" ? "is-equipped" : ""} ${cardState === "unavailable" ? "is-unavailable" : ""}">
@@ -184,7 +203,13 @@ function wardrobeCardMarkup(skin) {
 }
 
 function renderWardrobe() {
-  $("fa-money").textContent = state.money;
+  $("fa-money").textContent = skinsCore.totalBalance(state);
+  const wallets = CHARACTERS_FOR_SKINS
+    .map((c) => ({ c, b: skinsCore.getBalance(state, c.id) }))
+    .filter((x) => x.b > 0 || wardrobeState.characterId === x.c.id);
+  $("fa-wallets").innerHTML = wallets.length
+    ? wallets.map((x) => `<span class="fa-wallet-chip">${x.c.name}: <strong>${x.b}€</strong></span>`).join("")
+    : `<span class="fa-wallet-chip">Combatti nel Deathmatch per guadagnare €</span>`;
   const list = getFilteredSkins();
   $("fa-wardrobe-count").textContent = `${list.length} di ${SKINS.length} skin`;
   $("fa-wardrobe-grid").innerHTML = list.length
@@ -195,7 +220,9 @@ function renderWardrobe() {
 function renderAll() { renderWardrobe(); }
 
 function bindEvents() {
-  document.getElementById("fortress-app").addEventListener("click", (ev) => {
+  /* Il Guardaroba vive nel Centro Utilità (fa-utility-overlay), che è FUORI da
+     #fortress-app: ascoltare su document, altrimenti Compra/Equipaggia non scattano. */
+  document.addEventListener("click", (ev) => {
     const buy = ev.target.closest("[data-buy-skin]");
     if (buy) {
       state = skinsCore.buySkin(state, SKINS, buy.dataset.buySkin);
