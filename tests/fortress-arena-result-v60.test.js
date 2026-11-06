@@ -57,6 +57,9 @@ run('ARENA_CREATURE_IMAGES_READY.delete("puma");renderArena()');
 assert.ok(html().includes('🐆'));assert.ok(!html().includes('enemy/puma.webp'));
 // Ogni creatura del pool ha davvero il suo file: nessun 404 in gioco
 const ids=run('ARENA_BEAST_POOL.map(c=>c.id)');
-assert.equal(ids.length,14);
-for(const id of ids) assert.ok(fs.existsSync(__dirname+'/../assets/fortress/enemy/'+id+'.webp'),'manca assets/fortress/enemy/'+id+'.webp');
+assert.equal(ids.length,24);
+const senzaFoto=new Set(run('Array.from(ARENA_CREATURES_WITHOUT_IMAGE)'));
+for(const id of ids) if(!senzaFoto.has(id)) assert.ok(fs.existsSync(__dirname+'/../assets/fortress/enemy/'+id+'.webp'),'manca assets/fortress/enemy/'+id+'.webp');
+// Le creature senza foto mostrano l'emoji, mai un'immagine rotta
+for(const id of senzaFoto) assert.equal(run(`arenaCreatureImage(${JSON.stringify(id)})`),null);
 console.log('V60: riepilogo scontro con card vincitore/colpito/K.O., creature con foto OK');

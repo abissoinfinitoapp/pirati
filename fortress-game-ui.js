@@ -5089,12 +5089,26 @@
     {id:"banana-ninja",name:"Banana Ninja",maxHp:75,icon:"🍌"},
     {id:"wc-corazzato",name:"WC Corazzato",maxHp:125,icon:"🚽"},
     {id:"cactus-pugile",name:"Cactus Pugile",maxHp:100,icon:"🌵"},
-    {id:"papera-infernale",name:"Papera Infernale",maxHp:90,icon:"🦆"}
+    {id:"papera-infernale",name:"Papera Infernale",maxHp:90,icon:"🦆"},
+    // Seconda tornata di avversari assurdi: per ora senza foto (vedi ARENA_CREATURES_WITHOUT_IMAGE).
+    {id:"pizza-zombie",name:"Pizza Zombie",maxHp:95,icon:"🍕"},
+    {id:"gelato-vulcanico",name:"Gelato Vulcanico",maxHp:80,icon:"🍦"},
+    {id:"calzino-mutante",name:"Calzino Mutante",maxHp:70,icon:"🧦"},
+    {id:"criceto-corazzato",name:"Criceto Corazzato",maxHp:75,icon:"🐹"},
+    {id:"frigorifero-furioso",name:"Frigorifero Furioso",maxHp:130,icon:"🧊"},
+    {id:"spaghetto-gigante",name:"Spaghetto Gigante",maxHp:105,icon:"🍝"},
+    {id:"pinguino-sumo",name:"Pinguino Sumo",maxHp:120,icon:"🐧"},
+    {id:"tostapane-laser",name:"Tostapane Laser",maxHp:90,icon:"🍞"},
+    {id:"unicorno-punk",name:"Unicorno Punk",maxHp:100,icon:"🦄"},
+    {id:"fungo-esplosivo",name:"Fungo Esplosivo",maxHp:85,icon:"🍄"}
   ];
   const ARENA_BEAST_POOL = [...ARENA_ANIMALS,...ARENA_ODD_CREATURES];
   // Immagini delle creature: assets/fortress/enemy/<id>.webp (1024x1024, soggetto centrato).
   // Il test fortress-arena-result-v60 verifica che ogni creatura abbia il file su disco; togliere un id da qui riporta all'emoji.
-  const ARENA_CREATURE_IMAGES_READY = new Set(ARENA_BEAST_POOL.map((c) => c.id));
+  // Finche' manca il file assets/fortress/enemy/<id>.webp l'id sta qui e il gioco mostra l'emoji.
+  // Quando arriva la foto: aggiungere il file e TOGLIERE l'id da questo elenco.
+  const ARENA_CREATURES_WITHOUT_IMAGE = new Set(["pizza-zombie","gelato-vulcanico","calzino-mutante","criceto-corazzato","frigorifero-furioso","spaghetto-gigante","pinguino-sumo","tostapane-laser","unicorno-punk","fungo-esplosivo"]);
+  const ARENA_CREATURE_IMAGES_READY = new Set(ARENA_BEAST_POOL.filter((c) => !ARENA_CREATURES_WITHOUT_IMAGE.has(c.id)).map((c) => c.id));
   function arenaCreatureImage(speciesId) {
     return ARENA_CREATURE_IMAGES_READY.has(speciesId) ? `assets/fortress/enemy/${speciesId}.webp` : null;
   }
