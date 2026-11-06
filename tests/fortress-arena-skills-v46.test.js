@@ -20,7 +20,7 @@ assert.equal(run('arena.skillAwarded'),option);
 assert.equal(JSON.parse(saved.get('fortress-army-arena-champion-skills-v1')).p0,option);
 run('arenaNewTournament()');
 assert.equal(run('arena.players[0].skill'),option);
-assert.equal(run('arenaSkillBook().p0'),undefined);
+assert.equal(run('arenaSkillBook().p0'),option); // si consuma solo a torneo concluso, non all'avvio
 run('arena.players[0].hp=0;arenaEliminateSkill(arena.players[0])');
 assert.equal(run('arena.players[0].skill'),null);
 for(const [id,expression,expect] of [

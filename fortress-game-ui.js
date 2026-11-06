@@ -493,6 +493,63 @@
     } catch (_) {}
   }
 
+  /* >>> FEEDBACK PULSANTI (V61) — suoni sintetici brevissimi (WebAudio), nessun file da caricare.
+     Tutti i <button>: un "tic". Pulsanti dado ([data-die]): un "toc-toc" il cui tono sale col numero,
+     così si sente anche quale valore è stato premuto. Rispetta sfxEnabled; mai bloccante. */
+  let uiAudioCtx = null;
+  function uiAudio() {
+    if (!sfxEnabled) return null;
+    const AC = typeof window !== "undefined" ? (window.AudioContext || window.webkitAudioContext) : null;
+    if (!AC) return null;
+    try {
+      if (!uiAudioCtx) uiAudioCtx = new AC();
+      if (uiAudioCtx.state === "suspended") uiAudioCtx.resume();
+      return uiAudioCtx;
+    } catch (_) { return null; }
+  }
+  function uiNoiseBurst(ctx, t, dur, freq, gain) {
+    const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filter = ctx.createBiquadFilter(); filter.type = "bandpass"; filter.frequency.value = freq; filter.Q.value = 1.4;
+    const g = ctx.createGain(); g.gain.value = gain;
+    src.connect(filter); filter.connect(g); g.connect(ctx.destination); src.start(t);
+  }
+  function uiTone(ctx, t, type, f0, f1, dur, gain) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + dur + 0.01);
+  }
+  function playButtonSound(kind, value) {
+    const ctx = uiAudio(); if (!ctx) return;
+    const t = ctx.currentTime;
+    if (kind === "die") {
+      const v = Math.min(6, Math.max(1, Number(value) || 1));
+      const base = 900 + v * 140;
+      uiNoiseBurst(ctx, t, .07, base, .38);
+      uiNoiseBurst(ctx, t + .055, .09, base * .75, .3);
+      uiTone(ctx, t, "triangle", 260 + v * 55, 260 + v * 55, .12, .12);
+    } else {
+      uiTone(ctx, t, "square", 1400, 700, .05, .05);
+    }
+  }
+  // Puro (testabile): quale suono merita questo pulsante? null = nessuno (disabilitato o data-no-sfx).
+  function buttonSoundFor(btn) {
+    if (!btn || btn.disabled || (btn.dataset && btn.dataset.noSfx !== undefined)) return null;
+    if (btn.dataset && btn.dataset.die !== undefined) return { kind: "die", value: Number(btn.dataset.value ?? btn.dataset.die) };
+    return { kind: "click", value: 0 };
+  }
+  if (typeof document !== "undefined" && document.addEventListener) {
+    document.addEventListener("click", (ev) => {
+      const btn = ev.target && ev.target.closest ? ev.target.closest("button") : null;
+      const s = buttonSoundFor(btn);
+      if (s) playButtonSound(s.kind, s.value);
+    }, { capture: true });
+  }
+  /* <<< FEEDBACK PULSANTI (V61) */
+
   function announcementSfx(announcement) {
     if (!announcement) return null;
     const p = announcement.payload || {};
@@ -4792,6 +4849,8 @@
       }
     } catch (_) {}
   }
+  // Il campione deve prima scegliere la skill: finché non lo fa, il torneo non si può annullare.
+  function arenaPrizePending() { return !!arena && arena.stage==="winner" && !!arena.winner && !arena.skillAwarded; }
   function arenaResetTournament() {
     // Annulla soltanto la run Arena; roster e premi gia' assegnati restano intatti.
     arena = null;
@@ -5062,9 +5121,20 @@
   function arenaAlivePlayers() { return arena.players.filter((p) => p.hp > 0); }
   function arenaAliveAnimals() { return (arena.animals?.fighters||[]).filter((p) => p.hp > 0); }
   function arenaAlive() { return [...arenaAlivePlayers(),...arenaAliveAnimals()]; }
+  // Le skill portate in questo torneo si consumano solo quando il torneo finisce davvero.
+  // Un RESET (o l'uscita) non le tocca: chi le aveva conquistate le ritrova nel torneo successivo.
+  function arenaConsumeStartingSkills() {
+    const started=arena?.startSkills;
+    if (!started || arena.startSkillsConsumed) return;
+    const book=arenaSkillBook();
+    for (const [id,skill] of Object.entries(started)) if (book[id]===skill) delete book[id];
+    arenaWriteSkillBook(book);
+    arena.startSkillsConsumed=true;
+  }
   function arenaWinnerStage(reason="combat") {
     const people=arenaAlivePlayers(), beasts=arenaAliveAnimals();
     if (people.length > 1 || (people.length===1 && beasts.length>0)) return false;
+    arenaConsumeStartingSkills();
     if (people.length===1 && beasts.length===0) {
       arena.winner=people[0].id; arena.stage="winner";
     } else {
@@ -5107,9 +5177,12 @@
         maxHp:skill==="defense"?200:100,shield:skill==="defense"?200:40,maxShield:skill==="defense"?200:40,attacks:0,defends:0,
         skill,skillUsed:{},lastMatch:0,arenaWeapon:null,specialWeapon:null,weaponId:null,giftWeapon:null};
     });
-    for(const p of members) delete skillBook[p.id];
-    arenaWriteSkillBook(skillBook);
+    // La skill NON viene tolta dal libretto qui: resta al vincitore finché il torneo non si conclude
+    // davvero (vedi arenaConsumeStartingSkills). Se il torneo viene resettato/annullato, la skill resta sua.
+    const startSkills={};
+    for(const p of nextPlayers) if(p.skill) startSkills[p.id]=p.skill;
     arena = { version:1, tournament:(arena ? arena.tournament + 1 : 1), stage:"gift", giftIndex:0,giftReveal:false,pickIndex:0,
+      startSkills,
       players:nextPlayers,
       match:null, exchange:0, result:null, winner:null, log:[],
       splatter:{target:1+arenaRandom(3),count:0,rolls:[],outcomes:[],nextAt:5+arenaRandom(3)},
@@ -5332,8 +5405,8 @@
         if(op==="card") { if(arena){ arenaCardChoice={key:arenaCardKey(),id:btn.dataset.card}; arenaRefreshCard(root); } return; }
         if(op==="exit") { arenaGiftRiveCleanup(); root.hidden=true; arena=null; renderSetup(); return; }
         if(op==="reset") {
-          if (!arena) return;
-          if (typeof confirm !== "function" || !confirm("Annullare il Deathmatch in corso? Gli scontri non completati andranno persi. I partecipanti e i premi precedenti resteranno salvati.")) return;
+          if (!arena || arenaPrizePending()) return;
+          if (typeof confirm !== "function" || !confirm("Annullare il Deathmatch in corso? Gli scontri non completati andranno persi. I partecipanti e le skill già conquistate resteranno salvati.")) return;
           arenaGiftRiveCleanup(); arenaResetTournament(); return;
         }
         if(op==="skill") {arenaAwardSkill(btn.dataset.skill);return;}
@@ -5483,7 +5556,7 @@
       @media(max-width:380px){.fa-arena-gift-dice .fa-arena-btn{height:54px}.fa-arena-gift-machine{aspect-ratio:4/3}}
 .fa-arena-damage-guide{margin:12px 0;padding:10px;border:1px solid rgba(150,160,175,.35);border-radius:10px;background:rgba(120,135,160,.1)}.fa-arena-damage-guide summary{cursor:pointer;font-weight:800}.fa-arena-damage-guide table{width:100%;border-collapse:collapse;font-size:.84em;text-align:left}.fa-arena-damage-guide th,.fa-arena-damage-guide td{padding:5px 4px;border-bottom:1px solid rgba(150,160,175,.25)}.fa-arena-damage-guide p{font-size:.8em;line-height:1.45;margin:6px 0}.fa-arena-equipment{margin-top:9px}.fa-arena-equipment-title{font-size:.75em;letter-spacing:.06em;opacity:.8;margin-bottom:5px;font-weight:700}.fa-arena-equipment-items{display:flex;flex-wrap:wrap;gap:6px}.fa-arena-equipment-item{display:flex;gap:5px;align-items:flex-start;padding:5px 8px;border-radius:8px;background:rgba(130,145,165,.13);border:1px solid rgba(150,160,175,.2);font-size:.82em;min-width:0}.fa-arena-equipment-item strong{display:block;overflow-wrap:anywhere}.fa-arena-equipment-item small{display:block;opacity:.8}.fa-arena-equipment-special{border-color:rgba(205,157,75,.65);background:rgba(198,146,56,.16)}.fa-arena-equipment-skill{border-color:rgba(151,105,198,.55)}.fa-arena-roster .fa-arena-equipment-item{font-size:.75em}.fa-arena-fighter-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:12px 0}.fa-arena-fighter-card{border:1px solid rgba(150,160,175,.32);border-radius:12px;padding:12px;background:rgba(40,50,65,.22)}.fa-arena-fighter-card>strong{display:block;margin-bottom:10px}.fa-arena-bars{display:grid;gap:9px}.fa-arena-meter-label{display:flex;justify-content:space-between;gap:10px;font-size:.85em;margin-bottom:3px}.fa-arena-meter-track{width:100%;height:13px;border-radius:8px;background:rgba(130,135,145,.3);overflow:hidden}.fa-arena-meter-fill{height:100%;border-radius:8px;transition:width .15s ease}.fa-arena-roster .fa-arena-bars{margin-top:7px}.fa-arena-roster .fa-arena-meter-track{height:8px}.fa-arena-defense-note{font-size:.85em;opacity:.85;margin:7px 0}</style>`;
     const btn=(action,label,extra="")=>`<button class="fa-arena-btn" data-arena="${action}" ${extra}>${label}</button>`;
-    const header=`<header class="fa-arena-header"><strong>⚔️ FORTRESS ARENA · PvP</strong><div class="fa-arena-header-actions">${arena ? btn("reset","↻ RESET TORNEO") : ""}${btn("exit","ESCI DALL'ARENA")}</div></header>`;
+    const header=`<header class="fa-arena-header"><strong>⚔️ FORTRESS ARENA · PvP</strong><div class="fa-arena-header-actions">${arena && !arenaPrizePending() ? btn("reset","↻ RESET TORNEO") : ""}${btn("exit","ESCI DALL'ARENA")}</div></header>`;
     const roster=arena ? arenaRosterHtml() : "";
     let body="";
     if (!arena) {
