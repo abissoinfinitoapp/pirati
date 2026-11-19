@@ -5354,6 +5354,25 @@
     }
     return out;
   }
+  // Creature catturate: p.pet={species,name,icon,hp,maxHp}. Non sono combattenti dell'arena,
+  // ma un "cuscinetto" di HP che il giocatore puo' scegliere di usare quando difende.
+  function arenaHasPet(p) { return !!p && !p.animal && p.hp>0 && !!p.pet && p.pet.hp>0; }
+  function arenaPetChoicePending() {
+    const m=arena?.match;
+    return !!m && arena.stage==="defense" && arenaHasPet(arenaPlayer(m.b)) && typeof m.petDefends!=="boolean";
+  }
+  function arenaPetDefends(d) { return arenaHasPet(d) && arena.match?.petDefends===true; }
+  function arenaCapturePet(owner,beast) {
+    const pet={species:beast.species,name:beast.name,icon:beast.icon,hp:beast.maxHp,maxHp:beast.maxHp};
+    const replaced=owner.pet?.name||null;
+    owner.pet=pet;
+    return {name:pet.name,hp:pet.hp,replaced};
+  }
+  function arenaChoosePetDefense(usePet) {
+    if (!arenaPetChoicePending()) return;
+    arena.match.petDefends=!!usePet;
+    arenaStore(); renderArena();
+  }
   function arenaResolve() {
     const m=arena.match, a=arenaPlayer(m.a), d=arenaPlayer(m.b);
     // V60: stato prima dello scontro, per il riepilogo (colpi presi, scudo perso, cure/maledizioni dell'attaccante).
@@ -5373,10 +5392,19 @@
     const parryPressure=percent===0?(d.skillUsed?.dodge&&delta>0?0:delta<=-4?0:delta<0?10:20):0;
     const maxHp=d.maxHp||100;
     const rawDamage=percent===100?d.hp:percent>0?Math.ceil(maxHp*percent/100):parryPressure;
-    const blocked=percent===100?0:Math.min(Math.max(0,d.shield||0),rawDamage);
+    // Creatura catturata: se il difensore ha scelto di usarla, assorbe il colpo con i suoi HP
+    // (anche il KO immediato). Solo il danno che avanza arriva al giocatore.
+    const pet=arenaPetDefends(d)?d.pet:null;
+    const petAbsorbed=pet?Math.min(pet.hp,rawDamage):0;
+    if(pet) pet.hp-=petAbsorbed;
+    const leftover=rawDamage-petAbsorbed;
+    const blocked=percent===100?0:Math.min(Math.max(0,d.shield||0),leftover);
     d.shield=Math.max(0,(d.shield||0)-blocked);
-    const hpDamage=percent===100?d.hp:Math.max(0,rawDamage-blocked);
+    const hpDamage=Math.max(0,leftover-blocked);
     d.hp=Math.max(0,d.hp-hpDamage);
+    const petLost=!!pet&&pet.hp<=0;
+    const petInfo=pet?{name:pet.name,absorbed:petAbsorbed,lost:petLost,hp:Math.max(0,pet.hp),maxHp:pet.maxHp}:null;
+    if(petLost) d.pet=null;
     if(d.hp===0&&d.skill==="phoenix"&&!d.skillUsed?.phoenix){d.hp=Math.ceil(maxHp*.4);d.skillUsed.phoenix=true;}
     if(percent>0&&arenaSkill(a)==="vampire")a.hp=Math.min(a.maxHp||100,a.hp+Math.ceil((a.maxHp||100)*.2));
     if(arenaWeapon(a)?.kind==="cursed")a.hp=Math.max(0,a.hp-Math.ceil((a.maxHp||100)*.2));
@@ -5386,9 +5414,15 @@
     if(d.hp===0){d.giftWeapon=null;d.arenaWeapon=null;d.specialWeapon=null;d.specialTargetPending=false;}
     if(a.hp===0){a.giftWeapon=null;a.arenaWeapon=null;a.specialWeapon=null;a.specialTargetPending=false;}
     arenaEliminateSkill(d);
+    // Chi viene eliminato perde anche la creatura che aveva catturato.
+    if(d.hp===0) d.pet=null;
+    if(a.hp===0) a.pet=null;
+    // Un giocatore che elimina una creatura la cattura: torna con tutti i suoi HP e lo difende.
+    // Una sola creatura per giocatore: una nuova cattura sostituisce la precedente.
+    const captured=d.animal&&d.hp===0&&!a.animal&&a.hp>0?arenaCapturePet(a,d):null;
     a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
     const earnings=arenaPayExchange(a,d,delta);
-    arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null,earnings,
+    arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null,earnings,pet:petInfo,captured,
       before,after:{a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}}};
     arena.log.unshift({number:arena.exchange,a:a.name,b:d.name,delta,eliminated:d.hp===0});
     arena.log=arena.log.slice(0,12);
@@ -5404,6 +5438,7 @@
       m.attack.push(n);
       // Il giocatore conferma esplicitamente i due dadi prima del cambio turno.
     } else if (arena.stage === "defense") {
+      if (arenaPetChoicePending()) return;
       if (m.defense.length>=arenaSkillDice(arenaPlayer(m.b),false)) return;
       m.defense.push(n);
       // Il risultato viene calcolato solo dopo conferma della difesa.
@@ -5419,7 +5454,7 @@
       attacker.boost=false;
       arena.stage="defense";
       arenaStore(); renderArena();
-    } else if (arena.stage === "defense" && m.defense.length===arenaSkillDice(arenaPlayer(m.b),false)) {
+    } else if (arena.stage === "defense" && !arenaPetChoicePending() && m.defense.length===arenaSkillDice(arenaPlayer(m.b),false)) {
       arenaResolve(); renderArena();
     }
   }
@@ -5468,6 +5503,7 @@
         if(op==="splatter-next") { arenaFinishSplatter(); return; }
         if(op==="die") { arenaInputDie(Number(btn.dataset.die)); renderArena(); return; }
         if(op==="confirm-dice") { arenaConfirmDice(); return; }
+        if(op==="pet-defend") { arenaChoosePetDefense(btn.dataset.choice==="pet"); return; }
         if(op==="undo" && (arena.stage==="attack" || arena.stage==="defense")) {
           const arr=arena.stage==="attack"?arena.match.attack:arena.match.defense; arr.pop(); arenaStore(); renderArena(); return; }
         if(op==="next" && arena.stage==="result") { if(!arenaWinnerStage()){ arena.stage="ready";arenaStore(); } renderArena();return; }
@@ -5508,6 +5544,7 @@
     if (p.boost) entries.push({icon:"⚡",name:"Potenza",detail:"+1 dado al prossimo attacco",type:"boost"});
     if ((p.directChallenges||0)>0) entries.push({icon:"🎯",name:"Sfida Diretta",detail:`${p.directChallenges} disponibili`,type:"direct"});
     if (p.upgradeName) entries.push({icon:"🐾",name:p.upgradeName,detail:"Potenziamento",type:"upgrade"});
+    if (arenaHasPet(p)) entries.push({icon:p.pet.icon||"🐾",name:p.pet.name,detail:`Creatura catturata · ❤️ ${p.pet.hp}/${p.pet.maxHp}`,type:"pet"});
     if (!entries.length) entries.push({icon:"—",name:"Nessuna dotazione",detail:"",type:"empty"});
     return `<div class="fa-arena-equipment" aria-label="Dotazioni ${arenaEscape(p.name)}"><div class="fa-arena-equipment-title">🎒 DOTAZIONI</div><div class="fa-arena-equipment-items">${entries.map(e=>`<div class="fa-arena-equipment-item fa-arena-equipment-${e.type}"><span aria-hidden="true">${e.icon}</span><span><strong>${arenaEscape(e.name)}</strong>${e.detail?`<small>${arenaEscape(e.detail)}</small>`:""}</span></div>`).join("")}</div></div>`;
   }
@@ -5557,7 +5594,20 @@
     root.querySelectorAll(".fa-arena-chip").forEach(b=>{const on=b.dataset.card===sel.id;b.classList.toggle("is-active",on);b.setAttribute("aria-pressed",String(on));});
   }
   function arenaDuelist(p,role,rolling) {
-    return `<div class="fa-arena-duelist ${rolling?"is-rolling":""}"><div class="fa-arena-thumb">${arenaPhoto(p)}</div><span class="fa-arena-duelist-role">${role}</span><strong class="fa-arena-duelist-name">${arenaEscape(p.name)}</strong>${arenaBars(p)}</div>`;
+    const pet=arenaHasPet(p)?`<small class="fa-arena-pet-line">${p.pet.icon||"🐾"} ${arenaEscape(p.pet.name)} · ❤️ ${p.pet.hp}/${p.pet.maxHp}</small>`:"";
+    return `<div class="fa-arena-duelist ${rolling?"is-rolling":""}"><div class="fa-arena-thumb">${arenaPhoto(p)}</div><span class="fa-arena-duelist-role">${role}</span><strong class="fa-arena-duelist-name">${arenaEscape(p.name)}</strong>${arenaBars(p)}${pet}</div>`;
+  }
+  // Scelta del difensore che possiede una creatura: usarla come scudo vivente o tenerla da parte.
+  function arenaPetChoiceHtml(d) {
+    const pet=d.pet, photo=arenaPhoto({animal:true,species:pet.species,name:pet.name,icon:pet.icon});
+    return `<section class="fa-arena-pet-choice" aria-label="Scelta della creatura">
+      <div class="fa-arena-photo fa-arena-photo-mini">${photo}</div>
+      <h3>🐾 ${arenaEscape(d.name)}, vuoi difenderti con ${arenaEscape(pet.name)}?</h3>
+      <p>${arenaEscape(pet.name)} ha <strong>❤️ ${pet.hp}/${pet.maxHp} HP</strong>. Se la usi, il colpo lo prende la creatura: solo i danni che avanzano arrivano a te. Se i suoi HP finiscono, la perdi.</p>
+      <div class="fa-arena-choices fa-arena-pet-buttons">
+        ${`<button class="fa-arena-btn" data-arena="pet-defend" data-choice="pet"><strong>🐾 DIFENDITI CON ${arenaEscape(pet.name.toUpperCase())}</strong><small>Prende il colpo al posto tuo</small></button>`}
+        ${`<button class="fa-arena-btn" data-arena="pet-defend" data-choice="self"><strong>🙋 DIFENDITI DA SOLO</strong><small>Tieni la creatura per dopo</small></button>`}
+      </div></section>`;
   }
   // V60: riepilogo scontro con la card di chi vince e di chi ha subito (colpi, scudo, K.O.).
   function arenaOutcomeCard(p,role,badge,change,flags) {
@@ -5651,9 +5701,10 @@
       const p=attacking?a:d, rolls=attacking?m.attack:m.defense, count=arenaSkillDice(p,attacking);
       // V59 mobile: 1) duellanti, 2) dadi subito sotto, 3) bonus attivi, 4) istruzioni sul valore, 5) combattenti (pulsanti + scheda).
       const bonuses=`${m.event?`<p class="fa-arena-event">🎁 ${arenaEscape(m.event)}</p>`:''}${arenaWeapon(p)?`<p class="fa-arena-event">🔫 ${arenaEscape(arenaWeaponLabel(p))}</p>`:""}${arenaSpecial(p)?`<p class="fa-arena-event">💥 COLPO UNICO: ${arenaEscape(arenaSpecial(p).name)} · scegli bersaglio, si consuma dopo il tiro</p>`:""}${arenaSkill(p)?`<p class="fa-arena-event">✨ SKILL DEL CAMPIONE: ${arenaEscape(arenaSkillName(p.skill))}</p>`:""}${p.upgradeName?`<p class="fa-arena-event">🐾 ${arenaEscape(p.upgradeName)}${p.attackBonus?" · +"+p.attackBonus+" attacco":""}${p.shield?" · 🛡️"+p.shield:""}</p>`:""}`;
+      const petNote=!attacking&&arenaPetDefends(d)?`<p class="fa-arena-event">🐾 ${arenaEscape(d.pet.name)} difende ${arenaEscape(d.name)}: prende il colpo per prima (❤️ ${d.pet.hp})</p>`:"";
       body=`<h2>SCONTRO ${arena.exchange}</h2>
         <div class="fa-arena-duel" aria-label="Combattenti dello scontro">${arenaDuelist(a,"⚔️ ATTACCA",attacking)}<strong>VS</strong>${arenaDuelist(d,"🛡️ DIFENDE",!attacking)}</div>
-        <section class="fa-arena-roll" aria-label="Tiro dei dadi">
+        ${arenaPetChoicePending()?arenaPetChoiceHtml(d):`${petNote}<section class="fa-arena-roll" aria-label="Tiro dei dadi">
         <h3>${attacking?'ATTACCA':'DIFENDE'}: ${arenaEscape(p.name)}</h3>
         <p class="fa-arena-turn-instruction">${arenaEscape(p.name)}, tira <strong>${count} dadi fisici insieme</strong> e inserisci il valore di ciascuno.</p>
         <div class="fa-arena-roll-slots" aria-label="Dadi di ${attacking?'attacco':'difesa'}">
@@ -5664,7 +5715,7 @@
         ${arenaSkill(p)==="reroll"&&rolls.length===count&&!m.rerolled?.[arena.stage]?btn("reroll","⚡ RITIRA ENTRAMBI I DADI"):""}
         <div class="fa-arena-roll-actions">${btn("confirm-dice",attacking?"CONFERMA ATTACCO → PASSA AL DIFENSORE":"CONFERMA DIFESA → MOSTRA RISULTATO",rolls.length===count?'':'disabled')}
         ${btn("undo","↶ CORREGGI ULTIMO DADO",rolls.length?'':'disabled')}</div>
-        </section>
+        </section>`}
         ${bonuses}
         ${arenaDamageGuide(d)}`;
     } else if(arena.stage==="result") {
@@ -5673,6 +5724,8 @@
       body=`<h2>RISULTATO SCONTRO ${arena.exchange}</h2><div class="fa-arena-score">${r.attack} ⚔️ VS 🛡️ ${r.defense}</div>
       <h3 class="fa-arena-verdict">${r.eliminated?`💀 ${arenaEscape(d.name)} È ELIMINATO`:r.delta<=0?(r.parryPressure===0?'DIFESA PERFETTA!':'DIFESA SOTTO PRESSIONE!'):`COLPO A SEGNO!`}</h3>
       ${r.specialName?`<p class="fa-arena-event">💥 ${arenaEscape(r.specialName)} consumata</p>`:''}
+      ${r.pet?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(r.pet.name)} ha preso ${r.pet.absorbed} danni al posto di ${arenaEscape(d.name)}${r.pet.lost?' ed è caduta: creatura persa':` · le restano ❤️ ${r.pet.hp}/${r.pet.maxHp}`}</p>`:''}
+      ${r.captured?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(a.name)} HA CATTURATO ${arenaEscape(r.captured.name.toUpperCase())}! Torna con ❤️ ${r.captured.hp} HP e potrà difendere ${arenaEscape(a.name)}${r.captured.replaced?` (prende il posto di ${arenaEscape(r.captured.replaced)})`:''}.</p>`:''}
       ${(r.earnings||[]).length?`<p class="fa-arena-event" role="status">💶 ${r.earnings.map(e=>`${arenaEscape(e.name)} +${e.amount}€`).join(' · ')}</p>`:''}
       <div class="fa-arena-outcome" aria-label="Esito dello scontro">${arenaResultCards(a,d,r)}</div>
       ${btn("next","PROSSIMO SCONTRO")}
