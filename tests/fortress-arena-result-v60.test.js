@@ -23,12 +23,12 @@ assert.equal(count(/fa-arena-ribbon">🏆 VINCE/g),1);
 assert.ok(/fa-arena-outcome-card is-ko/.test(html()));
 assert.ok(html().includes('💀 ELIMINATO'));assert.ok(html().includes('P1 È ELIMINATO'));
 assert.ok(html().includes('fa-arena-ko'));
-// ordine: esito → pulsante → dettaglio chiuso → combattenti
+// ordine (V65): spiegazione "come è andata" sempre visibile → esito → pulsante → combattenti
+assert.ok(at('<section class="fa-arena-explain"')<at('<div class="fa-arena-outcome"'));
 assert.ok(at('<div class="fa-arena-outcome"')<at('data-arena="next"'));
-assert.ok(at('data-arena="next"')<at('<details class="fa-arena-damage-guide"'));
-assert.ok(at('<details class="fa-arena-damage-guide"')<at('<section class="fa-arena-cards"'));
-assert.ok(!/<details class="fa-arena-damage-guide" open/.test(html()),'dettaglio sempre chiuso');
-assert.ok(html().includes('KO immediato: lo scudo non protegge'));
+assert.ok(at('data-arena="next"')<at('<section class="fa-arena-cards"'));
+assert.ok(!/<details class="fa-arena-damage-guide" open/.test(html()),'scala dello scontro chiusa');
+assert.ok(html().includes('K.O.: lo scudo non serve'));
 // before/after registrati
 assert.equal(run('arena.result.before.d.hp'),100);assert.equal(run('arena.result.after.d.hp'),0);
 

@@ -5055,16 +5055,20 @@
   function arenaSkillName(id) {return ARENA_SKILLS.find(x=>x.id===id)?.name||"";}
   function arenaEliminateSkill(p) {if(p&&!p.animal&&p.hp<=0) {p.skill=null;p.skillUsed=null;} }
   function arenaSkillDice(p,attacking) {return (attacking&&(p.boost||arenaSkill(p)==="destiny"||arenaWeaponDice(p,attacking)))?3:2;}
-  function arenaDiceTotal(p,rolls,attacking) {
-    let total=rolls.reduce((a,b)=>a+b,0);
+  // Bonus che si sommano ai dadi, con il loro nome: servono per spiegare il conto ai bambini.
+  function arenaBonusParts(p,rolls,attacking) {
+    const parts=[], add=(label,value)=>{ if(value) parts.push({label,value}); };
     const weapon=arenaWeapon(p);
-    if(!p?.animal && p?.giftWeapon && !weapon) total+=attacking?arenaGiftBonus(p):0;
-    if(weapon&&((attacking&&weapon.kind!=="defense")||(!attacking&&weapon.kind==="defense")))total+=weapon.bonus;
-    if(attacking&&arenaSkill(p)==="fire") total+=2;
-    if(attacking&&arenaSkill(p)==="devastating") total+=rolls.length*2;
-    if(attacking && p?.animal) total+=(p.attackBonus||0);
-    if(attacking && arenaSpecial(p)) total+=arenaSpecial(p).bonus;
-    return total;
+    if(!p?.animal && p?.giftWeapon && !weapon && attacking) add(arenaGiftName(p)||"Arma regalo",arenaGiftBonus(p));
+    if(weapon&&((attacking&&weapon.kind!=="defense")||(!attacking&&weapon.kind==="defense"))) add(weapon.name,weapon.bonus);
+    if(attacking&&arenaSkill(p)==="fire") add(arenaSkillName("fire"),2);
+    if(attacking&&arenaSkill(p)==="devastating") add(arenaSkillName("devastating"),rolls.length*2);
+    if(attacking && p?.animal) add(p.upgradeName||"Furia",p.attackBonus||0);
+    if(attacking && arenaSpecial(p)) add(arenaSpecial(p).name,arenaSpecial(p).bonus);
+    return parts;
+  }
+  function arenaDiceTotal(p,rolls,attacking) {
+    return rolls.reduce((a,b)=>a+b,0)+arenaBonusParts(p,rolls,attacking).reduce((a,b)=>a+b.value,0);
   }
   function arenaAwardSkill(id) {
     if(!arena||arena.stage!=="winner"||!arena.winner||!arena.skillChoices?.includes(id)||arena.skillAwarded)return;
@@ -5707,7 +5711,7 @@
       const petNote=!attacking&&arenaPetDefends(d)?`<p class="fa-arena-event">🐾 ${arenaEscape(d.pet.name)} difende ${arenaEscape(d.name)}: prende il colpo per prima (❤️ ${d.pet.hp})</p>`:"";
       body=`<h2>SCONTRO ${arena.exchange}</h2>
         <div class="fa-arena-duel" aria-label="Combattenti dello scontro">${arenaDuelist(a,"⚔️ ATTACCA",attacking)}<strong>VS</strong>${arenaDuelist(d,"🛡️ DIFENDE",!attacking)}</div>
-        ${arenaPetChoicePending()?arenaPetChoiceHtml(d):`${petNote}<section class="fa-arena-roll" aria-label="Tiro dei dadi">
+        ${arenaPetChoicePending()?arenaPetChoiceHtml(d):`${petNote}${attacking?"":arenaDefenseHelp(a,d,arenaDiceTotal(a,m.attack,true),rolls)}<section class="fa-arena-roll" aria-label="Tiro dei dadi">
         <h3>${attacking?'ATTACCA':'DIFENDE'}: ${arenaEscape(p.name)}</h3>
         <p class="fa-arena-turn-instruction">${arenaEscape(p.name)}, tira <strong>${count} dadi fisici insieme</strong> e inserisci il valore di ciascuno.</p>
         <div class="fa-arena-roll-slots" aria-label="Dadi di ${attacking?'attacco':'difesa'}">
@@ -5720,21 +5724,19 @@
         ${btn("undo","↶ CORREGGI ULTIMO DADO",rolls.length?'':'disabled')}</div>
         </section>`}
         ${bonuses}
-        ${arenaDamageGuide(d)}`;
+        ${attacking?arenaDamageGuide(d):""}`;
     } else if(arena.stage==="result") {
       // V60 mobile: 1) punteggio e verdetto, 2) card di chi vince / di chi ha subito, 3) pulsante, 4) dettaglio calcolo chiuso, 5) combattenti.
       const r=arena.result, a=arenaPlayer(arena.match.a), d=arenaPlayer(arena.match.b);
       body=`<h2>RISULTATO SCONTRO ${arena.exchange}</h2><div class="fa-arena-score">${r.attack} ⚔️ VS 🛡️ ${r.defense}</div>
       <h3 class="fa-arena-verdict">${r.eliminated?`💀 ${arenaEscape(d.name)} È ELIMINATO`:r.delta<=0?(r.parryPressure===0?'DIFESA PERFETTA!':'DIFESA SOTTO PRESSIONE!'):`COLPO A SEGNO!`}</h3>
+      ${arenaExplainHtml(a,d,r,arena.match)}
       ${r.specialName?`<p class="fa-arena-event">💥 ${arenaEscape(r.specialName)} consumata</p>`:''}
       ${r.pet?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(r.pet.name)} ha preso ${r.pet.absorbed} danni al posto di ${arenaEscape(d.name)}${r.pet.lost?' ed è caduta: creatura persa':` · le restano ❤️ ${r.pet.hp}/${r.pet.maxHp}`}</p>`:''}
       ${r.captured?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(a.name)} HA CATTURATO ${arenaEscape(r.captured.name.toUpperCase())}! Torna con ❤️ ${r.captured.hp} HP e potrà difendere ${arenaEscape(a.name)}${r.captured.replaced?` (prende il posto di ${arenaEscape(r.captured.replaced)})`:''}.</p>`:''}
       ${(r.earnings||[]).length?`<p class="fa-arena-event" role="status">💶 ${r.earnings.map(e=>`${arenaEscape(e.name)} +${e.amount}€`).join(' · ')}</p>`:''}
       <div class="fa-arena-outcome" aria-label="Esito dello scontro">${arenaResultCards(a,d,r)}</div>
-      ${btn("next","PROSSIMO SCONTRO")}
-      <details class="fa-arena-damage-guide"><summary>📋 DETTAGLIO DEL CALCOLO</summary>
-      <p class="fa-arena-defense-note">${r.percent===100?'KO immediato: lo scudo non protegge':`Danno base: ${r.percent>0?Math.ceil((d.maxHp||100)*r.percent/100):r.parryPressure} punti · Scudo assorbito: ${r.blocked} · HP persi: ${r.hpDamage}`}</p>
-      <p class="fa-arena-defense-note">${r.delta<=-4?'Scarto difensivo perfetto: protezione intatta':r.delta<=0?`Scarto difensivo ${Math.abs(r.delta)} · pressione ${r.parryPressure} punti`:`Scarto attacco +${r.delta}`}</p></details>`;
+      ${btn("next","PROSSIMO SCONTRO")}`;
     } else if(arena.stage==="winner") {
       arenaPrepareSkillChoices();
       body=`<h2>🏆 CAMPIONE DEL TORNEO ${arena.tournament}</h2><h3>${arenaEscape(arenaPlayer(arena.winner)?.name||'—')}</h3>${arenaEarnedSummary()}
@@ -5774,6 +5776,84 @@
       <table><thead><tr><th>Scarto</th><th>Esito</th><th>Punti</th></tr></thead><tbody>${entries.map(([delta,label,points])=>`<tr><td>${delta}</td><td>${label}</td><td>${points}</td></tr>`).join('')}</tbody></table>
       <p>I punti consumano prima lo scudo 🛡️; solo il resto toglie HP ❤️. Il KO immediato ignora lo scudo. Armi e skill possono modificare il risultato.</p>
     </details>`;
+  }
+  // Scala della difesa: conta solo la DIFFERENZA tra attacco e difesa.
+  // Indice 0 = migliore per chi difende, 6 = KO.
+  function arenaLadderRow(delta) { return delta<=-4?0:delta<0?1:delta===0?2:delta>=4?6:2+delta; }
+  function arenaLadderRows(maxHp) {
+    const pct=n=>Math.ceil(maxHp*n/100);
+    return [
+      {from:4,to:Infinity,cls:"good",label:"🛡️ DIFESA PERFETTA",dmg:"nessun danno"},
+      {from:1,to:3,cls:"good",label:"🛡️ PARATA",dmg:"10 punti"},
+      {from:0,to:0,cls:"mid",label:"😬 PARATA AL LIMITE",dmg:"20 punti"},
+      {from:-1,to:-1,cls:"bad",label:"💥 COLPO LEGGERO",dmg:`${pct(40)} punti`},
+      {from:-2,to:-2,cls:"bad",label:"💥 COLPO FORTE",dmg:`${pct(70)} punti`},
+      {from:-3,to:-3,cls:"bad",label:"💥 COLPO DEVASTANTE",dmg:`${pct(80)} punti`},
+      {from:-Infinity,to:-4,cls:"ko",label:"💀 K.O.",dmg:"eliminato"}
+    ]; // from/to = quanto la difesa supera l'attacco (difesa − attacco)
+  }
+  // Cosa devono fare i 2 dadi di difesa per ogni gradino, dato il totale d'attacco.
+  function arenaLadderHtml(attackTotal,defBonus,maxHp,activeRow) {
+    const rows=arenaLadderRows(maxHp).map((r,i)=>{
+      const lo=Math.max(2,attackTotal+r.from-defBonus), hi=Math.min(12,attackTotal+r.to-defBonus);
+      const possible=lo<=hi;
+      const need=!possible?"impossibile":lo===hi?`${lo}`:hi===12&&r.to===Infinity?`${lo} o più`:lo===2&&r.from===-Infinity?`${hi} o meno`:`da ${lo} a ${hi}`;
+      return `<tr class="fa-ladder-${r.cls} ${possible?"":"is-impossible"} ${i===activeRow?"is-active":""}"><td>${need}</td><td><strong>${r.label}</strong></td><td>${r.dmg}</td></tr>`;
+    }).join("");
+    return `<table class="fa-arena-ladder"><thead><tr><th>🎲 Dadi difesa</th><th>Cosa succede</th><th>Danno</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  // Avvisi sulle regole speciali che cambiano la scala in questo scontro.
+  function arenaLadderNotes(a,d) {
+    const notes=[], sp=arenaSpecial(a);
+    if(sp&&(sp.kind==="any-ko"||(sp.kind==="beast-ko"&&d.animal))) notes.push(`💥 ${arenaEscape(sp.name)}: se l'attacco supera la difesa è subito K.O.`);
+    if(arenaSkill(d)==="armor") notes.push("👑 Armatura del Re: ogni colpo scende di un gradino.");
+    if(arenaSkill(d)==="dodge"&&!d.skillUsed?.dodge) notes.push("👻 Schivata Fantasma: il primo colpo che fa danni viene annullato.");
+    if(arenaPetDefends(d)) notes.push(`🐾 ${arenaEscape(d.pet.name)} prende i danni per prima (❤️ ${d.pet.hp}).`);
+    notes.push("I punti tolgono prima lo scudo 🛡️, poi la vita ❤️. Il K.O. ignora lo scudo.");
+    return notes.map(n=>`<p class="fa-arena-ladder-note">${n}</p>`).join("");
+  }
+  // Pannello mostrato a chi difende: l'attacco è già noto, quindi si può dire quanto serve.
+  function arenaDefenseHelp(a,d,attackTotal,defRolls) {
+    const bonus=arenaDiceTotal(d,[],false), done=defRolls.length===2;
+    const active=done?arenaLadderRow(attackTotal-arenaDiceTotal(d,defRolls,false)):-1;
+    return `<section class="fa-arena-defense-help" aria-label="Quanto serve per difendersi">
+      <h3>⚔️ ${arenaEscape(a.name)} ha fatto <span class="fa-arena-big">${attackTotal}</span></h3>
+      <p>${arenaEscape(d.name)}, somma i tuoi 2 dadi e guarda la scala: <strong>più alto fai, meno danni prendi.</strong>${bonus?` Il +${bonus} della tua arma è già contato.`:""}</p>
+      ${arenaLadderHtml(attackTotal,bonus,d.maxHp||100,active)}
+      ${arenaLadderNotes(a,d)}</section>`;
+  }
+  function arenaSumLine(rolls,parts) {
+    const pieces=[...rolls.map(String),...parts.map(x=>`${x.value} <small>(${arenaEscape(x.label)})</small>`)];
+    return pieces.join(" + ");
+  }
+  // Spiegazione del risultato, passo per passo e sempre visibile.
+  function arenaExplainHtml(a,d,r,m) {
+    const aParts=arenaBonusParts(a,m.attack,true), dParts=arenaBonusParts(d,m.defense,false);
+    const row=arenaLadderRows(d.maxHp||100)[arenaLadderRow(r.delta)];
+    const diff=r.delta>0?`l'attacco è più alto di <strong>${r.delta}</strong>`:r.delta<0?`la difesa è più alta di <strong>${-r.delta}</strong>`:"<strong>pareggio</strong>";
+    const expectedPct=r.delta<=0?0:[0,40,70,80,100][Math.min(4,r.delta)];
+    let twist="";
+    if(r.specialName&&r.percent===100&&expectedPct<100) twist=`💥 ${arenaEscape(r.specialName)}: l'arma speciale trasforma il colpo in K.O.!`;
+    else if(r.delta>0&&r.percent===0) twist="👻 Schivata Fantasma: il colpo è stato annullato!";
+    else if(r.percent>0&&r.percent<expectedPct) twist="👑 Armatura del Re: il colpo è sceso di un gradino.";
+    const raw=r.percent===100?null:(r.percent>0?Math.ceil((d.maxHp||100)*r.percent/100):r.parryPressure);
+    const steps=[];
+    if(r.pet) steps.push(`🐾 ${arenaEscape(r.pet.name)} ne prende ${r.pet.absorbed}`);
+    if(r.blocked) steps.push(`🛡️ lo scudo ne ferma ${r.blocked}`);
+    steps.push(r.hpDamage?`❤️ la vita perde ${r.hpDamage}`:"❤️ la vita resta intatta");
+    const damage=r.percent===100?(r.hpDamage?`💀 K.O.: lo scudo non serve${r.pet?`, ${arenaEscape(r.pet.name)} ne prende ${r.pet.absorbed}`:""} · ❤️ la vita perde ${r.hpDamage}`:`💀 Colpo da K.O. ma ${arenaEscape(r.pet?.name||"")} lo prende tutto!`)
+      :raw===0?"✨ Nessun punto di danno.":`${raw} punti di danno → ${steps.join(" → ")}`;
+    return `<section class="fa-arena-explain" aria-label="Come è andata">
+      <h3>🧮 COME È ANDATA</h3>
+      <ol>
+        <li>⚔️ <strong>${arenaEscape(a.name)}</strong> attacca: ${arenaSumLine(m.attack,aParts)} = <strong>${r.attack}</strong></li>
+        <li>🛡️ <strong>${arenaEscape(d.name)}</strong> difende: ${arenaSumLine(m.defense,dParts)} = <strong>${r.defense}</strong></li>
+        <li>➖ ${r.attack} − ${r.defense}: ${diff} → <strong>${row.label}</strong></li>
+        ${twist?`<li>${twist}</li>`:""}
+        <li>${damage}</li>
+      </ol>
+      <details class="fa-arena-damage-guide"><summary>📶 VEDI LA SCALA DI QUESTO SCONTRO</summary>${arenaLadderHtml(r.attack,arenaDiceTotal(d,[],false),d.maxHp||100,arenaLadderRow(r.delta))}</details>
+    </section>`;
   }
   function arenaOpen() { arenaLoad(); renderArena(); }
   function arenaBindSetup() {

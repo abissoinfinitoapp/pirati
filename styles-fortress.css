@@ -2477,3 +2477,23 @@ body.fa-game-active .fa-header { display:none; }
 .fa-arena-pet-line{display:block;margin-top:5px;font-size:.78rem;color:#cfe8bd;font-weight:700}
 .fa-arena-equipment-pet{border-color:rgba(127,174,106,.65);background:rgba(80,120,60,.18)}
 @media(max-width:520px){.fa-arena-pet-buttons{grid-template-columns:1fr}.fa-arena-pet-buttons .fa-arena-btn{min-height:0}}
+/* Spiegazione dei dadi: scala della difesa e "come è andata" */
+.fa-arena-defense-help,.fa-arena-explain{margin:12px 0;padding:12px;border:2px solid #4f6f93;border-radius:12px;background:rgba(60,90,130,.16)}
+.fa-arena-defense-help h3,.fa-arena-explain h3{margin:0 0 6px}
+.fa-arena-defense-help p{font-size:.9rem;line-height:1.45;margin:6px 0}
+.fa-arena-big{display:inline-block;min-width:1.6em;padding:0 8px;border-radius:8px;background:#7a2a2f;color:#fff;font-size:1.4em;text-align:center}
+.fa-arena-ladder{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:.88rem;text-align:left}
+.fa-arena-ladder th{font-size:.75rem;opacity:.8;padding:0 8px}
+.fa-arena-ladder td{padding:7px 8px;background:rgba(130,145,165,.12)}
+.fa-arena-ladder td:first-child{border-radius:8px 0 0 8px;font-weight:800;white-space:nowrap}
+.fa-arena-ladder td:last-child{border-radius:0 8px 8px 0;white-space:nowrap}
+.fa-arena-ladder .fa-ladder-good td{background:rgba(70,140,90,.22)}
+.fa-arena-ladder .fa-ladder-mid td{background:rgba(190,160,60,.2)}
+.fa-arena-ladder .fa-ladder-bad td{background:rgba(190,90,60,.2)}
+.fa-arena-ladder .fa-ladder-ko td{background:rgba(160,40,50,.3)}
+.fa-arena-ladder .is-impossible td{opacity:.35}
+.fa-arena-ladder .is-active td{outline:3px solid #ffd76a;outline-offset:-3px;opacity:1}
+.fa-arena-ladder-note{font-size:.8rem!important;opacity:.85}
+.fa-arena-explain ol{margin:0;padding-left:22px;text-align:left;display:grid;gap:6px;font-size:.92rem;line-height:1.4}
+.fa-arena-explain ol small{opacity:.75}
+@media(max-width:520px){.fa-arena-ladder{font-size:.8rem}.fa-arena-ladder td{padding:6px 5px}}

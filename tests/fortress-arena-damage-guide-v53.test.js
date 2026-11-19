@@ -8,6 +8,6 @@ assert.match(src,/Math\.ceil\(hpMax\*\.7\)/);
 assert.match(src,/Math\.ceil\(hpMax\*\.8\)/);
 assert.match(src,/const levels=\[0,40,70,80,100\]/);
 assert.match(src,/arenaDamageGuide\(d\)/);
-assert.match(src,/Danno base:.*Scudo assorbito:.*HP persi:/);
-assert.match(src,/KO immediato: lo scudo non protegge/);
+assert.match(src,/punti di danno → \$\{steps\.join/); // V65: danno → scudo → vita spiegati passo per passo
+assert.match(src,/K.O.: lo scudo non serve/);
 console.log('V53 damage guide: OK');
