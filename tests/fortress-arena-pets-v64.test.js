@@ -59,4 +59,14 @@ assert.equal(run('arena.animals.fighters[0].pet'),undefined);
 run(`arena.players[1].pet={species:"puma",name:"Puma",icon:"🐆",hp:10,maxHp:70};arena.animals.fighters.push(${lupo})`);
 run('arena.match={a:"p1",b:"animal-1-lupo",attack:[6,6],defense:[1,1]};arena.stage="defense";arenaResolve()');
 assert.equal(run('arena.players[1].pet.name'),'Lupo');assert.equal(run('arena.result.captured.replaced'),'Puma');
-console.log('V64: cattura creature, scelta in difesa, assorbimento danni e perdita OK');
+
+// 9) Splatter House: muoiono solo le creature libere, quelle catturate restano al padrone.
+run(`arenaNewTournament();arena.players.forEach(p=>{p.hp=100;p.shield=0;p.skill=null});arena.stage="ready";arena.exchange=10;
+ arena.splatter={target:1,count:0,rolls:[],outcomes:[],nextAt:5};
+ arena.players[0].pet={species:"tigre",name:"Tigre",icon:"🐅",hp:90,maxHp:90};
+ arena.players[1].pet={species:"orso",name:"Orso",icon:"🐻",hp:120,maxHp:120};arena.players[1].hp=30;
+ arena.animals.fighters=[${lupo}];arenaBeginSplatter();arenaSplatterInput(6);arenaSplatterInput(1);arenaSplatterInput(6)`);
+assert.equal(run('arena.animals.fighters[0].hp'),0);                 // creatura libera eliminata
+assert.deepEqual(json('arena.players[0].pet'),{species:'tigre',name:'Tigre',icon:'🐅',hp:90,maxHp:90}); // catturata: intatta
+assert.equal(run('arena.players[1].hp'),0);assert.equal(run('arena.players[1].pet'),null); // padrone eliminato: la perde
+console.log('V64: cattura creature, scelta in difesa, assorbimento danni, perdita e Splatter House OK');

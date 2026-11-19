@@ -5240,6 +5240,8 @@
         player.shield-=blocked;
         player.hp=Math.max(0,player.hp-(damage-blocked));
         arenaEliminateSkill(player);
+        // Le creature catturate non subiscono le pareti: si perdono solo se il padrone viene eliminato.
+        if(player.hp===0) player.pet=null;
         return {id,die,damage,blocked,hp:player.hp};
       });
       // Le pareti eliminano sempre gli animali presenti, senza tiro.
@@ -5682,13 +5684,14 @@
       const rolls=arena.splatter.rolls, alive=arenaAlivePlayers(), p=alive[rolls.length];
       body=`<div class="fa-arena-splatter"><h2>☠️ SPLATTER HOUSE!</h2><p>Le pareti chiodate si avvicinano! Tutti i superstiti tirano 1 dado fisico.</p>
         <p><strong>${rolls.length+1} / ${alive.length} · ${arenaEscape(p?.name||'')}</strong></p>
-        <p>1–2: −40% HP · 3–6: salvo. Gli animali presenti vengono eliminati dalle pareti.</p>
+        <p>1–2: −40% HP · 3–6: salvo. Gli animali liberi vengono eliminati dalle pareti; le creature catturate restano con il loro padrone.</p>
         <div class="fa-arena-dice">${[1,2,3,4,5,6].map(n=>btn("splatter-die",String(n),`data-die="${n}"`)).join('')}</div>
         <p class="fa-arena-roll-hint">Danni e KO saranno applicati dopo il tiro di tutti.</p></div>`;
     } else if(arena.stage==="splatter-result") {
       body=`<div class="fa-arena-splatter"><h2>☠️ SPLATTER HOUSE · RISULTATI</h2>
         <div class="fa-arena-splatter-results">${arena.splatter.outcomes.map(o=>`<p><strong>${arenaEscape(arenaPlayer(o.id)?.name||'')}</strong> · D6: ${o.die} · ${o.damage===0?'SALVO':o.hp===0?'ELIMINATO':`−${o.damage-o.blocked}% HP${o.blocked?' (scudo '+o.blocked+')':''}`}</p>`).join('')}</div>
-        ${(arena.splatter.eliminatedAnimals||[]).length?`<div class="fa-arena-splatter-results" role="status"><h3>🐾 SPLATTER HOUSE HA ELIMINATO ${arena.splatter.eliminatedAnimals.length} ANIMALI!</h3><p>${arena.splatter.eliminatedAnimals.map(a=>arenaEscape(a.name)).join(' · ')}</p><p>Nessun animale sopravvissuto alle pareti chiodate.</p></div>`:''}
+        ${(arena.splatter.eliminatedAnimals||[]).length?`<div class="fa-arena-splatter-results" role="status"><h3>🐾 SPLATTER HOUSE HA ELIMINATO ${arena.splatter.eliminatedAnimals.length} ANIMALI!</h3><p>${arena.splatter.eliminatedAnimals.map(a=>arenaEscape(a.name)).join(' · ')}</p><p>Nessun animale libero sopravvissuto alle pareti chiodate.</p></div>`:''}
+        ${arenaAlivePlayers().filter(arenaHasPet).length?`<p class="fa-arena-event" role="status">🐾 Le creature catturate sono salve: ${arenaAlivePlayers().filter(arenaHasPet).map(p=>`${arenaEscape(p.pet.name)} (${arenaEscape(p.name)})`).join(" · ")}</p>`:"" }
         ${arenaAlive().length===0?'<h3>☠️ NESSUN SOPRAVVISSUTO</h3>':''}
         ${btn("splatter-next",arenaAlive().length<=1?"CONCLUDI TORNEO":"CONTINUA DEATHMATCH")}</div>`;
     } else if(arena.stage==="splatter-winner") {
