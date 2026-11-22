@@ -5379,6 +5379,43 @@
     arena.match.petDefends=!!usePet;
     arenaStore(); renderArena();
   }
+  // V66 furto: chi attacca un giocatore con una creatura catturata sceglie se combattere o rubarla.
+  // Il sistema sorteggia un numero (2-12); il tiro dell'attaccante deve stare entro ±tolleranza.
+  const ARENA_STEAL_TOLERANCE=2, ARENA_STEAL_PENALTY=40;
+  function arenaStealChoicePending() {
+    const m=arena?.match;
+    return !!m && arena.stage==="attack" && arenaHasPet(arenaPlayer(m.b)) && typeof m.steal!=="boolean";
+  }
+  function arenaChooseSteal(steal) {
+    if (!arenaStealChoicePending()) return;
+    arena.match.steal=!!steal;
+    if (steal) arena.match.stealTarget=2+Math.floor(Math.random()*11);
+    arenaStore(); renderArena();
+  }
+  function arenaResolveSteal() {
+    const m=arena.match, a=arenaPlayer(m.a), d=arenaPlayer(m.b), pet=d.pet;
+    const roll=m.attack.reduce((sum,n)=>sum+n,0), gap=Math.abs(roll-m.stealTarget);
+    const success=gap<=ARENA_STEAL_TOLERANCE;
+    const before={a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}};
+    let replaced=null, damage=0;
+    if (success) {
+      replaced=a.pet?.name||null;
+      a.pet={...pet};          // conserva gli HP che la creatura ha ora
+      d.pet=null;
+    } else {
+      damage=ARENA_STEAL_PENALTY;
+      a.hp=Math.max(0,a.hp-damage);
+    }
+    // Il colpo dell'attaccante si consuma comunque (come negli scontri).
+    if (a.specialWeapon) { a.specialWeapon=null; a.specialTargetPending=false; }
+    if (a.hp===0) { arenaEliminateSkill(a); a.giftWeapon=null; a.arenaWeapon=null; a.specialWeapon=null; a.specialTargetPending=false; a.pet=null; }
+    a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
+    arena.stealResult={target:m.stealTarget,roll,gap,success,damage,replaced,
+      attackerName:a.name,ownerName:d.name,petName:pet.name,petHp:pet.hp,petIcon:pet.icon,before,
+      after:{a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}}};
+    arena.stage="steal-result"; arenaStore();
+    playSfx(success?"roll-success":"player-hit");
+  }
   function arenaResolve() {
     const m=arena.match, a=arenaPlayer(m.a), d=arenaPlayer(m.b);
     // V60: stato prima dello scontro, per il riepilogo (colpi presi, scudo perso, cure/maledizioni dell'attaccante).
@@ -5440,7 +5477,7 @@
     const m=arena.match;
     if (arena.stage === "attack") {
       const attacker=arenaPlayer(m.a), count=arenaSkillDice(attacker,true);
-      if (m.attack.length >= count) return;
+      if (arenaStealChoicePending() || m.attack.length >= count) return;
       m.attack.push(n);
       // Il giocatore conferma esplicitamente i due dadi prima del cambio turno.
     } else if (arena.stage === "defense") {
@@ -5456,8 +5493,9 @@
     const m=arena.match;
     if (arena.stage === "attack") {
       const attacker=arenaPlayer(m.a);
-      if (m.attack.length !== arenaSkillDice(attacker,true)) return;
+      if (arenaStealChoicePending() || m.attack.length !== arenaSkillDice(attacker,true)) return;
       attacker.boost=false;
+      if (m.steal===true) { arenaResolveSteal(); renderArena(); return; }
       arena.stage="defense";
       arenaStore(); renderArena();
     } else if (arena.stage === "defense" && !arenaPetChoicePending() && m.defense.length===arenaSkillDice(arenaPlayer(m.b),false)) {
@@ -5510,9 +5548,10 @@
         if(op==="die") { arenaInputDie(Number(btn.dataset.die)); renderArena(); return; }
         if(op==="confirm-dice") { arenaConfirmDice(); return; }
         if(op==="pet-defend") { arenaChoosePetDefense(btn.dataset.choice==="pet"); return; }
+        if(op==="steal-choice") { arenaChooseSteal(btn.dataset.choice==="steal"); return; }
         if(op==="undo" && (arena.stage==="attack" || arena.stage==="defense")) {
           const arr=arena.stage==="attack"?arena.match.attack:arena.match.defense; arr.pop(); arenaStore(); renderArena(); return; }
-        if(op==="next" && arena.stage==="result") { if(!arenaWinnerStage()){ arena.stage="ready";arenaStore(); } renderArena();return; }
+        if(op==="next" && (arena.stage==="result" || arena.stage==="steal-result")) { if(!arenaWinnerStage()){ arena.stage="ready";arenaStore(); } renderArena();return; }
         if(op==="restart" && (arena.stage==="winner" || arena.stage==="splatter-winner" || arena.stage==="animal-winner")) { arena=null; arenaRosterError=""; renderArena(); return; }
       });
       root.addEventListener("change", (ev) => {
@@ -5615,6 +5654,35 @@
         ${`<button class="fa-arena-btn" data-arena="pet-defend" data-choice="self"><strong>🙋 DIFENDITI DA SOLO</strong><small>Tieni la creatura per dopo</small></button>`}
       </div></section>`;
   }
+  // V66: scelta iniziale quando il difensore ha una creatura catturata.
+  function arenaStealChoiceHtml(a,d) {
+    const pet=d.pet, photo=arenaPhoto({animal:true,species:pet.species,name:pet.name,icon:pet.icon});
+    return `<section class="fa-arena-pet-choice" aria-label="Scelta: combatti o ruba">
+      <div class="fa-arena-photo fa-arena-photo-mini">${photo}</div>
+      <h3>🐾 ${arenaEscape(d.name)} ha catturato ${arenaEscape(pet.name)}</h3>
+      <p>${arenaEscape(a.name)}, puoi <strong>combattere</strong> normalmente oppure <strong>rubare</strong> la creatura. Per rubarla il sistema sorteggia un numero da raggiungere: se il tuo tiro è entro ±${ARENA_STEAL_TOLERANCE}, la creatura è tua. Altrimenti prendi almeno ${ARENA_STEAL_PENALTY} HP di danno.</p>
+      <div class="fa-arena-choices fa-arena-pet-buttons">
+        <button class="fa-arena-btn" data-arena="steal-choice" data-choice="fight"><strong>⚔️ COMBATTI</strong><small>Scontro normale</small></button>
+        <button class="fa-arena-btn" data-arena="steal-choice" data-choice="steal"><strong>🪤 RUBA ${arenaEscape(pet.name.toUpperCase())}</strong><small>Tiro contro un numero sorteggiato</small></button>
+      </div></section>`;
+  }
+  // V66: esito del furto. Nessun danno allo scontro: la creatura passa o resta, poi si va avanti.
+  function arenaStealResultHtml(btn) {
+    const s=arena.stealResult, a=arenaPlayer(arena.match.a), d=arenaPlayer(arena.match.b);
+    const verdict=s.success?`🪤 FURTO RIUSCITO!`:`💥 FURTO FALLITO!`;
+    const outcome=s.success
+      ? `<p class="fa-arena-event" role="status">🐾 ${arenaEscape(s.attackerName)} RUBA ${arenaEscape(s.petName)} a ${arenaEscape(s.ownerName)}! Torna con ❤️ ${s.petHp} HP${s.replaced?` (prende il posto di ${arenaEscape(s.replaced)})`:""}.</p>`
+      : `<p class="fa-arena-event" role="status">💥 ${arenaEscape(s.attackerName)} perde ${s.damage} HP. ${arenaEscape(s.petName)} resta con ${arenaEscape(s.ownerName)}.</p>`;
+    return `<h2>FURTO · SCONTRO ${arena.exchange}</h2>
+      <h3 class="fa-arena-verdict">${verdict}</h3>
+      <section class="fa-arena-explain" aria-label="Calcolo del furto">
+        <ol><li>🎯 Numero da raggiungere: <strong>${s.target}</strong> (tolleranza ±${ARENA_STEAL_TOLERANCE})</li>
+        <li>🎲 Tiro di <strong>${arenaEscape(s.attackerName)}</strong>: <strong>${s.roll}</strong> · scarto <strong>${s.gap}</strong> ${s.success?"→ dentro la tolleranza":"→ fuori tolleranza"}</li></ol>
+      </section>
+      ${outcome}
+      <div class="fa-arena-duel" aria-label="Dopo il furto">${arenaDuelist(a,"🪤 LADRO",false)}<strong>VS</strong>${arenaDuelist(d,"🐾 PROPRIETARIO",false)}</div>
+      ${btn("next","PROSSIMO SCONTRO")}`;
+  }
   // V60: riepilogo scontro con la card di chi vince e di chi ha subito (colpi, scudo, K.O.).
   function arenaOutcomeCard(p,role,badge,change,flags) {
     const cls=[flags.winner?"is-winner":"",flags.ko?"is-ko":"",flags.hit?"is-hit":""].filter(Boolean).join(" ");
@@ -5709,9 +5777,10 @@
       // V59 mobile: 1) duellanti, 2) dadi subito sotto, 3) bonus attivi, 4) istruzioni sul valore, 5) combattenti (pulsanti + scheda).
       const bonuses=`${m.event?`<p class="fa-arena-event">🎁 ${arenaEscape(m.event)}</p>`:''}${arenaWeapon(p)?`<p class="fa-arena-event">🔫 ${arenaEscape(arenaWeaponLabel(p))}</p>`:""}${arenaSpecial(p)?`<p class="fa-arena-event">💥 COLPO UNICO: ${arenaEscape(arenaSpecial(p).name)} · scegli bersaglio, si consuma dopo il tiro</p>`:""}${arenaSkill(p)?`<p class="fa-arena-event">✨ SKILL DEL CAMPIONE: ${arenaEscape(arenaSkillName(p.skill))}</p>`:""}${p.upgradeName?`<p class="fa-arena-event">🐾 ${arenaEscape(p.upgradeName)}${p.attackBonus?" · +"+p.attackBonus+" attacco":""}${p.shield?" · 🛡️"+p.shield:""}</p>`:""}`;
       const petNote=!attacking&&arenaPetDefends(d)?`<p class="fa-arena-event">🐾 ${arenaEscape(d.pet.name)} difende ${arenaEscape(d.name)}: prende il colpo per prima (❤️ ${d.pet.hp})</p>`:"";
+      const stealNote=m.steal===true?`<p class="fa-arena-event">🪤 FURTO: raggiungi <strong>${m.stealTarget}</strong> (±${ARENA_STEAL_TOLERANCE}) · se sbagli prendi ${ARENA_STEAL_PENALTY} HP di danno</p>`:"";
       body=`<h2>SCONTRO ${arena.exchange}</h2>
         <div class="fa-arena-duel" aria-label="Combattenti dello scontro">${arenaDuelist(a,"⚔️ ATTACCA",attacking)}<strong>VS</strong>${arenaDuelist(d,"🛡️ DIFENDE",!attacking)}</div>
-        ${arenaPetChoicePending()?arenaPetChoiceHtml(d):`${petNote}${attacking?"":arenaDefenseHelp(a,d,arenaDiceTotal(a,m.attack,true),rolls)}<section class="fa-arena-roll" aria-label="Tiro dei dadi">
+        ${arenaPetChoicePending()?arenaPetChoiceHtml(d):arenaStealChoicePending()?arenaStealChoiceHtml(a,d):`${petNote}${stealNote}${attacking?"":arenaDefenseHelp(a,d,arenaDiceTotal(a,m.attack,true),rolls)}<section class="fa-arena-roll" aria-label="Tiro dei dadi">
         <h3>${attacking?'ATTACCA':'DIFENDE'}: ${arenaEscape(p.name)}</h3>
         <p class="fa-arena-turn-instruction">${arenaEscape(p.name)}, tira <strong>${count} dadi fisici insieme</strong> e inserisci il valore di ciascuno.</p>
         <div class="fa-arena-roll-slots" aria-label="Dadi di ${attacking?'attacco':'difesa'}">
@@ -5720,7 +5789,7 @@
         <p class="fa-arena-roll-hint">${rolls.length<count?`Inserisci il valore del DADO ${rolls.length+1}`:`Totale: ${arenaDiceTotal(p,rolls,attacking)}${arenaDiceTotal(p,rolls,attacking)!==rolls.reduce((sum,n)=>sum+n,0)?" (bonus skill incluso)":""} · Conferma per proseguire`}</p>
         <div class="fa-arena-dice">${[1,2,3,4,5,6].map((n)=>btn("die",String(n),`data-die="${n}" ${rolls.length>=count?'disabled':''}`)).join('')}</div>
         ${arenaSkill(p)==="reroll"&&rolls.length===count&&!m.rerolled?.[arena.stage]?btn("reroll","⚡ RITIRA ENTRAMBI I DADI"):""}
-        <div class="fa-arena-roll-actions">${btn("confirm-dice",attacking?"CONFERMA ATTACCO → PASSA AL DIFENSORE":"CONFERMA DIFESA → MOSTRA RISULTATO",rolls.length===count?'':'disabled')}
+        <div class="fa-arena-roll-actions">${btn("confirm-dice",attacking?(m.steal===true?"CONFERMA TIRO → VEDI SE RUBI":"CONFERMA ATTACCO → PASSA AL DIFENSORE"):"CONFERMA DIFESA → MOSTRA RISULTATO",rolls.length===count?'':'disabled')}
         ${btn("undo","↶ CORREGGI ULTIMO DADO",rolls.length?'':'disabled')}</div>
         </section>`}
         ${bonuses}
@@ -5737,6 +5806,8 @@
       <div class="fa-arena-outcome" aria-label="Esito dello scontro">${arenaResultCards(a,d,r)}</div>
       ${arenaExplainHtml(a,d,r,arena.match)}
       ${btn("next","PROSSIMO SCONTRO")}`;
+    } else if(arena.stage==="steal-result") {
+      body=arenaStealResultHtml(btn);
     } else if(arena.stage==="winner") {
       arenaPrepareSkillChoices();
       body=`<h2>🏆 CAMPIONE DEL TORNEO ${arena.tournament}</h2><h3>${arenaEscape(arenaPlayer(arena.winner)?.name||'—')}</h3>${arenaEarnedSummary()}
