@@ -2479,7 +2479,9 @@ body.fa-game-active .fa-header { display:none; }
 @media(max-width:520px){.fa-arena-pet-buttons{grid-template-columns:1fr}.fa-arena-pet-buttons .fa-arena-btn{min-height:0}}
 /* Spiegazione dei dadi: scala della difesa e "come è andata" */
 .fa-arena-defense-help,.fa-arena-explain{margin:12px 0;padding:12px;border:2px solid #4f6f93;border-radius:12px;background:rgba(60,90,130,.16)}
-.fa-arena-defense-help h3,.fa-arena-explain h3{margin:0 0 6px}
+.fa-arena-defense-help h3{margin:0 0 6px}
+.fa-arena-explain summary{cursor:pointer;font-weight:800;padding:4px 0}
+.fa-arena-explain summary small{font-weight:400;opacity:.75}
 .fa-arena-defense-help p{font-size:.9rem;line-height:1.45;margin:6px 0}
 .fa-arena-big{display:inline-block;min-width:1.6em;padding:0 8px;border-radius:8px;background:#7a2a2f;color:#fff;font-size:1.4em;text-align:center}
 .fa-arena-ladder{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:.88rem;text-align:left}

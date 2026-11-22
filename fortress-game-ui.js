@@ -5730,12 +5730,12 @@
       const r=arena.result, a=arenaPlayer(arena.match.a), d=arenaPlayer(arena.match.b);
       body=`<h2>RISULTATO SCONTRO ${arena.exchange}</h2><div class="fa-arena-score">${r.attack} ⚔️ VS 🛡️ ${r.defense}</div>
       <h3 class="fa-arena-verdict">${r.eliminated?`💀 ${arenaEscape(d.name)} È ELIMINATO`:r.delta<=0?(r.parryPressure===0?'DIFESA PERFETTA!':'DIFESA SOTTO PRESSIONE!'):`COLPO A SEGNO!`}</h3>
-      ${arenaExplainHtml(a,d,r,arena.match)}
       ${r.specialName?`<p class="fa-arena-event">💥 ${arenaEscape(r.specialName)} consumata</p>`:''}
       ${r.pet?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(r.pet.name)} ha preso ${r.pet.absorbed} danni al posto di ${arenaEscape(d.name)}${r.pet.lost?' ed è caduta: creatura persa':` · le restano ❤️ ${r.pet.hp}/${r.pet.maxHp}`}</p>`:''}
       ${r.captured?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(a.name)} HA CATTURATO ${arenaEscape(r.captured.name.toUpperCase())}! Torna con ❤️ ${r.captured.hp} HP e potrà difendere ${arenaEscape(a.name)}${r.captured.replaced?` (prende il posto di ${arenaEscape(r.captured.replaced)})`:''}.</p>`:''}
       ${(r.earnings||[]).length?`<p class="fa-arena-event" role="status">💶 ${r.earnings.map(e=>`${arenaEscape(e.name)} +${e.amount}€`).join(' · ')}</p>`:''}
       <div class="fa-arena-outcome" aria-label="Esito dello scontro">${arenaResultCards(a,d,r)}</div>
+      ${arenaExplainHtml(a,d,r,arena.match)}
       ${btn("next","PROSSIMO SCONTRO")}`;
     } else if(arena.stage==="winner") {
       arenaPrepareSkillChoices();
@@ -5843,8 +5843,8 @@
     steps.push(r.hpDamage?`❤️ la vita perde ${r.hpDamage}`:"❤️ la vita resta intatta");
     const damage=r.percent===100?(r.hpDamage?`💀 K.O.: lo scudo non serve${r.pet?`, ${arenaEscape(r.pet.name)} ne prende ${r.pet.absorbed}`:""} · ❤️ la vita perde ${r.hpDamage}`:`💀 Colpo da K.O. ma ${arenaEscape(r.pet?.name||"")} lo prende tutto!`)
       :raw===0?"✨ Nessun punto di danno.":`${raw} punti di danno → ${steps.join(" → ")}`;
-    return `<section class="fa-arena-explain" aria-label="Come è andata">
-      <h3>🧮 COME È ANDATA</h3>
+    return `<details class="fa-arena-explain" aria-label="Come è andata">
+      <summary>🧮 COME È ANDATA <small>tocca per il calcolo passo per passo</small></summary>
       <ol>
         <li>⚔️ <strong>${arenaEscape(a.name)}</strong> attacca: ${arenaSumLine(m.attack,aParts)} = <strong>${r.attack}</strong></li>
         <li>🛡️ <strong>${arenaEscape(d.name)}</strong> difende: ${arenaSumLine(m.defense,dParts)} = <strong>${r.defense}</strong></li>
@@ -5853,7 +5853,7 @@
         <li>${damage}</li>
       </ol>
       <details class="fa-arena-damage-guide"><summary>📶 VEDI LA SCALA DI QUESTO SCONTRO</summary>${arenaLadderHtml(r.attack,arenaDiceTotal(d,[],false),d.maxHp||100,arenaLadderRow(r.delta))}</details>
-    </section>`;
+    </details>`;
   }
   function arenaOpen() { arenaLoad(); renderArena(); }
   function arenaBindSetup() {

@@ -23,9 +23,10 @@ assert.equal(count(/fa-arena-ribbon">🏆 VINCE/g),1);
 assert.ok(/fa-arena-outcome-card is-ko/.test(html()));
 assert.ok(html().includes('💀 ELIMINATO'));assert.ok(html().includes('P1 È ELIMINATO'));
 assert.ok(html().includes('fa-arena-ko'));
-// ordine (V65): spiegazione "come è andata" sempre visibile → esito → pulsante → combattenti
-assert.ok(at('<section class="fa-arena-explain"')<at('<div class="fa-arena-outcome"'));
-assert.ok(at('<div class="fa-arena-outcome"')<at('data-arena="next"'));
+// ordine (V66): esito → spiegazione "come è andata" chiusa di default → pulsante → combattenti
+assert.ok(at('<div class="fa-arena-outcome"')<at('<details class="fa-arena-explain"'));
+assert.ok(at('<details class="fa-arena-explain"')<at('data-arena="next"'));
+assert.ok(!/<details class="fa-arena-explain" open/.test(html()),'spiegazione chiusa di default');
 assert.ok(at('data-arena="next"')<at('<section class="fa-arena-cards"'));
 assert.ok(!/<details class="fa-arena-damage-guide" open/.test(html()),'scala dello scontro chiusa');
 assert.ok(html().includes('K.O.: lo scudo non serve'));
