@@ -5549,6 +5549,7 @@
         if(op==="confirm-dice") { arenaConfirmDice(); return; }
         if(op==="pet-defend") { arenaChoosePetDefense(btn.dataset.choice==="pet"); return; }
         if(op==="steal-choice") { arenaChooseSteal(btn.dataset.choice==="steal"); return; }
+        if(op==="buy") { arenaBuyItem(btn.dataset.player, btn.dataset.item); return; }
         if(op==="undo" && (arena.stage==="attack" || arena.stage==="defense")) {
           const arr=arena.stage==="attack"?arena.match.attack:arena.match.defense; arr.pop(); arenaStore(); renderArena(); return; }
         if(op==="next" && (arena.stage==="result" || arena.stage==="steal-result")) { if(!arenaWinnerStage()){ arena.stage="ready";arenaStore(); } renderArena();return; }
@@ -5624,7 +5625,7 @@
     const out=p.hp<=0;
     return `<article class="fa-arena-card ${out?"fa-arena-out":""}" aria-label="Scheda ${arenaEscape(p.name)}">
       <div class="fa-arena-photo">${arenaPhoto(p)}${out?`<span class="fa-arena-ko">K.O.</span>`:""}</div>
-      <div class="fa-arena-card-head"><strong class="fa-arena-card-name">${arenaEscape(p.name)}</strong><small>${arenaEscape(arenaCharacterName(p))}</small>${arenaBars(p)}</div>
+      <div class="fa-arena-card-head"><strong class="fa-arena-card-name">${arenaEscape(p.name)}</strong><small>${arenaEscape(arenaCharacterName(p))}</small>${p.animal?"":`<small class="fa-arena-wallet">💶 Portafoglio: <strong>${arenaBalance(p)}€</strong></small>`}${arenaBars(p)}</div>
       <div class="fa-arena-card-gear">${arenaEquipment(p)}</div></article>`;
   }
   function arenaRosterHtml() {
@@ -5653,6 +5654,49 @@
         ${`<button class="fa-arena-btn" data-arena="pet-defend" data-choice="pet"><strong>🐾 DIFENDITI CON ${arenaEscape(pet.name.toUpperCase())}</strong><small>Prende il colpo al posto tuo</small></button>`}
         ${`<button class="fa-arena-btn" data-arena="pet-defend" data-choice="self"><strong>🙋 DIFENDITI DA SOLO</strong><small>Tieni la creatura per dopo</small></button>`}
       </div></section>`;
+  }
+  // V67 negozio dell'arena: i soldi del portafoglio del personaggio si spendono solo qui.
+  // Ogni oggetto è monouso e si applica subito con i meccanismi già esistenti (HP, scudo, boost).
+  const ARENA_SHOP=[
+    {id:"potion-small",icon:"🧪",name:"Pozione piccola",price:10,desc:"+40 ❤️ subito (max HP)"},
+    {id:"potion-large",icon:"⚗️",name:"Pozione grande",price:18,desc:"+80 ❤️ subito (max HP)"},
+    {id:"shield",icon:"🛡️",name:"Scudo rinforzato",price:8,desc:"+30 🛡️ subito"},
+    {id:"dice",icon:"🎲",name:"Dado in più",price:15,desc:"+1 dado al prossimo attacco, poi si consuma"}
+  ];
+  function arenaBalance(p) {
+    if (!p || p.animal || !p.avatarId || typeof walletApi==="undefined" || !walletApi) return 0;
+    return walletApi.getBalance(p.avatarId);
+  }
+  // Motivo per cui un oggetto non si può comprare adesso (null = acquistabile).
+  function arenaShopBlock(p,item) {
+    if (arenaBalance(p) < item.price) return "Soldi insufficienti";
+    if (item.id.startsWith("potion") && p.hp >= (p.maxHp||100)) return "HP già al massimo";
+    if (item.id==="dice" && p.boost) return "Già pronto il dado in più";
+    return null;
+  }
+  function arenaBuyItem(playerId,itemId) {
+    if (!arena || arena.stage!=="ready") return;
+    const p=arenaPlayer(playerId), item=ARENA_SHOP.find(x=>x.id===itemId);
+    if (!p || !item || p.hp<=0 || arenaShopBlock(p,item)) return;
+    if (typeof walletApi==="undefined" || !walletApi || !walletApi.spend(p.avatarId,item.price)) return;
+    if (item.id==="potion-small") p.hp=Math.min(p.maxHp||100,p.hp+40);
+    else if (item.id==="potion-large") p.hp=Math.min(p.maxHp||100,p.hp+80);
+    else if (item.id==="shield") p.shield=(p.shield||0)+30;
+    else if (item.id==="dice") p.boost=true;
+    playSfx("heal");
+    arenaStore(); renderArena();
+  }
+  // Pannello chiuso di default: una riga per combattente con i 4 oggetti.
+  function arenaShopHtml(btn) {
+    const rows=arenaAlivePlayers().filter(p=>!p.animal).map(p=>{
+      const buttons=ARENA_SHOP.map(item=>{
+        const block=arenaShopBlock(p,item);
+        return `<button class="fa-arena-btn" data-arena="buy" data-player="${arenaEscape(p.id)}" data-item="${item.id}" ${block?"disabled":""} title="${arenaEscape(block||item.desc)}"><strong>${item.icon} ${arenaEscape(item.name)} · ${item.price}€</strong><small>${arenaEscape(block||item.desc)}</small></button>`;
+      }).join("");
+      return `<div class="fa-arena-shop-row"><strong>${arenaEscape(p.name)}</strong><span>💶 ${arenaBalance(p)}€</span><div class="fa-arena-choices">${buttons}</div></div>`;
+    }).join("");
+    if (!rows) return "";
+    return `<details class="fa-arena-damage-guide fa-arena-shop"><summary>🏪 NEGOZIO ARENA (si spendono solo qui)</summary>${rows}</details>`;
   }
   // V66: scelta iniziale quando il difensore ha una creatura catturata.
   function arenaStealChoiceHtml(a,d) {
@@ -5770,7 +5814,7 @@
       body=`<div class="fa-arena-splatter"><h2>☠️ SPLATTER HOUSE VINCE!</h2><h3>NESSUN SOPRAVVISSUTO</h3><p>Nessun campione e nessun premio assegnato.</p><p>Vittorie Splatter House: ${Number(localStorage.getItem(ARENA_SPLATTER_WINS_KEY))||0}</p>${btn("restart","NUOVO DEATHMATCH")}</div>`;
     } else if(arena.stage==="animal-winner") {
       body=`<div class="fa-arena-splatter"><h2>🐾 ANIMAL BATTLE VINCE!</h2><p>Nessun giocatore sopravvissuto. Nessun premio assegnato.</p><p>Vittorie Animal Battle: ${Number(localStorage.getItem(ARENA_ANIMAL_WINS_KEY))||0}</p>${btn("restart","NUOVO DEATHMATCH")}</div>`;
-    } else if(arena.stage==="ready") body=`<h2>TORNEO ${arena.tournament} · SCONTRO ${arena.exchange+1}</h2><p>${arenaAlivePlayers().length} giocatori e ${arenaAliveAnimals().length} animali in gara · animali eliminati: ${arenaAnimalDeaths()}.</p>${btn("fight","ESTRAI I COMBATTENTI")}`;
+    } else if(arena.stage==="ready") body=`<h2>TORNEO ${arena.tournament} · SCONTRO ${arena.exchange+1}</h2><p>${arenaAlivePlayers().length} giocatori e ${arenaAliveAnimals().length} animali in gara · animali eliminati: ${arenaAnimalDeaths()}.</p>${arenaShopHtml(btn)}${btn("fight","ESTRAI I COMBATTENTI")}`;
     else if(arena.stage==="attack" || arena.stage==="defense") {
       const m=arena.match, a=arenaPlayer(m.a),d=arenaPlayer(m.b), attacking=arena.stage==="attack";
       const p=attacking?a:d, rolls=attacking?m.attack:m.defense, count=arenaSkillDice(p,attacking);

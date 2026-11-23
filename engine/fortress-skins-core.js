@@ -62,6 +62,18 @@
     });
   }
 
+  /* V67: spesa dal portafoglio di un personaggio (negozio dell'Arena).
+     Se il saldo non basta, o l'importo non è un intero positivo, lo stato resta invariato. */
+  function spendMoney(state, characterId, amount) {
+    const n = Math.floor(Number(amount));
+    if (!characterId || !Number.isFinite(n) || n <= 0) return state;
+    const balance = getBalance(state, characterId);
+    if (balance < n) return state;
+    return Object.assign({}, state, {
+      walletByCharacter: Object.assign({}, state.walletByCharacter, { [characterId]: balance - n })
+    });
+  }
+
   function findSkin(catalog, id) {
     return (catalog || []).find((s) => s.id === id) || null;
   }
@@ -133,7 +145,7 @@
   }
 
   return {
-    PAYOUT, exchangePayout, getBalance, totalBalance, addMoney,
+    PAYOUT, exchangePayout, getBalance, totalBalance, addMoney, spendMoney,
     defaultState, findSkin, ownsSkin,
     canBuy, buySkin, canEquip, equipSkin, unequipSkin,
     getEquippedSkinId, getEquippedSkin, getCharacterDisplayImage

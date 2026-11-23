@@ -129,6 +129,15 @@ window.FORTRESS_WALLET_API = {
     saveState();
     if (typeof renderWardrobe === "function" && $("fa-wardrobe-grid")) renderWardrobe();
     return skinsCore.getBalance(state, characterId);
+  },
+  /* V67: spesa nel negozio dell'Arena. true se il saldo bastava e il prezzo è stato scalato. */
+  spend(characterId, amount) {
+    const next = skinsCore.spendMoney(state, characterId, amount);
+    if (next === state) return false;
+    state = next;
+    saveState();
+    if (typeof renderWardrobe === "function" && $("fa-wardrobe-grid")) renderWardrobe();
+    return true;
   }
 };
 
