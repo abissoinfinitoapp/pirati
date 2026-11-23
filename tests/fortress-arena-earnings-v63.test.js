@@ -17,32 +17,32 @@ const run=x=>vm.runInContext(x,ctx);
 const bal=id=>skinsCore.getBalance(wallet,id);
 
 run('arenaLoadRoster();arenaNewTournament()');
-// Scontro normale (scarto +1): 1€ a testa, ai personaggi giusti.
+// Scontro normale (scarto +1): 2€ a testa (V68: base 2€), ai personaggi giusti.
 run('arena.players.forEach(p=>{p.hp=100;p.shield=40;p.skill=null});arena.match={a:"p0",b:"p1",attack:[3,3],defense:[2,3]};arena.stage="defense";arenaResolve()');
-assert.equal(bal('a0'),1);assert.equal(bal('a1'),1);assert.equal(bal('a2'),0);
-assert.deepEqual(JSON.parse(JSON.stringify(run('arena.result.earnings'))),[{id:'p0',name:'P0',amount:1},{id:'p1',name:'P1',amount:1}]);
+assert.equal(bal('a0'),2);assert.equal(bal('a1'),2);assert.equal(bal('a2'),0);
+assert.deepEqual(JSON.parse(JSON.stringify(run('arena.result.earnings'))),[{id:'p0',name:'P0',amount:2},{id:'p1',name:'P1',amount:2}]);
 
-// Scarto epico dell'attaccante (+4): 2€ a lui, 1€ al difensore.
+// Scarto epico dell'attaccante (+8): 3€ a lui (base+epico), 2€ al difensore.
 run('arena.players.forEach(p=>{p.hp=100;p.shield=40});arena.match={a:"p0",b:"p1",attack:[6,6],defense:[2,2]};arena.stage="defense";arenaResolve()');
-assert.equal(bal('a0'),3);assert.equal(bal('a1'),2);
+assert.equal(bal('a0'),5);assert.equal(bal('a1'),4);
 
-// Difesa perfetta (scarto <= -4): 2€ al difensore.
+// Difesa perfetta (scarto <= -4): 3€ al difensore (base+epico), 2€ all'attaccante.
 run('arena.players.forEach(p=>{p.hp=100;p.shield=40});arena.match={a:"p0",b:"p2",attack:[1,1],defense:[6,6]};arena.stage="defense";arenaResolve()');
-assert.equal(bal('a0'),4);assert.equal(bal('a2'),2);
+assert.equal(bal('a0'),7);assert.equal(bal('a2'),3);
 
 // I guadagni sono nel riepilogo del torneo.
-assert.deepEqual(JSON.parse(JSON.stringify(run('arena.earned'))),{p0:4,p1:2,p2:2});
+assert.deepEqual(JSON.parse(JSON.stringify(run('arena.earned'))),{p0:7,p1:4,p2:3});
 
 // Gli animali non guadagnano.
 run('arena.animals.fighters=[{id:"animal-1-lupo",species:"lupo",name:"Lupo",icon:"x",animal:true,maxHp:65,hp:65,shield:0,attacks:0,defends:0,lastMatch:0}]');
 run('arena.players.forEach(p=>{p.hp=100;p.shield=40});arena.match={a:"p0",b:"animal-1-lupo",attack:[6,6],defense:[2,2]};arena.stage="defense";arenaResolve()');
-assert.equal(bal('a0'),6);
-assert.equal(skinsCore.totalBalance(wallet),6+2+2);
+assert.equal(bal('a0'),10);
+assert.equal(skinsCore.totalBalance(wallet),10+4+3);
 assert.equal(Object.keys(wallet.walletByCharacter).some(k=>k.startsWith('animal')),false);
 
 // Un RESET del torneo non toglie i soldi gia' guadagnati.
 run('arenaResetTournament()');
-assert.equal(bal('a0'),6);assert.equal(bal('a1'),2);assert.equal(bal('a2'),2);
+assert.equal(bal('a0'),10);assert.equal(bal('a1'),4);assert.equal(bal('a2'),3);
 
 // Senza portafoglio (moduli non caricati) l'arena funziona lo stesso.
 ctx.walletApi=null;

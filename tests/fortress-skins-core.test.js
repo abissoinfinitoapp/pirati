@@ -123,20 +123,20 @@ test("addMoney accetta solo interi positivi e non muta lo stato", () => {
   assert.equal(core.getBalance(next, "duck"), 2);
 });
 
-test("guadagno per scontro: 1 euro a testa, 2 per uno scarto epico (>= 4) a proprio favore", () => {
-  assert.deepEqual(core.exchangePayout(0, true, true), { attacker: 1, defender: 1 });
-  assert.deepEqual(core.exchangePayout(3, true, true), { attacker: 1, defender: 1 });
-  assert.deepEqual(core.exchangePayout(4, true, true), { attacker: 2, defender: 1 });
-  assert.deepEqual(core.exchangePayout(-3, true, true), { attacker: 1, defender: 1 });
-  assert.deepEqual(core.exchangePayout(-4, true, true), { attacker: 1, defender: 2 });
-  assert.deepEqual(core.exchangePayout(9, true, true), { attacker: 2, defender: 1 });
+test("guadagno per scontro: 2 euro a testa, 3 per uno scarto epico (>= 4) a proprio favore", () => {
+  assert.deepEqual(core.exchangePayout(0, true, true), { attacker: 2, defender: 2 });
+  assert.deepEqual(core.exchangePayout(3, true, true), { attacker: 2, defender: 2 });
+  assert.deepEqual(core.exchangePayout(4, true, true), { attacker: 3, defender: 2 });
+  assert.deepEqual(core.exchangePayout(-3, true, true), { attacker: 2, defender: 2 });
+  assert.deepEqual(core.exchangePayout(-4, true, true), { attacker: 2, defender: 3 });
+  assert.deepEqual(core.exchangePayout(9, true, true), { attacker: 3, defender: 2 });
 });
 
-test("gli animali non guadagnano e il massimo per scontro e' 2 euro", () => {
-  assert.deepEqual(core.exchangePayout(5, true, false), { attacker: 2, defender: 0 });
-  assert.deepEqual(core.exchangePayout(-5, false, true), { attacker: 0, defender: 2 });
+test("gli animali non guadagnano e il massimo per scontro e' 3 euro", () => {
+  assert.deepEqual(core.exchangePayout(5, true, false), { attacker: 3, defender: 0 });
+  assert.deepEqual(core.exchangePayout(-5, false, true), { attacker: 0, defender: 3 });
   for (let delta = -20; delta <= 20; delta++) {
     const p = core.exchangePayout(delta, true, true);
-    assert.ok(p.attacker <= 2 && p.defender <= 2);
+    assert.ok(p.attacker <= 3 && p.defender <= 3);
   }
 });

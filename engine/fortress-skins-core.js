@@ -25,7 +25,7 @@
      proprio personaggio. Tutti i numeri da ritoccare sono qui sotto.
      --------------------------------------------------------------------- */
   const PAYOUT = {
-    base: 1,        /* ogni scontro a cui partecipa un giocatore */
+    base: 2,        /* ogni scontro a cui partecipa un giocatore (V68: era 1) */
     epicBonus: 1,   /* in piu' se lo scarto a proprio favore e' epico */
     epicMargin: 4   /* scarto (attacco-difesa) che vale come "epico" */
   };
