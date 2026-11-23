@@ -5191,8 +5191,16 @@
   function arenaNewTournament() {
     const members = arenaPeople();
     if (members.length < 2 || members.length > 10) { arenaRosterError="Seleziona da 2 a 10 giocatori."; renderArena(); return; }
-    if (members.some((p) => !p.name.trim() || !p.avatarId) || new Set(members.map((p)=>p.avatarId)).size !== members.length) {
-      arenaRosterError="Ogni partecipante deve avere un nome e un avatar diverso."; renderArena(); return;
+    const problems=[];
+    const noName=members.filter((p)=>!p.name.trim()).length;
+    const noAvatar=members.filter((p)=>!p.avatarId).length;
+    if (noName) problems.push(`${noName} senza nome`);
+    if (noAvatar) problems.push(`${noAvatar} senza avatar`);
+    const byAvatar={};
+    members.filter((p)=>p.avatarId).forEach((p)=>{ (byAvatar[p.avatarId]=byAvatar[p.avatarId]||[]).push(p.name.trim()||"(senza nome)"); });
+    Object.values(byAvatar).filter((names)=>names.length>1).forEach((names)=>problems.push(`avatar uguale per ${names.join(" e ")}`));
+    if (problems.length) {
+      arenaRosterError=`Ogni partecipante deve avere un nome e un avatar diverso: ${problems.join(" · ")}. Cambia l'avatar o il nome nella lista qui sotto.`; renderArena(); return;
     }
     arenaRosterError="";
     const skillBook=arenaSkillBook();
