@@ -123,20 +123,26 @@ test("addMoney accetta solo interi positivi e non muta lo stato", () => {
   assert.equal(core.getBalance(next, "duck"), 2);
 });
 
-test("guadagno per scontro: 2 euro a testa, 3 per uno scarto epico (>= 4) a proprio favore", () => {
-  assert.deepEqual(core.exchangePayout(0, true, true), { attacker: 2, defender: 2 });
-  assert.deepEqual(core.exchangePayout(3, true, true), { attacker: 2, defender: 2 });
-  assert.deepEqual(core.exchangePayout(4, true, true), { attacker: 3, defender: 2 });
-  assert.deepEqual(core.exchangePayout(-3, true, true), { attacker: 2, defender: 2 });
-  assert.deepEqual(core.exchangePayout(-4, true, true), { attacker: 2, defender: 3 });
-  assert.deepEqual(core.exchangePayout(9, true, true), { attacker: 3, defender: 2 });
+test("guadagno per scontro: vittoria 5 euro, vittoria epica (>= 4) 8 euro, parata perfetta (-4) 5 euro", () => {
+  assert.deepEqual(core.exchangePayout(0, true, true), { attacker: 0, defender: 0 });
+  assert.deepEqual(core.exchangePayout(3, true, true), { attacker: 5, defender: 0 });
+  assert.deepEqual(core.exchangePayout(4, true, true), { attacker: 8, defender: 0 });
+  assert.deepEqual(core.exchangePayout(-3, true, true), { attacker: 0, defender: 0 });
+  assert.deepEqual(core.exchangePayout(-4, true, true), { attacker: 0, defender: 5 });
+  assert.deepEqual(core.exchangePayout(9, true, true), { attacker: 8, defender: 0 });
 });
 
-test("gli animali non guadagnano e il massimo per scontro e' 3 euro", () => {
-  assert.deepEqual(core.exchangePayout(5, true, false), { attacker: 3, defender: 0 });
-  assert.deepEqual(core.exchangePayout(-5, false, true), { attacker: 0, defender: 3 });
+test("gli animali non guadagnano e il massimo per scontro e' 8 euro", () => {
+  assert.deepEqual(core.exchangePayout(5, true, false), { attacker: 8, defender: 0 });
+  assert.deepEqual(core.exchangePayout(-5, false, true), { attacker: 0, defender: 5 });
   for (let delta = -20; delta <= 20; delta++) {
     const p = core.exchangePayout(delta, true, true);
-    assert.ok(p.attacker <= 3 && p.defender <= 3);
+    assert.ok(p.attacker <= 8 && p.defender <= 5);
   }
+});
+
+test("bonus fuori scontro: cattura 3, furto 5, campione 15", () => {
+  assert.equal(core.capturePayout(), 3);
+  assert.equal(core.theftPayout(), 5);
+  assert.equal(core.tournamentWinPayout(), 15);
 });

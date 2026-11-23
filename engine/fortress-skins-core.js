@@ -25,18 +25,26 @@
      proprio personaggio. Tutti i numeri da ritoccare sono qui sotto.
      --------------------------------------------------------------------- */
   const PAYOUT = {
-    base: 2,        /* ogni scontro a cui partecipa un giocatore (V68: era 1) */
-    epicBonus: 1,   /* in piu' se lo scarto a proprio favore e' epico */
-    epicMargin: 4   /* scarto (attacco-difesa) che vale come "epico" */
+    win: 5,            /* vittoria normale di uno scontro (attacco > difesa) */
+    epicWin: 8,        /* vittoria epica: scarto a proprio favore >= epicMargin */
+    epicMargin: 4,
+    perfectParry: 5,   /* parata perfetta: difesa supera l'attacco di almeno perfectMargin */
+    perfectMargin: 4,
+    capture: 3,        /* cattura di una creatura (bonus, in aggiunta allo scontro) */
+    theft: 5,          /* furto riuscito di una creatura catturata */
+    tournamentWin: 15  /* campione: vince l'intero Deathmatch */
   };
 
   /* Quanto guadagna ciascun combattente in UNO scontro. Gli animali/creature
-     non guadagnano: passare isHuman=false. delta = attacco - difesa. */
+     non guadagnano: passare isHuman=false. delta = attacco - difesa.
+     Chi vince lo scontro (attacco > difesa) prende 5€, 8€ se epico.
+     Chi para perfettamente (difesa >= attacco + 4) prende 5€. */
   function exchangePayout(delta, attackerIsHuman, defenderIsHuman) {
     const d = Number(delta) || 0;
-    const earn = (human, margin) => !human ? 0 :
-      PAYOUT.base + (margin >= PAYOUT.epicMargin ? PAYOUT.epicBonus : 0);
-    return { attacker: earn(attackerIsHuman, d), defender: earn(defenderIsHuman, -d) };
+    const attacker = attackerIsHuman && d > 0
+      ? (d >= PAYOUT.epicMargin ? PAYOUT.epicWin : PAYOUT.win) : 0;
+    const defender = defenderIsHuman && d <= -PAYOUT.perfectMargin ? PAYOUT.perfectParry : 0;
+    return { attacker, defender };
   }
 
   function defaultState() {
@@ -146,6 +154,7 @@
 
   return {
     PAYOUT, exchangePayout, getBalance, totalBalance, addMoney, spendMoney,
+    capturePayout: () => PAYOUT.capture, theftPayout: () => PAYOUT.theft, tournamentWinPayout: () => PAYOUT.tournamentWin,
     defaultState, findSkin, ownsSkin,
     canBuy, buySkin, canEquip, equipSkin, unequipSkin,
     getEquippedSkinId, getEquippedSkin, getCharacterDisplayImage

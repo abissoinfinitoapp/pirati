@@ -5160,6 +5160,8 @@
     if (people.length > 1 || (people.length===1 && beasts.length>0)) return false;
     arenaConsumeStartingSkills();
     if (people.length===1 && beasts.length===0) {
+      // V68: il campione incassa il premio una sola volta (la fase "winner" non si ripaga).
+      if (arena.stage!=="winner") arenaPayBonus(people[0],arenaPayoutOf("tournamentWin"));
       arena.winner=people[0].id; arena.stage="winner";
     } else {
       arena.winner=null;
@@ -5347,6 +5349,20 @@
   }
   // Guadagno in € di uno scontro: 1€ a ogni giocatore, +1€ per uno scarto epico a suo favore.
   // Accredito immediato e salvato nel portafoglio del personaggio: un RESET non lo toglie.
+  // V68: importi dei bonus dal motore (0 se il motore non è caricato).
+  function arenaPayoutOf(kind) {
+    const fn={capture:"capturePayout",theft:"theftPayout",tournamentWin:"tournamentWinPayout"}[kind];
+    return typeof skinsCoreApi!=="undefined" && skinsCoreApi && skinsCoreApi[fn] ? skinsCoreApi[fn]() : 0;
+  }
+  // V68: bonus fuori dallo scontro (cattura, furto, vittoria del torneo). Solo giocatori umani.
+  function arenaPayBonus(p,amount) {
+    if(typeof skinsCoreApi==="undefined"||!skinsCoreApi||typeof walletApi==="undefined"||!walletApi)return [];
+    if(!p||p.animal||!p.avatarId||!(amount>0))return [];
+    walletApi.addMoney(p.avatarId,amount);
+    arena.earned=arena.earned||{};
+    arena.earned[p.id]=(arena.earned[p.id]||0)+amount;
+    return [{id:p.id,name:p.name,amount}];
+  }
   function arenaPayExchange(a,d,delta) {
     if(typeof skinsCoreApi==="undefined"||!skinsCoreApi||typeof walletApi==="undefined"||!walletApi)return [];
     const pay=skinsCoreApi.exchangePayout(delta,!a.animal,!d.animal);
@@ -5398,10 +5414,12 @@
     const success=gap<=ARENA_STEAL_TOLERANCE;
     const before={a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}};
     let replaced=null, damage=0;
+    let paid=[];
     if (success) {
       replaced=a.pet?.name||null;
       a.pet={...pet};          // conserva gli HP che la creatura ha ora
       d.pet=null;
+      paid=arenaPayBonus(a,arenaPayoutOf("theft"));
     } else {
       damage=ARENA_STEAL_PENALTY;
       a.hp=Math.max(0,a.hp-damage);
@@ -5410,7 +5428,7 @@
     if (a.specialWeapon) { a.specialWeapon=null; a.specialTargetPending=false; }
     if (a.hp===0) { arenaEliminateSkill(a); a.giftWeapon=null; a.arenaWeapon=null; a.specialWeapon=null; a.specialTargetPending=false; a.pet=null; }
     a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
-    arena.stealResult={target:m.stealTarget,roll,gap,success,damage,replaced,
+    arena.stealResult={target:m.stealTarget,roll,gap,success,damage,replaced,paid,
       attackerName:a.name,ownerName:d.name,petName:pet.name,petHp:pet.hp,petIcon:pet.icon,before,
       after:{a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}}};
     arena.stage="steal-result"; arenaStore();
@@ -5465,6 +5483,7 @@
     const captured=d.animal&&d.hp===0&&!a.animal&&a.hp>0?arenaCapturePet(a,d):null;
     a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
     const earnings=arenaPayExchange(a,d,delta);
+    if(captured) earnings.push(...arenaPayBonus(a,arenaPayoutOf("capture")));
     arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null,earnings,pet:petInfo,captured,
       before,after:{a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}}};
     arena.log.unshift({number:arena.exchange,a:a.name,b:d.name,delta,eliminated:d.hp===0});
@@ -5715,7 +5734,7 @@
     const s=arena.stealResult, a=arenaPlayer(arena.match.a), d=arenaPlayer(arena.match.b);
     const verdict=s.success?`🪤 FURTO RIUSCITO!`:`💥 FURTO FALLITO!`;
     const outcome=s.success
-      ? `<p class="fa-arena-event" role="status">🐾 ${arenaEscape(s.attackerName)} RUBA ${arenaEscape(s.petName)} a ${arenaEscape(s.ownerName)}! Torna con ❤️ ${s.petHp} HP${s.replaced?` (prende il posto di ${arenaEscape(s.replaced)})`:""}.</p>`
+      ? `<p class="fa-arena-event" role="status">🐾 ${arenaEscape(s.attackerName)} RUBA ${arenaEscape(s.petName)} a ${arenaEscape(s.ownerName)}! Torna con ❤️ ${s.petHp} HP${s.replaced?` (prende il posto di ${arenaEscape(s.replaced)})`:""}.${(s.paid||[]).length?` 💶 +${s.paid[0].amount}€`:""}</p>`
       : `<p class="fa-arena-event" role="status">💥 ${arenaEscape(s.attackerName)} perde ${s.damage} HP. ${arenaEscape(s.petName)} resta con ${arenaEscape(s.ownerName)}.</p>`;
     return `<h2>FURTO · SCONTRO ${arena.exchange}</h2>
       <h3 class="fa-arena-verdict">${verdict}</h3>
