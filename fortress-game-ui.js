@@ -5122,8 +5122,8 @@
   // Quando arriva la foto: aggiungere il file e TOGLIERE l'id da questo elenco.
   const ARENA_CREATURES_WITHOUT_IMAGE = new Set([]);
   const ARENA_CREATURE_IMAGES_READY = new Set(ARENA_BEAST_POOL.filter((c) => !ARENA_CREATURES_WITHOUT_IMAGE.has(c.id)).map((c) => c.id));
-  // Compagni in vendita: aggiungere qui l'id quando esiste il file della foto (stessa cartella).
-  const ARENA_COMPANION_IMAGES = new Set([]);
+  // Compagni (comprati o vinti) con foto nella stessa cartella: togliere un id riporta all'emoji.
+  const ARENA_COMPANION_IMAGES = new Set(["gatto-fulminante","cincilla-allegro","pungitopo-rotante","ragno-velenoso","stupido-troll","dragone-di-lava"]);
   function arenaCreatureImage(speciesId) {
     return ARENA_CREATURE_IMAGES_READY.has(speciesId) || ARENA_COMPANION_IMAGES.has(speciesId) ? `assets/fortress/enemy/${speciesId}.webp` : null;
   }
@@ -5856,7 +5856,8 @@
     const buttons=ARENA_COMPANIONS.map(c=>{
       const block=arenaCompanionBlock(p,c);
       const desc=`❤️ ${c.maxHp} · +${c.attackBonus} attacco${arenaHasPet(p)?` · prende il posto di ${p.pet.name}`:""}`;
-      return `<button class="fa-arena-btn" data-arena="buy-companion" data-player="${arenaEscape(p.id)}" data-item="${c.id}" ${block?"disabled":""}><strong>${c.icon} ${arenaEscape(c.name)} · ${c.price}€</strong><small>${arenaEscape(block?`${desc} · ${block}`:desc)}</small></button>`;
+      const img=arenaCreatureImage(c.id), thumb=img?`<img class="fa-arena-companion-thumb" src="${img}" alt="" loading="lazy">`:"";
+      return `<button class="fa-arena-btn" data-arena="buy-companion" data-player="${arenaEscape(p.id)}" data-item="${c.id}" ${block?"disabled":""}>${thumb}<strong>${c.icon} ${arenaEscape(c.name)} · ${c.price}€</strong><small>${arenaEscape(block?`${desc} · ${block}`:desc)}</small></button>`;
     }).join("");
     return `<details class="fa-arena-companions"><summary>🐾 COMPAGNI · restano finché resti in vita, nessuno può rubarli</summary><div class="fa-arena-choices">${buttons}</div></details>`;
   }

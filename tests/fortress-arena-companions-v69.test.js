@@ -27,6 +27,12 @@ assert.deepEqual(json('ARENA_COMPANIONS.map(c=>c.name)'),['Gatto Fulminante','Ci
 assert.ok(run('ARENA_COMPANIONS.every(c=>c.price>=50&&c.price<=150)'));
 assert.equal(run('ARENA_COMPANIONS.filter(c=>c.attackBonus===2).map(c=>c.id).join()'),'dragone-di-lava');
 
+// Ogni compagno ha la sua foto su disco.
+for(const id of json('ARENA_COMPANIONS.map(c=>c.id)')){
+  assert.equal(run(`arenaCreatureImage("${id}")`),`assets/fortress/enemy/${id}.webp`);
+  assert.ok(fs.existsSync(`${__dirname}/../assets/fortress/enemy/${id}.webp`),id);
+}
+
 // 2) Acquisto: serve il saldo; si paga una volta sola e si ha un solo compagno.
 fresh();
 run('arenaBuyCompanion("p0","dragone-di-lava")');
