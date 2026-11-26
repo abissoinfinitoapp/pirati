@@ -5452,7 +5452,7 @@
   }
   // V70: il compagno è anche il premio raro della Macchina dei Regali.
   // Probabilità e creature per risultato del dado si ritoccano qui.
-  const ARENA_COMPANION_GIFT_CHANCE=25; // % di vincerlo quando il dado fa 5 o 6
+  const ARENA_COMPANION_GIFT_CHANCE=75; // % di vincerlo con 5 o 6: in media 1 giocatore su 4
   const ARENA_COMPANION_GIFT_POOL={
     5:["gatto-fulminante","cincilla-allegro","pungitopo-rotante","ragno-velenoso"],
     6:["stupido-troll","dragone-di-lava"]

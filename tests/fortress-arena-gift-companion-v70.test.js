@@ -68,10 +68,10 @@ assert.equal(run('arena.players[0].pet.bought'),true);
 newDay();saved.delete('fortress-army-arena-companions-v1');start3();roll=0;give(2);start3();give(6);
 assert.equal(run('arena.players[0].pet'),null);
 
-// 6) La probabilità è del 25%.
-assert.equal(run('ARENA_COMPANION_GIFT_CHANCE'),25);
-newDay();start3();roll=0.25;give(5);
+// 6) Con 5 o 6 si vince 3 volte su 4: in media un giocatore su quattro.
+assert.equal(run('ARENA_COMPANION_GIFT_CHANCE'),75);
+newDay();start3();roll=0.75;give(5);
 assert.equal(run('arena.players[0].pet'),null);
-newDay();start3();roll=0.24;give(5);
+newDay();start3();roll=0.74;give(5);
 assert.equal(run('arena.players[0].pet.bought'),true);
 console.log('V70: compagno come premio raro della Macchina dei Regali, una occasione al giorno OK');
