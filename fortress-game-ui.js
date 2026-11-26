@@ -5001,16 +5001,20 @@
       if(actions) actions.insertAdjacentHTML("afterbegin",`<p role="alert" class="fa-arena-error">${arenaEscape(arenaRosterError)}</p>`);
       return;
     }
-    const p=arena.players[arena.giftIndex||0];if(!p||p.giftWeapon)return;
+    const p=arena.players[arena.giftIndex||0];if(!p||p.giftWeapon||p.giftCompanion||!Number.isInteger(n)||n<1||n>6)return;
     try {
-      const drawn=giftMachineApi.drawArenaWeapon(n,Math.random,arena.players.map(x=>x.giftWeapon?.id).filter(Boolean));
-      p.giftWeapon={id:drawn.weaponId,name:drawn.weapon.name,rarity:drawn.rarity,image:drawn.image||null};
+      const won=arenaGiftCompanionDraw(p,n);
+      if(won) arenaGiveCompanion(p,won);
+      else {
+        const drawn=giftMachineApi.drawArenaWeapon(n,Math.random,arena.players.map(x=>x.giftWeapon?.id).filter(Boolean));
+        p.giftWeapon={id:drawn.weaponId,name:drawn.weapon.name,rarity:drawn.rarity,image:drawn.image||null};
+      }
       arena.giftReveal=true;arena.giftAnimating=true;arenaStore();arenaGiftPlay();renderArenaGiftPending();
     }catch(err){arenaRosterError=err?.message||"Errore estrazione arma";renderArena();}
   }
   function renderArenaGiftPending() {
     const actions = $("fa-arena-gift-actions");
-    if (actions) actions.innerHTML = '<p class="fa-arena-gift-wait" role="status">🎁 LA MACCHINA STA ESTRAENDO L’ARMA…</p>';
+    if (actions) actions.innerHTML = '<p class="fa-arena-gift-wait" role="status">🎁 LA MACCHINA STA ESTRAENDO IL REGALO…</p>';
   }
   function arenaGiftNext(){
     if(!arena||arena.stage!=="gift"||!arena.giftReveal||arena.giftAnimating)return;
@@ -5411,7 +5415,7 @@
     arena.match.petDefends=!!usePet;
     arenaStore(); renderArena();
   }
-  // V69 compagni: creature in vendita nel negozio dell'arena (p.pet.bought=true).
+  // V69 compagni: creature comprate nel negozio dell'arena o vinte ai regali (p.pet.bought=true).
   // Non si possono rubare, passano di torneo in torneo finché il padrone non viene eliminato e muoiono con lui.
   // A 0 HP sono solo esauste: tornano con tutti gli HP al torneo successivo. Prezzi e forza si ritoccano qui.
   const ARENA_COMPANIONS_KEY="fortress-army-arena-companions-v1";
@@ -5446,6 +5450,37 @@
     p.pet=null;
     return lost;
   }
+  // V70: il compagno è anche il premio raro della Macchina dei Regali.
+  // Probabilità e creature per risultato del dado si ritoccano qui.
+  const ARENA_COMPANION_GIFT_CHANCE=25; // % di vincerlo quando il dado fa 5 o 6
+  const ARENA_COMPANION_GIFT_POOL={
+    5:["gatto-fulminante","cincilla-allegro","pungitopo-rotante","ragno-velenoso"],
+    6:["stupido-troll","dragone-di-lava"]
+  };
+  // Una sola occasione al giorno per personaggio: resettare il torneo non fa ritentare.
+  const ARENA_COMPANION_GIFT_DAYS_KEY="fortress-army-arena-companion-gift-days-v1";
+  function arenaToday() { const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+  function arenaGiftDays() {
+    try { const v=JSON.parse(localStorage.getItem(ARENA_COMPANION_GIFT_DAYS_KEY)||"{}"); return v&&typeof v==="object"&&!Array.isArray(v)?v:{}; }
+    catch(_) { return {}; }
+  }
+  function arenaGiftCompanionEligible(p) { return !!p&&!p.pet?.bought&&arenaGiftDays()[p.avatarId]!==arenaToday(); }
+  // Consuma l'occasione del giorno e restituisce il compagno vinto, oppure null (esce un'arma).
+  function arenaGiftCompanionDraw(p,n) {
+    const eligible=arenaGiftCompanionEligible(p), days=arenaGiftDays();
+    days[p.avatarId]=arenaToday();
+    try {localStorage.setItem(ARENA_COMPANION_GIFT_DAYS_KEY,JSON.stringify(days));}catch(_){}
+    const pool=ARENA_COMPANION_GIFT_POOL[n];
+    if(!eligible||!pool||arenaRandom(100)>=ARENA_COMPANION_GIFT_CHANCE)return null;
+    const id=pool[arenaRandom(pool.length)];
+    return ARENA_COMPANIONS.find(c=>c.id===id)||null;
+  }
+  // Acquistato o vinto, il compagno segue le stesse regole.
+  function arenaGiveCompanion(p,spec) {
+    const book=arenaCompanionBook(); book[p.avatarId]=spec.id; arenaWriteCompanionBook(book);
+    p.pet=arenaCompanionPet(spec);
+    if(arena?.stage==="gift") p.giftCompanion=spec.id;
+  }
   function arenaCompanionBlock(p,spec) {
     if (p.pet?.bought) return "Hai già un compagno";
     return arenaBalance(p) < spec.price ? "Soldi insufficienti" : null;
@@ -5455,8 +5490,7 @@
     const p=arenaPlayer(playerId), spec=ARENA_COMPANIONS.find(c=>c.id===companionId);
     if (!p || p.animal || !spec || p.hp<=0 || arenaCompanionBlock(p,spec)) return;
     if (typeof walletApi==="undefined" || !walletApi || !walletApi.spend(p.avatarId,spec.price)) return;
-    const book=arenaCompanionBook(); book[p.avatarId]=spec.id; arenaWriteCompanionBook(book);
-    p.pet=arenaCompanionPet(spec);
+    arenaGiveCompanion(p,spec);
     playSfx("heal");
     arenaStore(); renderArena();
   }
@@ -5919,12 +5953,13 @@
     else if (arena.stage==="gift") {
       const p=arena.players[arena.giftIndex||0];
       const w=p?.giftWeapon;
+      const gc=p?.giftCompanion?p.pet:null;
       const pending=Boolean(arena.giftAnimating);
       body=`<section class="fa-arena-gift-stage"><h2>🎁 MACCHINA DEI REGALI · ${arena.giftIndex+1}/${arena.players.length}</h2>
         <h3>${arenaEscape(p?.name||"")}</h3>
         <div class="fa-arena-gift-machine"><canvas id="fa-arena-gift-canvas" aria-label="Macchina dei regali animata"></canvas><div id="fa-arena-gift-status" role="status"></div></div>
-        <div id="fa-arena-gift-actions">${pending?'<p class="fa-arena-gift-wait" role="status">🎁 LA MACCHINA STA ESTRAENDO L’ARMA…</p>':w?`<div class="fa-arena-gift-result"><h3>🎉 ${arenaEscape(w.name)}</h3><p>${arenaEscape(w.rarity.toUpperCase())} · +${arenaGiftBonus(p)} al totale di attacco</p>${w.image?`<img src="${arenaEscape(w.image)}" alt="${arenaEscape(w.name)}" style="max-height:140px;max-width:100%;object-fit:contain" onerror="this.hidden=true">`:''}</div>${btn("gift-next",arena.giftIndex+1===arena.players.length?"ENTRA NELL'ARENA":"PROSSIMO GIOCATORE")}`:
-        `<p>Tira 1 dado fisico per determinare la rarità dell'arma.</p><div class="fa-arena-gift-dice">${[1,2,3,4,5,6].map(n=>btn("gift-die",String(n),`data-die="${n}"`)).join("")}</div>`}</div>
+        <div id="fa-arena-gift-actions">${pending?'<p class="fa-arena-gift-wait" role="status">🎁 LA MACCHINA STA ESTRAENDO L’ARMA…</p>':gc?`<div class="fa-arena-gift-result fa-arena-gift-companion"><h3>🐾 HAI VINTO UN COMPAGNO!</h3><div class="fa-arena-photo fa-arena-photo-mini">${arenaPhoto({animal:true,species:gc.species,name:gc.name,icon:gc.icon})}</div><h3>${arenaEscape(gc.name)}</h3><p>❤️ ${gc.maxHp} HP · +${gc.attackBonus} attacco · al posto dell'arma. Resta con te finché resti in vita.</p></div>${btn("gift-next",arena.giftIndex+1===arena.players.length?"ENTRA NELL'ARENA":"PROSSIMO GIOCATORE")}`:w?`<div class="fa-arena-gift-result"><h3>🎉 ${arenaEscape(w.name)}</h3><p>${arenaEscape(w.rarity.toUpperCase())} · +${arenaGiftBonus(p)} al totale di attacco</p>${w.image?`<img src="${arenaEscape(w.image)}" alt="${arenaEscape(w.name)}" style="max-height:140px;max-width:100%;object-fit:contain" onerror="this.hidden=true">`:''}</div>${btn("gift-next",arena.giftIndex+1===arena.players.length?"ENTRA NELL'ARENA":"PROSSIMO GIOCATORE")}`:
+        `<p>Tira 1 dado fisico per determinare la rarità dell'arma.</p>${p?.pet?.bought?`<p>🐾 ${arenaEscape(p.pet.name)} è già con te.</p>`:arenaGiftCompanionEligible(p)?`<p>🐾 Con <strong>5 o 6</strong> a volte esce un <strong>compagno</strong> al posto dell'arma!</p>`:""}<div class="fa-arena-gift-dice">${[1,2,3,4,5,6].map(n=>btn("gift-die",String(n),`data-die="${n}"`)).join("")}</div>`}</div>
         ${arenaRosterError?`<p role="alert">${arenaEscape(arenaRosterError)}</p>`:""}</section>`;
     }
     else if (arena.stage==="direct-target") {
