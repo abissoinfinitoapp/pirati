@@ -2475,6 +2475,8 @@ body.fa-game-active .fa-header { display:none; }
 .fa-arena-pet-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}
 .fa-arena-pet-buttons .fa-arena-btn[data-choice="pet"]{background:#3f6b35;border-color:#a9d68f}
 .fa-arena-pet-line{display:block;margin-top:5px;font-size:.78rem;color:#cfe8bd;font-weight:700}
+.fa-arena-companions{margin-top:8px}.fa-arena-companions summary{cursor:pointer;font-weight:800;padding:6px 0}
+.fa-arena-companion-owned{margin:8px 0 0}
 .fa-arena-equipment-pet{border-color:rgba(127,174,106,.65);background:rgba(80,120,60,.18)}
 @media(max-width:520px){.fa-arena-pet-buttons{grid-template-columns:1fr}.fa-arena-pet-buttons .fa-arena-btn{min-height:0}}
 /* Spiegazione dei dadi: scala della difesa e "come è andata" */

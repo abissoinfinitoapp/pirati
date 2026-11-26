@@ -5028,7 +5028,8 @@
       const item=giftMachineApi.drawArenaWeapon(1,Math.random,arena.players.map(x=>x.giftWeapon?.id).filter(Boolean));
       const p={id:r.id,name:r.name,avatarId:r.avatarId,hp:100,maxHp:100,shield:40,maxShield:40,attacks:0,defends:0,
         skill:null,skillUsed:{},lastMatch:arena.exchange,arenaWeapon:null,specialWeapon:null,weaponId:null,
-        giftWeapon:{id:item.weaponId,name:item.weapon.name,rarity:item.rarity,image:item.image||null}};
+        giftWeapon:{id:item.weaponId,name:item.weapon.name,rarity:item.rarity,image:item.image||null},
+        pet:arenaOwnedCompanion(r.avatarId)};
       arena.players.push(p);r.selected=true;arenaSaveRoster();arenaRosterError="";
       arenaStore();renderArena();
     }catch(err){arenaRosterError=err?.message||"Ingresso non disponibile";renderArena();}
@@ -5065,6 +5066,8 @@
     if(attacking&&arenaSkill(p)==="devastating") add(arenaSkillName("devastating"),rolls.length*2);
     if(attacking && p?.animal) add(p.upgradeName||"Furia",p.attackBonus||0);
     if(attacking && arenaSpecial(p)) add(arenaSpecial(p).name,arenaSpecial(p).bonus);
+    const match=typeof arena!=="undefined"?arena?.match:null;
+    if(attacking && match?.petAttack && match.a===p?.id) add(match.petAttack.name,match.petAttack.value);
     return parts;
   }
   function arenaDiceTotal(p,rolls,attacking) {
@@ -5115,8 +5118,10 @@
   // Quando arriva la foto: aggiungere il file e TOGLIERE l'id da questo elenco.
   const ARENA_CREATURES_WITHOUT_IMAGE = new Set([]);
   const ARENA_CREATURE_IMAGES_READY = new Set(ARENA_BEAST_POOL.filter((c) => !ARENA_CREATURES_WITHOUT_IMAGE.has(c.id)).map((c) => c.id));
+  // Compagni in vendita: aggiungere qui l'id quando esiste il file della foto (stessa cartella).
+  const ARENA_COMPANION_IMAGES = new Set([]);
   function arenaCreatureImage(speciesId) {
-    return ARENA_CREATURE_IMAGES_READY.has(speciesId) ? `assets/fortress/enemy/${speciesId}.webp` : null;
+    return ARENA_CREATURE_IMAGES_READY.has(speciesId) || ARENA_COMPANION_IMAGES.has(speciesId) ? `assets/fortress/enemy/${speciesId}.webp` : null;
   }
   const ARENA_BEAST_UPGRADES = [
     {id:"armored",label:"CORAZZA",shield:60},
@@ -5209,7 +5214,8 @@
       const skill=skillBook[p.id]||null;
       return {id:p.id,name:p.name,avatarId:p.avatarId,hp:skill==="defense"?200:100,
         maxHp:skill==="defense"?200:100,shield:skill==="defense"?200:40,maxShield:skill==="defense"?200:40,attacks:0,defends:0,
-        skill,skillUsed:{},lastMatch:0,arenaWeapon:null,specialWeapon:null,weaponId:null,giftWeapon:null};
+        skill,skillUsed:{},lastMatch:0,arenaWeapon:null,specialWeapon:null,weaponId:null,giftWeapon:null,
+        pet:arenaOwnedCompanion(p.avatarId)};
     });
     // La skill NON viene tolta dal libretto qui: resta al vincitore finché il torneo non si conclude
     // davvero (vedi arenaConsumeStartingSkills). Se il torneo viene resettato/annullato, la skill resta sua.
@@ -5254,9 +5260,9 @@
         player.shield-=blocked;
         player.hp=Math.max(0,player.hp-(damage-blocked));
         arenaEliminateSkill(player);
-        // Le creature catturate non subiscono le pareti: si perdono solo se il padrone viene eliminato.
-        if(player.hp===0) player.pet=null;
-        return {id,die,damage,blocked,hp:player.hp};
+        // Creature e compagni non subiscono le pareti: si perdono solo se il padrone viene eliminato.
+        const fallen=player.hp===0?arenaLosePet(player):null;
+        return {id,die,damage,blocked,hp:player.hp,...(fallen?.bought?{companion:fallen.name}:{})};
       });
       // Le pareti eliminano sempre gli animali presenti, senza tiro.
       sp.eliminatedAnimals=arenaAliveAnimals().map(animal=>({id:animal.id,name:animal.name}));
@@ -5394,6 +5400,8 @@
   function arenaPetDefends(d) { return arenaHasPet(d) && arena.match?.petDefends===true; }
   function arenaCapturePet(owner,beast) {
     const pet={species:beast.species,name:beast.name,icon:beast.icon,hp:beast.maxHp,maxHp:beast.maxHp};
+    // Il compagno comprato non si cambia: la cattura vale solo il bonus in euro.
+    if(owner.pet?.bought) return {name:pet.name,hp:pet.hp,replaced:null,kept:owner.pet.name};
     const replaced=owner.pet?.name||null;
     owner.pet=pet;
     return {name:pet.name,hp:pet.hp,replaced};
@@ -5403,12 +5411,78 @@
     arena.match.petDefends=!!usePet;
     arenaStore(); renderArena();
   }
+  // V69 compagni: creature in vendita nel negozio dell'arena (p.pet.bought=true).
+  // Non si possono rubare, passano di torneo in torneo finché il padrone non viene eliminato e muoiono con lui.
+  // A 0 HP sono solo esauste: tornano con tutti gli HP al torneo successivo. Prezzi e forza si ritoccano qui.
+  const ARENA_COMPANIONS_KEY="fortress-army-arena-companions-v1";
+  const ARENA_COMPANION_FAIL_DAMAGE=20;
+  const ARENA_COMPANIONS=[
+    {id:"gatto-fulminante",name:"Gatto Fulminante",icon:"🐱",price:50,maxHp:60,attackBonus:1},
+    {id:"cincilla-allegro",name:"Cincillà Allegro",icon:"🐭",price:50,maxHp:60,attackBonus:1},
+    {id:"pungitopo-rotante",name:"Pungitopo Rotante",icon:"🌿",price:90,maxHp:90,attackBonus:1},
+    {id:"ragno-velenoso",name:"Ragno Velenoso",icon:"🕷️",price:90,maxHp:90,attackBonus:1},
+    {id:"stupido-troll",name:"Stupido Troll",icon:"🧌",price:120,maxHp:130,attackBonus:1},
+    {id:"dragone-di-lava",name:"Dragone di Lava",icon:"🐉",price:150,maxHp:120,attackBonus:2}
+  ];
+  // Il libretto è per personaggio (avatarId), come il portafoglio che ha pagato.
+  function arenaCompanionBook() {
+    try { const v=JSON.parse(localStorage.getItem(ARENA_COMPANIONS_KEY)||"{}"); return v&&typeof v==="object"&&!Array.isArray(v)?v:{}; }
+    catch(_) { return {}; }
+  }
+  function arenaWriteCompanionBook(x) { try {localStorage.setItem(ARENA_COMPANIONS_KEY,JSON.stringify(x));}catch(_){} }
+  function arenaCompanionPet(spec) {
+    return {species:spec.id,name:spec.name,icon:spec.icon,hp:spec.maxHp,maxHp:spec.maxHp,attackBonus:spec.attackBonus,bought:true};
+  }
+  function arenaOwnedCompanion(avatarId) {
+    const spec=ARENA_COMPANIONS.find(c=>c.id===arenaCompanionBook()[avatarId]);
+    return spec?arenaCompanionPet(spec):null;
+  }
+  // Un giocatore eliminato perde la sua creatura. Per un compagno comprato la perdita è salvata subito:
+  // un RESET del torneo non lo riporta in vita.
+  function arenaLosePet(p) {
+    if(!p||p.animal||!p.pet)return null;
+    const lost=p.pet;
+    if(lost.bought){const book=arenaCompanionBook();delete book[p.avatarId];arenaWriteCompanionBook(book);}
+    p.pet=null;
+    return lost;
+  }
+  function arenaCompanionBlock(p,spec) {
+    if (p.pet?.bought) return "Hai già un compagno";
+    return arenaBalance(p) < spec.price ? "Soldi insufficienti" : null;
+  }
+  function arenaBuyCompanion(playerId,companionId) {
+    if (!arena || arena.stage!=="ready") return;
+    const p=arenaPlayer(playerId), spec=ARENA_COMPANIONS.find(c=>c.id===companionId);
+    if (!p || p.animal || !spec || p.hp<=0 || arenaCompanionBlock(p,spec)) return;
+    if (typeof walletApi==="undefined" || !walletApi || !walletApi.spend(p.avatarId,spec.price)) return;
+    const book=arenaCompanionBook(); book[p.avatarId]=spec.id; arenaWriteCompanionBook(book);
+    p.pet=arenaCompanionPet(spec);
+    playSfx("heal");
+    arenaStore(); renderArena();
+  }
+  // Chi attacca con un compagno in forze sceglie se portarlo: bonus al totale, ma se l'attacco è parato lui si ferisce.
+  function arenaPetAttackPending() {
+    const m=arena?.match;
+    if (!m || arena.stage!=="attack" || typeof m.petAttacks==="boolean") return false;
+    const a=arenaPlayer(m.a);
+    return arenaHasPet(a) && !!a.pet.bought;
+  }
+  function arenaChoosePetAttack(withPet) {
+    if (!arenaPetAttackPending()) return;
+    const m=arena.match, a=arenaPlayer(m.a);
+    m.petAttacks=!!withPet;
+    if (withPet) m.petAttack={name:a.pet.name,value:a.pet.attackBonus||0};
+    arenaStore(); renderArena();
+  }
   // V66 furto: chi attacca un giocatore con una creatura catturata sceglie se combattere o rubarla.
   // Il sistema sorteggia un numero (2-12); il tiro dell'attaccante deve stare entro ±tolleranza.
   const ARENA_STEAL_TOLERANCE=2, ARENA_STEAL_PENALTY=40;
   function arenaStealChoicePending() {
     const m=arena?.match;
-    return !!m && arena.stage==="attack" && arenaHasPet(arenaPlayer(m.b)) && typeof m.steal!=="boolean";
+    if (!m || arena.stage!=="attack" || typeof m.steal==="boolean") return false;
+    const a=arenaPlayer(m.a), d=arenaPlayer(m.b);
+    // I compagni comprati non si rubano; le creature libere non rubano; chi ha un compagno non ha posto per un'altra.
+    return arenaHasPet(d) && !d.pet.bought && !a?.animal && !a?.pet?.bought;
   }
   function arenaChooseSteal(steal) {
     if (!arenaStealChoicePending()) return;
@@ -5434,7 +5508,7 @@
     }
     // Il colpo dell'attaccante si consuma comunque (come negli scontri).
     if (a.specialWeapon) { a.specialWeapon=null; a.specialTargetPending=false; }
-    if (a.hp===0) { arenaEliminateSkill(a); a.giftWeapon=null; a.arenaWeapon=null; a.specialWeapon=null; a.specialTargetPending=false; a.pet=null; }
+    if (a.hp===0) { arenaEliminateSkill(a); a.giftWeapon=null; a.arenaWeapon=null; a.specialWeapon=null; a.specialTargetPending=false; arenaLosePet(a); }
     a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
     arena.stealResult={target:m.stealTarget,roll,gap,success,damage,replaced,paid,
       attackerName:a.name,ownerName:d.name,petName:pet.name,petHp:pet.hp,petIcon:pet.icon,before,
@@ -5472,8 +5546,16 @@
     const hpDamage=Math.max(0,leftover-blocked);
     d.hp=Math.max(0,d.hp-hpDamage);
     const petLost=!!pet&&pet.hp<=0;
-    const petInfo=pet?{name:pet.name,absorbed:petAbsorbed,lost:petLost,hp:Math.max(0,pet.hp),maxHp:pet.maxHp}:null;
-    if(petLost) d.pet=null;
+    const petInfo=pet?{name:pet.name,absorbed:petAbsorbed,lost:petLost,hp:Math.max(0,pet.hp),maxHp:pet.maxHp,...(pet.bought?{bought:true}:{})}:null;
+    // La creatura catturata a 0 HP è persa; il compagno comprato è solo esausto.
+    if(petLost) { if(pet.bought) pet.hp=0; else d.pet=null; }
+    // Compagno in attacco: se la difesa para, si ferisce.
+    let petAttack=null;
+    if(m.petAttack&&a.pet?.bought) {
+      const hurt=delta<=0?Math.min(a.pet.hp,ARENA_COMPANION_FAIL_DAMAGE):0;
+      a.pet.hp-=hurt;
+      petAttack={name:a.pet.name,hurt,hp:a.pet.hp,maxHp:a.pet.maxHp};
+    }
     if(d.hp===0&&d.skill==="phoenix"&&!d.skillUsed?.phoenix){d.hp=Math.ceil(maxHp*.4);d.skillUsed.phoenix=true;}
     if(percent>0&&arenaSkill(a)==="vampire")a.hp=Math.min(a.maxHp||100,a.hp+Math.ceil((a.maxHp||100)*.2));
     if(arenaWeapon(a)?.kind==="cursed")a.hp=Math.max(0,a.hp-Math.ceil((a.maxHp||100)*.2));
@@ -5484,15 +5566,15 @@
     if(a.hp===0){a.giftWeapon=null;a.arenaWeapon=null;a.specialWeapon=null;a.specialTargetPending=false;}
     arenaEliminateSkill(d);
     // Chi viene eliminato perde anche la creatura che aveva catturato.
-    if(d.hp===0) d.pet=null;
-    if(a.hp===0) a.pet=null;
+    const fallen=[];
+    for(const p of [d,a]) if(p.hp===0) { const lost=arenaLosePet(p); if(lost?.bought) fallen.push({name:lost.name,owner:p.name}); }
     // Un giocatore che elimina una creatura la cattura: torna con tutti i suoi HP e lo difende.
     // Una sola creatura per giocatore: una nuova cattura sostituisce la precedente.
     const captured=d.animal&&d.hp===0&&!a.animal&&a.hp>0?arenaCapturePet(a,d):null;
     a.attacks++; d.defends++; a.lastMatch=arena.exchange; d.lastMatch=arena.exchange;
     const earnings=arenaPayExchange(a,d,delta);
     if(captured) earnings.push(...arenaPayBonus(a,arenaPayoutOf("capture")));
-    arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null,earnings,pet:petInfo,captured,
+    arena.result={attack,defense,delta,percent,blocked,hpDamage,parryPressure,eliminated:d.hp===0,specialName:special?.name||null,earnings,pet:petInfo,petAttack,fallen,captured,
       before,after:{a:{hp:a.hp,shield:a.shield||0},d:{hp:d.hp,shield:d.shield||0}}};
     arena.log.unshift({number:arena.exchange,a:a.name,b:d.name,delta,eliminated:d.hp===0});
     arena.log=arena.log.slice(0,12);
@@ -5504,7 +5586,7 @@
     const m=arena.match;
     if (arena.stage === "attack") {
       const attacker=arenaPlayer(m.a), count=arenaSkillDice(attacker,true);
-      if (arenaStealChoicePending() || m.attack.length >= count) return;
+      if (arenaPetAttackPending() || arenaStealChoicePending() || m.attack.length >= count) return;
       m.attack.push(n);
       // Il giocatore conferma esplicitamente i due dadi prima del cambio turno.
     } else if (arena.stage === "defense") {
@@ -5520,7 +5602,7 @@
     const m=arena.match;
     if (arena.stage === "attack") {
       const attacker=arenaPlayer(m.a);
-      if (arenaStealChoicePending() || m.attack.length !== arenaSkillDice(attacker,true)) return;
+      if (arenaPetAttackPending() || arenaStealChoicePending() || m.attack.length !== arenaSkillDice(attacker,true)) return;
       attacker.boost=false;
       if (m.steal===true) { arenaResolveSteal(); renderArena(); return; }
       arena.stage="defense";
@@ -5577,6 +5659,12 @@
         if(op==="pet-defend") { arenaChoosePetDefense(btn.dataset.choice==="pet"); return; }
         if(op==="steal-choice") { arenaChooseSteal(btn.dataset.choice==="steal"); return; }
         if(op==="buy") { arenaBuyItem(btn.dataset.player, btn.dataset.item); return; }
+        if(op==="buy-companion") {
+          const p=arena&&arenaPlayer(btn.dataset.player), spec=ARENA_COMPANIONS.find(c=>c.id===btn.dataset.item);
+          if(p&&spec&&(typeof confirm!=="function"||confirm(`${p.name}: compri ${spec.name} per ${spec.price}€? Resta con te finché resti in vita: se vieni eliminato muore con te.`))) arenaBuyCompanion(p.id,spec.id);
+          return;
+        }
+        if(op==="pet-attack") { arenaChoosePetAttack(btn.dataset.choice==="pet"); return; }
         if(op==="undo" && (arena.stage==="attack" || arena.stage==="defense")) {
           const arr=arena.stage==="attack"?arena.match.attack:arena.match.defense; arr.pop(); arenaStore(); renderArena(); return; }
         if(op==="next" && (arena.stage==="result" || arena.stage==="steal-result")) { if(!arenaWinnerStage()){ arena.stage="ready";arenaStore(); } renderArena();return; }
@@ -5605,6 +5693,10 @@
     const bar=(label,value,max,color)=>`<div class="fa-arena-meter"><div class="fa-arena-meter-label"><span>${label}</span><strong>${value}/${max}</strong></div><div class="fa-arena-meter-track" role="progressbar" aria-label="${label}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${value}"><div class="fa-arena-meter-fill" style="width:${Math.max(0,Math.min(100,value/max*100))}%;background:${color}"></div></div></div>`;
     return `<div class="fa-arena-bars">${bar("❤️ VITA",hp,hpMax,"#d34c53")}${bar("🛡️ SCUDO",shield,shieldMax,"#369bd9")}</div>`;
   }
+  function arenaPetDetail(pet) {
+    if (!pet.bought) return `Creatura catturata · ❤️ ${pet.hp}/${pet.maxHp}`;
+    return pet.hp>0?`Compagno · ❤️ ${pet.hp}/${pet.maxHp} · +${pet.attackBonus} attacco`:"Compagno esausto · torna al prossimo torneo";
+  }
   // V52: riepilogo delle dotazioni dallo stato reale del combattente, senza duplicare inventari.
   function arenaEquipment(p) {
     if (!p) return "";
@@ -5617,7 +5709,7 @@
     if (p.boost) entries.push({icon:"⚡",name:"Potenza",detail:"+1 dado al prossimo attacco",type:"boost"});
     if ((p.directChallenges||0)>0) entries.push({icon:"🎯",name:"Sfida Diretta",detail:`${p.directChallenges} disponibili`,type:"direct"});
     if (p.upgradeName) entries.push({icon:"🐾",name:p.upgradeName,detail:"Potenziamento",type:"upgrade"});
-    if (arenaHasPet(p)) entries.push({icon:p.pet.icon||"🐾",name:p.pet.name,detail:`Creatura catturata · ❤️ ${p.pet.hp}/${p.pet.maxHp}`,type:"pet"});
+    if (arenaHasPet(p)||(p.pet?.bought&&p.hp>0)) entries.push({icon:p.pet.icon||"🐾",name:p.pet.name,detail:arenaPetDetail(p.pet),type:"pet"});
     if (!entries.length) entries.push({icon:"—",name:"Nessuna dotazione",detail:"",type:"empty"});
     return `<div class="fa-arena-equipment" aria-label="Dotazioni ${arenaEscape(p.name)}"><div class="fa-arena-equipment-title">🎒 DOTAZIONI</div><div class="fa-arena-equipment-items">${entries.map(e=>`<div class="fa-arena-equipment-item fa-arena-equipment-${e.type}"><span aria-hidden="true">${e.icon}</span><span><strong>${arenaEscape(e.name)}</strong>${e.detail?`<small>${arenaEscape(e.detail)}</small>`:""}</span></div>`).join("")}</div></div>`;
   }
@@ -5667,7 +5759,7 @@
     root.querySelectorAll(".fa-arena-chip").forEach(b=>{const on=b.dataset.card===sel.id;b.classList.toggle("is-active",on);b.setAttribute("aria-pressed",String(on));});
   }
   function arenaDuelist(p,role,rolling) {
-    const pet=arenaHasPet(p)?`<small class="fa-arena-pet-line">${p.pet.icon||"🐾"} ${arenaEscape(p.pet.name)} · ❤️ ${p.pet.hp}/${p.pet.maxHp}</small>`:"";
+    const pet=arenaHasPet(p)||(p.pet?.bought&&p.hp>0)?`<small class="fa-arena-pet-line">${p.pet.icon||"🐾"} ${arenaEscape(p.pet.name)} · ${p.pet.hp>0?`❤️ ${p.pet.hp}/${p.pet.maxHp}`:"esausto"}</small>`:"";
     return `<div class="fa-arena-duelist ${rolling?"is-rolling":""}"><div class="fa-arena-thumb">${arenaPhoto(p)}</div><span class="fa-arena-duelist-role">${role}</span><strong class="fa-arena-duelist-name">${arenaEscape(p.name)}</strong>${arenaBars(p)}${pet}</div>`;
   }
   // Scelta del difensore che possiede una creatura: usarla come scudo vivente o tenerla da parte.
@@ -5676,7 +5768,7 @@
     return `<section class="fa-arena-pet-choice" aria-label="Scelta della creatura">
       <div class="fa-arena-photo fa-arena-photo-mini">${photo}</div>
       <h3>🐾 ${arenaEscape(d.name)}, vuoi difenderti con ${arenaEscape(pet.name)}?</h3>
-      <p>${arenaEscape(pet.name)} ha <strong>❤️ ${pet.hp}/${pet.maxHp} HP</strong>. Se la usi, il colpo lo prende la creatura: solo i danni che avanzano arrivano a te. Se i suoi HP finiscono, la perdi.</p>
+      <p>${arenaEscape(pet.name)} ha <strong>❤️ ${pet.hp}/${pet.maxHp} HP</strong>. Se la usi, il colpo lo prende la creatura: solo i danni che avanzano arrivano a te. ${pet.bought?"Se i suoi HP finiscono resta esausto fino al prossimo torneo.":"Se i suoi HP finiscono, la perdi."}</p>
       <div class="fa-arena-choices fa-arena-pet-buttons">
         ${`<button class="fa-arena-btn" data-arena="pet-defend" data-choice="pet"><strong>🐾 DIFENDITI CON ${arenaEscape(pet.name.toUpperCase())}</strong><small>Prende il colpo al posto tuo</small></button>`}
         ${`<button class="fa-arena-btn" data-arena="pet-defend" data-choice="self"><strong>🙋 DIFENDITI DA SOLO</strong><small>Tieni la creatura per dopo</small></button>`}
@@ -5720,10 +5812,31 @@
         const block=arenaShopBlock(p,item);
         return `<button class="fa-arena-btn" data-arena="buy" data-player="${arenaEscape(p.id)}" data-item="${item.id}" ${block?"disabled":""} title="${arenaEscape(block||item.desc)}"><strong>${item.icon} ${arenaEscape(item.name)} · ${item.price}€</strong><small>${arenaEscape(block||item.desc)}</small></button>`;
       }).join("");
-      return `<div class="fa-arena-shop-row"><strong>${arenaEscape(p.name)}</strong><span>💶 ${arenaBalance(p)}€</span><div class="fa-arena-choices">${buttons}</div></div>`;
+      return `<div class="fa-arena-shop-row"><strong>${arenaEscape(p.name)}</strong><span>💶 ${arenaBalance(p)}€</span><div class="fa-arena-choices">${buttons}</div>${arenaCompanionShopHtml(p)}</div>`;
     }).join("");
     if (!rows) return "";
     return `<details class="fa-arena-damage-guide fa-arena-shop"><summary>🏪 NEGOZIO ARENA (si spendono solo qui)</summary>${rows}</details>`;
+  }
+  function arenaCompanionShopHtml(p) {
+    if (p.pet?.bought) return `<p class="fa-arena-companion-owned">${p.pet.icon} Compagno: <strong>${arenaEscape(p.pet.name)}</strong> · ${p.pet.hp>0?`❤️ ${p.pet.hp}/${p.pet.maxHp}`:"esausto"}</p>`;
+    const buttons=ARENA_COMPANIONS.map(c=>{
+      const block=arenaCompanionBlock(p,c);
+      const desc=`❤️ ${c.maxHp} · +${c.attackBonus} attacco${arenaHasPet(p)?` · prende il posto di ${p.pet.name}`:""}`;
+      return `<button class="fa-arena-btn" data-arena="buy-companion" data-player="${arenaEscape(p.id)}" data-item="${c.id}" ${block?"disabled":""}><strong>${c.icon} ${arenaEscape(c.name)} · ${c.price}€</strong><small>${arenaEscape(block?`${desc} · ${block}`:desc)}</small></button>`;
+    }).join("");
+    return `<details class="fa-arena-companions"><summary>🐾 COMPAGNI · restano finché resti in vita, nessuno può rubarli</summary><div class="fa-arena-choices">${buttons}</div></details>`;
+  }
+  // V69: scelta di chi attacca con un compagno.
+  function arenaPetAttackHtml(a) {
+    const pet=a.pet, photo=arenaPhoto({animal:true,species:pet.species,name:pet.name,icon:pet.icon});
+    return `<section class="fa-arena-pet-choice" aria-label="Scelta: attacca con il compagno">
+      <div class="fa-arena-photo fa-arena-photo-mini">${photo}</div>
+      <h3>🐾 ${arenaEscape(a.name)}, ${arenaEscape(pet.name)} attacca con te?</h3>
+      <p>Con ${arenaEscape(pet.name)} hai <strong>+${pet.attackBonus}</strong> al totale. Se l'attacco viene parato, il compagno perde ${ARENA_COMPANION_FAIL_DAMAGE} HP (ora ❤️ ${pet.hp}/${pet.maxHp}).</p>
+      <div class="fa-arena-choices fa-arena-pet-buttons">
+        <button class="fa-arena-btn" data-arena="pet-attack" data-choice="pet"><strong>🐾 ATTACCA CON ${arenaEscape(pet.name.toUpperCase())}</strong><small>+${pet.attackBonus} attacco</small></button>
+        <button class="fa-arena-btn" data-arena="pet-attack" data-choice="self"><strong>⚔️ ATTACCA DA SOLO</strong><small>Il compagno non rischia</small></button>
+      </div></section>`;
   }
   // V66: scelta iniziale quando il difensore ha una creatura catturata.
   function arenaStealChoiceHtml(a,d) {
@@ -5827,12 +5940,12 @@
       const rolls=arena.splatter.rolls, alive=arenaAlivePlayers(), p=alive[rolls.length];
       body=`<div class="fa-arena-splatter"><h2>☠️ SPLATTER HOUSE!</h2><p>Le pareti chiodate si avvicinano! Tutti i superstiti tirano 1 dado fisico.</p>
         <p><strong>${rolls.length+1} / ${alive.length} · ${arenaEscape(p?.name||'')}</strong></p>
-        <p>1–2: −40% HP · 3–6: salvo. Gli animali liberi vengono eliminati dalle pareti; le creature catturate restano con il loro padrone.</p>
+        <p>1–2: −40% HP · 3–6: salvo. Gli animali liberi vengono eliminati dalle pareti; creature catturate e compagni restano con il loro padrone.</p>
         <div class="fa-arena-dice">${[1,2,3,4,5,6].map(n=>btn("splatter-die",String(n),`data-die="${n}"`)).join('')}</div>
         <p class="fa-arena-roll-hint">Danni e KO saranno applicati dopo il tiro di tutti.</p></div>`;
     } else if(arena.stage==="splatter-result") {
       body=`<div class="fa-arena-splatter"><h2>☠️ SPLATTER HOUSE · RISULTATI</h2>
-        <div class="fa-arena-splatter-results">${arena.splatter.outcomes.map(o=>`<p><strong>${arenaEscape(arenaPlayer(o.id)?.name||'')}</strong> · D6: ${o.die} · ${o.damage===0?'SALVO':o.hp===0?'ELIMINATO':`−${o.damage-o.blocked}% HP${o.blocked?' (scudo '+o.blocked+')':''}`}</p>`).join('')}</div>
+        <div class="fa-arena-splatter-results">${arena.splatter.outcomes.map(o=>`<p><strong>${arenaEscape(arenaPlayer(o.id)?.name||'')}</strong> · D6: ${o.die} · ${o.damage===0?'SALVO':o.hp===0?'ELIMINATO':`−${o.damage-o.blocked}% HP${o.blocked?' (scudo '+o.blocked+')':''}`}${o.companion?` · 🕯️ ${arenaEscape(o.companion)} muore con il padrone`:''}</p>`).join('')}</div>
         ${(arena.splatter.eliminatedAnimals||[]).length?`<div class="fa-arena-splatter-results" role="status"><h3>🐾 SPLATTER HOUSE HA ELIMINATO ${arena.splatter.eliminatedAnimals.length} ANIMALI!</h3><p>${arena.splatter.eliminatedAnimals.map(a=>arenaEscape(a.name)).join(' · ')}</p><p>Nessun animale libero sopravvissuto alle pareti chiodate.</p></div>`:''}
         ${arenaAlivePlayers().filter(arenaHasPet).length?`<p class="fa-arena-event" role="status">🐾 Le creature catturate sono salve: ${arenaAlivePlayers().filter(arenaHasPet).map(p=>`${arenaEscape(p.pet.name)} (${arenaEscape(p.name)})`).join(" · ")}</p>`:"" }
         ${arenaAlive().length===0?'<h3>☠️ NESSUN SOPRAVVISSUTO</h3>':''}
@@ -5848,16 +5961,17 @@
       // V59 mobile: 1) duellanti, 2) dadi subito sotto, 3) bonus attivi, 4) istruzioni sul valore, 5) combattenti (pulsanti + scheda).
       const bonuses=`${m.event?`<p class="fa-arena-event">🎁 ${arenaEscape(m.event)}</p>`:''}${arenaWeapon(p)?`<p class="fa-arena-event">🔫 ${arenaEscape(arenaWeaponLabel(p))}</p>`:""}${arenaSpecial(p)?`<p class="fa-arena-event">💥 COLPO UNICO: ${arenaEscape(arenaSpecial(p).name)} · scegli bersaglio, si consuma dopo il tiro</p>`:""}${arenaSkill(p)?`<p class="fa-arena-event">✨ SKILL DEL CAMPIONE: ${arenaEscape(arenaSkillName(p.skill))}</p>`:""}${p.upgradeName?`<p class="fa-arena-event">🐾 ${arenaEscape(p.upgradeName)}${p.attackBonus?" · +"+p.attackBonus+" attacco":""}${p.shield?" · 🛡️"+p.shield:""}</p>`:""}`;
       const petNote=!attacking&&arenaPetDefends(d)?`<p class="fa-arena-event">🐾 ${arenaEscape(d.pet.name)} difende ${arenaEscape(d.name)}: prende il colpo per prima (❤️ ${d.pet.hp})</p>`:"";
+      const petAttackNote=attacking&&m.petAttack?`<p class="fa-arena-event">🐾 ${arenaEscape(m.petAttack.name)} attacca con ${arenaEscape(a.name)}: +${m.petAttack.value}</p>`:"";
       const stealNote=m.steal===true?`<p class="fa-arena-event">🪤 FURTO: raggiungi <strong>${m.stealTarget}</strong> (±${ARENA_STEAL_TOLERANCE}) · se sbagli prendi ${ARENA_STEAL_PENALTY} HP di danno</p>`:"";
       body=`<h2>SCONTRO ${arena.exchange}</h2>
         <div class="fa-arena-duel" aria-label="Combattenti dello scontro">${arenaDuelist(a,"⚔️ ATTACCA",attacking)}<strong>VS</strong>${arenaDuelist(d,"🛡️ DIFENDE",!attacking)}</div>
-        ${arenaPetChoicePending()?arenaPetChoiceHtml(d):arenaStealChoicePending()?arenaStealChoiceHtml(a,d):`${petNote}${stealNote}${attacking?"":arenaDefenseHelp(a,d,arenaDiceTotal(a,m.attack,true),rolls)}<section class="fa-arena-roll" aria-label="Tiro dei dadi">
+        ${arenaPetChoicePending()?arenaPetChoiceHtml(d):arenaPetAttackPending()?arenaPetAttackHtml(a):arenaStealChoicePending()?arenaStealChoiceHtml(a,d):`${petNote}${petAttackNote}${stealNote}${attacking?"":arenaDefenseHelp(a,d,arenaDiceTotal(a,m.attack,true),rolls)}<section class="fa-arena-roll" aria-label="Tiro dei dadi">
         <h3>${attacking?'ATTACCA':'DIFENDE'}: ${arenaEscape(p.name)}</h3>
         <p class="fa-arena-turn-instruction">${arenaEscape(p.name)}, tira <strong>${count} dadi fisici insieme</strong> e inserisci il valore di ciascuno.</p>
         <div class="fa-arena-roll-slots" aria-label="Dadi di ${attacking?'attacco':'difesa'}">
           ${Array.from({length:count},(_,i)=>`<div class="fa-arena-roll-slot ${i===rolls.length?'fa-arena-roll-active':''} ${i<rolls.length?'fa-arena-roll-filled':''}"><small>DADO ${i+1}</small><strong>${rolls[i]??'?'}</strong></div>`).join('')}
         </div>
-        <p class="fa-arena-roll-hint">${rolls.length<count?`Inserisci il valore del DADO ${rolls.length+1}`:`Totale: ${arenaDiceTotal(p,rolls,attacking)}${arenaDiceTotal(p,rolls,attacking)!==rolls.reduce((sum,n)=>sum+n,0)?" (bonus skill incluso)":""} · Conferma per proseguire`}</p>
+        <p class="fa-arena-roll-hint">${rolls.length<count?`Inserisci il valore del DADO ${rolls.length+1}`:`Totale: ${arenaDiceTotal(p,rolls,attacking)}${arenaDiceTotal(p,rolls,attacking)!==rolls.reduce((sum,n)=>sum+n,0)?" (bonus incluso)":""} · Conferma per proseguire`}</p>
         <div class="fa-arena-dice">${[1,2,3,4,5,6].map((n)=>btn("die",String(n),`data-die="${n}" ${rolls.length>=count?'disabled':''}`)).join('')}</div>
         ${arenaSkill(p)==="reroll"&&rolls.length===count&&!m.rerolled?.[arena.stage]?btn("reroll","⚡ RITIRA ENTRAMBI I DADI"):""}
         <div class="fa-arena-roll-actions">${btn("confirm-dice",attacking?(m.steal===true?"CONFERMA TIRO → VEDI SE RUBI":"CONFERMA ATTACCO → PASSA AL DIFENSORE"):"CONFERMA DIFESA → MOSTRA RISULTATO",rolls.length===count?'':'disabled')}
@@ -5871,8 +5985,10 @@
       body=`<h2>RISULTATO SCONTRO ${arena.exchange}</h2><div class="fa-arena-score">${r.attack} ⚔️ VS 🛡️ ${r.defense}</div>
       <h3 class="fa-arena-verdict">${r.eliminated?`💀 ${arenaEscape(d.name)} È ELIMINATO`:r.delta<=0?(r.parryPressure===0?'DIFESA PERFETTA!':'DIFESA SOTTO PRESSIONE!'):`COLPO A SEGNO!`}</h3>
       ${r.specialName?`<p class="fa-arena-event">💥 ${arenaEscape(r.specialName)} consumata</p>`:''}
-      ${r.pet?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(r.pet.name)} ha preso ${r.pet.absorbed} danni al posto di ${arenaEscape(d.name)}${r.pet.lost?' ed è caduta: creatura persa':` · le restano ❤️ ${r.pet.hp}/${r.pet.maxHp}`}</p>`:''}
-      ${r.captured?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(a.name)} HA CATTURATO ${arenaEscape(r.captured.name.toUpperCase())}! Torna con ❤️ ${r.captured.hp} HP e potrà difendere ${arenaEscape(a.name)}${r.captured.replaced?` (prende il posto di ${arenaEscape(r.captured.replaced)})`:''}.</p>`:''}
+      ${r.pet?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(r.pet.name)} ha preso ${r.pet.absorbed} danni al posto di ${arenaEscape(d.name)}${r.pet.lost?(r.pet.bought?' ed è esausto: torna al prossimo torneo':' ed è caduta: creatura persa'):` · ${r.pet.bought?"gli":"le"} restano ❤️ ${r.pet.hp}/${r.pet.maxHp}`}</p>`:''}
+      ${r.petAttack?.hurt?`<p class="fa-arena-event" role="status">🐾 Attacco parato: ${arenaEscape(r.petAttack.name)} perde ${r.petAttack.hurt} HP${r.petAttack.hp>0?` · ❤️ ${r.petAttack.hp}/${r.petAttack.maxHp}`:" ed è esausto fino al prossimo torneo"}</p>`:''}
+      ${(r.fallen||[]).map(f=>`<p class="fa-arena-event" role="status">🕯️ ${arenaEscape(f.name)} muore insieme a ${arenaEscape(f.owner)}</p>`).join('')}
+      ${r.captured?.kept?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(a.name)} elimina ${arenaEscape(r.captured.name)} e tiene il suo compagno ${arenaEscape(r.captured.kept)}.</p>`:r.captured?`<p class="fa-arena-event" role="status">🐾 ${arenaEscape(a.name)} HA CATTURATO ${arenaEscape(r.captured.name.toUpperCase())}! Torna con ❤️ ${r.captured.hp} HP e potrà difendere ${arenaEscape(a.name)}${r.captured.replaced?` (prende il posto di ${arenaEscape(r.captured.replaced)})`:''}.</p>`:''}
       ${(r.earnings||[]).length?`<p class="fa-arena-event" role="status">💶 ${r.earnings.map(e=>`${arenaEscape(e.name)} +${e.amount}€`).join(' · ')}</p>`:''}
       <div class="fa-arena-outcome" aria-label="Esito dello scontro">${arenaResultCards(a,d,r)}</div>
       ${arenaExplainHtml(a,d,r,arena.match)}
@@ -5881,7 +5997,8 @@
       body=arenaStealResultHtml(btn);
     } else if(arena.stage==="winner") {
       arenaPrepareSkillChoices();
-      body=`<h2>🏆 CAMPIONE DEL TORNEO ${arena.tournament}</h2><h3>${arenaEscape(arenaPlayer(arena.winner)?.name||'—')}</h3>${arenaEarnedSummary()}
+      const champion=arenaPlayer(arena.winner);
+      body=`<h2>🏆 CAMPIONE DEL TORNEO ${arena.tournament}</h2><h3>${arenaEscape(champion?.name||'—')}</h3>${champion?.pet?.bought?`<p role="status">🐾 ${arenaEscape(champion.pet.name)} sopravvive e torna nel prossimo torneo.</p>`:''}${arenaEarnedSummary()}
         ${arena.skillAwarded?`<p>SKILL CONQUISTATA: <strong>${arenaEscape(arenaSkillName(arena.skillAwarded))}</strong>. Si attiverà nel prossimo torneo.</p>${btn("restart","NUOVO DEATHMATCH")}`:
         `<p>Scegli una skill leggendaria per il prossimo Deathmatch:</p><div class="fa-arena-choices">${arena.skillChoices.map(id=>{
           const sk=ARENA_SKILLS.find(x=>x.id===id);
